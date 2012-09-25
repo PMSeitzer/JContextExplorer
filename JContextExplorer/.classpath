@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path=""/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Users/Phil/WinEclipse/ECRONGUI/ECrons/multidendrograms-2.1.0-src/lib/biojava3-aa-prop-3.0.3.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Phil/WinEclipse/ECRONGUI/ECrons/multidendrograms-2.1.0-src/lib/biojava3-alignment-3.0.3.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Phil/WinEclipse/ECRONGUI/ECrons/multidendrograms-2.1.0-src/lib/biojava3-core-3.0.3.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Phil/WinEclipse/ECRONGUI/ECrons/multidendrograms-2.1.0-src/lib/biojava3-modfinder-3.0.3.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Phil/WinEclipse/ECRONGUI/ECrons/multidendrograms-2.1.0-src/lib/biojava3-phylo-3.0.3.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Phil/WinEclipse/ECRONGUI/ECrons/multidendrograms-2.1.0-src/lib/biojava3-protein-disorder-3.0.3.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Phil/WinEclipse/ECRONGUI/ECrons/multidendrograms-2.1.0-src/lib/biojava3-structure-3.0.3.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Phil/WinEclipse/ECRONGUI/ECrons/multidendrograms-2.1.0-src/lib/biojava3-structure-gui-3.0.3.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Phil/WinEclipse/ECRONGUI/ECrons/multidendrograms-2.1.0-src/lib/biojava3-ws-3.0.3.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Phil/WinEclipse/ECRONGUI/ECrons/multidendrograms-2.1.0-src/lib/jlibeps.jar"/>
+	<classpathentry kind="output" path=""/>
+</classpath>

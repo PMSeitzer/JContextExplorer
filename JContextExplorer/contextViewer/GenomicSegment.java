@@ -1,0 +1,104 @@
+package contextViewer;
+
+import java.awt.geom.Rectangle2D;
+import java.util.LinkedList;
+
+import javax.sound.sampled.Line;
+
+public class GenomicSegment {
+
+	//fields
+	private LinkedList<DrawGenes> dg; 		//individual gene information for display
+	private String Label;					//Node name
+	private Rectangle2D boundingRect;		//Size information of whole segment
+	
+	//nucleotide range information
+	private int StartBeforeBuffer;
+	private int StartCS;
+	private int CenterofCS;
+	private int StartAfterBuffer;
+	private int EndRange;
+	
+	//in the event of a strand-display reversal, should all genes be flipped??
+	private boolean StrRevFlipGenes = false;
+	
+	//drawing bars
+	private LinkedList<Integer> BarPositions;		//list of coordinates as to where to draw bars
+	private LinkedList<Integer> BarPositionsRev;	//for strand-reversed case
+	private LinkedList<Integer> BarValues;			//genomic coordinates associated with bars
+	
+	//Getters + Setters
+	public LinkedList<DrawGenes> getDg() {
+		return dg;
+	}
+	public void setDg(LinkedList<DrawGenes> dg) {
+		this.dg = dg;
+	}
+	public String getLabel() {
+		return Label;
+	}
+	public void setLabel(String label) {
+		Label = label;
+	}
+	public Rectangle2D getBoundingRect() {
+		return boundingRect;
+	}
+	public void setBoundingRect(Rectangle2D boundingRect) {
+		this.boundingRect = boundingRect;
+	}
+	public int getStartBeforeBuffer() {
+		return StartBeforeBuffer;
+	}
+	public void setStartBeforeBuffer(int startBeforeBuffer) {
+		StartBeforeBuffer = startBeforeBuffer;
+	}
+	public int getStartCS() {
+		return StartCS;
+	}
+	public void setStartCS(int startCS) {
+		StartCS = startCS;
+	}
+	public int getStartAfterBuffer() {
+		return StartAfterBuffer;
+	}
+	public void setStartAfterBuffer(int startAfterBuffer) {
+		StartAfterBuffer = startAfterBuffer;
+	}
+	public int getEndRange() {
+		return EndRange;
+	}
+	public void setEndRange(int endRange) {
+		EndRange = endRange;
+	}
+	public int getCenterofCS() {
+		return CenterofCS;
+	}
+	public void setCenterofCS(int centerofCS) {
+		CenterofCS = centerofCS;
+	}
+	public boolean isStrRevFlipGenes() {
+		return StrRevFlipGenes;
+	}
+	public void setStrRevFlipGenes(boolean strRevFlipGenes) {
+		StrRevFlipGenes = strRevFlipGenes;
+	}
+	public LinkedList<Integer> getBarPositions() {
+		return BarPositions;
+	}
+	public void setBarPositions(LinkedList<Integer> barPositions) {
+		BarPositions = barPositions;
+	}
+	public LinkedList<Integer> getBarValues() {
+		return BarValues;
+	}
+	public void setBarValues(LinkedList<Integer> barValues) {
+		BarValues = barValues;
+	}
+	public LinkedList<Integer> getBarPositionsRev() {
+		return BarPositionsRev;
+	}
+	public void setBarPositionsRev(LinkedList<Integer> barPositionsRev) {
+		BarPositionsRev = barPositionsRev;
+	}
+	
+}
