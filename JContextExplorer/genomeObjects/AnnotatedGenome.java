@@ -77,15 +77,19 @@ public void importElements(String filename){
 			//System.out.println("fail!");
 			//System.exit(1);
 		}
-
+		
+		//sort elements
+		Collections.sort(Elements, new GenomicElementComparator());
+		
 		//set elements to the newly parsed elements.
 		this.Elements = Elements;
+
 	}
 
 //add pre-computed cluster information (alternative to annotation)
 public void addClusterNumber(String Contig, int Start, int Stop, int Clusternumber){
 	for (GenomicElement E : Elements){
-		if (E.getContig().equals(Contig) &&
+		if (E.getContig().contentEquals(Contig) &&
 				E.getStart() == Start &&
 				E.getStop() == Stop){
 			E.setClusterID(Clusternumber);
@@ -96,11 +100,41 @@ public void addClusterNumber(String Contig, int Start, int Stop, int Clusternumb
 
 //----------------------- Context Set computation ------------------//
 
+//single gene context set
+public void MakeSingleGeneContextSet(String CSName){
+	
+	//initialize a new context set
+	ContextSet CS = new ContextSet(CSName, "SingleGene");
+	CS.setPreProcessed(true);
+	HashMap<Integer, LinkedList<GenomicElement>> csmap 
+	= new HashMap<Integer, LinkedList<GenomicElement>>();
+	
+	//iterate through all elements, add each to single-gene context set
+	int Counter = 0;
+	for (GenomicElement E : this.Elements){
+		Counter++;
+		LinkedList<GenomicElement> L = new LinkedList<GenomicElement>();
+		L.add(E);
+		csmap.put(Counter, L);
+	}
+	
+	//add completed hash map to context set object
+	CS.setContextMapping(csmap);
+	
+	//add this new context set to the Groupings field.
+	if (Groupings == null){
+		Groupings = new LinkedList<ContextSet>();
+	} 
+	this.Groupings.add(CS);
+
+}
+
 //estimate contexts based on distance
 public void ComputeContextSet(String CSName, int tolerance, boolean RequireSameStrain){
 	
 	//initialize a new context set
-	ContextSet CS = new ContextSet(CSName, tolerance);
+	ContextSet CS = new ContextSet(CSName, "IntergenicDist");
+	CS.setPreProcessed(true);
 	HashMap<Integer, LinkedList<GenomicElement>> csmap 
 		= new HashMap<Integer, LinkedList<GenomicElement>>();
 	
@@ -264,7 +298,8 @@ public void ImportContextSet(String CSName, String fileName) {
 		String Line = null;
 		
 		//initialize a new context set
-		ContextSet CS = new ContextSet(CSName, -1);
+		ContextSet CS = new ContextSet(CSName, "Loaded");
+		CS.setPreProcessed(true);
 		LinkedHashMap<Integer, LinkedList<GenomicElement>> CSMap = new LinkedHashMap<Integer, LinkedList<GenomicElement>>();
 		
 		int ContextSetID = -1;
@@ -319,6 +354,20 @@ public void ImportContextSet(String CSName, String fileName) {
 	
 	}
 
+//----------------------- Sorting ------------------------//
+
+//sort genomic elements by (1) contig name, and within contigs, (2) start position.
+public class GenomicElementComparator implements Comparator<GenomicElement> {
+
+	  public int compare(GenomicElement E1, GenomicElement E2) {
+	     int nameCompare = E1.getContig().compareToIgnoreCase(E2.getContig());
+	     if (nameCompare != 0) {
+	        return nameCompare;
+	     } else {
+	       return Integer.valueOf(E1.getStart()).compareTo(Integer.valueOf(E2.getStart()));
+	     }
+	  }
+	}
 
 // ----------------------- Sequence Export ------------------------//
 
@@ -351,8 +400,9 @@ public String retrieveSequence(String contig, int start, int stop, Strand strand
 
 //----------------------- Search/Retrieval ------------------------//
 
-//return a hashset of operons
-public HashSet<LinkedList<GenomicElementAndQueryMatch>> AnnotationMatches(String query, String ContextSetName){
+//preprocessed == true
+//return a hashset of gene groupings - annotation
+public HashSet<LinkedList<GenomicElementAndQueryMatch>> AnnotationMatches(String[] query, String ContextSetName){
 	
 	//initialize
 	ContextSet CS = new ContextSet();
@@ -387,12 +437,17 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> AnnotationMatches(String
 			GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
 			GandE.setE(LL.get(i));
 			
-			if (LL.get(i).getAnnotation().toUpperCase().contains(query.toUpperCase())){
-				AddtheSet = true;
-				GandE.setQueryMatch(true);
-				//Hits.add(LL);
-			} else {
-				GandE.setQueryMatch(false);
+			//check each query
+			for (int j = 0; j < query.length; j++){
+			
+				if (LL.get(i).getAnnotation().toUpperCase().contains(query[j].trim().toUpperCase())){
+					AddtheSet = true;
+					GandE.setQueryMatch(true);
+					//Hits.add(LL);
+				} else {
+					GandE.setQueryMatch(false);
+				}
+			
 			}
 			
 			//add this element to the list
@@ -410,7 +465,8 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> AnnotationMatches(String
 	return Hits;
 }
 
-public HashSet<LinkedList<GenomicElementAndQueryMatch>> ClusterMatches(int ClusterNumber, String ContextSetName){
+//return a hashset of gene groupings - homology cluster
+public HashSet<LinkedList<GenomicElementAndQueryMatch>> ClusterMatches(int[] ClusterNumber, String ContextSetName){
 	
 	//initialize
 	ContextSet CS = new ContextSet();
@@ -445,14 +501,17 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> ClusterMatches(int Clust
 			GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
 			GandE.setE(LL.get(i));
 			
-			if (LL.get(i).getClusterID()==ClusterNumber){
-				AddtheSet = true;
-				GandE.setQueryMatch(true);
-				//Hits.add(LL);
-			} else {
-				GandE.setQueryMatch(false);
-			}
+			for (int j = 0; j < ClusterNumber.length; j++){
 			
+				if (LL.get(i).getClusterID()==ClusterNumber[j]){
+					AddtheSet = true;
+					GandE.setQueryMatch(true);
+					//Hits.add(LL);
+				} else {
+					GandE.setQueryMatch(false);
+				}
+			
+			}
 			//add this element to the list
 			TheList.add(GandE);
 			
@@ -469,11 +528,142 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> ClusterMatches(int Clust
 	return Hits;
 }
 
+//preprocessed == false
+//return a hashset of gene groupings - annotation
+public HashSet<LinkedList<GenomicElementAndQueryMatch>> AnnotationMatchesOnTheFly(String[] query, ContextSetDescription CSD){
+	
+	switch (CSD.getType()) {
+	
+	case "Range" :
+	
+	case "GenesAround" :
+	
+	case "GenesBetween" :
+	
+	case "MultipleQuery" :
+	
+	case "Combination" :
+		
+	}
+	
+	return null;
+}
+
+//return a hashset of gene groupings - homology cluster
+public HashSet<LinkedList<GenomicElementAndQueryMatch>> ClusterMatchesOnTheFly(int[] ClusterNumber, ContextSetDescription CSD){
+	
+	//create a tree set to contain individual element matches
+	HashSet<LinkedList<GenomicElementAndQueryMatch>> Hits = 
+			new HashSet<LinkedList<GenomicElementAndQueryMatch>>();
+	
+	switch (CSD.getType()) {
+	
+	case "Range" :
+	
+		//find query match
+		boolean QueryMatch = false;
+		for (int i = 0; i <this.Elements.size(); i++){
+			
+			//determine if the element is a query match.
+			QueryMatch = false;
+			for (int j = 0; j < ClusterNumber.length; j++){
+				if (this.Elements.get(i).getClusterID() == ClusterNumber[j]){
+					QueryMatch = true;
+				}
+			}
+			
+			//if it is, extract the appropriate range
+			if (QueryMatch){
+				
+				//define a new GenomicElementAndQueryMatch
+				LinkedList<GenomicElementAndQueryMatch> LL = new LinkedList<GenomicElementAndQueryMatch>();
+				GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+				GandE.setE(this.Elements.get(i)); GandE.setQueryMatch(true); LL.add(GandE);
+				int Center = (int)Math.round(0.5*(double)(GandE.getE().getStart()+GandE.getE().getStop()));
+				
+				//continue adding genes until sufficient
+				//before genes
+				int BeforeQuery = Center - this.Elements.get(i).getStart(); 
+				int BeforeCounter = 0;
+				boolean EndOfContig = false;
+				String CurrentContig = this.Elements.get(i).getContig();
+				while (BeforeQuery < CSD.getNtRangeBefore() && EndOfContig == false){
+					BeforeCounter++;
+					GandE = new GenomicElementAndQueryMatch();
+					
+					//first element in file
+					if (i-BeforeCounter > 0) {
+					
+					GandE.setE(this.Elements.get(i-BeforeCounter));
+					GandE.setQueryMatch(false);
+					LL.add(GandE);
+					BeforeQuery = Center - GandE.getE().getStart();
+					
+					//check for end of contig
+					if (!CurrentContig.equals(GandE.getE().getContig())){
+						EndOfContig = true;
+					}
+					
+					} else {
+						EndOfContig = true;
+					}
+
+				}
+				
+				//after genes
+				int AfterQuery = this.Elements.get(i).getStop() - Center; 
+				int AfterCounter = 0;
+				EndOfContig = false;
+				CurrentContig = this.Elements.get(i).getContig();
+				while (AfterQuery < CSD.getNtRangeAfter() && EndOfContig == false){
+					AfterCounter++;
+					GandE = new GenomicElementAndQueryMatch();
+					
+					//last element in file
+					if (i+AfterCounter < this.Elements.size()){
+					
+					GandE.setE(this.Elements.get(i+AfterCounter));
+					GandE.setQueryMatch(false);
+					LL.add(GandE);
+					AfterQuery = GandE.getE().getStop() - Center;
+					
+					//check for end of contig
+					if (!CurrentContig.equals(GandE.getE().getContig())){
+						EndOfContig = true;
+					}
+					
+					} else {
+						EndOfContig = true;
+					}
+
+				}
+				
+				//finally, add this to the hit list
+				Hits.add(LL);
+				
+			}
+		}
+		
+	case "GenesAround" :
+	
+	case "GenesBetween" :
+	
+	case "MultipleQuery" :
+	
+	case "Combination" :
+		
+	}
+	
+	return Hits;
+}
+
+//----------------------- GETTERS+SETTERS ------------------------//
+
 //----------------------- Getters and Setters ----------------------//
 
 
 //Getters and Setters
-public String getGenus() {
+ public String getGenus() {
 	return Genus;
 }
 public void setGenus(String genus) {

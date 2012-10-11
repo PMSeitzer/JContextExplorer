@@ -22,7 +22,7 @@ public class OrganismSet {
 	//fields
 	private LinkedHashMap<String, AnnotatedGenome> Species;		//-Species-information--------
 	private LinkedList<String> SpeciesNames;					//-Species-Names--------------
-	private LinkedList<String> CSDs;							//-Info-about-Context-Sets----
+	private LinkedList<ContextSetDescription> CSDs;							//-Info-about-Context-Sets----
 	private boolean GeneClustersLoaded = false;					//-Gene-Clusters--------------
 	public int LargestCluster = 0;
 	private boolean ContinueImportingOperons = true;			
@@ -176,15 +176,15 @@ public class OrganismSet {
 	//----------------------- Extended CRON computation ---------------//
 	
 	//annotation search
-	public DadesExternes AnnotationSearch(String Query, String ContextSetName, String DissimilarityMethod) throws Exception{
+	public DadesExternes AnnotationSearch(String[] Query, String ContextSetName, String DissimilarityMethod) throws Exception{
 				
 		//initialize output
 		ExtendedCRON EC = new ExtendedCRON();
 		
 		//set name and type of CRON.
-		EC.setName(Query);
+		EC.setName(Query[0]);
 		EC.setContextSetName(ContextSetName);
-		EC.setType("annotation");
+		EC.setSearchType("annotation");
 		
 		//initialize output
 		//actual context mapping
@@ -260,16 +260,26 @@ public class OrganismSet {
 	}
 
 	//cluster number search
-	public DadesExternes ClusterSearch(int ClusterNumber, String ContextSetName, String DissimilarityMethod) throws Exception{
+	public DadesExternes ClusterSearch(int[] ClusterNumber, String ContextSetName, String DissimilarityMethod) throws Exception{
 				
+		ContextSetDescription CurrentCSD = null;
+		
+		//recover the context set description
+		for (ContextSetDescription csd : this.CSDs){
+			if (csd.getName().contentEquals(ContextSetName)){
+				CurrentCSD = csd;
+				break;
+			}
+		}
+		
 		//initialize output
 		ExtendedCRON EC = new ExtendedCRON();
 		
 		//set name and type of CRON.
-		String Title = "Cluster " + Integer.toString(ClusterNumber);
-		EC.setName(Title);
+		EC.setName("Cluster " + Integer.toString(ClusterNumber[0]));
 		EC.setContextSetName(ContextSetName);
-		EC.setType("cluster");
+		EC.setSearchType("cluster");
+		EC.setContextType(CurrentCSD.getType());
 		
 		//initialize output
 		LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> ContextSetList = 
@@ -286,17 +296,22 @@ public class OrganismSet {
 		//initialize a counter variable
 		int Counter = 0;
 		
-		//int SpecCounter = 0;
-		//System.out.println("before iteration");
-		
 		//iterate through species.
 		for (Entry<String, AnnotatedGenome> entry : Species.entrySet()) {
 
-			//retrieve all matches
-			HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = entry.getValue().ClusterMatches(ClusterNumber, ContextSetName);
+			HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = null;
 			
-			//SpecCounter++;
-			//System.out.println("matches retrieved for " + SpecCounter + "/" + Species.entrySet().size());
+			if (CurrentCSD.isPreprocessed()){
+				
+				//pre-processed cases
+				Matches = entry.getValue().ClusterMatches(ClusterNumber, ContextSetName);
+
+			} else {
+				
+				//on-the-fly cases
+				Matches = entry.getValue().ClusterMatchesOnTheFly(ClusterNumber, CurrentCSD);
+				
+			}
 			
 			//create an iterator for the HashSet
 			Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
@@ -365,11 +380,11 @@ public class OrganismSet {
 		SpeciesNames = speciesNames;
 	}
 	
-	public LinkedList<String> getCSDs() {
+	public LinkedList<ContextSetDescription> getCSDs() {
 		return CSDs;
 	}
 
-	public void setCSDs(LinkedList<String> cSDs) {
+	public void setCSDs(LinkedList<ContextSetDescription> cSDs) {
 		CSDs = cSDs;
 	}
 	

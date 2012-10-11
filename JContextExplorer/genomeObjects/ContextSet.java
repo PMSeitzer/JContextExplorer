@@ -7,16 +7,30 @@ public class ContextSet {
 	
 	//fields
 	private String Name;
-	private int DistanceThreshold;
+	private String Type;
+	private boolean PreProcessed;
 	private HashMap<Integer, LinkedList<GenomicElement>> ContextMapping;
 	
+	/*
+	 * Types of Context Sets:
+	 *  A: PreProcessed = true
+	 * (1) IntergenicDist (+SingleGene)
+	 * (2) Loaded
+	 * 
+	 *  B: PreProcessed = false;
+	 * (3) Range
+	 * (4) GenesAround
+	 * (5) Combination
+	 * (6) GenesBetween
+	 * (7) MultipleQuery
+	 */
 // ----------------------- Construction ------------------------//
 	
 
 	//Constructor
-	public ContextSet(String name, int tolerance){
+	public ContextSet(String name, String Type){
 		this.Name = name;
-		this.DistanceThreshold = tolerance;
+		this.Type = Type;
 	}
 	
 	public ContextSet(){
@@ -24,21 +38,12 @@ public class ContextSet {
 	}
 	
 	//Setters and Getters
-	
 	public String getName() {
 		return Name;
 	}
 
 	public void setName(String name) {
 		Name = name;
-	}
-
-	public int getDistanceThreshold() {
-		return DistanceThreshold;
-	}
-
-	public void setDistanceThreshold(int distanceThreshold) {
-		DistanceThreshold = distanceThreshold;
 	}
 
 	public HashMap<Integer, LinkedList<GenomicElement>> getContextMapping() {
@@ -48,6 +53,22 @@ public class ContextSet {
 	public void setContextMapping(
 			HashMap<Integer, LinkedList<GenomicElement>> contextMapping) {
 		ContextMapping = contextMapping;
+	}
+
+	public String getType() {
+		return Type;
+	}
+
+	public void setType(String type) {
+		Type = type;
+	}
+
+	public boolean isPreProcessed() {
+		return PreProcessed;
+	}
+
+	public void setPreProcessed(boolean preProcessed) {
+		PreProcessed = preProcessed;
 	}
 
 }

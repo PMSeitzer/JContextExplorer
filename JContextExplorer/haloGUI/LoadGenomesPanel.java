@@ -443,6 +443,11 @@ public class LoadGenomesPanel extends JPanel
 				lg.addPropertyChangeListener(this);
 				lg.execute();
 				
+//				//Debugging: show one species
+//				for (int i = 0; i < OS.getSpecies().get("Serratia_proteamaculans_568").getElements().size(); i++){
+//					System.out.println(OS.getSpecies().get("Serratia_proteamaculans_568").getElements().get(i).getClusterID());
+//				}
+//
 				}
 
 			} else {
@@ -457,7 +462,6 @@ public class LoadGenomesPanel extends JPanel
 				ClusterFileName.setText(clusterfileName);
 				GenomeClustersFile = clusterfileName;
 			}
-			
 
 		}
 		
@@ -507,6 +511,11 @@ public class LoadGenomesPanel extends JPanel
 		//if (evt.getSource().equals(this.getBtnSubmit())){
 			if (ReadyToSubmit == true) {
 				
+//				//Debugging: show one species
+//				for (int i = 0; i < OS.getSpecies().get("Serratia_proteamaculans_568").getElements().size(); i++){
+//					System.out.println(OS.getSpecies().get("Serratia_proteamaculans_568").getElements().get(i).getClusterID());
+//				}
+//				
 				//close this window
 				sf.dispose();
 				
@@ -694,7 +703,7 @@ public class LoadGenomesPanel extends JPanel
 				//add descriptions to the OS
 				LinkedList<String> CSD = new LinkedList<String>();
 				CSD.add(contextSetName.getText());
-				OS.setCSDs(CSD);
+				//OS.setCSDs(CSD);
 				//System.out.println("LoadGenomePanels: " + OS.getCSDs());
 				
 				//change tasks descriptions
@@ -773,7 +782,7 @@ public class LoadGenomesPanel extends JPanel
 						//set the first context set
 						LinkedList<String> CSD = new LinkedList<String>();
 						CSD.add(contextSetName.getText());
-						OS.setCSDs(CSD);
+						//OS.setCSDs(CSD);
 						
 						progressBarOps.setVisible(false);
 						OperonFileName.setVisible(true);
@@ -852,6 +861,11 @@ public class LoadGenomesPanel extends JPanel
 						int GeneStop = Integer.parseInt(ImportedLine[3]);
 						int GeneClusterNum = Integer.parseInt(ImportedLine[4]);
 						
+//						//de-bugging: break points
+//						if (ImportedLine[0].contentEquals("Pectobacterium_wasabiae_WPP163")){
+//							System.out.println("Debugging breakpoint");
+//						}
+						
 						//set largest cluster number
 						if (OS.LargestCluster < GeneClusterNum){
 							OS.LargestCluster = GeneClusterNum;
@@ -876,6 +890,11 @@ public class LoadGenomesPanel extends JPanel
 					ClusterFileName.setVisible(true);
 					ClusterFileName.setText(GenomeClustersFile);
 					
+					//breakpoint!
+					//Debugging: show one species
+//					for (int i = 0; i < OS.getSpecies().get("Serratia_proteamaculans_568").getElements().size(); i++){
+//						System.out.println(OS.getSpecies().get("Serratia_proteamaculans_568").getElements().get(i).getClusterID());
+//					}
 					
 				} catch(Exception ex) {
 					
@@ -905,6 +924,7 @@ public class LoadGenomesPanel extends JPanel
 			btnClusterLoad.setEnabled(true);
 			btnSubmit.setEnabled(true);
 			loadOperons.setEnabled(true);
+			
 			if (ClusterFileImproperlyLoaded == true){
 				ClusterFileName.setVisible(true);
 				ClusterFileName.setText(strNoFileLoaded);
@@ -920,6 +940,15 @@ public class LoadGenomesPanel extends JPanel
 			progressBar.setVisible(false);
 			progressBarOps.setVisible(false);
 			progressBarClusters.setVisible(false);
+			
+//			//debugging
+//			if (LoadingGeneClusters == true){
+//				//Debugging: show one species
+//				for (int i = 0; i < OS.getSpecies().get("Serratia_proteamaculans_568").getElements().size(); i++){
+//					System.out.println(OS.getSpecies().get("Serratia_proteamaculans_568").getElements().get(i).getClusterID());
+//				}
+//			}
+		
 		}
 		
 	}
@@ -953,6 +982,9 @@ public class LoadGenomesPanel extends JPanel
 
 	//create a new dendrogram window, with the loaded OS
 	public void invokeDendrograma(){
+		
+//		System.out.println("Breakpoint!");
+		
 		new Dendrograma(OS);
 		
 //		//optional print statements (working)

@@ -9,7 +9,7 @@ import javax.swing.*;
 @SuppressWarnings("serial")
 public class StartFrame extends JFrame implements ActionListener{
 	
-	private final LoadGenomesPanel lgp;
+	private final LoadGenomesPanelv2 lgp;
 	
 	//constructor
 	public StartFrame(final String title){
@@ -18,7 +18,7 @@ public class StartFrame extends JFrame implements ActionListener{
 		super(title);
 		
 		//ADD START PANEL
-		lgp = new LoadGenomesPanel(this);
+		lgp = new LoadGenomesPanelv2(this);
 		
 		//PANEL ADDING
 		this.add(lgp, BorderLayout.NORTH);
@@ -26,7 +26,7 @@ public class StartFrame extends JFrame implements ActionListener{
 		//SET PROPERTIES OF DESKTOP FRAME
 		JFrame.setDefaultLookAndFeelDecorated(false);
 		this.setResizable(true);
-		this.setSize(450,410);
+		this.setSize(450,210);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLocationRelativeTo(null);
 		this.setVisible(true);

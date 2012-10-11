@@ -343,7 +343,7 @@ public class Jpan_genome extends JPanel implements ActionListener,
 					
 					//check for cluster number or annotation query
 					for (int j = 0; j < LL.size(); j++){
-						if (CSD.getEC().getType().equals("annotation")){
+						if (CSD.getEC().getSearchType().equals("annotation")){
 							if (LL.get(j).getE().getAnnotation().toUpperCase().contains(CSD.getEC().getName().toUpperCase())){
 
 								//write to array
@@ -351,7 +351,7 @@ public class Jpan_genome extends JPanel implements ActionListener,
 								Annotations[i] = LL.get(j).getE().getAnnotation() + "\n";
 								
 							}
-						} else if (CSD.getEC().getType().equals("cluster")){
+						} else if (CSD.getEC().getSearchType().equals("cluster")){
 							
 							String TheName[] = new String[2];
 							TheName = CSD.getEC().getName().split(" ");
@@ -436,7 +436,13 @@ public class Jpan_genome extends JPanel implements ActionListener,
 					String Query = searchForNodes.getText();
 					
 					//parse into candidates
-					String[] Queries = Query.split(",");
+					//try to split by semi-colon
+					String[] Queries = Query.split(";");
+					
+					//try to split by commas
+					if (Queries.length == 1){
+						Queries = Query.split(",");
+					}
 					
 					//search for node names + annotations
 					CSDisplayData CompareCSD = fr.getCurrentFrame().getInternalPanel().getCSD();

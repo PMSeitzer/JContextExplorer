@@ -329,7 +329,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		contexts = mf.getCSD().getEC().getContexts();
 		SourceSpecies = mf.getCSD().getEC().getSourceSpeciesNames();
 		SourceContigs = mf.getCSD().getEC().getSourceContigNames();
-		ECRONType = mf.getCSD().getEC().getType();
+		ECRONType = mf.getCSD().getEC().getSearchType();
 		
 		int LongestRange = 0; 
 		

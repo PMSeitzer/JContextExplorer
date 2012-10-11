@@ -25,7 +25,7 @@ public class RunTheJAR {
 	
 	public static void main(String[] args) throws Exception{
 		
-		new StartFrame("Welcome!");	
+		new StartFrame("Welcome!");
 
 	}
 

@@ -1,6 +1,7 @@
 package moduls.frm.Panels;
 
 	import genomeObjects.CSDisplayData;
+import genomeObjects.ContextSetDescription;
 import genomeObjects.OrganismSet;
 import importExport.DadesExternes;
 	import importExport.FitxerDades;
@@ -44,7 +45,7 @@ import javax.swing.JRadioButton;
 	import moduls.frm.InternalFrameData;
 import moduls.frm.Panels.Jpan_btn.MDComputation;
 	import moduls.frm.children.FrmPiz;
-import moduls.frm.children.manageContextSets;
+import moduls.frm.children.manageContextSetsv2;
 	import parser.Fig_Pizarra;
 	import tipus.Orientation;
 	import tipus.metodo;
@@ -515,12 +516,15 @@ import definicions.MatriuDistancies;
 					if (searchType.getSelection().equals(annotationSearch.getModel())){
 						currentQuery = "Search Query: " + searchField.getText();
 					} else {
-						if (isInteger(searchField.getText())){
-							currentQuery = "Cluster " + searchField.getText();
-						} else {
-							showError("Cluster number must be an integer.");
-						}
+						currentQuery ="Search Query: Cluster(s) " + searchField.getText();
 					}
+//					else {
+//						if (isInteger(searchField.getText())){
+//							currentQuery = "Cluster " + searchField.getText();
+//						} else {
+//							showError("Cluster number must be an integer or contain.");
+//						}
+//					}
 				
 					action = "Load";
 					buttonClicked = true;
@@ -549,7 +553,8 @@ import definicions.MatriuDistancies;
 			} else if (evt.getSource().equals(btnManage)){
 				action = "manage contexts";
 				buttonClicked = true;
-				new manageContextSets(this.fr, fr.getOS().getCSDs(), this);
+				//new manageContextSets(this.fr, fr.getOS().getCSDs(), this);
+				new manageContextSetsv2(this.fr, this);
 			}
 
 			//CARRY OUT ACTION
@@ -567,8 +572,11 @@ import definicions.MatriuDistancies;
 					
 					//System.out.println("Before calling OS searches");
 					
+					//parse into candidates
+					String[] Queries = searchField.getText().split(";");
+					
 					if (searchType.getSelection().equals(annotationSearch.getModel())){
-
+						
 						//before carrying out search, ask user about their search.
 						String Hypo = "hypothetical protein";
 						String Unk = "Unknown function";
@@ -597,14 +605,26 @@ import definicions.MatriuDistancies;
 						if (this.ProceedWithSearch == true){
 						
 						//get DE from annotation search
-						de = OS.AnnotationSearch(searchField.getText(),
+						de = OS.AnnotationSearch(Queries,
 								contextSetMenu.getSelectedItem().toString(),
 								Jpan_Menu.getCbDissimilarity().getSelectedItem().toString());
 						
 						}
 						//System.out.println("Got to the de.");
 					} else {
-						de = OS.ClusterSearch(Integer.parseInt(searchField.getText()),
+						LinkedList<Integer> NumQueriesList = new LinkedList<Integer>();
+						for (int i = 0; i < Queries.length; i++){
+							try {
+								NumQueriesList.add(Integer.parseInt(Queries[i].trim()));
+							} catch (Exception ex){}
+						}
+						
+						int[] NumQueries = new int[NumQueriesList.size()];
+						for (int i = 0; i < NumQueriesList.size(); i++){
+							NumQueries[i] = NumQueriesList.get(i);
+						}
+						
+						de = OS.ClusterSearch(NumQueries,
 								contextSetMenu.getSelectedItem().toString(),
 								Jpan_Menu.getCbDissimilarity().getSelectedItem().toString());
 						//System.out.println("Got to the de.");
@@ -646,8 +666,8 @@ import definicions.MatriuDistancies;
 							showError("There were no matches to the query.");
 						}
 					} else {
-						String LastCluster = Integer.toString(OS.LargestCluster);
-						String errMsg = "Cluster Number must be between 1 and " + LastCluster;
+						//String LastCluster = Integer.toString(OS.LargestCluster);
+						String errMsg = "One or more of the cluster numbers entered is invalid.";
 						showError(errMsg);
 					}
 				}
@@ -879,14 +899,14 @@ import definicions.MatriuDistancies;
 		    }
 		}		
 
-		public String[] convertContextSets(LinkedList<String> ListOfContextSets){
+		public String[] convertContextSets(LinkedList<ContextSetDescription> ListOfContextSets){
 			
 			//initialize output array
 			String[] ArrayOfContextSets = new String[ListOfContextSets.size()];
 			
-			//iterate through rray
+			//iterate through array
 			for (int i = 0; i < ListOfContextSets.size(); i++){
-				ArrayOfContextSets[i] = ListOfContextSets.get(i);
+				ArrayOfContextSets[i] = ListOfContextSets.get(i).getName();
 			}
 			
 			return ArrayOfContextSets;

@@ -24,7 +24,8 @@ public class ExtendedCRON {
 	//fields
 	private String Name;
 	private String ContextSetName;
-	private String Type;
+	private String SearchType;
+	private String ContextType;
 	private LinkedHashMap<String, String> SourceSpeciesNames;
 	private LinkedHashMap<String, String> SourceContigNames;
 	private LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> Contexts; //<species-num, list of genomic elements
@@ -60,17 +61,17 @@ public class ExtendedCRON {
 		//select appropriate operon dissimilarity measure
 		if (DissimilarityMethod.equals("Common Genes - Dice")){
 		
-			if (Type.equals("annotation")){
+			if (SearchType.equals("annotation")){
 				distMethod = new DicebyAnnotation();
-			} else if (Type.equals("cluster")){
+			} else if (SearchType.equals("cluster")){
 				distMethod = new DicebyClusterID();
 			}
 			
 		} else if (DissimilarityMethod.equals("Common Genes - Jaccard")){
 			
-			if (Type.equals("annotation")){
+			if (SearchType.equals("annotation")){
 				distMethod = new JaccardbyAnnotation();
-			} else if (Type.equals("cluster")){
+			} else if (SearchType.equals("cluster")){
 				distMethod = new JaccardbyClusterID();
 			}
 			
@@ -80,9 +81,9 @@ public class ExtendedCRON {
 				
 		} else if (DissimilarityMethod.equals("Moving Distances")){
 			
-			if (Type.equals("annotation")){
+			if (SearchType.equals("annotation")){
 				distMethod = new MovingDistancesbyAnnotation();
-			} else if (Type.equals("cluster")){
+			} else if (SearchType.equals("cluster")){
 				distMethod = new MovingDistancesbyClusterID();
 			}
 		}
@@ -251,12 +252,12 @@ public class ExtendedCRON {
 		Dissimilarities = dissimilarities;
 	}
 
-	public String getType() {
-		return Type;
+	public String getSearchType() {
+		return SearchType;
 	}
 
-	public void setType(String type) {
-		Type = type;
+	public void setSearchType(String type) {
+		SearchType = type;
 	}
 
 	public LinkedHashMap<String, String> getSourceSpeciesNames() {
@@ -282,6 +283,14 @@ public class ExtendedCRON {
 
 	public void setDissimilarityType(String dissimilarityType) {
 		DissimilarityType = dissimilarityType;
+	}
+
+	public String getContextType() {
+		return ContextType;
+	}
+
+	public void setContextType(String contextType) {
+		ContextType = contextType;
 	}
 
 }
