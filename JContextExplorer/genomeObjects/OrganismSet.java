@@ -176,13 +176,23 @@ public class OrganismSet {
 	//----------------------- Extended CRON computation ---------------//
 	
 	//annotation search
-	public DadesExternes AnnotationSearch(String[] Query, String ContextSetName, String DissimilarityMethod) throws Exception{
-				
+	public DadesExternes AnnotationSearch(String[] Queries, String ContextSetName, String DissimilarityMethod) throws Exception{
+			
+		ContextSetDescription CurrentCSD = null;
+		
+		//recover the context set description
+		for (ContextSetDescription csd : this.CSDs){
+			if (csd.getName().contentEquals(ContextSetName)){
+				CurrentCSD = csd;
+				break;
+			}
+		}
+		
 		//initialize output
 		ExtendedCRON EC = new ExtendedCRON();
 		
 		//set name and type of CRON.
-		EC.setName(Query[0]);
+		EC.setName(Queries[0]);
 		EC.setContextSetName(ContextSetName);
 		EC.setSearchType("annotation");
 		
@@ -207,8 +217,25 @@ public class OrganismSet {
 		//iterate through species.
 		for (Entry<String, AnnotatedGenome> entry : Species.entrySet()) {
 
-			//retrieve all matches
-			HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = entry.getValue().AnnotationMatches(Query, ContextSetName);
+			//initialize output
+			HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = null;
+			
+			if (CurrentCSD.isPreprocessed()){
+				
+				//pre-processed cases
+				Matches = entry.getValue().AnnotationMatches(Queries, ContextSetName);
+
+			} else {
+				
+				//on-the-fly
+				if (CurrentCSD.getType().contentEquals("GenesBetween") && Queries.length != 2) {
+					JOptionPane.showMessageDialog(null, "This gene grouping requires exactly two search queries.",
+							"Inappropriate Number of Queries",JOptionPane.ERROR_MESSAGE);
+				} else {
+					Matches = entry.getValue().MatchesOnTheFly(Queries, null, CurrentCSD);
+				}
+
+			}
 			
 			//create an iterator for the HashSet
 			Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
@@ -308,9 +335,14 @@ public class OrganismSet {
 
 			} else {
 				
-				//on-the-fly cases
-				Matches = entry.getValue().ClusterMatchesOnTheFly(ClusterNumber, CurrentCSD);
-				
+				//on-the-fly
+				if (CurrentCSD.getType().contentEquals("GenesBetween") && ClusterNumber.length != 2) {
+					JOptionPane.showMessageDialog(null, "This gene grouping requires exactly two search queries.",
+							"Inappropriate Number of Queries",JOptionPane.ERROR_MESSAGE);
+				} else {
+					Matches = entry.getValue().MatchesOnTheFly(null, ClusterNumber, CurrentCSD);
+				}
+
 			}
 			
 			//create an iterator for the HashSet

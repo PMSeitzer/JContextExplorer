@@ -663,11 +663,11 @@ import definicions.MatriuDistancies;
 					//showError(e1.getMessage());
 					if (searchType.getSelection().equals(annotationSearch.getModel())){
 						if (this.ProceedWithSearch == true){
-							showError("There were no matches to the query.");
+							showError("There were no matches to the query (or queries).");
 						}
 					} else {
 						//String LastCluster = Integer.toString(OS.LargestCluster);
-						String errMsg = "One or more of the cluster numbers entered is invalid.";
+						String errMsg = "There were no matches to the query (or queries).";
 						showError(errMsg);
 					}
 				}

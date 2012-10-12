@@ -676,9 +676,10 @@ public class LoadGenomesPanelv2 extends JPanel
 			btnClusterLoad.setEnabled(true);
 			btnSubmit.setEnabled(true);
 			
-			//all progress bars are made invisible
+			//all progress bars are made invisible, all files visible
 			progressBar.setVisible(false);
 			progressBarClusters.setVisible(false);
+			ClusterFileName.setVisible(true);
 		}
 	}
 	

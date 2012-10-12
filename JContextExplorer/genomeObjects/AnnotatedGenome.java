@@ -529,26 +529,6 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> ClusterMatches(int[] Clu
 }
 
 //preprocessed == false
-//return a hashset of gene groupings - annotation
-public HashSet<LinkedList<GenomicElementAndQueryMatch>> AnnotationMatchesOnTheFly(String[] query, ContextSetDescription CSD){
-	
-	switch (CSD.getType()) {
-	
-	case "Range" :
-	
-	case "GenesAround" :
-	
-	case "GenesBetween" :
-	
-	case "MultipleQuery" :
-	
-	case "Combination" :
-		
-	}
-	
-	return null;
-}
-
 //return a hashset of gene groupings - homology cluster
 public HashSet<LinkedList<GenomicElementAndQueryMatch>> ClusterMatchesOnTheFly(int[] ClusterNumber, ContextSetDescription CSD){
 	
@@ -654,6 +634,372 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> ClusterMatchesOnTheFly(i
 		
 	}
 	
+	return Hits;
+}
+
+//return a hashset of gene groupings
+public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[] Queries,
+		int[] ClusterNumbers, 
+		ContextSetDescription CSD){
+	
+	//create a tree set to contain individual element matches
+	HashSet<LinkedList<GenomicElementAndQueryMatch>> Hits = 
+			new HashSet<LinkedList<GenomicElementAndQueryMatch>>();
+	
+	//determine appropriate form of searches
+	boolean IsCluster = false;
+	if (Queries == null){
+		IsCluster = true;
+	} 
+	
+	//find query match
+	boolean QueryMatch = false;
+
+	//group genes together according to the specificed gene grouping protocol.
+	if (CSD.getType().contentEquals("Range")) {
+		
+		//iterate through all elements
+		for (int i = 0; i <this.Elements.size(); i++){
+				
+			//determine if the element is a query match.
+			QueryMatch = false;
+			if (IsCluster){
+				for (int j = 0; j < ClusterNumbers.length; j++){
+					if (this.Elements.get(i).getClusterID() == ClusterNumbers[j]){
+						QueryMatch = true;
+						break;
+					}
+				}
+			} else {
+				for (int j = 0; j < Queries.length; j++){
+					if (this.Elements.get(i).getAnnotation().toUpperCase().contains(Queries[j].trim().toUpperCase())){
+						QueryMatch = true;
+						break;
+					}
+				}
+			}
+		
+			//if it is, extract the appropriate range
+			if (QueryMatch){
+						
+				//define a new GenomicElementAndQueryMatch
+				LinkedList<GenomicElementAndQueryMatch> LL = new LinkedList<GenomicElementAndQueryMatch>();
+				GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+				GandE.setE(this.Elements.get(i)); GandE.setQueryMatch(true); LL.add(GandE);
+				int Center = (int)Math.round(0.5*(double)(GandE.getE().getStart()+GandE.getE().getStop()));
+						
+				//continue adding genes until sufficient
+				//before genes
+				int BeforeQuery = Center - this.Elements.get(i).getStart(); 
+				int BeforeCounter = 0;
+				boolean EndOfContig = false;
+				String CurrentContig = this.Elements.get(i).getContig();
+				while (BeforeQuery < CSD.getNtRangeBefore() && EndOfContig == false){
+					BeforeCounter++;
+					GandE = new GenomicElementAndQueryMatch();
+							
+					//first element in file
+					if (i-BeforeCounter > 0) {
+							
+					GandE.setE(this.Elements.get(i-BeforeCounter));
+					GandE.setQueryMatch(false);
+					LL.add(0,GandE);
+					BeforeQuery = Center - GandE.getE().getStart();
+							
+					//check for end of contig
+					if (!CurrentContig.equals(GandE.getE().getContig())){
+						EndOfContig = true;
+					}
+							
+					} else {
+						EndOfContig = true;
+					}
+
+				}
+						
+				//after genes
+				int AfterQuery = this.Elements.get(i).getStop() - Center; 
+				int AfterCounter = 0;
+				EndOfContig = false;
+				CurrentContig = this.Elements.get(i).getContig();
+				while (AfterQuery < CSD.getNtRangeAfter() && EndOfContig == false){
+					AfterCounter++;
+					GandE = new GenomicElementAndQueryMatch();
+							
+					//last element in file
+					if (i+AfterCounter < this.Elements.size()){
+							
+					GandE.setE(this.Elements.get(i+AfterCounter));
+					GandE.setQueryMatch(false);
+					LL.add(GandE);
+					AfterQuery = GandE.getE().getStop() - Center;
+							
+					//check for end of contig
+					if (!CurrentContig.equals(GandE.getE().getContig())){
+						EndOfContig = true;
+					}
+							
+					} else {
+						EndOfContig = true;
+					}
+
+				}
+						
+				//finally, add this to the hit list
+				Hits.add(LL);
+						
+			}
+		}
+		
+	} else if (CSD.getType().contentEquals("GenesAround")) {
+
+		//iterate through all elements
+		for (int i = 0; i <this.Elements.size(); i++){
+				
+			//determine if the element is a query match.
+			QueryMatch = false;
+			if (IsCluster){
+				for (int j = 0; j < ClusterNumbers.length; j++){
+					if (this.Elements.get(i).getClusterID() == ClusterNumbers[j]){
+						QueryMatch = true;
+						break;
+					}
+				}
+			} else {
+				for (int j = 0; j < Queries.length; j++){
+					if (this.Elements.get(i).getAnnotation().toUpperCase().contains(Queries[j].trim().toUpperCase())){
+						QueryMatch = true;
+						break;
+					}
+				}
+			}
+		
+			//if it is, extract the appropriate range
+			if (QueryMatch){
+					
+			//define a new GenomicElementAndQueryMatch
+			LinkedList<GenomicElementAndQueryMatch> LL = new LinkedList<GenomicElementAndQueryMatch>();
+			GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+			GandE.setE(this.Elements.get(i)); GandE.setQueryMatch(true); LL.add(GandE);
+					
+			//continue adding genes until sufficient
+			//before genes
+			int BeforeCounter = 0;
+			boolean EndOfContig = false;
+			String CurrentContig = this.Elements.get(i).getContig();
+			while (BeforeCounter < CSD.getGenesBefore() && EndOfContig == false){
+				BeforeCounter++;
+				GandE = new GenomicElementAndQueryMatch();
+						
+				//first element in file
+				if (i-BeforeCounter > 0) {
+						
+				GandE.setE(this.Elements.get(i-BeforeCounter));
+				GandE.setQueryMatch(false);
+				LL.add(0,GandE);
+						
+				//check for end of contig
+				if (!CurrentContig.equals(GandE.getE().getContig())){
+					EndOfContig = true;
+				}
+						
+				} else {
+					EndOfContig = true;
+				}
+
+			}
+					
+			//after genes
+			int AfterCounter = 0;
+			EndOfContig = false;
+			CurrentContig = this.Elements.get(i).getContig();
+			while (AfterCounter < CSD.getGenesAfter() && EndOfContig == false){
+				AfterCounter++;
+				GandE = new GenomicElementAndQueryMatch();
+						
+				//last element in file
+				if (i+AfterCounter < this.Elements.size()){
+						
+				GandE.setE(this.Elements.get(i+AfterCounter));
+				GandE.setQueryMatch(false);
+				LL.add(GandE);
+						
+				//check for end of contig
+				if (!CurrentContig.equals(GandE.getE().getContig())){
+					EndOfContig = true;
+				}
+						
+				} else {
+					EndOfContig = true;
+				}
+
+			}
+					
+			//finally, add this to the hit list
+			Hits.add(LL);
+					
+			}
+		}
+		
+	} else if (CSD.getType().contentEquals("GenesBetween")) {
+		
+		LinkedList<GenomicElement> FirstQueries = new LinkedList<GenomicElement>();
+		LinkedList<GenomicElement> SecondQueries = new LinkedList<GenomicElement>();
+		
+		//iterate through all elements, find first + second queries
+		for (int i = 0; i <this.Elements.size(); i++){
+			
+			//determine if the element is a query match.
+			QueryMatch = false;
+			if (IsCluster){
+				for (int j = 0; j <ClusterNumbers.length; j++){
+					if (this.Elements.get(i).getClusterID() == ClusterNumbers[j]){
+						if (j == 0){
+							FirstQueries.add(Elements.get(i));
+						} else {
+							SecondQueries.add(Elements.get(i));
+						}
+
+					}
+				}
+
+			} else {
+				for (int j = 0; j < Queries.length; j++){
+					if (this.Elements.get(i).getAnnotation().toUpperCase().contains(Queries[j].trim().toUpperCase())){
+						if (j ==0 ){
+							FirstQueries.add(Elements.get(i));
+						} else {
+							SecondQueries.add(Elements.get(i));
+						}
+					}
+				}
+			}
+		}
+		
+		//pairs = the result of the work
+		HashSet<LinkedList<GenomicElement>> Pairs = 
+				new HashSet<LinkedList<GenomicElement>>();
+		
+		//find first set matches
+		int ClosestDistance = 999999999;
+		GenomicElement Partner = null;
+		for (GenomicElement E1 : FirstQueries){
+			//reset values
+			Partner = null;
+			ClosestDistance = 999999999;
+			
+			//find closest
+			for (GenomicElement E2 : SecondQueries){
+				if (E1.getContig().contentEquals(E2.getContig()) &&
+						Math.abs(E1.getStart() - E2.getStart()) < ClosestDistance) {
+					ClosestDistance = E1.getStart() - E2.getStart();
+					Partner = E2;
+				}
+			}
+			
+			//there must be a partner for this to even matter.
+			if (Partner != null){
+				
+				//add to hash set
+				LinkedList<GenomicElement> Partnership = new LinkedList<GenomicElement>();
+				Partnership.add(E1); Partnership.add(Partner);
+				Pairs.add(Partnership);
+				
+			}
+		}
+		
+		//for all pairs, add all genomic elements
+		Iterator<LinkedList<GenomicElement>> it = Pairs.iterator();
+		while(it.hasNext()){
+			LinkedList<GenomicElement> Pair = it.next();
+			
+			//find starting /ending points
+			int StartingE = -1; int StoppingE = -1;
+			for (int i = 0; i < Elements.size(); i++){
+				if (this.Elements.get(i).equals(Pair.get(0))){
+					StartingE = i;
+				} 
+				if (this.Elements.get(i).equals(Pair.get(1))){
+					StoppingE = i;
+				}
+			}
+			
+			//System.out.println(this.Species + ": " + StartingE + " " + StoppingE);
+			
+			LinkedList<GenomicElementAndQueryMatch> LL = new LinkedList<GenomicElementAndQueryMatch>();
+			
+			//add all intermediate elements
+			if (StartingE < StoppingE){
+				GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+				GandE.setE(this.Elements.get(StartingE)); GandE.setQueryMatch(true); LL.add(GandE);
+				int ElementNumber = StartingE + 1;
+				while (ElementNumber < StoppingE){
+					GandE = new GenomicElementAndQueryMatch();
+					GandE.setE(Elements.get(ElementNumber)); GandE.setQueryMatch(false);
+					LL.add(GandE);
+					ElementNumber++;
+				}
+				GandE = new GenomicElementAndQueryMatch();
+				GandE.setE(this.Elements.get(StoppingE)); GandE.setQueryMatch(true); LL.add(GandE);
+			} else {
+				GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+				GandE.setE(this.Elements.get(StoppingE)); GandE.setQueryMatch(true); LL.add(GandE);
+				int ElementNumber = StoppingE - 1;
+				while (ElementNumber > StartingE){
+					GandE = new GenomicElementAndQueryMatch();
+					GandE.setE(Elements.get(ElementNumber)); GandE.setQueryMatch(false);
+					LL.add(GandE);
+					ElementNumber--;
+				}
+				GandE = new GenomicElementAndQueryMatch();
+				GandE.setE(this.Elements.get(StartingE)); GandE.setQueryMatch(true); LL.add(GandE);
+			}
+			
+			//add this list to the hash map.
+			Hits.add(LL);
+		}
+
+	
+	} else if (CSD.getType().contentEquals("MultipleQuery")) {
+	
+		LinkedList<GenomicElementAndQueryMatch> LL = new LinkedList<GenomicElementAndQueryMatch>();
+		GenomicElementAndQueryMatch GandE;
+		//iterate through all elements, find first + second queries
+		for (GenomicElement E : Elements){
+			
+			//determine if the element is a query match.
+			QueryMatch = false;
+			if (IsCluster){
+				for (int j = 0; j <ClusterNumbers.length; j++){
+					if (E.getClusterID() == ClusterNumbers[j]){
+						GandE = new GenomicElementAndQueryMatch();
+						GandE.setE(E); GandE.setQueryMatch(true);
+						LL.add(GandE);	
+					}
+				}
+
+			} else {
+				for (int j = 0; j < Queries.length; j++){
+					if (E.getAnnotation().toUpperCase().contains(Queries[j].trim().toUpperCase())){
+						GandE = new GenomicElementAndQueryMatch();
+						GandE.setE(E); GandE.setQueryMatch(true);
+						LL.add(GandE);	
+					}
+				}
+			}
+		}
+		
+		//note that this type only allows a max of one hit per species.
+		if (LL != null){
+			Hits.add(LL);
+		}
+		
+	} else if (CSD.getType().contentEquals("Combination")) {
+		
+		//TODO: implement Combination method (depending on most biological relevance)
+		
+	} // close case/switch
+
 	return Hits;
 }
 
