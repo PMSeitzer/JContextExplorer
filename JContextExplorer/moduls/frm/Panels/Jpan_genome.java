@@ -158,6 +158,7 @@ public class Jpan_genome extends JPanel implements ActionListener,
 		c.insets = new Insets(1,1,1,1);
 		searchForNodes = new JTextField("");
 		searchForNodes.setFont(fontSearch);
+		searchForNodes.addActionListener(this);
 		add(searchForNodes, c);
 		
 		//search for nodes button
@@ -444,6 +445,9 @@ public class Jpan_genome extends JPanel implements ActionListener,
 						Queries = Query.split(",");
 					}
 					
+					if (Queries.length ==1) {
+						Queries = Query.split("\\s+");
+					}
 					//search for node names + annotations
 					CSDisplayData CompareCSD = fr.getCurrentFrame().getInternalPanel().getCSD();
 					for (int i = 0; i < CompareCSD.getNodeNames().length; i++){

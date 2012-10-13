@@ -589,6 +589,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		c.gridwidth = 1;
 		ntAfter = new JTextField("1000");
 		ntAfter.setEditable(true);
+		ntAfter.addActionListener(this);
 		CSRange_group.add(ntAfter);
 		jp.add(ntAfter, c);
 		gridy++;
@@ -650,6 +651,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 1;
 		GenesAfter = new JTextField("2");
+		GenesAfter.addActionListener(this);
 		GenesAfter.setEditable(true);
 		CSGenesAround_group.add(GenesAfter);
 		jp.add(GenesAfter, c);
@@ -956,7 +958,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		} 
 		
 		//ADD BUTTON
-		if (evt.getSource().equals(btnAddCS)){
+		if (evt.getSource().equals(btnAddCS) || evt.getSource().equals(GenesAfter) || evt.getSource().equals(ntAfter)){
 			
 			//check if name is acceptable
 			CheckName();
@@ -1008,10 +1010,9 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 					contextSetMenu.insertItemAt(CSName.getText(), 0);
 					
 					//pre-processed sets are reset
-					LoadedFileName.setText("");
 					ComputedGrouping = false;
 					LoadedGrouping = false;
-					CSName.setText("");
+					LoadedFileName.setText("Context Set \"" + ToAdd.getName() + "\" Successfully Added!");
 					
 					} catch (Exception ex) {
 						JOptionPane.showMessageDialog(null, "Field values must be integers",
@@ -1090,6 +1091,11 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 				}
 			}
 		}
+		
+		//change message
+		if (CSName.getText().contentEquals("Between") || CSName.getText().contentEquals("MultipleQuery")){
+			CSName.setText("");
+		}
 	}
 
 	//enanble message box
@@ -1112,10 +1118,16 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 			LoadedFileName.setText("All genes within a defined range of a single gene query are grouped together.");
 		} else if (CSType.isSelected(CSGenesBetween.getModel())){
 			LoadedFileName.setText("All genes between two independent queries are grouped together.");
+			if (CSName.getText().contentEquals("") || CSName.getText().contentEquals("MultipleQuery")){
+				CSName.setText("Between");
+			}
 		} else if (CSType.isSelected(CSGenesAround.getModel())){
 			LoadedFileName.setText("A number of genes both before and after a single gene query are grouped together");
 		} else if (CSType.isSelected(CSMultipleQuery.getModel())) {
 			LoadedFileName.setText("Multiple gene query matches within a single organism are grouped together.");
+			if (CSName.getText().contentEquals("")  || CSName.getText().contentEquals("Between")){
+				CSName.setText("MultipleQuery");
+			}
 		} else if (CSType.isSelected(CSCombination.getModel())){
 			LoadedFileName.setText("Combine existing gene groupings to create a more complex gene grouping.");
 		}

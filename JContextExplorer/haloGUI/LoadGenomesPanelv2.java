@@ -287,6 +287,9 @@ public class LoadGenomesPanelv2 extends JPanel
 			progressBarClusters.setStringPainted(false);			
 			
 			String fileName = getGenomeWorkingSetFile();
+			//String[] b = this.getAnnotatedGenomeFiles();
+			//String fileName = null;
+			
 			//System.out.println("fileName: " + fileName);
 			if (fileName != null){
 				
@@ -398,6 +401,40 @@ public class LoadGenomesPanelv2 extends JPanel
 		return GenomeWorkingSetFile; //file name
 	}	
 	
+	private LinkedList<String> getAnnotatedGenomeFiles(){
+		
+		//use pre-existing 'FileDialog' GUI window to retrieve file
+//		final FileDialog fd = new FileDialog(sf, "English",
+//				FileDialog.LOAD);
+		
+		JFileChooser GetGenomes = new JFileChooser();
+		GetGenomes.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		GetGenomes.getCurrentDirectory();
+		GetGenomes.setDialogTitle("Title");
+		GetGenomes.showOpenDialog(GetGenomes);
+		
+		File[] AllFiles = GetGenomes.getCurrentDirectory().listFiles();
+		
+		//iterate through, guarantee correct extension
+		for (int i = 0; i < AllFiles.length; i++){
+			if (AllFiles[i].getAbsolutePath().contains(".gff")){
+				
+			}
+		}
+		
+		return new LinkedList<String>();
+//		String Directory = Genomes.get
+//		fd.setVisible(true);
+//		String GenomeWorkingSetFile = fd.getDirectory() + fd.getFile();
+//		this.GenomeWorkingSetFile_NoPath = fd.getFile();
+//		//String GenomeWorkingSetFile =  fd.getFile();
+//		if (fd.getFile() == null) {
+//			GenomeWorkingSetFile = null;
+//		} 
+//		return GenomeWorkingSetFile; //file name
+	}
+	
+	//retrieve clusters file
 	private String getClustersFile() {
 		
 		//use pre-existing 'FileDialog' GUI window to retrieve file

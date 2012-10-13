@@ -80,6 +80,11 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	private HashMap<String, String> SourceContigs;	//Contig Names
 	private String ECRONType; 			//Either "annotation" or "cluster"
 	
+	//Range-limited related
+	private int RangeLimit = 100000;				//Do not display a genomic region of 50,000 nt or more
+	private LinkedList<String> ExceededRangeLimit;	//nodes that are excluded
+	private boolean ContextsExcluded = false; 		//initially, none are excluded
+	
 	//display - related
 	private int GenomicDisplayRange;	//nt range to display on each GS
 	private int CoordinateBarEvery; 	//nt block to display
@@ -104,6 +109,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	private int CoordinateBarWidth = 1;
 	private int ArrowLength = 20;
 	private int ArrowHeight = 10;
+	private int LabelAboveGS = 5;
 	
 	//boolean variables for check box repainting
 	private boolean ShowSurrounding = true;
@@ -154,7 +160,11 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		
 		//create the Jpopupmenu
 		this.InitializeExportMenu();
-
+		
+		//show missed
+		if (this.ContextsExcluded){
+			showExludedContexts();
+		}
 	}
 
 	// ----- export-related ------------------------------------------//
@@ -304,6 +314,12 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	//create genomic segments
 	private Dimension computeGenomicSegments() {
 		
+		//acceptable segments + unacceptable segments
+		LinkedList<GenomicSegment> AcceptableSegments = 
+				new LinkedList<GenomicSegment>();
+		
+		ExceededRangeLimit = new LinkedList<String>();
+		
 		//determine number of segments
 		int SegmentstoDraw = 0;
 		for (int i =0; i<this.mf.getCSD().getSelectedNodes().length; i++){
@@ -338,42 +354,21 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		for (int i =0; i<this.mf.getCSD().getSelectedNodes().length; i++){
 			if (this.mf.getCSD().getSelectedNodes()[i] == true){
 				
-				//increment counter
-				CoordinateNumber++;
-				
-				//initialize a new segment
+				//initialize a new genomic segment
 				GenomicSegment GSelement = new GenomicSegment();
-				
-				//add node name
-				GSelement.setLabel(this.mf.getCSD().getNodeNames()[i]);
-
-				//retrieve dimension of parent frame, and determine values for components
-				//labels: 20%, genomes 80% of whole width
-//				Rectangle2D rect = 
-//						new Rectangle((int)(TotalWidth*(1-GSFraction)),
-//								(int)(((GSHeight+GSSpacer)*CoordinateNumber)+GSSpacer),
-//								(int)(TotalWidth*GSFraction),(int) GSHeight);
-				
-				//bounding rectangle
-				Rectangle2D rect = 
-						new Rectangle((int) (DimTotalWidth*GSStartFromLeft), 
-								(int)(((GSHeight+GSSpacer)*CoordinateNumber)+GSSpacer),
-								GSWidth,GSHeight);
-				
-				//add bounding rectangle to the set of GS elements
-				GSelement.setBoundingRect(rect);
-				
-				//determine the longest range
-				LinkedList<GenomicElementAndQueryMatch> LL = contexts.get(GSelement.getLabel());
-				
-				//System.out.println("Genes: " + LL.size());
-				
-				//reset start and stop variables for every genomic element processed
-				int Start = 99999999; int Stop = -1;
 				
 				//note query match info
 				int QueryStrandPlus = 0; int QueryStrandMinus = 0;
 				
+				//add node name
+				GSelement.setLabel(this.mf.getCSD().getNodeNames()[i]);
+				
+				//determine the longest range
+				LinkedList<GenomicElementAndQueryMatch> LL = contexts.get(GSelement.getLabel());
+				
+				//reset start and stop variables for every genomic element processed
+				int Start = 99999999; int Stop = -1;
+
 				//determine range information
 				for (GenomicElementAndQueryMatch e : LL){
 					
@@ -384,12 +379,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 					if (e.getE().getStop() > Stop){
 						Stop = e.getE().getStop();
 					}
-					
-//					//check for problems in gene sizes
-//					if (GSelement.getLabel().contains("Halobiforma_lacisalsi")){
-//						System.out.println(GSelement.getLabel() + " " + "Gene: " + e.getE().getStart() + ":" + e.getE().getStop());
-//					}
-					
+
 					//query-match orientation information
 					if (e.isQueryMatch()){
 						if (e.getE().getStrand().equals(Strand.POSITIVE)){
@@ -398,38 +388,60 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 							QueryStrandMinus++;
 						}
 					}
+					
 				}
 				
-				//set values for this CS
-				GSelement.setStartCS(Start);
-				GSelement.setStartAfterBuffer(Stop);
-				GSelement.setCenterofCS((int) Math.round((double)(0.5*(Start+Stop))));
-				
-				//compare to current longest range
-				if ((Stop-Start) > LongestRange){
-					LongestRange = Stop-Start;
-				}
+				//only add this element to the list if the range is acceptable.
+				if ((Stop - Start) < RangeLimit) {
+					
+					//increment coordinate number
+					CoordinateNumber++;
+					
+					//set values for this CS
+					GSelement.setStartCS(Start);
+					GSelement.setStartAfterBuffer(Stop);
+					GSelement.setCenterofCS((int) Math.round((double)(0.5*(Start+Stop))));
+					
 
-				//setting to flip all genes in the event of strand-noramlized display
-				if (QueryStrandMinus > QueryStrandPlus){
-					GSelement.setStrRevFlipGenes(true);
+					//bounding rectangle
+					Rectangle2D rect = 
+							new Rectangle((int) (DimTotalWidth*GSStartFromLeft), 
+									(int)(((GSHeight+GSSpacer)*CoordinateNumber)+GSSpacer),
+									GSWidth,GSHeight);
+					
+					//add bounding rectangle to the set of GS elements
+					GSelement.setBoundingRect(rect);
+					
+					//compare to current longest range
+					if ((Stop-Start) > LongestRange){
+						LongestRange = Stop-Start;
+					}
+					
+					//setting to flip all genes in the event of strand-normalized display
+					if (QueryStrandMinus > QueryStrandPlus){
+						GSelement.setStrRevFlipGenes(true);
+					}
+					
+					//segment is acceptable
+					AcceptableSegments.add(GSelement);
+					
+				} else {
+					ExceededRangeLimit.add(this.mf.getCSD().getNodeNames()[i]);
+					ContextsExcluded = true;
 				}
-				
-				//Finally, add this element to the array
-				GS[CoordinateNumber] = GSelement;
-				
-//				//optional print statements
-//				System.out.println(GSelement.getLabel() + ": ");
-//				System.out.println(GSelement.getStartCS());
-//				System.out.println(GSelement.getStartAfterBuffer());
-//				System.out.println(GSelement.getCenterofCS());
-//				System.out.println((GSelement.getStartAfterBuffer() - GSelement.getStartCS()) + 400);
-				
-				DimTotalHeight = (GSHeight + GSSpacer)*(CoordinateNumber+1)+ 2*GSSpacer;
-				//optional print statement
-				//System.out.println("Bounding Rect: " + GS[CoordinateNumber].getBoundingRect());
 			}
 		}
+		
+		CoordinateNumber = -1;
+		//from the list of acceptable nodes, determine rendering regions.
+		GS = new GenomicSegment[AcceptableSegments.size()];
+		for (int i = 0; i < AcceptableSegments.size(); i++){
+			GS[i] = AcceptableSegments.get(i);
+			CoordinateNumber++;
+		}
+		
+		//determine the total height
+		DimTotalHeight = (GSHeight + GSSpacer)*(CoordinateNumber+1)+ 2*GSSpacer;
 
 		//genomic display ranges
 		GenomicDisplayRange = LongestRange + BeforeBuffer + AfterBuffer;
@@ -868,16 +880,11 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 			
 			//create a text layout object
 			TextLayout tl = new TextLayout(txt,fontStandard,renderContext); 
-			
+
 			//render labels
-			//int textY = (int) GS[i].getBoundingRect().getCenterY();
-			//tl.draw(g,txtStart,textY);
-			
-			//render labels
-			int textX = (int) GS[i].getBoundingRect().getX();
-			int textY = (int) GS[i].getBoundingRect().getMaxY()-(int)tl.getBounds().getHeight();
-			tl.draw(g, textX, textY-GSHeight+5);
-			
+			int textX = (int) GS[i].getBoundingRect().getMinX();
+			int textY = (int) GS[i].getBoundingRect().getMinY() - LabelAboveGS;
+			tl.draw(g, textX, textY);
 		}
 	}
 
@@ -989,14 +996,20 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 				int[] xPoints = {(int) (GS[i].getBoundingRect().getMaxX() - ArrowLength),
 						(int) (GS[i].getBoundingRect().getMaxX() - ArrowLength), 
 						(int) GS[i].getBoundingRect().getMaxX()};
-				int[] yPoints = {(int) GS[i].getBoundingRect().getMinY()-ArrowHeight,
-						(int) GS[i].getBoundingRect().getMinY(),
-						(int)(GS[i].getBoundingRect().getMinY()-(ArrowHeight/2.0))};
+				int[] yPoints = {(int) GS[i].getBoundingRect().getMinY()-ArrowHeight - LabelAboveGS,
+						(int) GS[i].getBoundingRect().getMinY() - LabelAboveGS,
+						(int)(GS[i].getBoundingRect().getMinY()-(ArrowHeight/2.0) - LabelAboveGS)};
 				g.fillPolygon(xPoints, yPoints, 3);
+				
+				//paint contig name
+				TextLayout t2 = new TextLayout(GS[i].getDg().get(0).getBioInfo().getContig(),fontStandard,renderContext);
+				
+				//paint to panel
+				int ContigX = (int) GS[i].getBoundingRect().getMaxX() - ArrowLength - (int) t2.getBounds().getWidth() - 10;
+				int ContigY = (int) GS[i].getBoundingRect().getMinY() - LabelAboveGS;// - (int) t2.getBounds().getHeight();
+				t2.draw(g, ContigX, ContigY);
 			}
-			
-			
-			
+				
 		} else {
 		
 			for (int i = 0; i < GS.length; i++){
@@ -1024,11 +1037,21 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 							(int) (GS[i].getBoundingRect().getMaxX()),
 							(int) (GS[i].getBoundingRect().getMaxX() - ArrowLength), 
 							};
-					int[] yPoints = {(int)(GS[i].getBoundingRect().getMinY()),
-							(int) GS[i].getBoundingRect().getMinY()-ArrowHeight,
-							(int) (GS[i].getBoundingRect().getMinY()-(ArrowHeight/2.0)),
+					int[] yPoints = {(int)(GS[i].getBoundingRect().getMinY() - LabelAboveGS),
+							(int) GS[i].getBoundingRect().getMinY()-ArrowHeight - LabelAboveGS,
+							(int) (GS[i].getBoundingRect().getMinY()-(ArrowHeight/2.0) - LabelAboveGS),
 							};
 					g.fillPolygon(xPoints, yPoints, 3);
+					
+					g.setPaint(Color.BLACK);
+					
+					//paint contig name
+					TextLayout t2 = new TextLayout(GS[i].getDg().get(0).getBioInfo().getContig(),fontStandard,renderContext);
+					
+					//paint to panel
+					int ContigX = (int) GS[i].getBoundingRect().getMaxX() - ArrowLength - (int) t2.getBounds().getWidth() - 10;
+					int ContigY = (int) GS[i].getBoundingRect().getMinY() - LabelAboveGS;// - (int) t2.getBounds().getHeight();
+					t2.draw(g, ContigX, ContigY);
 					
 				} else {
 					
@@ -1039,10 +1062,18 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 					int[] xPoints = {(int) (GS[i].getBoundingRect().getMaxX() - ArrowLength),
 							(int) (GS[i].getBoundingRect().getMaxX() - ArrowLength), 
 							(int) GS[i].getBoundingRect().getMaxX()};
-					int[] yPoints = {(int) GS[i].getBoundingRect().getMinY()-ArrowHeight,
-							(int) GS[i].getBoundingRect().getMinY(),
-							(int)(GS[i].getBoundingRect().getMinY()-(ArrowHeight/2.0))};
+					int[] yPoints = {(int) GS[i].getBoundingRect().getMinY()-ArrowHeight - LabelAboveGS,
+							(int) GS[i].getBoundingRect().getMinY() - LabelAboveGS,
+							(int)(GS[i].getBoundingRect().getMinY()-(ArrowHeight/2.0) - LabelAboveGS)};
 					g.fillPolygon(xPoints, yPoints, 3);
+					
+					//paint contig name
+					TextLayout t2 = new TextLayout(GS[i].getDg().get(0).getBioInfo().getContig(),fontStandard,renderContext);
+					
+					//paint to panel
+					int ContigX = (int) GS[i].getBoundingRect().getMaxX() - ArrowLength - (int) t2.getBounds().getWidth() - 10;
+					int ContigY = (int) GS[i].getBoundingRect().getMinY() - LabelAboveGS;// - (int) t2.getBounds().getHeight();
+					t2.draw(g, ContigX, ContigY);
 					
 				}
 				
@@ -1171,6 +1202,18 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	    return sortedList;
 	}
 
+	// ---- Warning Messages -------------------------------------- //
+
+	
+	private void showExludedContexts(){
+		String Msg = "The following nodes refer to a genomic grouping of size " + RangeLimit + " nt or more,\n";
+		Msg = Msg + "and so are not displayed:\n";
+		for (String s: ExceededRangeLimit){
+			Msg = Msg + s + "\n";
+		}
+		JOptionPane.showMessageDialog(null, Msg, "Gene Grouping Size Limit Exceeded", JOptionPane.INFORMATION_MESSAGE);
+	}
+	
 	// ---- Genome Display Options -------------------------------------- //
 	
 	public boolean isShowSurrounding() {
@@ -1217,19 +1260,16 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		return GeneInfo;
 	}
 
-	
 	// ----- Mouse Click info  -------------------------------------------//
 	
 	public LinkedList<SharedHomology> getGeneList() {
 		return GeneColorList;
 	}
 	
-
 	public void setGeneList(LinkedList<SharedHomology> geneList) {
 		GeneColorList = geneList;
 	}
 	
-
 	public GeneColorLegendFrame getGclf() {
 		return gclf;
 	}
@@ -1237,7 +1277,6 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	public void setGclf(GeneColorLegendFrame gclf) {
 		this.gclf = gclf;
 	}
-	
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
