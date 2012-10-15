@@ -161,7 +161,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 	private JButton btnRemoveCS;
 	private JLabel Remove;
 	private String strRemoveCS = "Remove";
-	private JComboBox<String> contextSetMenu;
+	private JComboBox contextSetMenu;
 	
 	//okay - close panel
 	private JButton btnOK;
@@ -848,7 +848,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		String[] CurrentContextLists = this.convertContextSets(fr.getOS().getCSDs());
-		contextSetMenu = new JComboBox<String>(CurrentContextLists);
+		contextSetMenu = new JComboBox(CurrentContextLists);
 		contextSetMenu.addActionListener(this);
 		contextSetMenu.setEnabled(true);
 		jp.add(contextSetMenu, c);

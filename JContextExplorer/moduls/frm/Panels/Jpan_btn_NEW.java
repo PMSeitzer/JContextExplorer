@@ -98,7 +98,7 @@ import definicions.MatriuDistancies;
 		private JProgressBar progressBar;
 
 		// Menu to select current context set
-		private JComboBox<String> contextSetMenu;
+		private JComboBox contextSetMenu;
 		//private LinkedList<String> ContextList = new LinkedList<String>();
 		
 		// Indicate if the text fields have correct values
@@ -385,7 +385,7 @@ import definicions.MatriuDistancies;
 			c.insets = new Insets(1, 1, 1, 1);
 			strUpdate = Language.getLabel(110); // Update
 			String[] ContextArray = convertContextSets(fr.getOS().getCSDs());
-			contextSetMenu = new JComboBox<String>(ContextArray);
+			contextSetMenu = new JComboBox(ContextArray);
 			contextSetMenu.addActionListener(this);
 			contextSetMenu.setEnabled(true);
 			contextSetMenu.setFont(fontStandard);
@@ -912,11 +912,11 @@ import definicions.MatriuDistancies;
 			return ArrayOfContextSets;
 		}
 
-		public JComboBox<String> getContextSetMenu() {
+		public JComboBox getContextSetMenu() {
 			return contextSetMenu;
 		}
 
-		public void setContextSetMenu(JComboBox<String> contextSetMenu) {
+		public void setContextSetMenu(JComboBox contextSetMenu) {
 			this.contextSetMenu = contextSetMenu;
 		}
 	}
