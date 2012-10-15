@@ -10,6 +10,7 @@ public class SharedHomology {
 	private String ECRONType;				//"annotation" or "cluster"
 	private int ClusterID;					//cluster ID number
 	private String Annotation;				//Annotation
+	private boolean GeneGroupingMember;		//used to build the tree;
 	
 	//color-related
 	private Integer Frequency;				//Number of matches across organisms compared
@@ -27,7 +28,7 @@ public class SharedHomology {
 		this.BaseColors[4] = Color.MAGENTA;
 		this.BaseColors[5] = Color.ORANGE;
 		this.BaseColors[6] = Color.YELLOW;
-		this.BaseColors[7] = Color.DARK_GRAY;
+		this.BaseColors[7] = Color.WHITE;
 		this.BaseColors[8] = Color.PINK;
 				
 	}
@@ -55,7 +56,6 @@ public class SharedHomology {
 		
 		//determine base color
 		Color TheColor = BaseColors[(EntryNumber % BaseColors.length)];
-		
 
 		//determine brighter/darker based on actual value
 		int ColorFactor = EntryNumber/BaseColors.length;
@@ -100,6 +100,14 @@ public class SharedHomology {
 
 	public void setClusterID(int clusterID) {
 		ClusterID = clusterID;
+	}
+
+	public boolean isGeneGroupingMember() {
+		return GeneGroupingMember;
+	}
+
+	public void setGeneGroupingMember(boolean geneGroupingMember) {
+		GeneGroupingMember = geneGroupingMember;
 	}
 
 }

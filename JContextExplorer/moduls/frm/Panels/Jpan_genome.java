@@ -331,10 +331,15 @@ public class Jpan_genome extends JPanel implements ActionListener,
 			
 			JTextArea textArea = new JTextArea(20, 80);
 		    textArea.setEditable(false);	
-
+ 
+		    int NodeCounter = 0;
+		    
 			//determine EC from selected
 			for (int i = 0; i < CSD.getSelectedNodes().length; i++){
 				if (CSD.getSelectedNodes()[i] == true){
+					
+					//increment counter
+					NodeCounter++;
 					
 					//isolate node name
 					String NodeName = CSD.getNodeNames()[i];
@@ -385,7 +390,12 @@ public class Jpan_genome extends JPanel implements ActionListener,
 	        
 	        Style s = doc.addStyle("bold", regular);
 	        StyleConstants.setBold(s, true);
-	        
+	        if (Headers.length > 1){
+		        String MatchHits = "Annotations for " + NodeCounter + " selected nodes:\n";
+		        doc.insertString(doc.getLength(), MatchHits, doc.getStyle("regular"));
+		        doc.insertString(doc.getLength(), "-------------------------------\n", doc.getStyle("regular"));
+	        }
+
             for (int i=0; i <Headers.length; i++) {
                 try {
 					doc.insertString(doc.getLength(), Headers[i], doc.getStyle("bold"));

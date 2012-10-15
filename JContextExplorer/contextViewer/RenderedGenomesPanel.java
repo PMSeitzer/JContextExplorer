@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -133,6 +134,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	
 	//legend panel info
 	private LinkedList<SharedHomology> GeneColorList;
+	private LinkedList<SharedHomology> DisplayedGeneColorList;
 	
 	//formatting information
 	private Font fontStandard = new Font("Dialog", Font.BOLD, 10);
@@ -206,7 +208,9 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 					
 					//invoke the color list, unless there are no colors to report.
 					 if (GeneColorList != null){
-						 gclf = new GeneColorLegendFrame(GeneColorList);
+						 DetermineDisplayGeneColors();
+						 //gclf = new GeneColorLegendFrame(GeneColorList);
+						 gclf  = new GeneColorLegendFrame(DisplayedGeneColorList);
 					 }
 				}
 			}
@@ -235,6 +239,52 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		ExportMenu.addSeparator();
 		ExportMenu.add(me3);
 		
+	}
+	
+	//determine displayed gene colors
+	private void DetermineDisplayGeneColors(){
+		
+		//initialize output
+		DisplayedGeneColorList = new LinkedList<SharedHomology>();
+		
+		// all genes in the range are displayed
+		if (ShowSurrounding == true && ColorSurrounding == true){
+			DisplayedGeneColorList = GeneColorList;
+		} else { //only show query matches
+			
+			//initialize a hash set
+			HashSet<SharedHomology> SHash = new HashSet<SharedHomology>();
+			
+			//add all appropriate colored genes to the hashset
+			for (int i = 0; i < GS.length; i++){
+				for (DrawGenes dg : GS[i].getDg()){
+					if (dg.getMembership() == 0){
+						for (SharedHomology SH : GeneColorList){
+							if (ECRONType.equals("annotation")){
+								if (SH.getAnnotation().contentEquals(dg.getBioInfo().getAnnotation().toUpperCase())){
+									SHash.add(SH);
+									break;
+								}
+							} else {
+								if (SH.getClusterID()==dg.getBioInfo().getClusterID()){
+									SHash.add(SH);
+									break;
+								}
+							}
+						}
+					}
+
+				}
+			}
+
+			//create an iterator for the HashSet, remove duplicate entries
+			Iterator<SharedHomology> it = SHash.iterator();
+			while (it.hasNext()){
+				SharedHomology SH = it.next();
+				DisplayedGeneColorList.add(SH);
+			}
+
+		}
 	}
 	
 	//method to save picture
@@ -643,7 +693,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 			//collect all colors 
 			for (int i = 0; i < GS.length; i++){
 				for (int j = 0; j <GS[i].getDg().size(); j++){
-					AnnColors.add(GS[i].getDg().get(j).getBioInfo().getAnnotation());
+					AnnColors.add(GS[i].getDg().get(j).getBioInfo().getAnnotation().toUpperCase());
 				}
 			}
 			
@@ -655,7 +705,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	        for (int i = 0; i < GS.length; i++){
 	        	for (int j = 0; j < GS[i].getDg().size(); j++){
 	        		for (int k = 0; k < AnnColorsSorted.size(); k++){
-	        			if (AnnColorsSorted.get(k).getAnnotation().equals(GS[i].getDg().get(j).getBioInfo().getAnnotation())){
+	        			if (AnnColorsSorted.get(k).getAnnotation().equals(GS[i].getDg().get(j).getBioInfo().getAnnotation().toUpperCase())){
 	        				GS[i].getDg().get(j).setColor(AnnColorsSorted.get(k).getColor());
 	        			}
 	        		}
@@ -712,8 +762,10 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 			CoordinateBarEvery = 3000;
 		} else if (GenomicDisplayRange < 20000){
 			CoordinateBarEvery = 5000;
-		} else {
+		} else if (GenomicDisplayRange < 50000){
 			CoordinateBarEvery = 10000;
+		} else {
+			CoordinateBarEvery = 20000;
 		}
 
 		//add bars for non-strand corrected case
@@ -915,7 +967,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 					//options to color extra regions
 					if (this.GS[i].getDg().get(j).getMembership() == 0){
 						
-						//always homology-color core genes
+						//always color core genes with assigned homology color
 						g.setPaint(this.GS[i].getDg().get(j).getColor());
 						
 					} else {
@@ -1204,7 +1256,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 
 	// ---- Warning Messages -------------------------------------- //
 
-	
+	//contexts with overly large gene groupings are not displayed
 	private void showExludedContexts(){
 		String Msg = "The following nodes refer to a genomic grouping of size " + RangeLimit + " nt or more,\n";
 		Msg = Msg + "and so are not displayed:\n";

@@ -10,6 +10,7 @@ import inicial.Dendrograma;
 //import inicial.Language;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
 
 //import methods.Reagrupa;
 //import moduls.frm.FrmPrincipalDesk;
@@ -56,6 +57,9 @@ public class LoadGenomesPanelv2 extends JPanel
 	private boolean GeneClustersLoaded = false;
 	private boolean ReadyToSubmit = false;
 	
+	//read in files or directories
+	private boolean GenomesAsSingleFile = false;
+	
 	//improperly-loaded switches
 	private boolean ClusterFileImproperlyLoaded = false;
 	private boolean GenomeWorkingSetFileImproperlyLoaded = false;
@@ -74,6 +78,8 @@ public class LoadGenomesPanelv2 extends JPanel
 	
 	//dummy labels for spacing columns
 	private JLabel d1, d2, d3, d4, d5;
+
+	private File[] GenomeFiles;
 	
 	//constructor
 	public LoadGenomesPanelv2 (StartFrame startframe) {
@@ -287,8 +293,7 @@ public class LoadGenomesPanelv2 extends JPanel
 			progressBarClusters.setStringPainted(false);			
 			
 			String fileName = getGenomeWorkingSetFile();
-			//String[] b = this.getAnnotatedGenomeFiles();
-			//String fileName = null;
+			//String fileName = this.getGenomes();
 			
 			//System.out.println("fileName: " + fileName);
 			if (fileName != null){
@@ -398,40 +403,47 @@ public class LoadGenomesPanelv2 extends JPanel
 		if (fd.getFile() == null) {
 			GenomeWorkingSetFile = null;
 		} 
+		GenomesAsSingleFile = true;
 		return GenomeWorkingSetFile; //file name
 	}	
 	
-	private LinkedList<String> getAnnotatedGenomeFiles(){
+	//retrieve either directory or data file - TODO: finish/implement
+	private String getGenomes(){
 		
-		//use pre-existing 'FileDialog' GUI window to retrieve file
-//		final FileDialog fd = new FileDialog(sf, "English",
-//				FileDialog.LOAD);
-		
+		//initialize output
 		JFileChooser GetGenomes = new JFileChooser();
-		GetGenomes.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		GetGenomes.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 		GetGenomes.getCurrentDirectory();
-		GetGenomes.setDialogTitle("Title");
+		GetGenomes.setDialogTitle("Select Annotated Genomes Directory or Genome Working Set File");
 		GetGenomes.showOpenDialog(GetGenomes);
 		
-		File[] AllFiles = GetGenomes.getCurrentDirectory().listFiles();
+		//retrieve a directory
+		//File[] AllFiles = GetGenomes.getSelectedFiles();
+		File DirectoryOrGWSFile = GetGenomes.getSelectedFile();
+		this.GenomeWorkingSetFile_NoPath = DirectoryOrGWSFile.getName();
 		
-		//iterate through, guarantee correct extension
-		for (int i = 0; i < AllFiles.length; i++){
-			if (AllFiles[i].getAbsolutePath().contains(".gff")){
-				
+		//check if file could be received
+		if (DirectoryOrGWSFile != null){
+		
+			//determine if file or directory loaded
+			if (DirectoryOrGWSFile.isDirectory()){
+		
+				//retrieving info as a directory.
+				this.GenomesAsSingleFile = false;
+			
+				//retrieve directory
+				this.GenomeFiles = DirectoryOrGWSFile.listFiles();
+		
+			} else {
+			
+				//all information stored in a single genome working set file.
+				this.GenomesAsSingleFile = true;
+
 			}
 		}
 		
-		return new LinkedList<String>();
-//		String Directory = Genomes.get
-//		fd.setVisible(true);
-//		String GenomeWorkingSetFile = fd.getDirectory() + fd.getFile();
-//		this.GenomeWorkingSetFile_NoPath = fd.getFile();
-//		//String GenomeWorkingSetFile =  fd.getFile();
-//		if (fd.getFile() == null) {
-//			GenomeWorkingSetFile = null;
-//		} 
-//		return GenomeWorkingSetFile; //file name
+		//return the information.
+		return DirectoryOrGWSFile.getAbsolutePath();
 	}
 	
 	//retrieve clusters file
@@ -483,7 +495,10 @@ public class LoadGenomesPanelv2 extends JPanel
 			
 			//define a new list, for each species name
 			LinkedList<String> SpeciesNames = new LinkedList<String>();
-						
+			
+			//import a single genomic working set file
+			if (GenomesAsSingleFile){
+				
 				try{
 					//import buffered reader
 					BufferedReader br = new BufferedReader(new FileReader(GenomeWorkingSetFile));
@@ -566,6 +581,77 @@ public class LoadGenomesPanelv2 extends JPanel
 
 				}
 
+			} else {
+				
+				try {
+					
+				//retrieve all files
+				for (File f: GenomeFiles){
+					if (f.getName().contains(".gff")){
+						//new annotated genome
+						AnnotatedGenome AG = new AnnotatedGenome();
+						
+						//Annotation information
+						AG.importElements(f.getAbsolutePath());
+					
+						//reference to genome file
+						AG.setGenomeFile(f);
+						
+						//Species Name + genus
+						String[] SpeciesName = f.getName().split(".gff");
+						String TheName = SpeciesName[0];
+						AG.setSpecies(TheName);
+						
+						String[] Genus = SpeciesName[0].split("_");
+						String TheGenus = Genus[0];
+						AG.setGenus(TheGenus);
+
+						//add Context set
+						AG.MakeSingleGeneContextSet("SingleGene");
+						
+						//add to hash map
+						Species.put(TheName, AG);
+						
+						//add name to array of species
+						SpeciesNames.add(TheName);
+						
+						//update progress bar
+						OrganismsCompleted++;
+						progress= (int) Math.round(100*((double)OrganismsCompleted/(double)TotalOrganisms));
+						setProgress(progress);
+					}
+				}
+				
+				//save results to OS structure.
+				//imported data
+				OS.setSpecies(Species);
+				OS.setSpeciesNames(SpeciesNames);
+				
+				//context set information descriptions in OS
+				LinkedList<ContextSetDescription> CSD = new LinkedList<ContextSetDescription>();
+				ContextSetDescription Initial = new ContextSetDescription();
+				Initial.setName("SingleGene");
+				Initial.setPreprocessed(true);
+				Initial.setType("IntergenicDist");
+				CSD.add(Initial);
+				OS.setCSDs(CSD);
+				
+				progressBar.setValue(100);					
+				progressBar.setVisible(false);
+				
+				GenomeWorkingSetFileName.setVisible(true);
+				GenomeWorkingSetFileName.setText(GenomeWorkingSetFile_NoPath);
+
+				} catch (Exception ex){
+					progressBar.setStringPainted(false);
+					progressBar.setValue(0);
+					GenomeWorkingSetFileImproperlyLoaded = true;
+					JOptionPane.showMessageDialog(null, "The file could not be loaded or was improperly formatted.",
+							"Invalid File Format", JOptionPane.ERROR_MESSAGE);
+					GenomeWorkingSetFileName.setText(strCancelled);
+				}
+
+			}
 			return null;
 		}
 		

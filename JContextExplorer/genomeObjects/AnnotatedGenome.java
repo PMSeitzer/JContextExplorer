@@ -718,7 +718,6 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 				GandE.setQueryMatch(false);
 						
 				//check for end of contig
-				//check for end of contig
 				if (CurrentContig.equals(GandE.getE().getContig())){
 					LL.add(GandE);
 				} else {
@@ -772,7 +771,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 			}
 		}
 		
-		//pairs = the result of the work
+		//pairings of genomic element query matches
 		HashSet<LinkedList<GenomicElement>> Pairs = 
 				new HashSet<LinkedList<GenomicElement>>();
 		
@@ -826,7 +825,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 				
 				//add to hash set
 				LinkedList<GenomicElement> Partnership = new LinkedList<GenomicElement>();
-				Partnership.add(E2); Partnership.add(Partner);
+				Partnership.add(Partner); Partnership.add(E2); 
 				Pairs.add(Partnership);
 				
 			}
@@ -848,36 +847,28 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 				}
 			}
 			
-			//System.out.println(this.Species + ": " + StartingE + " " + StoppingE);
-			
+			//initialize an output linked list
 			LinkedList<GenomicElementAndQueryMatch> LL = new LinkedList<GenomicElementAndQueryMatch>();
 			
-			//add all intermediate elements
-			if (StartingE < StoppingE){
-				GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
-				GandE.setE(this.Elements.get(StartingE)); GandE.setQueryMatch(true); LL.add(GandE);
-				int ElementNumber = StartingE + 1;
-				while (ElementNumber < StoppingE){
-					GandE = new GenomicElementAndQueryMatch();
-					GandE.setE(Elements.get(ElementNumber)); GandE.setQueryMatch(false);
-					LL.add(GandE);
-					ElementNumber++;
-				}
-				GandE = new GenomicElementAndQueryMatch();
-				GandE.setE(this.Elements.get(StoppingE)); GandE.setQueryMatch(true); LL.add(GandE);
-			} else {
-				GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
-				GandE.setE(this.Elements.get(StoppingE)); GandE.setQueryMatch(true); LL.add(GandE);
-				int ElementNumber = StoppingE - 1;
-				while (ElementNumber > StartingE){
-					GandE = new GenomicElementAndQueryMatch();
-					GandE.setE(Elements.get(ElementNumber)); GandE.setQueryMatch(false);
-					LL.add(GandE);
-					ElementNumber--;
-				}
-				GandE = new GenomicElementAndQueryMatch();
-				GandE.setE(this.Elements.get(StartingE)); GandE.setQueryMatch(true); LL.add(GandE);
+			//re-order correctly
+			if (StartingE > StoppingE){
+				int temp = StartingE;
+				StartingE = StoppingE;
+				StoppingE = temp;
 			}
+			
+			//add all intermediate elements
+			GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+			GandE.setE(this.Elements.get(StartingE)); GandE.setQueryMatch(true); LL.add(GandE);
+			int ElementNumber = StartingE + 1;
+			while (ElementNumber < StoppingE){
+				GandE = new GenomicElementAndQueryMatch();
+				GandE.setE(Elements.get(ElementNumber)); GandE.setQueryMatch(false);
+				LL.add(GandE);
+				ElementNumber++;
+			}
+			GandE = new GenomicElementAndQueryMatch();
+			GandE.setE(this.Elements.get(StoppingE)); GandE.setQueryMatch(true); LL.add(GandE);
 			
 			//add this list to the hash map.
 			Hits.add(LL);
@@ -946,7 +937,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 		
 		//TODO: implement Combination method (depending on most biological relevance)
 		
-	} // close case/switch
+	} // various gene grouping strategies
 
 	return Hits;
 }
