@@ -23,6 +23,7 @@ public class GeneColorLegendFrame extends JFrame implements ComponentListener{
 	private Dimension dim;
 	private int ScrollPaneInset = 15;
 	private JScrollPane scrp;
+	private String ShowOption;
 	
 	//directional panels
 	private JPanel pan_North;
@@ -31,7 +32,7 @@ public class GeneColorLegendFrame extends JFrame implements ComponentListener{
 	private Font fontStandard = new Font("Dialog", Font.BOLD, 18);
 	
 	//constructor
-	public GeneColorLegendFrame(LinkedList<SharedHomology> GeneColorList){
+	public GeneColorLegendFrame(RenderedGenomesPanel rgp, LinkedList<SharedHomology> GeneColorList, String ShowOption){
 		
 		//INITIALIZATIONS
 		super("Gene Color Legend");
@@ -39,14 +40,15 @@ public class GeneColorLegendFrame extends JFrame implements ComponentListener{
 		
 		//SET SIZE
 		//long size - annotations, short size- cluster IDs
-		dim = new Dimension();
-		if (GeneColorList.get(0).getECRONType().contentEquals("annotation")){
-			dim.setSize(600,300);
-		} else {
-			dim.setSize(250,300);
-		}
+		dim = new Dimension(600,300);
+//		if (GeneColorList.get(0).getECRONType().contentEquals("annotation")){
+//			dim.setSize(600,300);
+//		} else {
+//			dim.setSize(250,300);
+//		}
 		//CONTENT PANELS
-		this.gclp = new GeneColorLegendPanel(this, GeneColorList);
+		this.ShowOption = ShowOption;
+		this.gclp = new GeneColorLegendPanel(rgp, this, GeneColorList, ShowOption);
 		
 		//DIRECTIONAL PANELS
 		this.pan_North = new JPanel();

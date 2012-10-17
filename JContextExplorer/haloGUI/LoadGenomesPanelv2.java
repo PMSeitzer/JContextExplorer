@@ -506,6 +506,10 @@ public class LoadGenomesPanelv2 extends JPanel
 					
 					while((Line = br.readLine()) != null){
 						
+							//initialize species name
+							String SpeciesName;
+						
+							//parse input
 							String[] ImportedLine = Line.split("\t");
 									
 							//create a new AnnotatedGenome
@@ -520,28 +524,42 @@ public class LoadGenomesPanelv2 extends JPanel
 								//reference to genome file
 								AG.setGenomeFile(new File(ImportedLine[1]));
 							
-								//Species name
-								AG.setSpecies(ImportedLine[2]);
-								//System.out.println("Species " + ImportedLine[2] + " Completed.");
+								//set species name
+								SpeciesName = ImportedLine[2];
 							
-							} else{ //first = annotation file, last = species name
+							} else if (ImportedLine.length > 1){ //first = annotation file, last = species name
 								AG.importElements(ImportedLine[0]);
-								AG.setSpecies(ImportedLine[(ImportedLine.length-1)]);
+								SpeciesName = ImportedLine[(ImportedLine.length-1)];
+								AG.setGenomeFile(new File(""));
+							} else {
+								
+								//import elements
+								AG.importElements(ImportedLine[0]);
+								
+								//retrieve species name
+								String SpeciesNameElements[] = ImportedLine[0].split("/");
+								String SpecName[] = SpeciesNameElements[SpeciesNameElements.length-1].split(".gff");
+								SpeciesName = SpecName[0];
+								
+								//genome file
 								AG.setGenomeFile(new File(""));
 							}
 							
+							//set species name
+							AG.setSpecies(SpeciesName);
+							
 							//Genus name
-							String SpeciesAndGenus[] = ImportedLine[(ImportedLine.length-1)].split("_");
+							String SpeciesAndGenus[] = SpeciesName.split("_");
 							AG.setGenus(SpeciesAndGenus[0]);
 							
 							//add Context set
 							AG.MakeSingleGeneContextSet("SingleGene");
 							
 							//add to hash map
-							Species.put(ImportedLine[(ImportedLine.length-1)], AG);
+							Species.put(SpeciesName, AG);
 							
 							//add name to array of species
-							SpeciesNames.add(ImportedLine[(ImportedLine.length-1)]);
+							SpeciesNames.add(SpeciesName);
 							
 							//update progress bar
 							OrganismsCompleted++;

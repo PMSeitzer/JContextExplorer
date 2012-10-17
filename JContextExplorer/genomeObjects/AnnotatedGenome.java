@@ -578,7 +578,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 				GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
 				GandE.setE(this.Elements.get(i)); GandE.setQueryMatch(true); LL.add(GandE);
 				int Center = (int)Math.round(0.5*(double)(GandE.getE().getStart()+GandE.getE().getStop()));
-						
+				
 				//continue adding genes until sufficient
 				//before genes
 				int BeforeQuery = Center - this.Elements.get(i).getStart(); 
@@ -595,16 +595,22 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 					GandE.setE(this.Elements.get(i-BeforeCounter));
 					GandE.setQueryMatch(false);
 					BeforeQuery = Center - GandE.getE().getStart();
+					
+					//only add elements of the appropriate type - otherwise, skip
+					if (GandE.getE().getType().equals("CDS") ||
+							GandE.getE().getType().equals("tRNA") ||
+							GandE.getE().getType().equals("rRNA")){
+						
+						//check for end of contig
+						if (CurrentContig.equals(GandE.getE().getContig())){
+							LL.add(0,GandE);
+						} else {
+							EndOfContig = true;
+						}
 							
-					//check for end of contig
-					if (CurrentContig.equals(GandE.getE().getContig())){
-						LL.add(0,GandE);
-					} else {
-						EndOfContig = true;
-					}
-							
-					} else {
-						EndOfContig = true;
+						} else {
+							EndOfContig = true;
+						}
 					}
 
 				}
@@ -624,18 +630,24 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 					GandE.setE(this.Elements.get(i+AfterCounter));
 					GandE.setQueryMatch(false);
 					AfterQuery = GandE.getE().getStop() - Center;
+					
+					//only add elements of the appropriate type - otherwise, skip
+					if (GandE.getE().getType().equals("CDS") ||
+							GandE.getE().getType().equals("tRNA") ||
+							GandE.getE().getType().equals("rRNA")){
+						
+						//check for end of contig
+						if (CurrentContig.equals(GandE.getE().getContig())){
+							LL.add(GandE);
+						} else {
+							EndOfContig = true;
+						}
 							
-					//check for end of contig
-					if (CurrentContig.equals(GandE.getE().getContig())){
-						LL.add(GandE);
-					} else {
-						EndOfContig = true;
-					}
-							
-					} else {
-						EndOfContig = true;
-					}
+						} else {
+							EndOfContig = true;
+						}
 
+					}
 				}
 						
 				//finally, add this to the hit list
@@ -689,16 +701,23 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 						
 				GandE.setE(this.Elements.get(i-BeforeCounter));
 				GandE.setQueryMatch(false);
+				
+				//only add elements of the appropriate type - otherwise, skip
+				if (GandE.getE().getType().equals("CDS") ||
+						GandE.getE().getType().equals("tRNA") ||
+						GandE.getE().getType().equals("rRNA")){
+					
+					//check for end of contig
+					if (CurrentContig.equals(GandE.getE().getContig())){
+						LL.add(GandE);
+					} else {
+						EndOfContig = true;
+					}
 						
-				//check for end of contig
-				if (CurrentContig.equals(GandE.getE().getContig())){
-					LL.add(0,GandE);
-				} else {
-					EndOfContig = true;
-				}
-						
-				} else {
-					EndOfContig = true;
+					} else {
+						EndOfContig = true;
+					}
+
 				}
 
 			}
@@ -717,15 +736,22 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 				GandE.setE(this.Elements.get(i+AfterCounter));
 				GandE.setQueryMatch(false);
 						
-				//check for end of contig
-				if (CurrentContig.equals(GandE.getE().getContig())){
-					LL.add(GandE);
-				} else {
-					EndOfContig = true;
-				}
+				//only add elements of the appropriate type - otherwise, skip
+				if (GandE.getE().getType().equals("CDS") ||
+						GandE.getE().getType().equals("tRNA") ||
+						GandE.getE().getType().equals("rRNA")){
+					
+					//check for end of contig
+					if (CurrentContig.equals(GandE.getE().getContig())){
+						LL.add(GandE);
+					} else {
+						EndOfContig = true;
+					}
 						
-				} else {
-					EndOfContig = true;
+					} else {
+						EndOfContig = true;
+					}
+
 				}
 
 			}
@@ -864,7 +890,15 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 			while (ElementNumber < StoppingE){
 				GandE = new GenomicElementAndQueryMatch();
 				GandE.setE(Elements.get(ElementNumber)); GandE.setQueryMatch(false);
-				LL.add(GandE);
+				
+				//only add elements of the appropriate type - otherwise, skip
+				if (GandE.getE().getType().equals("CDS") ||
+						GandE.getE().getType().equals("tRNA") ||
+						GandE.getE().getType().equals("rRNA")){
+	
+					LL.add(GandE);
+				}
+
 				ElementNumber++;
 			}
 			GandE = new GenomicElementAndQueryMatch();
@@ -922,7 +956,15 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 				if (E.getContig().contentEquals(Contig)){
 					GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
 					GandE.setE(E); GandE.setQueryMatch(true);
-					LL.add(GandE);
+					
+					//only add elements of the appropriate type - otherwise, skip
+					if (GandE.getE().getType().equals("CDS") ||
+							GandE.getE().getType().equals("tRNA") ||
+							GandE.getE().getType().equals("rRNA")){
+		
+						LL.add(GandE);
+					}
+					
 				}
 			}
 			

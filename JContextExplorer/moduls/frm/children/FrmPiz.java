@@ -355,7 +355,7 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 		menu.add(me4);
 		menu.add(me5);
 
-		this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
+		//this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
 	}
 
 	@Override
@@ -814,68 +814,80 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 
 	@Override
 	public void mouseClicked(MouseEvent e){
-		int x ,y ;
 		
-		x = e.getX() ;    
-		y = e.getY() ; 
-		
-		//Display coordinates
-		//String strpaint = " x = "   +  x  +   " , y = "   +  y  ;
-		//System.out.println(strpaint);
-		
-		//initialize
-		boolean[] SelectedAfterClick = new boolean[RectanglesSurroundingLabels.length];
-		Arrays.fill(SelectedAfterClick, Boolean.FALSE);
-		
-		//update with the current existing set, if appropriate
-		if (this.getSelectedNodeNumbers() != null){
-			if (e.isShiftDown() == true || e.isControlDown() == true){
-				SelectedAfterClick = this.getSelectedNodeNumbers();
-			}
-		}		
-		
-		//draw a box around the correct coordinate
-		for (int i = 0; i < RectanglesSurroundingLabels.length; i++){
-			Point p = new Point(x,-y);
-			//System.out.println(RectanglesSurroundingLabels[i].getMinX() + " and " + RectanglesSurroundingLabels[i].getMinY());
-			if (RectanglesSurroundingLabels[i].contains(p)){
-				if (e.isShiftDown() == false && e.isControlDown() == false){
-					SelectedAfterClick[i] = true; //no button
-				} else if (e.isShiftDown() == false  && e.isControlDown() == true){
-					if (SelectedAfterClick[i] == true){
-						SelectedAfterClick[i] = false;
-					} else {
-						SelectedAfterClick[i] = true;
-					}
-				} else {
-					if (LastSelectedNode != -1){
-						
-						//determine relative location of selected node to current shift+clicked node
-						if (LastSelectedNode <= i){
-							for (int j = LastSelectedNode; j<= i; j++){
-								SelectedAfterClick[j] = true;
-							}
-						} else {
-							for (int j = LastSelectedNode; j >= i; j--){
-								SelectedAfterClick[j] = true;
-							}
-						}
-						
-					} else {
-						SelectedAfterClick[i] = true; //no previous selected node
-					}
+		//left click
+		if (SwingUtilities.isLeftMouseButton(e)){
+			int x ,y ;
+			
+			x = e.getX() ;    
+			y = e.getY() ; 
+			
+			//Display coordinates
+			//String strpaint = " x = "   +  x  +   " , y = "   +  y  ;
+			//System.out.println(strpaint);
+			
+			//initialize
+			boolean[] SelectedAfterClick = new boolean[RectanglesSurroundingLabels.length];
+			Arrays.fill(SelectedAfterClick, Boolean.FALSE);
+			
+			//update with the current existing set, if appropriate
+			if (this.getSelectedNodeNumbers() != null){
+				if (e.isShiftDown() == true || e.isControlDown() == true){
+					SelectedAfterClick = this.getSelectedNodeNumbers();
 				}
-				
-				//update last selected node
-				LastSelectedNode = i;
-			} 
+			}		
+			
+			//draw a box around the correct coordinate
+			for (int i = 0; i < RectanglesSurroundingLabels.length; i++){
+				Point p = new Point(x,-y);
+				//System.out.println(RectanglesSurroundingLabels[i].getMinX() + " and " + RectanglesSurroundingLabels[i].getMinY());
+				if (RectanglesSurroundingLabels[i].contains(p)){
+					if (e.isShiftDown() == false && e.isControlDown() == false){
+						SelectedAfterClick[i] = true; //no button
+					} else if (e.isShiftDown() == false  && e.isControlDown() == true){
+						if (SelectedAfterClick[i] == true){
+							SelectedAfterClick[i] = false;
+						} else {
+							SelectedAfterClick[i] = true;
+						}
+					} else {
+						if (LastSelectedNode != -1){
+							
+							//determine relative location of selected node to current shift+clicked node
+							if (LastSelectedNode <= i){
+								for (int j = LastSelectedNode; j<= i; j++){
+									SelectedAfterClick[j] = true;
+								}
+							} else {
+								for (int j = LastSelectedNode; j >= i; j--){
+									SelectedAfterClick[j] = true;
+								}
+							}
+							
+						} else {
+							SelectedAfterClick[i] = true; //no previous selected node
+						}
+					}
+					
+					//update last selected node
+					LastSelectedNode = i;
+				} 
+			}
+			
+			//update selected node numbers
+			this.setSelectedNodeNumbers(SelectedAfterClick);
+
+			//redraw
+			repaint();
 		}
 		
-		//update selected node numbers
-		this.setSelectedNodeNumbers(SelectedAfterClick);
+		//right click
+		if (SwingUtilities.isRightMouseButton(e)){
+			//trigger pop-up menu display
+			this.menu.show(e.getComponent(),
+					e.getXOnScreen(), e.getYOnScreen());
+		}
 
-		//redraw
-		repaint();
 	}
 
 	@Override

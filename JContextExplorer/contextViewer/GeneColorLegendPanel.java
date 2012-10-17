@@ -1,5 +1,7 @@
 package contextViewer;
 
+import genomeObjects.GenomicElement;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FileDialog;
@@ -22,6 +24,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 import javax.imageio.ImageIO;
@@ -33,6 +36,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingUtilities;
 
 import org.sourceforge.jlibeps.epsgraphics.EpsGraphics2D;
 
@@ -48,6 +52,8 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 	private LinkedList<SharedHomology> GeneList;
 	private String ECronType;
 	private GeneColorLegendFrame gclf;
+	private String ItemsToShow;
+	private RenderedGenomesPanel rgp;
 	
 	//graphics display-related
 	//to determine dimensions / sizes
@@ -66,6 +72,9 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 	private int RectangleHeight = 20;
 	private int RectangleWidth = 41;
 	
+	//constant - cluster width
+	private int ClusterColumnWidth = 100;
+	
 	//font settings
 	private Font fontStandard = new Font("Dialog", Font.BOLD, 10);
 	private Font fontHeader = new Font("Dialog", Font.BOLD, 16);
@@ -76,14 +85,20 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 	private JPopupMenu ExportMenu;
 	
 	//Constructor
-	public GeneColorLegendPanel(GeneColorLegendFrame gclf, LinkedList<SharedHomology> genes){
+	public GeneColorLegendPanel(RenderedGenomesPanel rgp, GeneColorLegendFrame gclf, LinkedList<SharedHomology> genes, String ShowOption){
 		super();
 		this.addMouseListener(this);
-		
+
 		//pre-processing
+		this.rgp = rgp;
 		this.gclf = gclf;
 		this.setGeneList(genes);
 		this.ECronType = genes.get(0).getECRONType();
+		this.ItemsToShow = ShowOption;
+		
+		if (this.ItemsToShow.contentEquals("Complete")){
+			this.collectBioInfo();
+		}
 		
 		//process ready for display
 		this.computePanelDimension();
@@ -96,6 +111,45 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 	
 	// ----- pre-processing ----------------------------------//
 	
+	//collect additional information, if necessary
+	public void collectBioInfo(){
+		
+		//check cluster numbers for agreement
+		if (this.ECronType.contentEquals("annotation")){
+			for (SharedHomology SH : this.GeneList){
+				
+				//collect all annotations
+				HashSet<Integer> Clusters = new HashSet<Integer>();
+				for (GenomicElement E : SH.getMembers()){
+					Clusters.add(E.getClusterID());
+				}
+				
+				// if there was only one cluster ID among all annotations, map this annotation to the cluster.
+				if (Clusters.size() == 1){
+					SH.setClusterID(SH.getMembers().get(0).getClusterID());
+				} else {
+					SH.setClusterID(-1); //indicates a mixed case
+				}
+			}
+		} else {
+			for (SharedHomology SH : this.GeneList){
+				
+				//collect all annotations
+				HashSet<String> Clusters = new HashSet<String>();
+				for (GenomicElement E : SH.getMembers()){
+					Clusters.add(E.getAnnotation());
+				}
+				
+				// if there was only one cluster ID among all annotations, map this annotation to the cluster.
+				if (Clusters.size() == 1){
+					SH.setAnnotation(SH.getMembers().get(0).getAnnotation().toUpperCase());
+				} else {
+					SH.setAnnotation("multiple annotations exist"); //indicates a mixed case
+				}
+			}
+		}
+	}
+	
 	//determine appropriate dimension for panel, based on number of colors
 	public void computePanelDimension(){
 		
@@ -104,7 +158,18 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 		int DimTotalWidth = (int) d.getWidth() - 2*this.WidthBuffer;
 		
 		//longer width, if appropriate
-		if (this.ECronType.contentEquals("annotation")){
+		//annotation or annotation + cluster cases
+		if (this.ItemsToShow.contentEquals("Annotations")){
+			for (int i = 0; i <this.GeneList.size(); i++){
+				TextLayout label = new TextLayout(this.GeneList.get(i).getAnnotation(),fontStandard,renderContext);
+
+				//determine longest annotation, and re-do rendering
+				if ((int)label.getBounds().getWidth() > this.LongestAnnotation){
+					this.LongestAnnotation = (int)label.getBounds().getWidth();
+				}
+			}
+		
+		} else if (this.ItemsToShow.contentEquals("Complete")) {
 			for (int i = 0; i <this.GeneList.size(); i++){
 				TextLayout label = new TextLayout(this.GeneList.get(i).getAnnotation(),fontStandard,renderContext);
 
@@ -115,8 +180,13 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 			}
 		}
 		
-		if (this.LongestAnnotation + this.RectangleWidth + this.LabelSpacer +2*this.WidthBuffer> DimTotalWidth){
-			DimTotalWidth = this.LongestAnnotation + this.RectangleWidth + this.LabelSpacer + 2*this.WidthBuffer; 
+		//longsize parameter
+		int LongSize = this.LongestAnnotation + this.RectangleWidth + 
+				this.LabelSpacer + 2 * this.WidthBuffer + this.ClusterColumnWidth;
+		
+		//update the width according to longest case
+		if (LongSize > DimTotalWidth){
+			DimTotalWidth = LongSize;
 		}
 		
 		//determine height of the table area
@@ -138,9 +208,10 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 	
 	//sort colors by increasing cluster ID number or alphabetical annotations
 	public void sortColors(){
-		if (this.ECronType.contentEquals("cluster")){
+		if (this.ItemsToShow.contentEquals("Clusters") ||
+				this.ItemsToShow.contentEquals("Complete")){
 			
-			//bubble-sorting
+			//bubble-sorting by cluster ID
 			for (int i = 0; i < this.GeneList.size()-1; i++){
 				for (int j = 0; j <this.GeneList.size()-1; j++){
 					if (this.GeneList.get(j).getClusterID() > this.GeneList.get(j+1).getClusterID()){		
@@ -153,7 +224,7 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 			
 		} else {
 			
-			//bubble-sorting
+			//bubble-sorting alphabetically by annotations
 			for (int i = 0; i < this.GeneList.size()-1; i++){
 				for (int j = 0; j <this.GeneList.size()-1; j++){
 					int Comparison = this.GeneList.get(j).getAnnotation().compareTo( this.GeneList.get(j+1).getAnnotation());
@@ -170,6 +241,7 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 	
 	// ----- drawing-related ---------------------------------//
 	
+	//paint all components
 	public void paintComponent(Graphics g){
 		super.paintComponent(g);
 		
@@ -179,6 +251,7 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 		this.draftColorEntries(g2d);
 	}
 	
+	//draw labels
 	public void draftLabels(Graphics2D g2d){
 		
 		//color label
@@ -188,17 +261,25 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 		
 		//appropriate header
 		TextLayout header;
-		if (this.ECronType.contentEquals("annotation")){
+		if (this.ItemsToShow.contentEquals("Annotations")){
 			header = new TextLayout("Annotation",fontHeader,renderContext); 
-		} else {
+		} else if (this.ItemsToShow.contentEquals("Clusters")){
 			header = new TextLayout("Cluster ID",fontHeader,renderContext); 
+		} else {
+			header = new TextLayout("Cluster ID",fontHeader,renderContext);
+			TextLayout header2;
+			header2 = new TextLayout("Annotation",fontHeader,renderContext);
+			header2.draw(g2d,this.WidthBuffer + this.RectangleWidth + this.LabelSpacer +
+					this.ClusterColumnWidth, this.HeaderHeight);
 		}
 
+		//paint headers on the panel
 		header.draw(g2d, this.WidthBuffer + this.RectangleWidth + this.LabelSpacer, this.HeaderHeight);
-		
+
 		//labels
 		TextLayout label;
-		if (this.ECronType.contentEquals("annotation")){
+		
+		if (this.ItemsToShow.contentEquals("Annotations")){
 			
 			for (int i = 0; i <this.GeneList.size(); i++){
 				label = new TextLayout(this.GeneList.get(i).getAnnotation(),fontStandard,renderContext);
@@ -206,21 +287,49 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 						HeaderHeight+(LegendUnitHeight*i)+VerticalSpaceHeaderColors+LabelVerticalSpacer);
 			}
 			
-		} else {
+		} else if ((this.ItemsToShow.contentEquals("Clusters"))){
 			for (int i = 0; i <this.GeneList.size(); i++){
-			label = new TextLayout(Integer.toString(this.GeneList.get(i).getClusterID()),fontHeader,renderContext);
-			label.draw(g2d,this.WidthBuffer + this.RectangleWidth + this.LabelSpacer + (int)(header.getBounds().getWidth()/3.0),
+				
+				String ClusterNumber;
+				if (this.GeneList.get(i).getClusterID() == -1){
+					ClusterNumber = "mixed";
+				} else if (this.GeneList.get(i).getClusterID() == 0){
+					ClusterNumber = "none";
+				} else {
+					ClusterNumber = Integer.toString(this.GeneList.get(i).getClusterID());
+				}
+				
+			label = new TextLayout(ClusterNumber,fontHeader,renderContext);
+			label.draw(g2d,this.WidthBuffer + this.RectangleWidth + this.LabelSpacer,
 					HeaderHeight+(LegendUnitHeight*i)+VerticalSpaceHeaderColors+LabelVerticalSpacer);
 			}
+			
+		} else {
+			for (int i = 0; i <this.GeneList.size(); i++){
+			
+				String ClusterNumber;
+				if (this.GeneList.get(i).getClusterID() == -1){
+					ClusterNumber = "mixed";
+				} else if (this.GeneList.get(i).getClusterID() == 0){
+					ClusterNumber = "none";
+				} else {
+					ClusterNumber = Integer.toString(this.GeneList.get(i).getClusterID());
+				}
+					
+			label = new TextLayout(ClusterNumber,fontHeader,renderContext);
+			label.draw(g2d,this.WidthBuffer + this.RectangleWidth + this.LabelSpacer,
+					HeaderHeight+(LegendUnitHeight*i)+VerticalSpaceHeaderColors+LabelVerticalSpacer);
+			TextLayout label2 = new TextLayout(this.GeneList.get(i).getAnnotation(),fontStandard,renderContext);
+			label2.draw(g2d,this.WidthBuffer + this.RectangleWidth + this.LabelSpacer +
+					this.ClusterColumnWidth, HeaderHeight+(LegendUnitHeight*i)+VerticalSpaceHeaderColors+LabelVerticalSpacer);
+			}
+			
 		}
 	}
 	
+	//draw color entries
 	public void draftColorEntries(Graphics2D g2d){
-		//first, draw a big white rectangle.
-//		g2d.setColor(Color.WHITE);
-//		g2d.fillRect(this.WidthBuffer, this.HeaderHeight,
-//				this.LegendWidth, this.WholeColorMappingHeight);
-		
+
 		//print each color
 		for (int i = 0; i <this.GeneList.size(); i++){
 			g2d.setColor(this.GeneList.get(i).getColor());
@@ -360,15 +469,28 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 	
 	@Override
 	public void mouseClicked(MouseEvent e) {
+		
 		//update place clicked
 		this.PlaceClicked = e.getPoint();
 		
-		//trigger pop-up menu display
-		this.ExportMenu.show(e.getComponent(),
-				e.getXOnScreen(), e.getYOnScreen());
+		//select a set of genes / clusters in the main panel
+		if (SwingUtilities.isLeftMouseButton(e)){
+			
+		}
 		
-		//reposition appropriately
-		this.ExportMenu.setLocation(e.getXOnScreen(),e.getYOnScreen());
+		//export pop-up menu
+		if (SwingUtilities.isRightMouseButton(e)){
+
+			//trigger pop-up menu display
+			this.ExportMenu.show(e.getComponent(),
+					e.getXOnScreen(), e.getYOnScreen());
+			
+			//reposition appropriately
+			this.ExportMenu.setLocation(e.getXOnScreen(),e.getYOnScreen());
+		}
+		
+
+
 		
 	}
 

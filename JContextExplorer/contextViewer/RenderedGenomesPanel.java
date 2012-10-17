@@ -76,6 +76,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	//biological + parent info
 	private GenomicSegment[] GS; 		//Genomic segment information
 	private mainFrame mf;				//Genomes + other biological information
+	private RenderedGenomesPanel rgp;	//this;
 	private HashMap<String, LinkedList<GenomicElementAndQueryMatch>> contexts;			//Contexts
 	private HashMap<String, String> SourceSpecies;	//Species Names
 	private HashMap<String, String> SourceContigs;	//Contig Names
@@ -144,6 +145,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	public RenderedGenomesPanel(mainFrame mfr){
 		super();
 		this.mf = mfr;
+		this.rgp = this;
 		this.addMouseListener(this);
 		
 		//write in info from option panel
@@ -174,8 +176,11 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	//create the pop-up menu object
 	private void InitializeExportMenu(){
 		
+
+		
 		//create action listener
 		ActionListener exportAction = new ActionListener(){
+			
 			public void actionPerformed(final ActionEvent evt) {
 				
 				//initialize context region
@@ -204,13 +209,23 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 					}
 				
 				//create a legend frame/
-				} else if (evt.getActionCommand().equals("Show Legend")){
+				} else if (evt.getActionCommand().equals("Show Legend - Complete") ||
+						evt.getActionCommand().equals("Show Legend - Annotations") ||
+						evt.getActionCommand().equals("Show Legend - Clusters")){
 					
 					//invoke the color list, unless there are no colors to report.
 					 if (GeneColorList != null){
 						 DetermineDisplayGeneColors();
-						 //gclf = new GeneColorLegendFrame(GeneColorList);
-						 gclf  = new GeneColorLegendFrame(DisplayedGeneColorList);
+						
+						 if (evt.getActionCommand().equals("Show Legend - Complete")){
+							 gclf  = new GeneColorLegendFrame(rgp,DisplayedGeneColorList,"Complete");
+						 } else if (evt.getActionCommand().equals("Show Legend - Annotations")){
+							 gclf  = new GeneColorLegendFrame(rgp,DisplayedGeneColorList,"Annotations");
+						 } else if (evt.getActionCommand().equals("Show Legend - Clusters")){
+							 gclf  = new GeneColorLegendFrame(rgp,DisplayedGeneColorList,"Clusters");
+						 }
+						
+						 
 					 }
 				}
 			}
@@ -224,13 +239,17 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		final JMenuItem me0 = new JMenuItem("Save contexts as JPG");
 		final JMenuItem me1 = new JMenuItem("Save contexts as PNG");
 		final JMenuItem me2 = new JMenuItem("Save contexts as EPS");
-		final JMenuItem me3 = new JMenuItem("Show Legend");
+		final JMenuItem me3 = new JMenuItem("Show Legend - Complete");
+		final JMenuItem me4 = new JMenuItem("Show Legend - Annotations");
+		final JMenuItem me5 = new JMenuItem("Show Legend - Clusters");
 		
 		//add action listeners
 		me0.addActionListener(exportAction);
 		me1.addActionListener(exportAction);
 		me2.addActionListener(exportAction);
 		me3.addActionListener(exportAction);
+		me4.addActionListener(exportAction);
+		me5.addActionListener(exportAction);
 		
 		//build menu
 		ExportMenu.add(me0);
@@ -238,6 +257,8 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		ExportMenu.add(me2);
 		ExportMenu.addSeparator();
 		ExportMenu.add(me3);
+		ExportMenu.add(me4);
+		ExportMenu.add(me5);
 		
 	}
 	
@@ -699,6 +720,8 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 			
 	        //sort annotations into a linked list
 	        LinkedList<SharedHomology> AnnColorsSorted = SortAndAddColors2Ann(AnnColors);
+	        
+	        //set 
 	        this.GeneColorList = AnnColorsSorted;
 	        
 	        //add these colors back to the elements
@@ -706,7 +729,11 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	        	for (int j = 0; j < GS[i].getDg().size(); j++){
 	        		for (int k = 0; k < AnnColorsSorted.size(); k++){
 	        			if (AnnColorsSorted.get(k).getAnnotation().equals(GS[i].getDg().get(j).getBioInfo().getAnnotation().toUpperCase())){
+	        				//set color appropriately
 	        				GS[i].getDg().get(j).setColor(AnnColorsSorted.get(k).getColor());
+	        				
+	        				//add all elements to the shared homology colors for later parsing
+	        				AnnColorsSorted.get(k).getMembers().add(GS[i].getDg().get(j).getBioInfo());
 	        			}
 	        		}
 	        	}
@@ -734,7 +761,11 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	        	for (int j = 0; j < GS[i].getDg().size(); j++){
 	        		for (int k = 0; k < AnnColorsSorted.size(); k++){
 	        			if (AnnColorsSorted.get(k).getClusterID() == GS[i].getDg().get(j).getBioInfo().getClusterID()){
+	        				//set color appropriately
 	        				GS[i].getDg().get(j).setColor(AnnColorsSorted.get(k).getColor());
+	        				
+	        				//add all elements to the shared homology colors for later parsing
+	        				AnnColorsSorted.get(k).getMembers().add(GS[i].getDg().get(j).getBioInfo());
 	        			}
 	        		}
 	        	}
@@ -1341,7 +1372,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 			//close frame, and note that no frame is being displayed
 			GeneInfo.dispose();
 			GeneInformationIsBeingDisplayed = false;
-			
+		
 		} else {
 			
 			//create new frame

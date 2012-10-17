@@ -1,7 +1,10 @@
 package contextViewer;
 
+import genomeObjects.GenomicElement;
+
 import java.awt.Color;
 import java.awt.Paint;
+import java.util.LinkedList;
 
 public class SharedHomology {
 
@@ -11,7 +14,8 @@ public class SharedHomology {
 	private int ClusterID;					//cluster ID number
 	private String Annotation;				//Annotation
 	private boolean GeneGroupingMember;		//used to build the tree;
-	
+	private LinkedList<GenomicElement> Members = new LinkedList<GenomicElement>();	//Actual members (used for legend)
+
 	//color-related
 	private Integer Frequency;				//Number of matches across organisms compared
 	private Color TheColor;					//associated color
@@ -52,6 +56,15 @@ public class SharedHomology {
 	public void setColor(Color color) {
 		TheColor = color;
 	}
+	
+	public LinkedList<GenomicElement> getMembers() {
+		return Members;
+	}
+
+	public void setMembers(LinkedList<GenomicElement> members) {
+		Members = members;
+	}
+	
 	public void addColor(int EntryNumber) {
 		
 		//determine base color
