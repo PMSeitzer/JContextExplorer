@@ -1055,19 +1055,38 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		//adjust stroke
 		Stroke DefaultStroke = g.getStroke();
 		g.setStroke(new BasicStroke(6.0f));
-		
+
 		//add all genes to all backgrounds
 		if (gclp.getSelectedColors() != null){
 			for (int i = 0; i <this.GS.length; i++){
 				for (int j = 0; j <this.GS[i].getDg().size(); j++){
-					for (SharedHomology sh : gclp.getSelectedColors()){
-						for (GenomicElement E : sh.getMembers()){
-							if (GS[i].getDg().get(j).getBioInfo().equals(E)){
-								g.setPaint(Color.RED);
-								g.draw(this.GS[i].getDg().get(j).getCoordinates());
+					
+					//render original rectangle, or inverted strand
+					if (StrandNormalize == true){
+						
+						for (SharedHomology sh : gclp.getSelectedColors()){
+							for (GenomicElement E : sh.getMembers()){
+								if (GS[i].getDg().get(j).getBioInfo().equals(E)){
+									g.setPaint(Color.RED);
+									g.draw(this.GS[i].getDg().get(j).getStrRevCoordinates());
+								}
 							}
 						}
+
+						
+					} else {
+					
+						for (SharedHomology sh : gclp.getSelectedColors()){
+							for (GenomicElement E : sh.getMembers()){
+								if (GS[i].getDg().get(j).getBioInfo().equals(E)){
+									g.setPaint(Color.RED);
+									g.draw(this.GS[i].getDg().get(j).getCoordinates());
+								}
+							}
+						}
+					
 					}
+
 				}
 			}
 		}

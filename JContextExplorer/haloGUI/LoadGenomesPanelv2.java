@@ -333,7 +333,6 @@ public class LoadGenomesPanelv2 extends JPanel
 
 		} 
 
-		
 		if (evt.getSource().equals(btnClusterLoad)){
 			LoadingGenomeFiles = false;
 			LoadingGeneClusters = true;
@@ -357,6 +356,7 @@ public class LoadGenomesPanelv2 extends JPanel
 				}
 
 			} else {
+				
 				progressBarClusters.setValue(0);
 				progressBarClusters.setStringPainted(false);
 				LoadingGenomeFiles = false;
