@@ -5,6 +5,7 @@ import genomeObjects.CSDisplayData;
 import genomeObjects.GenomicElement;
 import genomeObjects.GenomicElementAndQueryMatch;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FileDialog;
@@ -18,6 +19,7 @@ import java.awt.Insets;
 import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -123,6 +125,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	private boolean GeneInformationIsBeingDisplayed = false;
 	private JFrame GeneInfo;
 	private GeneColorLegendFrame gclf;
+	private GeneColorLegendPanel gclp;
 	private int FrameMoveDown = 38;
 	private int FrameMoveRight = 20;
 	private boolean ShowAnnotation = false;
@@ -176,8 +179,6 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	//create the pop-up menu object
 	private void InitializeExportMenu(){
 		
-
-		
 		//create action listener
 		ActionListener exportAction = new ActionListener(){
 			
@@ -219,10 +220,13 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 						
 						 if (evt.getActionCommand().equals("Show Legend - Complete")){
 							 gclf  = new GeneColorLegendFrame(rgp,DisplayedGeneColorList,"Complete");
+							 gclp = gclf.getGclp();
 						 } else if (evt.getActionCommand().equals("Show Legend - Annotations")){
 							 gclf  = new GeneColorLegendFrame(rgp,DisplayedGeneColorList,"Annotations");
+							 gclp = gclf.getGclp();
 						 } else if (evt.getActionCommand().equals("Show Legend - Clusters")){
 							 gclf  = new GeneColorLegendFrame(rgp,DisplayedGeneColorList,"Clusters");
+							 gclp = gclf.getGclp();
 						 }
 						
 						 
@@ -950,6 +954,11 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		draftGenes(g2d);				//draw genes
 		draftLines(g2d); 				//draw centerline
 		draftLabels(g2d);				//draw label associated with each genomic segment
+		
+		//selected genes
+		if (this.gclp != null){
+			draftSelectedGenes(g2d);
+		}
 
 	}
 
@@ -1040,6 +1049,32 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		
 	}
 	
+	//draw genes selected in legend
+	private void draftSelectedGenes(Graphics2D g){
+		
+		//adjust stroke
+		Stroke DefaultStroke = g.getStroke();
+		g.setStroke(new BasicStroke(6.0f));
+		
+		//add all genes to all backgrounds
+		if (gclp.getSelectedColors() != null){
+			for (int i = 0; i <this.GS.length; i++){
+				for (int j = 0; j <this.GS[i].getDg().size(); j++){
+					for (SharedHomology sh : gclp.getSelectedColors()){
+						for (GenomicElement E : sh.getMembers()){
+							if (GS[i].getDg().get(j).getBioInfo().equals(E)){
+								g.setPaint(Color.RED);
+								g.draw(this.GS[i].getDg().get(j).getCoordinates());
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		//return to normal
+		g.setStroke(DefaultStroke);
+	}
 	//draw center line
 	private void draftLines(Graphics2D g2d) {
 		g2d.setColor(Color.BLACK);

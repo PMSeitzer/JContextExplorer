@@ -12,6 +12,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -24,6 +25,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 
@@ -49,12 +51,20 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 	
 	//Fields
 	//Content-related
-	private LinkedList<SharedHomology> GeneList;
+	private SharedHomology[] GeneList;
 	private String ECronType;
 	private GeneColorLegendFrame gclf;
 	private String ItemsToShow;
 	private RenderedGenomesPanel rgp;
 	
+	public RenderedGenomesPanel getRgp() {
+		return rgp;
+	}
+
+	public void setRgp(RenderedGenomesPanel rgp) {
+		this.rgp = rgp;
+	}
+
 	//graphics display-related
 	//to determine dimensions / sizes
 	private Dimension panelDim;
@@ -71,6 +81,7 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 	private int LegendWidth = (600-2*WidthBuffer);
 	private int RectangleHeight = 20;
 	private int RectangleWidth = 41;
+	private int SelectedEntryBuffer = 3;
 	
 	//constant - cluster width
 	private int ClusterColumnWidth = 100;
@@ -82,7 +93,14 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 	
 	//export menu / mouse clicked
 	private Point PlaceClicked;
+	private boolean RectangleSelected = false;
 	private JPopupMenu ExportMenu;
+
+	//clickable rectangles
+	private boolean[] SelectedRectangles;
+	private Rectangle[] Rectangles;
+	private int LastSelectedNode = -1; 
+	private LinkedList<SharedHomology> SelectedColors;
 	
 	//Constructor
 	public GeneColorLegendPanel(RenderedGenomesPanel rgp, GeneColorLegendFrame gclf, LinkedList<SharedHomology> genes, String ShowOption){
@@ -92,7 +110,14 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 		//pre-processing
 		this.rgp = rgp;
 		this.gclf = gclf;
-		this.setGeneList(genes);
+		GeneList = new SharedHomology[genes.size()];
+		for (int i = 0; i <genes.size(); i++){
+			GeneList[i] = genes.get(i);
+		}
+		this.SelectedRectangles = new boolean[genes.size()];
+		Arrays.fill(SelectedRectangles, false);
+		this.Rectangles = new Rectangle[genes.size()];
+		
 		this.ECronType = genes.get(0).getECRONType();
 		this.ItemsToShow = ShowOption;
 		
@@ -102,6 +127,7 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 		
 		//process ready for display
 		this.computePanelDimension();
+		this.computeRectangles();
 		this.sortColors();
 		
 		//prepare export menu
@@ -160,8 +186,8 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 		//longer width, if appropriate
 		//annotation or annotation + cluster cases
 		if (this.ItemsToShow.contentEquals("Annotations")){
-			for (int i = 0; i <this.GeneList.size(); i++){
-				TextLayout label = new TextLayout(this.GeneList.get(i).getAnnotation(),fontStandard,renderContext);
+			for (int i = 0; i <this.GeneList.length; i++){
+				TextLayout label = new TextLayout(this.GeneList[i].getAnnotation(),fontStandard,renderContext);
 
 				//determine longest annotation, and re-do rendering
 				if ((int)label.getBounds().getWidth() > this.LongestAnnotation){
@@ -170,8 +196,8 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 			}
 		
 		} else if (this.ItemsToShow.contentEquals("Complete")) {
-			for (int i = 0; i <this.GeneList.size(); i++){
-				TextLayout label = new TextLayout(this.GeneList.get(i).getAnnotation(),fontStandard,renderContext);
+			for (int i = 0; i <this.GeneList.length; i++){
+				TextLayout label = new TextLayout(this.GeneList[i].getAnnotation(),fontStandard,renderContext);
 
 				//determine longest annotation, and re-do rendering
 				if ((int)label.getBounds().getWidth() > this.LongestAnnotation){
@@ -191,12 +217,12 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 		
 		//determine height of the table area
 		this.WholeColorMappingHeight =
-				(this.LegendUnitHeight * this.GeneList.size());
+				(this.LegendUnitHeight * this.GeneList.length);
 				
 		//total height + width depend on other parameters
 		int DimTotalHeight = this.HeaderHeight +
 				this.VerticalUnderBuffer +
-				(this.LegendUnitHeight * this.GeneList.size());
+				(this.LegendUnitHeight * this.GeneList.length);
 		
 		//set dimension
 		this.setPanelDim(new Dimension(DimTotalWidth,DimTotalHeight));
@@ -206,18 +232,38 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 		
 	}
 	
+	//add clickable rectangles
+	public void computeRectangles(){
+		
+		//add a rectangle for each
+		for (int i = 0; i < GeneList.length; i++){
+			if (this.ItemsToShow.contentEquals("Clusters")){
+				Rectangles[i] = (new Rectangle(this.WidthBuffer - this.SelectedEntryBuffer, 
+						HeaderHeight+(LegendUnitHeight*i)+VerticalSpaceHeaderColors - this.SelectedEntryBuffer,
+						(int) (ClusterColumnWidth * 1.5),
+						RectangleHeight + 2*this.SelectedEntryBuffer));
+			} else {
+				Rectangles[i] = (new Rectangle(this.WidthBuffer - this.SelectedEntryBuffer, 
+						HeaderHeight+(LegendUnitHeight*i)+VerticalSpaceHeaderColors - this.SelectedEntryBuffer,
+						(int)this.panelDim.getWidth() - 2* this.WidthBuffer + 2*this.SelectedEntryBuffer,
+						RectangleHeight + 2*this.SelectedEntryBuffer));
+			}
+		}
+
+	}
+	
 	//sort colors by increasing cluster ID number or alphabetical annotations
 	public void sortColors(){
 		if (this.ItemsToShow.contentEquals("Clusters") ||
 				this.ItemsToShow.contentEquals("Complete")){
 			
 			//bubble-sorting by cluster ID
-			for (int i = 0; i < this.GeneList.size()-1; i++){
-				for (int j = 0; j <this.GeneList.size()-1; j++){
-					if (this.GeneList.get(j).getClusterID() > this.GeneList.get(j+1).getClusterID()){		
-						SharedHomology sh = this.GeneList.get(j);
-						this.GeneList.set(j, this.GeneList.get(j+1));
-						this.GeneList.set(j+1,sh);
+			for (int i = 0; i < this.GeneList.length-1; i++){
+				for (int j = 0; j <this.GeneList.length-1; j++){
+					if (this.GeneList[j].getClusterID() > this.GeneList[j+1].getClusterID()){		
+						SharedHomology sh = this.GeneList[j];
+						this.GeneList[j] = this.GeneList[j+1];
+						this.GeneList[j+1] = sh;
 					}
 				}
 			}
@@ -225,13 +271,13 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 		} else {
 			
 			//bubble-sorting alphabetically by annotations
-			for (int i = 0; i < this.GeneList.size()-1; i++){
-				for (int j = 0; j <this.GeneList.size()-1; j++){
-					int Comparison = this.GeneList.get(j).getAnnotation().compareTo( this.GeneList.get(j+1).getAnnotation());
+			for (int i = 0; i < this.GeneList.length-1; i++){
+				for (int j = 0; j <this.GeneList.length-1; j++){
+					int Comparison = this.GeneList[j].getAnnotation().compareTo( this.GeneList[j+1].getAnnotation());
 					if (Comparison > 0){		
-						SharedHomology sh = this.GeneList.get(j);
-						this.GeneList.set(j, this.GeneList.get(j+1));
-						this.GeneList.set(j+1,sh);
+						SharedHomology sh = this.GeneList[j];
+						this.GeneList[j] = this.GeneList[j+1];
+						this.GeneList[j+1] = sh;
 					}
 				}
 			}
@@ -249,6 +295,13 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 
 		this.draftLabels(g2d);
 		this.draftColorEntries(g2d);
+		if (this.PlaceClicked != null){
+			this.draftBoundingRectangles(g2d);
+			
+			//update parent panel
+			this.rgp.repaint();
+		}
+
 	}
 	
 	//draw labels
@@ -281,22 +334,22 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 		
 		if (this.ItemsToShow.contentEquals("Annotations")){
 			
-			for (int i = 0; i <this.GeneList.size(); i++){
-				label = new TextLayout(this.GeneList.get(i).getAnnotation(),fontStandard,renderContext);
+			for (int i = 0; i <this.GeneList.length; i++){
+				label = new TextLayout(this.GeneList[i].getAnnotation(),fontStandard,renderContext);
 				label.draw(g2d,this.WidthBuffer + this.RectangleWidth + this.LabelSpacer,
 						HeaderHeight+(LegendUnitHeight*i)+VerticalSpaceHeaderColors+LabelVerticalSpacer);
 			}
 			
 		} else if ((this.ItemsToShow.contentEquals("Clusters"))){
-			for (int i = 0; i <this.GeneList.size(); i++){
+			for (int i = 0; i <this.GeneList.length; i++){
 				
 				String ClusterNumber;
-				if (this.GeneList.get(i).getClusterID() == -1){
+				if (this.GeneList[i].getClusterID() == -1){
 					ClusterNumber = "mixed";
-				} else if (this.GeneList.get(i).getClusterID() == 0){
+				} else if (this.GeneList[i].getClusterID() == 0){
 					ClusterNumber = "none";
 				} else {
-					ClusterNumber = Integer.toString(this.GeneList.get(i).getClusterID());
+					ClusterNumber = Integer.toString(this.GeneList[i].getClusterID());
 				}
 				
 			label = new TextLayout(ClusterNumber,fontHeader,renderContext);
@@ -305,21 +358,21 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 			}
 			
 		} else {
-			for (int i = 0; i <this.GeneList.size(); i++){
+			for (int i = 0; i <this.GeneList.length; i++){
 			
 				String ClusterNumber;
-				if (this.GeneList.get(i).getClusterID() == -1){
+				if (this.GeneList[i].getClusterID() == -1){
 					ClusterNumber = "mixed";
-				} else if (this.GeneList.get(i).getClusterID() == 0){
+				} else if (this.GeneList[i].getClusterID() == 0){
 					ClusterNumber = "none";
 				} else {
-					ClusterNumber = Integer.toString(this.GeneList.get(i).getClusterID());
+					ClusterNumber = Integer.toString(this.GeneList[i].getClusterID());
 				}
 					
 			label = new TextLayout(ClusterNumber,fontHeader,renderContext);
 			label.draw(g2d,this.WidthBuffer + this.RectangleWidth + this.LabelSpacer,
 					HeaderHeight+(LegendUnitHeight*i)+VerticalSpaceHeaderColors+LabelVerticalSpacer);
-			TextLayout label2 = new TextLayout(this.GeneList.get(i).getAnnotation(),fontStandard,renderContext);
+			TextLayout label2 = new TextLayout(this.GeneList[i].getAnnotation(),fontStandard,renderContext);
 			label2.draw(g2d,this.WidthBuffer + this.RectangleWidth + this.LabelSpacer +
 					this.ClusterColumnWidth, HeaderHeight+(LegendUnitHeight*i)+VerticalSpaceHeaderColors+LabelVerticalSpacer);
 			}
@@ -331,8 +384,8 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 	public void draftColorEntries(Graphics2D g2d){
 
 		//print each color
-		for (int i = 0; i <this.GeneList.size(); i++){
-			g2d.setColor(this.GeneList.get(i).getColor());
+		for (int i = 0; i <this.GeneList.length; i++){
+			g2d.setColor(this.GeneList[i].getColor());
 			g2d.fillRect(WidthBuffer,HeaderHeight+(LegendUnitHeight*i)+VerticalSpaceHeaderColors, RectangleWidth, RectangleHeight);
 			g2d.setColor(Color.BLACK);
 			g2d.drawRect(WidthBuffer,HeaderHeight+(LegendUnitHeight*i)+VerticalSpaceHeaderColors, RectangleWidth, RectangleHeight);
@@ -342,6 +395,18 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 	// ----- export menu-related ---------------------------------//
 	
 	//create the pop-up menu object
+	
+	public void draftBoundingRectangles(Graphics2D g2d){
+		g2d.setColor(Color.RED);
+		//paint appropriate nodenumbers
+		for (int i = 0; i < SelectedRectangles.length; i++) {
+			if (SelectedRectangles[i] == true){
+				g2d.draw(Rectangles[i]);
+			} 
+		}
+		g2d.setColor(Color.BLACK);
+	}
+	
 	private void InitializeExportMenu(){
 		
 		//create action listener
@@ -465,6 +530,7 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 		}
 		
 	
+	//mouse click methods
 	// ----- mouse-click related -----------------------------//
 	
 	@Override
@@ -475,6 +541,69 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 		
 		//select a set of genes / clusters in the main panel
 		if (SwingUtilities.isLeftMouseButton(e)){
+			
+			//initialize
+			boolean[] SelectedAfterClick = new boolean[SelectedRectangles.length];
+			Arrays.fill(SelectedAfterClick, Boolean.FALSE);
+			
+			//reset selected color list appropriately.
+			SelectedColors = new LinkedList<SharedHomology>();
+			
+			//update with the current existing set, if appropriate
+			if (SelectedRectangles != null){
+				if (e.isShiftDown() == true || e.isControlDown() == true){
+					SelectedAfterClick = SelectedRectangles;
+				}
+			}		
+			
+			//draw a box around the correct coordinate
+			for (int i = 0; i < this.Rectangles.length; i++){
+				//System.out.println(RectanglesSurroundingLabels[i].getMinX() + " and " + RectanglesSurroundingLabels[i].getMinY());
+				if (Rectangles[i].contains(PlaceClicked)){
+					if (e.isShiftDown() == false && e.isControlDown() == false){
+						SelectedAfterClick[i] = true; //no button
+					} else if (e.isShiftDown() == false  && e.isControlDown() == true){
+						if (SelectedAfterClick[i] == true){
+							SelectedAfterClick[i] = false;
+						} else {
+							SelectedAfterClick[i] = true;
+						}
+					} else {
+						if (LastSelectedNode != -1){
+							
+							//determine relative location of selected node to current shift+clicked node
+							if (LastSelectedNode <= i){
+								for (int j = LastSelectedNode; j<= i; j++){
+									SelectedAfterClick[j] = true;
+								}
+							} else {
+								for (int j = LastSelectedNode; j >= i; j--){
+									SelectedAfterClick[j] = true;
+								}
+							}
+							
+						} else {
+							SelectedAfterClick[i] = true; //no previous selected node
+						}
+					}
+					
+					//update
+					SelectedRectangles = SelectedAfterClick;
+					
+					//update last selected node
+					LastSelectedNode = i;
+				} 
+			}
+
+			//update list
+			for (int i = 0; i <SelectedRectangles.length; i++){
+				if (SelectedRectangles[i]){
+					SelectedColors.add(GeneList[i]);
+				}
+			}
+			
+			//redraw
+			repaint();
 			
 		}
 		
@@ -488,10 +617,7 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 			//reposition appropriately
 			this.ExportMenu.setLocation(e.getXOnScreen(),e.getYOnScreen());
 		}
-		
 
-
-		
 	}
 
 	@Override
@@ -521,11 +647,11 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 
 	// ----- getters + setters --------------------------------//
 	
-	public LinkedList<SharedHomology> getGeneList() {
+	public SharedHomology[] getGeneList() {
 		return GeneList;
 	}
 
-	public void setGeneList(LinkedList<SharedHomology> geneList) {
+	public void setGeneList(SharedHomology[] geneList) {
 		GeneList = geneList;
 	}
 	
@@ -537,6 +663,14 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 	
 	public void setPanelDim(Dimension panelDim) {
 		this.panelDim = panelDim;
+	}
+
+	public LinkedList<SharedHomology> getSelectedColors() {
+		return SelectedColors;
+	}
+
+	public void setSelectedColors(LinkedList<SharedHomology> selectedColors) {
+		SelectedColors = selectedColors;
 	}
 
 }

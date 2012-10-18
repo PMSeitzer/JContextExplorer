@@ -5,6 +5,9 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.util.LinkedList;
 
 import javax.swing.JFrame;
@@ -64,15 +67,32 @@ public class GeneColorLegendFrame extends JFrame implements ComponentListener{
 		JFrame.setDefaultLookAndFeelDecorated(false);
 		this.setSize(dim);
 		this.setVisible(true);
-		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		this.setLocationRelativeTo(null);
 		this.setResizable(true);
+		
+		//CUSTOM CLOSE OPERATION - CLOSE SUB FRAMES
+		WindowListener DeSelectGenes = new WindowAdapter(){
+			public void windowClosing(WindowEvent e){
+				
+				//deselect all selected genes.
+				if (gclp.getSelectedColors() != null){
+					gclp.setSelectedColors(null);
+					gclp.getRgp().repaint();
+				}
+				
+				e.getWindow().dispose();
+			}
+		};
+		
+		this.addWindowListener(DeSelectGenes);
 		
 		//add directionality panels
 		this.add(pan_North, BorderLayout.NORTH);
 
 	}
 
+	//new close operation
 	
 	// ----- setters + getters -------------------------------------//
 	
@@ -108,5 +128,14 @@ public class GeneColorLegendFrame extends JFrame implements ComponentListener{
 	public void componentShown(ComponentEvent arg0) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	//gclp information
+	public GeneColorLegendPanel getGclp() {
+		return gclp;
+	}
+
+	public void setGclp(GeneColorLegendPanel gclp) {
+		this.gclp = gclp;
 	}
 }
