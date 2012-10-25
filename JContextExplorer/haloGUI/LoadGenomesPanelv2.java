@@ -333,16 +333,18 @@ public class LoadGenomesPanelv2 extends JPanel
 
 		} 
 
+		//load clusters file
 		if (evt.getSource().equals(btnClusterLoad)){
 			LoadingGenomeFiles = false;
 			LoadingGeneClusters = true;
-			
-			String clusterfileName = null;
+					
+			String clusterfileName;// = null;
 			if (GenomeWorkingSetLoaded == true){
 				clusterfileName = getClustersFile();
 			} else {
 				JOptionPane.showMessageDialog(null, "You must load a genomic working set before loading pre-computed gene clusters.",
 						"No Valid Genomic Working Set Loaded", JOptionPane.ERROR_MESSAGE);
+				clusterfileName = null;
 			}
 			
 			if (clusterfileName != null){
@@ -459,8 +461,11 @@ public class LoadGenomesPanelv2 extends JPanel
 		//String GenomeWorkingSetFile =  fd.getFile();
 		if (fd.getFile() == null) {
 			GenomeWorkingSetFile = null;
-		} 
-		return ClustersFile; //file name
+			return null;
+		} else {
+			return ClustersFile; //file name
+		}
+
 	}	
 	
 	//Perform File Loading + Operon computation tasks

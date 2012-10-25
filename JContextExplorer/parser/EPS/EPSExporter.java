@@ -58,7 +58,10 @@ public class EPSExporter {
 		EPSWriter.writeComments("David Torres Martin, Justo Montiel Borrull",
 				"Portrait");
 		//EPSWriter.writeProlog("./ini/PSprolog.txt");
-		EPSWriter.writeProlog("./resources/PSprolog.txt");
+		//EPSWriter.writeProlog("./resources/PSprolog.txt");
+		//EPSWriter.writeProlog("/resources/PSprolog.txt");
+		
+		EPSWriter.writePrologManual();
 		this.writeBody();
 		EPSWriter.writeEnd();
 		EPSWriter.close();
