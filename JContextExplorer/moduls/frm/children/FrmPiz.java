@@ -169,27 +169,7 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 	private int PivotY;
 	
 	private CSDisplayData CSD;
-	
-	// ----- Internal classes -----------------------------------------//
-	
-	static class moveselectionup extends AbstractAction{
-
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-//			if (SelectedNodeNumber != -1){
-//				if (SelectedNodeNumber > 0){
-//					SelectedNodeNumber--;
-//					System.out.println("Recognizing keyboard");
-//				}
-//			}
-			
-			System.out.println("Space key pressed.");
-		}
 		
-	}
-	
 	// ----- Methods -----------------------------------------------//
 
 	//constructor
@@ -279,6 +259,7 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 					try {
 						frm.savePostSript(frmpiz);
 					} catch (Exception e) {
+						System.out.println("Exception 262 FrmPiz");
 						errMsg = Language.getLabel(81);
 //						FesLog.LOG
 //								.throwing("FrmPiz", "initComponentsMenu()", e);

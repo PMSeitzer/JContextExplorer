@@ -42,7 +42,7 @@ public class EPSExporter {
 	private final int ymax;
 
 	public EPSExporter(Config cfg, FrmPiz frmp, String path) {
-
+		
 		this.xmin = 72;
 		this.ymin = 72;
 		this.xmax = frmp.getWidth() + 72;
@@ -55,9 +55,10 @@ public class EPSExporter {
 
 	public void writeEPS(String eps_path) {
 		EPSWriter.open(eps_path);
-		EPSWriter.writeComments("David Torres Mart�n, Justo Montiel Borrull",
+		EPSWriter.writeComments("David Torres Martin, Justo Montiel Borrull",
 				"Portrait");
-		EPSWriter.writeProlog("./ini/PSprolog.txt");
+		//EPSWriter.writeProlog("./ini/PSprolog.txt");
+		EPSWriter.writeProlog("./resources/PSprolog.txt");
 		this.writeBody();
 		EPSWriter.writeEnd();
 		EPSWriter.close();
@@ -68,7 +69,7 @@ public class EPSExporter {
 		EPSWriter.writeLine("%%Page: 1 1");
 		EPSWriter.writeLine(EPSWriter.setLineWidth(1.0f));
 		EPSWriter.writeLine("[] 0 setdash");
-		piz.dibuixa(); // Dibuixem la imatge
+		piz.dibuixa(); // Draw the image
 	}
 
 }

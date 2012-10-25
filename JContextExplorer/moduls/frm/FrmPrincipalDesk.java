@@ -288,6 +288,7 @@ public class FrmPrincipalDesk extends JFrame{
 
 //				FesLog.LOG.info("Imatge EPS emmagatzemada amb exit");
 			} catch (Exception e) {
+				System.out.println("Exception 291 FrmPrincipalDesk");
 				String msg_err = Language.getLabel(77);
 //				FesLog.LOG.throwing("FrmPrincipalDesk",
 //						"savePostScript(final BufferedImage buff)", e);

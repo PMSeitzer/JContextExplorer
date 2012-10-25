@@ -64,10 +64,12 @@ public class EPSWriter {
 			eps_fw = new FileWriter(EPSFileName);
 			eps_bw = new BufferedWriter(eps_fw);
 		} catch (FileNotFoundException e) {
+			System.out.println("EPSWriter 67");
 			String msg = Language.getLabel(106);
 			JOptionPane.showMessageDialog(null, msg, "Error",
 					JOptionPane.ERROR_MESSAGE);
 		} catch (IOException e) {
+			System.out.println("EPSWriter 73");
 			String msg = Language.getLabel(107);
 			JOptionPane.showMessageDialog(null, msg, "Error",
 					JOptionPane.ERROR_MESSAGE);
@@ -78,6 +80,7 @@ public class EPSWriter {
 		try {
 			eps_bw.close();
 		} catch (IOException e) {
+			System.out.println("EPSWriter 82");
 			String msg = Language.getLabel(108) + EPSFileName;
 			JOptionPane.showMessageDialog(null, msg, "Error",
 					JOptionPane.ERROR_MESSAGE);
@@ -115,6 +118,9 @@ public class EPSWriter {
 
 	public static void writeProlog(String prolog_path) {
 		try {
+			
+			System.out.println("prolog path is " + prolog_path);
+			
 			FileReader prolog_fr = new FileReader(prolog_path);
 			BufferedReader prolog_bf = new BufferedReader(prolog_fr);
 
@@ -124,6 +130,7 @@ public class EPSWriter {
 
 			prolog_bf.close();
 		} catch (IOException e) {
+			System.out.println("EPSWriter 131");
 			String msg = Language.getLabel(109) + EPSFileName;
 			JOptionPane.showMessageDialog(null, msg, "Error",
 					JOptionPane.ERROR_MESSAGE);
@@ -141,6 +148,7 @@ public class EPSWriter {
 		try {
 			eps_bw.write(line + "\n");
 		} catch (IOException e) {
+			System.out.println("EPSWriter 149");
 			String msg = Language.getLabel(108) + EPSFileName;
 			JOptionPane.showMessageDialog(null, msg, "Error",
 					JOptionPane.ERROR_MESSAGE);
