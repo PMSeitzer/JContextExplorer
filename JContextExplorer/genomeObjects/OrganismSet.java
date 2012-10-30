@@ -176,7 +176,7 @@ public class OrganismSet {
 	//----------------------- Extended CRON computation ---------------//
 	
 	//annotation search
-	public DadesExternes AnnotationSearch(String[] Queries, String ContextSetName, String DissimilarityMethod) throws Exception{
+	public DadesExternes AnnotationSearch(String[] Queries, String ContextSetName, String DissimilarityMethod, String Name) throws Exception{
 			
 		ContextSetDescription CurrentCSD = null;
 		
@@ -192,9 +192,10 @@ public class OrganismSet {
 		ExtendedCRON EC = new ExtendedCRON();
 		
 		//set name and type of CRON.
-		EC.setName(Queries[0]);
+		EC.setName(Name);
 		EC.setContextSetName(ContextSetName);
 		EC.setSearchType("annotation");
+		EC.setQueries(Queries);
 		
 		//initialize output
 		//actual context mapping
@@ -287,7 +288,7 @@ public class OrganismSet {
 	}
 
 	//cluster number search
-	public DadesExternes ClusterSearch(int[] ClusterNumber, String ContextSetName, String DissimilarityMethod) throws Exception{
+	public DadesExternes ClusterSearch(int[] ClusterNumber, String ContextSetName, String DissimilarityMethod, String Name) throws Exception{
 				
 		ContextSetDescription CurrentCSD = null;
 		
@@ -303,10 +304,11 @@ public class OrganismSet {
 		ExtendedCRON EC = new ExtendedCRON();
 		
 		//set name and type of CRON.
-		EC.setName("Cluster " + Integer.toString(ClusterNumber[0]));
+		EC.setName("Clusters " + Name);
 		EC.setContextSetName(ContextSetName);
 		EC.setSearchType("cluster");
 		EC.setContextType(CurrentCSD.getType());
+		EC.setClusterNumbers(ClusterNumber);
 		
 		//initialize output
 		LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> ContextSetList = 

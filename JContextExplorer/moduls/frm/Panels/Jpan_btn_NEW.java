@@ -518,13 +518,6 @@ import definicions.MatriuDistancies;
 					} else {
 						currentQuery ="Search Query: Cluster(s) " + searchField.getText();
 					}
-//					else {
-//						if (isInteger(searchField.getText())){
-//							currentQuery = "Cluster " + searchField.getText();
-//						} else {
-//							showError("Cluster number must be an integer or contain.");
-//						}
-//					}
 				
 					action = "Load";
 					buttonClicked = true;
@@ -535,6 +528,9 @@ import definicions.MatriuDistancies;
 				}
 				
 			} else if (evt.getActionCommand().equals(strUpdate)) {
+				
+				//set wait cursor
+				fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				
 				// UPDATE
 				buttonClicked = true;
@@ -562,15 +558,9 @@ import definicions.MatriuDistancies;
 				try {
 					
 					//DATA SOURCE
-					fitx = new FitxerDades();
-//					fitx.setNom("LargeMatrix.txt");
-//					fitx.setPath("C:/Research/ECRON_lists/");	
+					fitx = new FitxerDades();	
 					fitx.setNom("");
 					fitx.setPath("");
-					
-//					de = new DadesExternes(fitx);
-					
-					//System.out.println("Before calling OS searches");
 					
 					//parse into candidates
 					String[] Queries = searchField.getText().split(";");
@@ -604,10 +594,14 @@ import definicions.MatriuDistancies;
 						
 						if (this.ProceedWithSearch == true){
 						
+						//set wait cursor
+						fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+							
 						//get DE from annotation search
 						de = OS.AnnotationSearch(Queries,
 								contextSetMenu.getSelectedItem().toString(),
-								Jpan_Menu.getCbDissimilarity().getSelectedItem().toString());
+								Jpan_Menu.getCbDissimilarity().getSelectedItem().toString(),
+								searchField.getText());
 						
 						}
 						//System.out.println("Got to the de.");
@@ -624,9 +618,13 @@ import definicions.MatriuDistancies;
 							NumQueries[i] = NumQueriesList.get(i);
 						}
 						
+						//set wait cursor
+						fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+						
 						de = OS.ClusterSearch(NumQueries,
 								contextSetMenu.getSelectedItem().toString(),
-								Jpan_Menu.getCbDissimilarity().getSelectedItem().toString());
+								Jpan_Menu.getCbDissimilarity().getSelectedItem().toString(),
+								searchField.getText());
 						//System.out.println("Got to the de.");
 					}
 						

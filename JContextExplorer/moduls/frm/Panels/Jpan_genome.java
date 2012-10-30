@@ -89,7 +89,7 @@ public class Jpan_genome extends JPanel implements ActionListener,
 	private void getPanel() {
 		//initialize panel
 		this.setLayout(new GridBagLayout());
-		this.setBorder(BorderFactory.createTitledBorder("Genomic Segment Viewer Tool"));
+		this.setBorder(BorderFactory.createTitledBorder("Multiple Genome Browser Tool"));
 		final GridBagConstraints c = new GridBagConstraints();
 		int gridx = 0;
 		
@@ -325,21 +325,23 @@ public class Jpan_genome extends JPanel implements ActionListener,
 			HashMap<String, LinkedList<GenomicElementAndQueryMatch>> ContextEntries = fr.getCurrentFrame().getInternalPanel().getCSD().getEC().getContexts();
 			
 			//initialize strings
-			String DisplaytoScreen = "";
 			String[] Headers = new String[CSD.getSelectedNodes().length];
 			String[] Annotations = new String[CSD.getSelectedNodes().length];
-			
+
 			JTextArea textArea = new JTextArea(20, 80);
 		    textArea.setEditable(false);	
  
 		    int NodeCounter = 0;
-		    
+		    boolean NodeSelected = false;
 			//determine EC from selected
 			for (int i = 0; i < CSD.getSelectedNodes().length; i++){
 				if (CSD.getSelectedNodes()[i] == true){
 					
 					//increment counter
 					NodeCounter++;
+					
+					//determine if node already selected
+					NodeSelected = false;
 					
 					//isolate node name
 					String NodeName = CSD.getNodeNames()[i];
@@ -350,23 +352,28 @@ public class Jpan_genome extends JPanel implements ActionListener,
 					//check for cluster number or annotation query
 					for (int j = 0; j < LL.size(); j++){
 						if (CSD.getEC().getSearchType().equals("annotation")){
-							if (LL.get(j).getE().getAnnotation().toUpperCase().contains(CSD.getEC().getName().toUpperCase())){
-
-								//write to array
-								Headers[i] = NodeName + ": ";
-								Annotations[i] = LL.get(j).getE().getAnnotation() + "\n";
-								
+							if (NodeSelected == false){
+								for (int k = 0; k < CSD.getEC().getQueries().length; k++){
+									if (LL.get(j).getE().getAnnotation().toUpperCase().contains(CSD.getEC().getQueries()[k].toUpperCase().trim())){
+										
+										//write to array
+										Headers[i] = NodeName + ": ";
+										Annotations[i] = LL.get(j).getE().getAnnotation() + "\n";
+										NodeSelected = true;
+									}
+								}
 							}
 						} else if (CSD.getEC().getSearchType().equals("cluster")){
-							
-							String TheName[] = new String[2];
-							TheName = CSD.getEC().getName().split(" ");
-							if (LL.get(j).getE().getClusterID() == Integer.parseInt(TheName[1])){
-								
-								//write to array
-								Headers[i] = NodeName + ": ";
-								Annotations[i] = LL.get(j).getE().getAnnotation() + "\n";
-								
+							if (NodeSelected == false){
+								for (int k = 0; k < CSD.getEC().getClusterNumbers().length; k++){
+									if (LL.get(j).getE().getClusterID() == CSD.getEC().getClusterNumbers()[k]){
+										
+										//write to array
+										Headers[i] = NodeName + ": ";
+										Annotations[i] = LL.get(j).getE().getAnnotation() + "\n";
+										NodeSelected = true;
+									}
+								}
 							}
 						}
 						

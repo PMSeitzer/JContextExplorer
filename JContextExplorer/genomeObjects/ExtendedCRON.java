@@ -33,6 +33,8 @@ public class ExtendedCRON {
 	private int NumberOfEntries = 0;
 	private LinkedList<String> Dissimilarities;
 	private String DissimilarityType;
+	private String[] Queries;
+	private int[] ClusterNumbers;
 	
 	// this linked list relates elements returned by Keys() in this way:
 	//(0,1), (0,2) , ... , (0,n), (1,2), (1,3), ... (1,n), (2,3), (2,4), ... (n-1,n)	
@@ -291,6 +293,22 @@ public class ExtendedCRON {
 
 	public void setContextType(String contextType) {
 		ContextType = contextType;
+	}
+
+	public String[] getQueries() {
+		return Queries;
+	}
+
+	public void setQueries(String[] queries) {
+		Queries = queries;
+	}
+
+	public int[] getClusterNumbers() {
+		return ClusterNumbers;
+	}
+
+	public void setClusterNumbers(int[] clusterNumbers) {
+		ClusterNumbers = clusterNumbers;
 	}
 
 }

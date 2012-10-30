@@ -540,7 +540,6 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
-		add(lblNodesOrientation, c);
 		// cb nodes orientation
 		c.gridx = 1;
 		c.gridy = gridy;
@@ -548,8 +547,11 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
-		add(cbNodesOrientation, c);
-		gridy++;
+		
+		//edits - no longer offer these options to the panel
+//		add(lblNodesOrientation, c);
+//		add(cbNodesOrientation, c);
+//		gridy++;
 
 		// empty space
 		c.gridx = 0;
