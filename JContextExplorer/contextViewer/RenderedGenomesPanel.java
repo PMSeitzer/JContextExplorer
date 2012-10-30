@@ -85,7 +85,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	private String ECRONType; 			//Either "annotation" or "cluster"
 	
 	//Range-limited related
-	private int RangeLimit = 100000;				//Do not display a genomic region of 50,000 nt or more
+	private int RangeLimit = 100000;				//Do not display a genomic region of this or more
 	private LinkedList<String> ExceededRangeLimit;	//nodes that are excluded
 	private boolean ContextsExcluded = false; 		//initially, none are excluded
 	
@@ -261,9 +261,12 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		ExportMenu.add(me2);
 		ExportMenu.addSeparator();
 		ExportMenu.add(me3);
-		ExportMenu.add(me4);
-		ExportMenu.add(me5);
-		
+		if (this.ECRONType.contentEquals("annotation")){
+			ExportMenu.add(me4);
+		} else {
+			ExportMenu.add(me5);
+		}
+
 	}
 	
 	//determine displayed gene colors
@@ -477,7 +480,6 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 					GSelement.setStartAfterBuffer(Stop);
 					GSelement.setCenterofCS((int) Math.round((double)(0.5*(Start+Stop))));
 					
-
 					//bounding rectangle
 					Rectangle2D rect = 
 							new Rectangle((int) (DimTotalWidth*GSStartFromLeft), 

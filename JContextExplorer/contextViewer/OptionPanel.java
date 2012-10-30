@@ -59,9 +59,9 @@ public class OptionPanel extends JPanel implements ActionListener{
 	
 	//re-draw genomic segments
 	private String strbeforeRange = "Before: ";
-	private String strbeforeRangeValue = "1000";
+	private String strbeforeRangeValue = "2000";
 	private String strafterRange = "After: ";
-	private String strafterRangeValue = "1000";
+	private String strafterRangeValue = "2000";
 	private String strnt = "nt";	
 	
 	//font

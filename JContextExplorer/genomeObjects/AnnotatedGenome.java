@@ -572,7 +572,18 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 		
 			//if it is, extract the appropriate range
 			if (QueryMatch){
-						
+				
+//				//debugging: display species name
+//				System.out.println("Organism: " + this.Species + ", Coordinates: "
+//						+ this.Elements.get(i).getStart() + " " + this.Elements.get(i).getStop());
+//				
+//				//zero in on trouble case
+//				if (this.Elements.get(i).getStart() == 78350 &&
+//						this.Elements.get(i).getStop() == 78910 &&
+//						this.Species.contentEquals("Natronococcus_jeotagli")){
+//					System.out.println("Breakpoint!");
+//				}
+				
 				//define a new GenomicElementAndQueryMatch
 				LinkedList<GenomicElementAndQueryMatch> LL = new LinkedList<GenomicElementAndQueryMatch>();
 				GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
@@ -590,7 +601,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 					GandE = new GenomicElementAndQueryMatch();
 							
 					//first element in file
-					if (i-BeforeCounter > 0) {
+					if (i-BeforeCounter >= 0) {
 							
 					GandE.setE(this.Elements.get(i-BeforeCounter));
 					GandE.setQueryMatch(false);
@@ -611,6 +622,8 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 						} else {
 							EndOfContig = true;
 						}
+					} else {
+						EndOfContig = true;
 					}
 
 				}
@@ -647,9 +660,17 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 							EndOfContig = true;
 						}
 
+					} else {
+						EndOfContig = true;
 					}
 				}
 						
+//				if (this.Elements.get(i).getStart() == 78350 &&
+//						this.Elements.get(i).getStop() == 78910 &&
+//						this.Species.contentEquals("Natronococcus_jeotagli")){
+//					System.out.println("Past while loop.");
+//				}
+
 				//finally, add this to the hit list
 				Hits.add(LL);
 						
