@@ -279,6 +279,10 @@ public class LoadGenomesPanelv2 extends JPanel
 	@Override
 	public void actionPerformed(ActionEvent evt) {
 		
+		if (evt.getSource().equals(btnLoad)){
+			GFFChecker gffc = new GFFChecker(this);
+		}
+		
 		//load genome files
 		if (evt.getSource().equals(btnLoad)) {
 			//set switches to appropriate state

@@ -22,10 +22,12 @@ public class OrganismSet {
 	//fields
 	private LinkedHashMap<String, AnnotatedGenome> Species;		//-Species-information--------
 	private LinkedList<String> SpeciesNames;					//-Species-Names--------------
-	private LinkedList<ContextSetDescription> CSDs;							//-Info-about-Context-Sets----
+	private LinkedList<ContextSetDescription> CSDs;				//-Info-about-Context-Sets----
 	private boolean GeneClustersLoaded = false;					//-Gene-Clusters--------------
 	public int LargestCluster = 0;
 	private boolean ContinueImportingOperons = true;			
+	private LinkedList<String> IncludeTypes;					//-Types of data worth importing/processing
+	private LinkedList<String> DisplayOnlyTypes;
 	
 	// ----------------------- Construction ------------------------//
 	 	
@@ -436,6 +438,22 @@ public class OrganismSet {
 
 	public void setContinueImportingOperons(boolean continueImportingOperons) {
 		ContinueImportingOperons = continueImportingOperons;
+	}
+
+	public LinkedList<String> getIncludeTypes() {
+		return IncludeTypes;
+	}
+
+	public void setIncludeTypes(LinkedList<String> includeTypes) {
+		IncludeTypes = includeTypes;
+	}
+
+	public LinkedList<String> getDisplayOnlyTypes() {
+		return DisplayOnlyTypes;
+	}
+
+	public void setDisplayOnlyTypes(LinkedList<String> displayOnlyTypes) {
+		DisplayOnlyTypes = displayOnlyTypes;
 	}
 
 } //completes classbody
