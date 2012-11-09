@@ -11,6 +11,11 @@ import inicial.Dendrograma;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
+import javax.swing.text.StyledDocument;
 
 import contextViewer.DrawGenes;
 
@@ -33,7 +38,7 @@ import java.util.Iterator;
 import java.awt.Window;
 
 @SuppressWarnings("serial")
-public class LoadGenomesPanelv2 extends JPanel 
+public class LoadGenomesPanelv2 extends JLayeredPane 
 	implements ActionListener, PropertyChangeListener{
 	
 	//parent
@@ -45,13 +50,17 @@ public class LoadGenomesPanelv2 extends JPanel
 	private JProgressBar progressBar, progressBarClusters;
 	private JButton btnLoad, btnClusterLoad, btnSubmit;
 	private JTextField GenomeWorkingSetFileName, ClusterFileName;
-	private String strGWS = " GENOMIC WORKING SET (REQUIRED)";
-	private String strHC = " HOMOLOGOUS GENE CLUSTERS (OPTIONAL)";
+	private String strGWS = " Genomic Working Set (required)";
+	private String strHC = " Homologous Gene Clusters (optional)";
 	private String strLoad = "Load";
 	private String clusterLoad = "Load";
 	private String strNoFileLoaded = "No file currently loaded.";
 	//private String strCancelled = "The operation was cancelled.";
 	private String strCancelled = strNoFileLoaded;
+	private JButton LoadInfo, ClusterInfo;
+	private Font HeaderFont = new Font("Arial", 1, 13);
+	private int HeaderPadding = 11;
+	private String strInfo = "???";
 	
 	//Switches to determine operations able to be performed
 	private boolean LoadingGenomeFiles = false;
@@ -85,6 +94,8 @@ public class LoadGenomesPanelv2 extends JPanel
 	private JLabel d1, d2, d3, d4, d5;
 
 	private File[] GenomeFiles;
+	
+	//----- Building this frame ----------------------------------//
 	
 	//constructor
 	public LoadGenomesPanelv2 (StartFrame startframe) {
@@ -163,10 +174,24 @@ public class LoadGenomesPanelv2 extends JPanel
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 5;
+		c.ipady = HeaderPadding;
 		Genomes = new JLabel(strGWS);
 		Genomes.setBackground(Color.LIGHT_GRAY);
 		Genomes.setOpaque(true);
+		Genomes.setFont(HeaderFont);
 		add(Genomes, c);
+	
+		c.anchor = GridBagConstraints.FIRST_LINE_END;
+		c.gridx = 4;
+		c.ipady = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.fill = GridBagConstraints.REMAINDER;
+		LoadInfo = new JButton(strInfo);
+		LoadInfo.addActionListener(this);
+		add(LoadInfo, c);
+		this.moveToFront(LoadInfo);
 		gridy++;
 	
 		//Load File button
@@ -219,11 +244,26 @@ public class LoadGenomesPanelv2 extends JPanel
 		c.gridy = gridy;
 		c.gridwidth = 5;
 		c.gridheight = 1;
+		c.ipady = HeaderPadding;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		GeneClusters = new JLabel(strHC);
 		GeneClusters.setBackground(Color.LIGHT_GRAY);
 		GeneClusters.setOpaque(true);
+		GeneClusters.setFont(HeaderFont);
 		add(GeneClusters,c);
+		
+		c.anchor = GridBagConstraints.FIRST_LINE_END;
+		c.gridx = 4;
+		c.ipady = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.fill = GridBagConstraints.REMAINDER;
+		ClusterInfo = new JButton(strInfo);
+		ClusterInfo.addActionListener(this);
+		add(ClusterInfo, c);
+		this.moveToFront(ClusterInfo);
+		//this.add(LoadInfo, 2);
 		gridy++;
 		
 		//Load Cluster File button
@@ -280,9 +320,148 @@ public class LoadGenomesPanelv2 extends JPanel
 		
 	}
 	
+	//Instructions for launching program
+	public JTextPane getGenomicWorkingSetInfo(){
+		
+		// create a JTextPane + add settings
+		JTextPane Instructions = new JTextPane();
+		Instructions.setEditable(false);
+					
+		//retrieve document, and add styles
+		StyledDocument doc = Instructions.getStyledDocument();	        
+		Style def = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
+		Style regular = doc.addStyle("regular", def);
+		StyleConstants.setFontFamily(def, "SansSerif");
+        Style s = doc.addStyle("bold", regular);
+        StyleConstants.setBold(s, true);
+        
+        //text into document
+        try {
+			doc.insertString(doc.getLength(), "Instructions:\n\n", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "A ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Genomic Working Set",doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), " is a collection of annotated genomes. When performing searches in JContextExplorer, " +
+					"JContextExplorer will query all genomes in the genomic working set.\n\n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "To load a genomic working set, push the \"load\" button below and either\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "(1) Select a directory containing individual annotated genome files\n", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "or\n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "(2) Select a genomic working set file.\n\n",doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "Individual annotated genomes should be formatted in ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "General Feature Format (or .GFF) [version 2],",doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), " a standard tab-delimited text file format. GFF files should have the file extension \".gff\". " +
+					"\n\nEach line in the GFF file describes a single annotated feature, and is split into 9 columns." +
+					"  This program only reads in columns ",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "1, 3, 4, 5, 7,", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), " and ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "9, ", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "which contain the following information:\n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 1:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Sequence name\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 3:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Feature Type\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 4:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Feature Start Position\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 5:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Feature End Position\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 7:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Strand\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 9:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Annotation\n\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "If you specify a directory of .GFF files," +
+					" JContextExplorer will name each genome according to the name of the file. " +
+					"\n\nFor example,", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(),"\n/SomeDirectory/CollectionOfGenomes/Organism1.gff",doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "\nwill be named ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(),"\nOrganism1",doc.getStyle("bold"));
+			doc.insertString(doc.getLength(),".\nPlease avoid names containing " +
+					"white spaces (instead, use underscores).\n\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Instead of specifying a directory of .gff files, you may specify a single" +
+					" genomic working set file.  This file must be a 1 or 2-column tab-delimited text file. In the first column," +
+					" please specify the file path to all annotated genome files you would like to include in your genomic working set." +
+					"  If you do not include a second column, each genome will be named according to the name of the file." +
+					" The optional second column consists of a customized name for each genome.\n\n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "WARNING!\n\n", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "When specifying file paths of individual genome files, please be sure to either specify ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "(1) The absolute path",doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), " or ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), " (2) The path relative to the directory from which JContextExplorer was launched.",doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "  JContextExplorer will be unable to import files if the file paths are not correctly specified.\n\n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "For additional help and examples, please consult the JContextExplorer manual.", doc.getStyle("regular"));
+			//doc.insertString(doc.getLength(), "A genomic working set file is either a 1 or 2-column tab-delimited text file.", doc.getStyle("regular"));
+
+
+			
+			
+//			doc.insertString(doc.getLength(), " is a collection of annotated genomes. When performing searches in JContextExplorer, " +
+//					"JContextExplorer will query all genomes in the genomic working set. If you would like to work on " +
+//					"a subset of genomes in your genomic working set, please define a new Genomic Working Set containing only " +
+//					"your genomes of interest, and launch a new instance of JContextExplorer, using only these genomes.\n\n", doc.getStyle("regular"));
+
+			        } catch (BadLocationException e) {
+			e.printStackTrace();
+		}
+        
+        return Instructions;
+		
+	}
+	
+	//Instructions for cluster file
+	public JTextPane getClusterInfo(){
+		// create a JTextPane + add settings
+		JTextPane Instructions = new JTextPane();
+		Instructions.setEditable(false);
+					
+		//retrieve document, and add styles
+		StyledDocument doc = Instructions.getStyledDocument();	        
+		Style def = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
+		Style regular = doc.addStyle("regular", def);
+		StyleConstants.setFontFamily(def, "SansSerif");
+        Style s = doc.addStyle("bold", regular);
+        StyleConstants.setBold(s, true);
+        
+        //text into document
+        try {
+			doc.insertString(doc.getLength(), "Instructions:\n\n", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "The third column of a .GFF file describes each annotated feature's biological \"type\".", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "  For example, coding regions", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), " often have a type designation of \"CDS\" or \"gene\", and transfer RNA often have a type designation of \"tRNA\".\n\n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "This tool allows you to specify how to handle different types of annotated features.\n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "In general, among all possible feature types, you may specify\n",doc.getStyle("Regular"));
+			doc.insertString(doc.getLength(), "(1) The types that should be retained for both genomic grouping computation and display,\n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "(2) The types that should be excluded from genomic grouping computation, but retained for display, and \n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "(3) The types that should be excluded altogether.\n\n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Types in the list ", doc.getStyle("Regular"));
+			doc.insertString(doc.getLength(), "Types to Include in Genomic Groupings ",doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "(left) will be retained for both genomic grouping computation and display.  Types in the list ", doc.getStyle("Regular"));
+			doc.insertString(doc.getLength(), "Types to Include for Display only ",doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "(right) will be retained for display only when viewing genomic segments.  ",doc.getStyle("Regular"));
+			doc.insertString(doc.getLength(), "All other types will be ignored (excluded altogether).\n\n", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "To add types to a list, type in the type in the text field below the list and push the \"Add\" button. \n", doc.getStyle("Regular"));
+			doc.insertString(doc.getLength(), "To remove types from a list, select the type with your mouse, and push the \"Remove\" button. \n", doc.getStyle("Regular"));
+			doc.insertString(doc.getLength(), "To transfer types from one list to another, select the type with your mouse, and drag the type to the other list.\n\n", doc.getStyle("Regular"));
+			doc.insertString(doc.getLength(), "WARNING!\n", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "Features in the GFF file may not overlap in the genomic coordinates they span.  In the case that they do overlap, JContextExplorer will exhibit unpredictable behavior ", doc.getStyle("Regular"));
+			doc.insertString(doc.getLength(), "and likely fail.\n", doc.getStyle("Regular"));
+			doc.insertString(doc.getLength(), "Please ensure that no annotated features overlap prior to loading GFF files.", doc.getStyle("bold"));
+        } catch (BadLocationException e) {
+			e.printStackTrace();
+		}
+        
+        return Instructions;
+	}
+	
 	//All Actions
 	@Override
 	public void actionPerformed(ActionEvent evt) {
+		
+		//retrieve info
+		if (evt.getSource().equals(LoadInfo)){
+			new InfoFrame(getGenomicWorkingSetInfo(),"Genomic Working Set Info",this, -170);
+		}
+		
+		if (evt.getSource().equals(ClusterInfo)){
+			new InfoFrame(getClusterInfo(),"Homology Clusters Info",this, 70);
+		}
 		
 		//specify GFF file format details
 		if (evt.getSource().equals(btnLoad)){
@@ -405,6 +584,8 @@ public class LoadGenomesPanelv2 extends JPanel
 	
 	}
 
+	//----- Import Data Files ----------------------------------//
+	
 	//retrieve a data file
 	private String getGenomeWorkingSetFile() {
 		
@@ -481,6 +662,8 @@ public class LoadGenomesPanelv2 extends JPanel
 		}
 
 	}	
+	
+	//----- SwingWorker-related ----------------------------------//
 	
 	//Perform File Loading + Operon computation tasks
 	class LoadGenomesWorker extends SwingWorker<Void, Void>{
@@ -862,7 +1045,8 @@ public class LoadGenomesPanelv2 extends JPanel
 			}
 		}
 
-	//getters + setters
+	//----- Getters + Setters ----------------------------------//
+	
 	public JButton getBtnSubmit() {
 		return btnSubmit;
 	}
@@ -887,6 +1071,8 @@ public class LoadGenomesPanelv2 extends JPanel
 		DisplayOnlyTypes = displayOnlyTypes;
 	}
 
+	//----- Launch main frame ----------------------------------//
+	
 	//create a new dendrogram window, with the loaded OS
 	public void invokeDendrograma(){
 		

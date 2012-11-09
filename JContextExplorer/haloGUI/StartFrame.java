@@ -26,7 +26,7 @@ public class StartFrame extends JFrame implements ActionListener{
 		//SET PROPERTIES OF DESKTOP FRAME
 		JFrame.setDefaultLookAndFeelDecorated(false);
 		this.setResizable(true);
-		this.setSize(450,210);
+		this.setSize(470,220);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLocationRelativeTo(null);
 		this.setVisible(true);
