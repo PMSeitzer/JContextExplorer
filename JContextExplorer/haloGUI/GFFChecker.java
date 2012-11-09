@@ -114,7 +114,7 @@ public class GFFChecker extends JFrame implements ActionListener{
 			doc.insertString(doc.getLength(), "Instructions:\n\n", doc.getStyle("bold"));
 			doc.insertString(doc.getLength(), "The third column of a .GFF file describes each annotated feature's biological \"type\".", doc.getStyle("regular"));
 			doc.insertString(doc.getLength(), "  For example, coding regions", doc.getStyle("regular"));
-			doc.insertString(doc.getLength(), " are often described with a type designation of \"CDS\" or \"gene\", and transfer RNA often have a type designation of \"tRNA\".\n\n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), " often have a type designation of \"CDS\" or \"gene\", and transfer RNA often have a type designation of \"tRNA\".\n\n", doc.getStyle("regular"));
 			doc.insertString(doc.getLength(), "This tool allows you to specify how to handle different types of annotated features.\n", doc.getStyle("regular"));
 			doc.insertString(doc.getLength(), "In general, among all possible feature types, you may specify\n",doc.getStyle("Regular"));
 			doc.insertString(doc.getLength(), "(1) The types that should be retained for both genomic grouping computation and display,\n", doc.getStyle("regular"));
@@ -141,7 +141,6 @@ public class GFFChecker extends JFrame implements ActionListener{
 	}
 	
 	//Create frame
-	//build frame
 	public void getFrame(){
 		this.setSize(700,620);
 		this.setVisible(true);
@@ -151,8 +150,6 @@ public class GFFChecker extends JFrame implements ActionListener{
 	}
 	
 	//Create panel	
-	//build panel
-
 	public void getPanel(){
 		
 		//initial GridBagLayout parameters
@@ -356,6 +353,7 @@ public class GFFChecker extends JFrame implements ActionListener{
         c.insets = new Insets(10,100,10,100);
         btnSubmit = new JButton(strbtnSubmit);
         btnSubmit.addActionListener(this);
+        btnSubmit.addActionListener(lgp);
         jp.add(btnSubmit, c);
         
         //add panel to frame
@@ -363,8 +361,6 @@ public class GFFChecker extends JFrame implements ActionListener{
 		
 	}
 	
-	//add copy/cut/past actions to action map
-    
 	//List-associated mappings
 	private void setMappings(JList list) {
         ActionMap map = list.getActionMap();
@@ -376,8 +372,6 @@ public class GFFChecker extends JFrame implements ActionListener{
                 TransferHandler.getPasteAction());
 
     }
-	
-	//Action performed
 	
 	//Actions!
 	@Override
@@ -484,14 +478,25 @@ public class GFFChecker extends JFrame implements ActionListener{
 				DisplayOnlyTypes.add(DisplayOnlyListModel.get(i).toString());
 			}
 			
+			//write these types to the output structure.
+			lgp.setIncludeTypes(IncludeTypes);
+			lgp.setDisplayOnlyTypes(DisplayOnlyTypes);
+			
 			//dispose the window.
 			this.dispose();
 		}
 		
 	}
 	
-	//class describing list element tranfers
-	
+	//---GETTERS + SETTERS-----------
+	public JButton getBtnSubmit() {
+		return btnSubmit;
+	}
+
+	public void setBtnSubmit(JButton btnSubmit) {
+		this.btnSubmit = btnSubmit;
+	}
+
 	//transfer handler class
 	class ListTransferHandler extends TransferHandler {
 

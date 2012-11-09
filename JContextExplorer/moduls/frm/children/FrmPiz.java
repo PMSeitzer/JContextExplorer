@@ -864,9 +864,13 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 		
 		//right click
 		if (SwingUtilities.isRightMouseButton(e)){
+
 			//trigger pop-up menu display
 			this.menu.show(e.getComponent(),
 					e.getXOnScreen(), e.getYOnScreen());
+			
+			//reposition appropriately
+			this.menu.setLocation(e.getXOnScreen(),e.getYOnScreen());
 		}
 
 	}

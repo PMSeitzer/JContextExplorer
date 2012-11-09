@@ -657,6 +657,9 @@ import definicions.MatriuDistancies;
 						showError("Unable to call SwingWorker");
 					}
 				} catch (Exception e1) {
+					
+					fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+					
 					buttonClicked = false;
 					//showError(e1.getMessage());
 					if (searchType.getSelection().equals(annotationSearch.getModel())){

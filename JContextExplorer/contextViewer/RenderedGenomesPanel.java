@@ -135,8 +135,13 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	private boolean ShowSize = false;
 	private boolean ShowClusterID = false;
 	private int CharacterMax = 20;
+	private boolean HomologyGroupSelected = false;
+	private DrawGenes CurrentMiddleClickedDrawGene;
+	private DrawGenes CurrentLeftClickedDrawGene;
+	private boolean ClickedOnLegend = false;
 	
 	//legend panel info
+	private LinkedList<Color> CurrentlySelectedGeneColors;
 	private LinkedList<SharedHomology> GeneColorList;
 	private LinkedList<SharedHomology> DisplayedGeneColorList;
 	
@@ -584,10 +589,31 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 
 			//iterate through all genes
 			for (GenomicElement e : AG.getElements()){
+				
+				//check and see if this element should be retained at all
+				//check include types
+				boolean DisplayElement = false;
+				for (String s : AG.getIncludeTypes()){
+					if (e.getType().contentEquals(s)){
+						DisplayElement = true;
+						break;
+					}
+				}
+				//if this fails, check for display only types
+				if (!DisplayElement){
+					for (String s : AG.getDisplayOnlyTypes()){
+						if (e.getType().contentEquals(s)){
+							DisplayElement = true;
+							break;
+						}
+					}
+				}
+				
 				if ((((e.getStart() < GS[i].getStartBeforeBuffer() && e.getStop() < GS[i].getStartBeforeBuffer()) ||
 						(e.getStart() > GS[i].getEndRange() && e.getStop() > GS[i].getEndRange())) == false) &&
-						(e.getType().contentEquals("CDS") || e.getType().contentEquals("rRNA") ||
-								e.getType().contentEquals("tRNA")) && e.getContig().equals(ContigName)){
+//						(e.getType().contentEquals("CDS") || e.getType().contentEquals("rRNA") ||
+//								e.getType().contentEquals("tRNA")) && e.getContig().equals(ContigName)){
+						(DisplayElement) && e.getContig().equals(ContigName)){
 					
 					//upon discovering a single gene, initialize a new "drawgene"
 					DrawGenes dg = new DrawGenes();
@@ -957,10 +983,13 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		draftLines(g2d); 				//draw centerline
 		draftLabels(g2d);				//draw label associated with each genomic segment
 		
-		//selected genes
-		if (this.gclp != null){
-			draftSelectedGenes(g2d);
-		}
+		//genes from legend				//draw selected homology groups
+//		if (this.gclp != null) {
+//			draftSelectedGenes(g2d);
+//		}
+		
+		//middle clicked genes
+		draftMiddleClickGenes(g2d);
 
 	}
 
@@ -1096,6 +1125,44 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		//return to normal
 		g.setStroke(DefaultStroke);
 	}
+	
+	//draw genes selected in click
+	private void draftMiddleClickGenes(Graphics2D g){
+		
+		//adjust stroke
+		Stroke DefaultStroke = g.getStroke();
+		g.setStroke(new BasicStroke(6.0f));
+		g.setColor(Color.RED);
+		
+		//color genes
+		
+		if (CurrentlySelectedGeneColors != null){
+			for (Color c : CurrentlySelectedGeneColors){
+				
+				//check all genes for this color.
+			    for (int i = 0; i <GS.length; i++){
+			    	for (int j = 0; j <GS[i].getDg().size(); j++){
+			    		if (GS[i].getDg().get(j).getColor().equals(c)){
+				    		
+			    			//normal strand case
+				    		if (StrandNormalize == false){
+				    			g.draw(this.GS[i].getDg().get(j).getCoordinates());
+				    		} else {
+				    			g.draw(this.GS[i].getDg().get(j).getStrRevCoordinates());
+				    		}
+			    		}
+			    	}
+			    }
+			}
+		}
+
+		//color corresponding entries in legend
+		
+		//return to default settings
+		g.setStroke(DefaultStroke);
+		g.setColor(Color.BLACK);
+	}
+
 	//draw center line
 	private void draftLines(Graphics2D g2d) {
 		g2d.setColor(Color.BLACK);
@@ -1417,38 +1484,95 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		this.gclf = gclf;
 	}
 
+	public boolean isClickedOnLegend() {
+		return ClickedOnLegend;
+	}
+
+	public void setClickedOnLegend(boolean clickedOnLegend) {
+		ClickedOnLegend = clickedOnLegend;
+	}
+
+	public LinkedList<Color> getCurrentlySelectedGeneColors() {
+		return CurrentlySelectedGeneColors;
+	}
+
+	public void setCurrentlySelectedGeneColors(
+			LinkedList<Color> currentlySelectedGeneColors) {
+		CurrentlySelectedGeneColors = currentlySelectedGeneColors;
+	}
+
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		
 		//left click: genomic information
 		if(SwingUtilities.isLeftMouseButton(e)){
 		
-		if (GeneInformationIsBeingDisplayed){
+			//recover clicked draw gene
+			DrawGenes NewlyClicked = FindCurrentDrawGene(e);
 			
-			//close frame, and note that no frame is being displayed
-			GeneInfo.dispose();
-			GeneInformationIsBeingDisplayed = false;
-		
-		} else {
+			//null case (no gene clicked): release all.
+			if (NewlyClicked == null){
+				
+				//close current information frame, if it exists.
+				if (GeneInfo != null){
+					GeneInfo.dispose();
+				}
+				
+				GeneInformationIsBeingDisplayed = false;
+				
+			//current gene case: release all.
+			} else if (NewlyClicked == CurrentLeftClickedDrawGene){
+				
+				// update
+				if (GeneInformationIsBeingDisplayed){
+					//close current information frame, if it exists.
+					if (GeneInfo != null){
+						GeneInfo.dispose();
+						GeneInformationIsBeingDisplayed = false;
+					}
+				} else {
+					//create new frame
+					JFrame Info = MakeGeneInfo(e);
+					
+					//bring to front
+					Info.toFront();
+					this.repaint();
+					
+					//set JFrame to the field.
+					this.GeneInfo = Info;
+					GeneInformationIsBeingDisplayed = true;
+				}
+
+				
+			//new location case: assign current clicked here.
+			} else {
+				
+				//close current information frame, if it exists.
+				if (GeneInfo != null){
+					GeneInfo.dispose();
+				}
+				
+				CurrentLeftClickedDrawGene = NewlyClicked;
+				
+				//create new frame
+				JFrame Info = MakeGeneInfo(e);
+				
+				//bring to front
+				Info.toFront();
+				this.repaint();
+				
+				//set JFrame to the field.
+				this.GeneInfo = Info;
+				GeneInformationIsBeingDisplayed = true;
+			}
 			
-			//create new frame
-			JFrame Info = MakeGeneInfo(e);
-			
-			//bring to front
-			Info.toFront();
+			//update graphical display
 			this.repaint();
-			
-			//set JFrame to the field.
-			this.GeneInfo = Info;
-			
-			//a frame is now being displayed.
-			GeneInformationIsBeingDisplayed = true;
-		}
 		
 		//right click: export menu
 		} else if (SwingUtilities.isRightMouseButton(e)){
 			//check moduls.frm.children -> Frmpiz ->.initComponentsMenu() <201>
-			
+						
 			//update place clicked
 			this.PlaceClicked = e.getPoint();
 			
@@ -1456,11 +1580,113 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 			this.ExportMenu.show(e.getComponent(),
 					e.getXOnScreen(), e.getYOnScreen());
 			
+
 			//reposition appropriately
 			this.ExportMenu.setLocation(e.getXOnScreen(),e.getYOnScreen());
-		}
 		
+		//center click: select all by common homology
+		} else if (SwingUtilities.isMiddleMouseButton(e)){
+			
+			//recover clicked draw gene
+			DrawGenes NewlyClicked = FindCurrentDrawGene(e);
+			
+			//null case (no gene clicked): release all.
+			if (NewlyClicked == null){
+				
+				//reset all colors
+				CurrentlySelectedGeneColors = new LinkedList<Color>();
+				CurrentMiddleClickedDrawGene = null;
+									
+			//new location case: assign current clicked here.
+			} else {
+				
+				//new location
+				CurrentMiddleClickedDrawGene = NewlyClicked;
+
+				//check for shift/ctrl buttons
+				if (e.isShiftDown() || e.isControlDown()){
+					
+					//check and see if this is in the existing list.
+					boolean AlreadyInTheList = false;
+					if (CurrentlySelectedGeneColors != null){
+						for (Color c : CurrentlySelectedGeneColors){
+							if (CurrentMiddleClickedDrawGene.getColor().equals(c)){
+								AlreadyInTheList = true;
+							}
+						}
+						
+						if (AlreadyInTheList){
+							CurrentlySelectedGeneColors.remove((Color) CurrentMiddleClickedDrawGene.getColor());
+						} else {
+							//add to existing list
+							CurrentlySelectedGeneColors.add((Color) CurrentMiddleClickedDrawGene.getColor());
+						}
+					} else {
+						//initialize a new list with a single entry.
+						this.CurrentlySelectedGeneColors = new LinkedList<Color>();
+						CurrentlySelectedGeneColors.add((Color) CurrentMiddleClickedDrawGene.getColor());
+					}
+
+				} else {
+					//replace existing list with single entry
+					this.CurrentlySelectedGeneColors = new LinkedList<Color>();
+					CurrentlySelectedGeneColors.add((Color) CurrentMiddleClickedDrawGene.getColor());
+				}
+
+			}
+			
+			//update list in legend panel, if it exists.
+			if (this.gclp != null){
+				//LinkedList<SharedHomology> UpdatedLegendColors = new LinkedList<SharedHomology>();
+				boolean[] UpdatedSelectedRectangles = new boolean[gclp.getSelectedRectangles().length];
+				Arrays.fill(UpdatedSelectedRectangles,false);
+				for (Color c : CurrentlySelectedGeneColors){
+					for (int i = 0; i < UpdatedSelectedRectangles.length; i++){
+						if (gclp.getGeneList()[i].getColor().equals(c)){
+							UpdatedSelectedRectangles[i] = true;
+						}
+					}	
+				}
+				this.gclp.setSelectedRectangles(UpdatedSelectedRectangles);
+				this.gclp.repaint();
+			}
+			
+			//update graphical display
+			this.repaint();
+
+			//bring gene tags to center
+			if (this.GeneInfo != null){
+				this.GeneInfo.toFront();
+			}
+		}
+
 	}
+
+	//Determine the identity of the clicked on gene.
+	private DrawGenes FindCurrentDrawGene(MouseEvent e) {
+	    
+		DrawGenes SelectedGene = null;
+		
+		//find the gene in the selected area.
+	    for (int i = 0; i <GS.length; i++){
+	    	for (int j = 0; j <GS[i].getDg().size(); j++){
+	    	
+	    		//normal strand case
+	    		if (StrandNormalize == false){
+	    			if (GS[i].getDg().get(j).getCoordinates().contains(e.getPoint())){
+	    				SelectedGene = GS[i].getDg().get(j);
+	    			}
+	    		} else {
+	    			if (GS[i].getDg().get(j).getStrRevCoordinates().contains(e.getPoint())){
+	    				SelectedGene = GS[i].getDg().get(j);
+	    			}
+	    		}
+	    	}
+	    }
+	    				
+		return SelectedGene;
+	}
+
 
 	@Override
 	public void mouseEntered(MouseEvent arg0) {

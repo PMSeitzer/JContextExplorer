@@ -12,6 +12,8 @@ import inicial.Dendrograma;
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 
+import contextViewer.DrawGenes;
+
 //import methods.Reagrupa;
 //import moduls.frm.FrmPrincipalDesk;
 
@@ -36,6 +38,7 @@ public class LoadGenomesPanelv2 extends JPanel
 	
 	//parent
 	private StartFrame sf;
+	private GFFChecker gffc;
 	
 	//GUI components
 	private JLabel Genomes, GeneClusters;
@@ -67,6 +70,8 @@ public class LoadGenomesPanelv2 extends JPanel
 	//Loaded Organism Set + corresponding information
 	private OrganismSet OS;
 	private int TotalOrganisms;	
+	private LinkedList<String> IncludeTypes;
+	private LinkedList<String> DisplayOnlyTypes;
 	
 	//loaded file names, with path
 	private String GenomeWorkingSetFile;
@@ -279,12 +284,15 @@ public class LoadGenomesPanelv2 extends JPanel
 	@Override
 	public void actionPerformed(ActionEvent evt) {
 		
+		//specify GFF file format details
 		if (evt.getSource().equals(btnLoad)){
-			GFFChecker gffc = new GFFChecker(this);
+			gffc = new GFFChecker(this);
 		}
 		
-		//load genome files
-		if (evt.getSource().equals(btnLoad)) {
+		//load genome files, after determining GFF file format stuff.
+		try {
+		if (evt.getSource().equals(gffc.getBtnSubmit())){
+			
 			//set switches to appropriate state
 			LoadingGenomeFiles = true;
 			GenomeWorkingSetLoaded = false;
@@ -337,6 +345,8 @@ public class LoadGenomesPanelv2 extends JPanel
 
 		} 
 
+		} catch (Exception ex){}
+		
 		//load clusters file
 		if (evt.getSource().equals(btnClusterLoad)){
 			LoadingGenomeFiles = false;
@@ -497,6 +507,8 @@ public class LoadGenomesPanelv2 extends JPanel
 			//import	
 			OS = new OrganismSet();
 			TotalOrganisms = OS.determineNumberOfSpecies(GenomeWorkingSetFile);
+			OS.setIncludeTypes(IncludeTypes);
+			OS.setDisplayOnlyTypes(DisplayOnlyTypes);
 			int OrganismsCompleted = 0;
 
 			//define a new linked list, for each annotated genome
@@ -523,6 +535,8 @@ public class LoadGenomesPanelv2 extends JPanel
 									
 							//create a new AnnotatedGenome
 							AnnotatedGenome AG = new AnnotatedGenome();
+							AG.setIncludeTypes(IncludeTypes);
+							AG.setDisplayOnlyTypes(DisplayOnlyTypes);
 							
 							//middle line is the sequence line
 							if (ImportedLine.length == 3){
@@ -855,6 +869,22 @@ public class LoadGenomesPanelv2 extends JPanel
 
 	public void setBtnSubmit(JButton btnSubmit) {
 		this.btnSubmit = btnSubmit;
+	}
+	
+	public LinkedList<String> getIncludeTypes() {
+		return IncludeTypes;
+	}
+
+	public void setIncludeTypes(LinkedList<String> includeTypes) {
+		IncludeTypes = includeTypes;
+	}
+
+	public LinkedList<String> getDisplayOnlyTypes() {
+		return DisplayOnlyTypes;
+	}
+
+	public void setDisplayOnlyTypes(LinkedList<String> displayOnlyTypes) {
+		DisplayOnlyTypes = displayOnlyTypes;
 	}
 
 	//create a new dendrogram window, with the loaded OS

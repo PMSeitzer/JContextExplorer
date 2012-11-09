@@ -21,7 +21,9 @@ public class AnnotatedGenome {
     private LinkedList<ContextSet> Groupings;					//-Predicted Groupings-----------------
     private File GenomeFile; 									//-Associated genome file --------------
     private boolean TryToComputeOperons;
-  
+	private LinkedList<String> IncludeTypes;					//-Types of data worth importing/processing
+	private LinkedList<String> DisplayOnlyTypes;
+	
 // ----------------------- Construction ------------------------//
       
 //Constructor
@@ -49,27 +51,48 @@ public void importElements(String filename){
 					//import each line of the .gff file
 					String ImportedLine[] = Line.split("\t");
 							
-					//create a new element
-					GenomicElement E = new GenomicElement();
-					
-					//set appropriate fields of this genomic element with inputs achieved from the GFF file
-					E.setContig(ImportedLine[0]);
-					E.setType(ImportedLine[2]);
-					E.setStart(Integer.parseInt(ImportedLine[3]));
-					E.setStop(Integer.parseInt(ImportedLine[4]));
-					E.setElementID(Counter);
-					
-					if(Integer.parseInt(ImportedLine[6])==1){
-						E.setStrand(Strand.POSITIVE);
-					}else{
-						E.setStrand(Strand.NEGATIVE);
+					//check and see if this element should be retained at all
+					//check include types
+					boolean RetainElement = false;
+					for (String s : this.IncludeTypes){
+						if (ImportedLine[2].trim().contentEquals(s)){
+							RetainElement = true;
+							break;
+						}
+					}
+					//if this fails, check for display types
+					if (!RetainElement){
+						for (String s : this.DisplayOnlyTypes){
+							if (ImportedLine[2].trim().contentEquals(s)){
+								RetainElement = true;
+								break;
+							}
+						}
 					}
 					
-					E.setAnnotation(ImportedLine[8]);
-				
-					//add to list
-					Elements.add(E);
-	
+					//add this element to the list, if necessary
+					if (RetainElement){
+						//create a new element
+						GenomicElement E = new GenomicElement();
+						
+						//set appropriate fields of this genomic element with inputs achieved from the GFF file
+						E.setContig(ImportedLine[0]);
+						E.setType(ImportedLine[2]);
+						E.setStart(Integer.parseInt(ImportedLine[3]));
+						E.setStop(Integer.parseInt(ImportedLine[4]));
+						E.setElementID(Counter);
+						
+						if(Integer.parseInt(ImportedLine[6])==1){
+							E.setStrand(Strand.POSITIVE);
+						}else{
+							E.setStrand(Strand.NEGATIVE);
+						}
+						
+						E.setAnnotation(ImportedLine[8]);
+					
+						//add to list
+						Elements.add(E);
+					}
 			}
 			br.close();		
 			
@@ -146,11 +169,22 @@ public void ComputeContextSet(String CSName, int tolerance, boolean RequireSameS
 	//this method assumes that the elements are in order
 	for (int i=0; i < Elements.size()-1; i++){
 
+		//check against user-defined set of valid types
+		boolean ElementIsValid = false;
+		for (String s : this.IncludeTypes){
+			if (Elements.get(i).getType().contentEquals(s)){
+				ElementIsValid = true;
+				break;
+			}
+		}
+		
 		//require valid type
-		if (Elements.get(i).getType().contentEquals("CDS") ||
-				Elements.get(i).getType().contentEquals("tRNA") ||
-				Elements.get(i).getType().contentEquals("rRNA")){		
-	
+//		if (Elements.get(i).getType().contentEquals("CDS") ||
+//				Elements.get(i).getType().contentEquals("tRNA") ||
+//				Elements.get(i).getType().contentEquals("rRNA")){		
+		
+		if (ElementIsValid){
+			
 			//if the element is valid, place into an operon.
 			//Comment: technically, a pointer to the element
 			LL.add(Elements.get(i));
@@ -161,10 +195,18 @@ public void ComputeContextSet(String CSName, int tolerance, boolean RequireSameS
 			
 			//discover the next valid element in the Elements field.
 			while(validType == false){
+				
+				//determine if next element is valid (should be included)
+				boolean NextElementIsValid = false;
+				for (String s : this.IncludeTypes){
+					if (Elements.get(NextValid).getType().contentEquals(s)){
+						NextElementIsValid = true;
+						break;
+					}
+				}
+
 				//case: next element is valid
-				if (Elements.get(NextValid).getType().contentEquals("CDS") ||
-						Elements.get(NextValid).getType().contentEquals("tRNA") ||
-						Elements.get(NextValid).getType().contentEquals("rRNA")){		
+				if (NextElementIsValid){		
 					validType = true;
 				}else if (NextValid < Elements.size()-1) { // case: next element is not valid, look further in file
 					NextValid++;
@@ -175,12 +217,6 @@ public void ComputeContextSet(String CSName, int tolerance, boolean RequireSameS
 				}
 			}
 		
-			//debugging: check for comparison schema.
-//			if (this.Species.equals("Halobiforma_lacisalsi") && NextValid != -1){
-//				System.out.println("Element:   " + Elements.get(i).getType() + " " + Elements.get(i).getStart() + ":" + Elements.get(i).getStop());
-//				System.out.println("Next Valid:" + Elements.get(NextValid).getType() + " " + Elements.get(NextValid).getStart() + ":" + Elements.get(NextValid).getStop());
-//			}
-			
 			//Assuming that there are valid elements to compare against,
 			if (NextValid != -1){
 			
@@ -231,22 +267,7 @@ public void ComputeContextSet(String CSName, int tolerance, boolean RequireSameS
 				//if the next valid element defines a new operon:
 				// store the old operon, reset the LL, increment the operon counter.
 				if (newOperon == true){
-					
-//					//optional print statement for debugging
-//					if (this.Species.equals("Halobiforma_lacisalsi") && NextValid != -1){
-//					System.out.println("Context Set" + OperonCounter + ":");
-//						
-//						for (int q = 0; q < LL.size(); q++){
-//
-//							if (q > 0){
-//								System.out.println(LL.get(q).getStart() + ":" + LL.get(q).getStop() + " dist:" + (LL.get(q).getStart() - LL.get(q-1).getStop()));
-//							} else {
-//								System.out.println(LL.get(q).getStart() + ":" + LL.get(q).getStop());
-//							}
-//
-//						}
-//					}
-					
+
 					 csmap.put(OperonCounter, LL);
 					 LL = new LinkedList<GenomicElement>();
 					 OperonCounter++;
@@ -258,21 +279,7 @@ public void ComputeContextSet(String CSName, int tolerance, boolean RequireSameS
 				//place element into an operon, and store the operon in the hash map.
 				LL.add(Elements.get(i));
 				csmap.put(OperonCounter,LL);
-
-//				//optional print statement for debugging
-//				if (this.Species.equals("Halobiforma_lacisalsi") && NextValid != -1){
-//				System.out.println("Context Set" + OperonCounter + ":");
-//					
-//					for (int q = 0; q < LL.size(); q++){
-//
-//						if (q > 0){
-//							System.out.println(LL.get(q).getStart() + ":" + LL.get(q).getStop() + " dist:" + (LL.get(q).getStart() - LL.get(q-1).getStop()));
-//						} else {
-//							System.out.println(LL.get(q).getStart() + ":" + LL.get(q).getStop());
-//						}
-//
-//					}
-//				}
+				
 			}
 		}
 	}	
@@ -607,10 +614,21 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 					GandE.setQueryMatch(false);
 					BeforeQuery = Center - GandE.getE().getStart();
 					
+					//check against user-defined set of valid types
+					boolean ElementIsValid = false;
+					for (String s : this.IncludeTypes){
+						if (GandE.getE().getType().contentEquals(s)){
+							ElementIsValid = true;
+							break;
+						}
+					}
+					
 					//only add elements of the appropriate type - otherwise, skip
-					if (GandE.getE().getType().equals("CDS") ||
-							GandE.getE().getType().equals("tRNA") ||
-							GandE.getE().getType().equals("rRNA")){
+//					if (GandE.getE().getType().equals("CDS") ||
+//							GandE.getE().getType().equals("tRNA") ||
+//							GandE.getE().getType().equals("rRNA")){
+						
+					if (ElementIsValid){
 						
 						//check for end of contig
 						if (CurrentContig.equals(GandE.getE().getContig())){
@@ -644,10 +662,21 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 					GandE.setQueryMatch(false);
 					AfterQuery = GandE.getE().getStop() - Center;
 					
-					//only add elements of the appropriate type - otherwise, skip
-					if (GandE.getE().getType().equals("CDS") ||
-							GandE.getE().getType().equals("tRNA") ||
-							GandE.getE().getType().equals("rRNA")){
+					//check against user-defined set of valid types
+					boolean ElementIsValid = false;
+					for (String s : this.IncludeTypes){
+						if (GandE.getE().getType().contentEquals(s)){
+							ElementIsValid = true;
+							break;
+						}
+					}
+					
+//					//only add elements of the appropriate type - otherwise, skip
+//					if (GandE.getE().getType().equals("CDS") ||
+//							GandE.getE().getType().equals("tRNA") ||
+//							GandE.getE().getType().equals("rRNA")){
+					
+					if (ElementIsValid){	
 						
 						//check for end of contig
 						if (CurrentContig.equals(GandE.getE().getContig())){
@@ -723,10 +752,17 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 				GandE.setE(this.Elements.get(i-BeforeCounter));
 				GandE.setQueryMatch(false);
 				
+				//check against user-defined set of valid types
+				boolean ElementIsValid = false;
+				for (String s : this.IncludeTypes){
+					if (GandE.getE().getType().contentEquals(s)){
+						ElementIsValid = true;
+						break;
+					}
+				}
+				
 				//only add elements of the appropriate type - otherwise, skip
-				if (GandE.getE().getType().equals("CDS") ||
-						GandE.getE().getType().equals("tRNA") ||
-						GandE.getE().getType().equals("rRNA")){
+				if (ElementIsValid){
 					
 					//check for end of contig
 					if (CurrentContig.equals(GandE.getE().getContig())){
@@ -757,10 +793,17 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 				GandE.setE(this.Elements.get(i+AfterCounter));
 				GandE.setQueryMatch(false);
 						
+				//check against user-defined set of valid types
+				boolean ElementIsValid = false;
+				for (String s : this.IncludeTypes){
+					if (GandE.getE().getType().contentEquals(s)){
+						ElementIsValid = true;
+						break;
+					}
+				}
+				
 				//only add elements of the appropriate type - otherwise, skip
-				if (GandE.getE().getType().equals("CDS") ||
-						GandE.getE().getType().equals("tRNA") ||
-						GandE.getE().getType().equals("rRNA")){
+				if (ElementIsValid){
 					
 					//check for end of contig
 					if (CurrentContig.equals(GandE.getE().getContig())){
@@ -912,10 +955,17 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 				GandE = new GenomicElementAndQueryMatch();
 				GandE.setE(Elements.get(ElementNumber)); GandE.setQueryMatch(false);
 				
+				//check against user-defined set of valid types
+				boolean ElementIsValid = false;
+				for (String s : this.IncludeTypes){
+					if (GandE.getE().getType().contentEquals(s)){
+						ElementIsValid = true;
+						break;
+					}
+				}
+				
 				//only add elements of the appropriate type - otherwise, skip
-				if (GandE.getE().getType().equals("CDS") ||
-						GandE.getE().getType().equals("tRNA") ||
-						GandE.getE().getType().equals("rRNA")){
+				if (ElementIsValid){
 	
 					LL.add(GandE);
 				}
@@ -978,10 +1028,17 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 					GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
 					GandE.setE(E); GandE.setQueryMatch(true);
 					
+					//check against user-defined set of valid types
+					boolean ElementIsValid = false;
+					for (String s : this.IncludeTypes){
+						if (GandE.getE().getType().contentEquals(s)){
+							ElementIsValid = true;
+							break;
+						}
+					}
+					
 					//only add elements of the appropriate type - otherwise, skip
-					if (GandE.getE().getType().equals("CDS") ||
-							GandE.getE().getType().equals("tRNA") ||
-							GandE.getE().getType().equals("rRNA")){
+					if (ElementIsValid){
 		
 						LL.add(GandE);
 					}
@@ -1056,6 +1113,22 @@ public boolean isTryToComputeOperons() {
 
 public void setTryToComputeOperons(boolean tryToComputeOperons) {
 	TryToComputeOperons = tryToComputeOperons;
+}
+
+public LinkedList<String> getIncludeTypes() {
+	return IncludeTypes;
+}
+
+public void setIncludeTypes(LinkedList<String> includeTypes) {
+	IncludeTypes = includeTypes;
+}
+
+public LinkedList<String> getDisplayOnlyTypes() {
+	return DisplayOnlyTypes;
+}
+
+public void setDisplayOnlyTypes(LinkedList<String> displayOnlyTypes) {
+	DisplayOnlyTypes = displayOnlyTypes;
 }
 
 //-----------------------Deprecated ----------------------//
