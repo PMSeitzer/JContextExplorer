@@ -50,7 +50,12 @@ public void importElements(String filename){
 					
 					//import each line of the .gff file
 					String ImportedLine[] = Line.split("\t");
-							
+					
+					//GFF files must contain exactly at least 9 fields
+					if (ImportedLine.length < 9){
+						throw new Exception();
+					}
+					
 					//check and see if this element should be retained at all
 					//check include types
 					boolean RetainElement = false;
@@ -82,11 +87,19 @@ public void importElements(String filename){
 						E.setStop(Integer.parseInt(ImportedLine[4]));
 						E.setElementID(Counter);
 						
-						if(Integer.parseInt(ImportedLine[6])==1){
-							E.setStrand(Strand.POSITIVE);
-						}else{
-							E.setStrand(Strand.NEGATIVE);
-						}
+						try {
+							if(Integer.parseInt(ImportedLine[6])==1){
+								E.setStrand(Strand.POSITIVE);
+							}else{
+								E.setStrand(Strand.NEGATIVE);
+							}
+						} catch (Exception ex) {
+							if (ImportedLine[6].contentEquals("+")){
+								E.setStrand(Strand.POSITIVE);
+							} else {
+								E.setStrand(Strand.NEGATIVE);
+							}
+						} 
 						
 						E.setAnnotation(ImportedLine[8]);
 					
@@ -109,7 +122,28 @@ public void importElements(String filename){
 
 	}
 
-//add pre-computed cluster information (alternative to annotation)
+//----------------------- add cluster number -----------------------//
+
+//Organism - Gene Name - Cluster Number [OR] Gene Name - Cluster Number [OR] Gene Name
+public void addClusterNumber(String Annotation, int Clusternumber){
+	for (GenomicElement E : Elements){
+		if (E.getAnnotation().toUpperCase().contains(Annotation.toUpperCase().trim())){
+			E.setClusterID(Clusternumber);
+		}
+	}
+}
+
+//Organism - Contig - Gene Name - Cluster Number
+public void addClusterNumber(String Contig, String Annotation, int Clusternumber){
+	for (GenomicElement E : Elements){
+		if (E.getContig().contentEquals(Contig) &&
+				E.getAnnotation().toUpperCase().contains(Annotation.toUpperCase().trim())){
+			E.setClusterID(Clusternumber);
+		}
+	}
+}
+
+//Organism - Contig - Gene Start - Gene Stop - Cluster Number
 public void addClusterNumber(String Contig, int Start, int Stop, int Clusternumber){
 	for (GenomicElement E : Elements){
 		if (E.getContig().contentEquals(Contig) &&

@@ -51,11 +51,10 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 	private JButton btnLoad, btnClusterLoad, btnSubmit;
 	private JTextField GenomeWorkingSetFileName, ClusterFileName;
 	private String strGWS = " Genomic Working Set (required)";
-	private String strHC = " Homologous Gene Clusters (optional)";
+	private String strHC = " Homology Clusters (optional)";
 	private String strLoad = "Load";
 	private String clusterLoad = "Load";
 	private String strNoFileLoaded = "No file currently loaded.";
-	//private String strCancelled = "The operation was cancelled.";
 	private String strCancelled = strNoFileLoaded;
 	private JButton LoadInfo, ClusterInfo;
 	private Font HeaderFont = new Font("Arial", 1, 13);
@@ -85,6 +84,7 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 	//loaded file names, with path
 	private String GenomeWorkingSetFile;
 	private String ClustersFile;
+	private File ReferenceDirectory;
 	
 	//loaded file names no path
 	private String GenomeWorkingSetFile_NoPath;
@@ -341,7 +341,7 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 			doc.insertString(doc.getLength(), "A ", doc.getStyle("regular"));
 			doc.insertString(doc.getLength(), "Genomic Working Set",doc.getStyle("bold"));
 			doc.insertString(doc.getLength(), " is a collection of annotated genomes. When performing searches in JContextExplorer, " +
-					"JContextExplorer will query all genomes in the genomic working set.\n\n", doc.getStyle("regular"));
+					"JContextExplorer will query all genomes in the loaded genomic working set.\n\n", doc.getStyle("regular"));
 			doc.insertString(doc.getLength(), "To load a genomic working set, push the \"load\" button below and either\n",doc.getStyle("regular"));
 			doc.insertString(doc.getLength(), "(1) Select a directory containing individual annotated genome files\n", doc.getStyle("bold"));
 			doc.insertString(doc.getLength(), "or\n", doc.getStyle("regular"));
@@ -422,27 +422,85 @@ public class LoadGenomesPanelv2 extends JLayeredPane
         //text into document
         try {
 			doc.insertString(doc.getLength(), "Instructions:\n\n", doc.getStyle("bold"));
-			doc.insertString(doc.getLength(), "The third column of a .GFF file describes each annotated feature's biological \"type\".", doc.getStyle("regular"));
-			doc.insertString(doc.getLength(), "  For example, coding regions", doc.getStyle("regular"));
-			doc.insertString(doc.getLength(), " often have a type designation of \"CDS\" or \"gene\", and transfer RNA often have a type designation of \"tRNA\".\n\n", doc.getStyle("regular"));
-			doc.insertString(doc.getLength(), "This tool allows you to specify how to handle different types of annotated features.\n", doc.getStyle("regular"));
-			doc.insertString(doc.getLength(), "In general, among all possible feature types, you may specify\n",doc.getStyle("Regular"));
-			doc.insertString(doc.getLength(), "(1) The types that should be retained for both genomic grouping computation and display,\n", doc.getStyle("regular"));
-			doc.insertString(doc.getLength(), "(2) The types that should be excluded from genomic grouping computation, but retained for display, and \n", doc.getStyle("regular"));
-			doc.insertString(doc.getLength(), "(3) The types that should be excluded altogether.\n\n", doc.getStyle("regular"));
-			doc.insertString(doc.getLength(), "Types in the list ", doc.getStyle("Regular"));
-			doc.insertString(doc.getLength(), "Types to Include in Genomic Groupings ",doc.getStyle("bold"));
-			doc.insertString(doc.getLength(), "(left) will be retained for both genomic grouping computation and display.  Types in the list ", doc.getStyle("Regular"));
-			doc.insertString(doc.getLength(), "Types to Include for Display only ",doc.getStyle("bold"));
-			doc.insertString(doc.getLength(), "(right) will be retained for display only when viewing genomic segments.  ",doc.getStyle("Regular"));
-			doc.insertString(doc.getLength(), "All other types will be ignored (excluded altogether).\n\n", doc.getStyle("bold"));
-			doc.insertString(doc.getLength(), "To add types to a list, type in the type in the text field below the list and push the \"Add\" button. \n", doc.getStyle("Regular"));
-			doc.insertString(doc.getLength(), "To remove types from a list, select the type with your mouse, and push the \"Remove\" button. \n", doc.getStyle("Regular"));
-			doc.insertString(doc.getLength(), "To transfer types from one list to another, select the type with your mouse, and drag the type to the other list.\n\n", doc.getStyle("Regular"));
-			doc.insertString(doc.getLength(), "WARNING!\n", doc.getStyle("bold"));
-			doc.insertString(doc.getLength(), "Features in the GFF file may not overlap in the genomic coordinates they span.  In the case that they do overlap, JContextExplorer will exhibit unpredictable behavior ", doc.getStyle("Regular"));
-			doc.insertString(doc.getLength(), "and likely fail.\n", doc.getStyle("Regular"));
-			doc.insertString(doc.getLength(), "Please ensure that no annotated features overlap prior to loading GFF files.", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "Within a single genomic working set, certain annotated features may be " +
+					"homologous to one another.  This may occur both within a single species and across multiple species.  " +
+					"A group of homologous features is often referred to as a ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Homologous Gene Cluster", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), ", or simply a ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Homology Cluster", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), ".  Numerous methods exist to detect homology across and within genomes," +
+					" and to cluster annotated features in a set of genomes into homology cluster groups.  Often, but " +
+					"not necessarily, these homology cluster groups are ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "non-overlapping", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), ". That is, each annotated feature may belong to a maximum of one homology cluster.\n\n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "For all homology cluster-associated processes, JContextExplorer assumes non-overlapping homology clusters", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), ".\n\n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "When JContextExpolorer searches for annotated features in a genomic working set, " +
+					"it may do so either by\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "(1) Matching a textual query to individual genomic feature annotations", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "\nor\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "(2) Matching a homology cluster ID number.\n\n", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "Textual annotations may be unreliable (especially if a " +
+					"genomic working set contains contains genomes annotated by different groups), so it may be worthwhile to compute homology clusters" +
+					" and load these computed homology clusters into JContextExplorer.",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "\n\nWARNING!\n\n", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "JContextExplorer cannot compute homology clusters from a set of sequenced genomes, only search a set" +
+					" of pre-computed, loaded homology clusters.\n\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "To load a set of pre-computed homology clusters", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), ", click the ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "load", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), " button below the banner, and select the appropriate file.  Homology clusters may be defined according to gene name " +
+					"or precise feature coordinates.", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(),"   All Files must be tab-delimited, and ",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "each line in the file " +
+					"describes an individual feature - homology group relationship.", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "  Depending on the number of columns provided, each line is parsed differently.  " +
+					"Lines in the file that do not " +
+					"follow the specifications described below will be ignored.", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "\n\nThere are 5 acceptable line formats:\n\n", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "(1) Five-Column Format\n",doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "If there are 5 tab-delimited entries in the line, entries take on the following values:\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 1:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Genome Name\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 2:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Sequence Name\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 3:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Feature Start Position\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 4:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Feature End Position\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 5:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Homology Cluster ID Number\n\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "If a feature starts at ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Feature Start Position", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), " and stops at ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Feature Stop Position", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), ", on the sequence named ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Sequence Name", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), ", in the genome named ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Genome Name", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), ", this feature is assigned the provided ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Homology Cluster ID Number", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), ".\n\n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "(2) Four-Column Format\n",doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "If there are 4 tab-delimited entries in the line, entries take on the following values:\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 1:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Genome Name\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 2:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Sequence Name\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 3:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Annotation Key\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 4:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Homology Cluster ID Number\n\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "If a feature contains the string ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Annotation Key", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), " in it's annotation, and is found on the sequence named ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Sequence Name", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), " in the genome named ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Genome Name", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), ", this feature is assigned the provided ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Homology Cluster ID Number", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), ".\n\nInstead of spaces, please use underscores.", doc.getStyle("regular"));
+
         } catch (BadLocationException e) {
 			e.printStackTrace();
 		}
@@ -483,8 +541,8 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 			progressBarClusters.setValue(0);
 			progressBarClusters.setStringPainted(false);			
 			
-			String fileName = getGenomeWorkingSetFile();
-			//String fileName = this.getGenomes();
+			//String fileName = getGenomeWorkingSetFile();
+			String fileName = this.getGenomes();
 			
 			//System.out.println("fileName: " + fileName);
 			if (fileName != null){
@@ -524,7 +582,24 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 
 		} 
 
-		} catch (Exception ex){}
+		} catch (Exception ex){
+			//System.out.println("Gffc exception.");
+			//set everything back to zero
+			progressBar.setValue(0);
+			progressBar.setStringPainted(false);
+			GenomeWorkingSetFileName.setText(strCancelled);
+			ClusterFileName.setText(strCancelled);
+			
+			//turn everything off - back to square one
+			LoadingGenomeFiles = false;
+			GenomeWorkingSetLoaded = false;
+			LoadingGeneClusters = false;
+			ReadyToSubmit = false;
+			GeneClustersLoaded = false;
+			
+			GenomeWorkingSetFile = null;
+			ClustersFile = null;
+		}
 		
 		//load clusters file
 		if (evt.getSource().equals(btnClusterLoad)){
@@ -604,20 +679,37 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 		return GenomeWorkingSetFile; //file name
 	}	
 	
-	//retrieve either directory or data file - TODO: finish/implement
+	//retrieve either directory or data file
 	private String getGenomes(){
 		
 		//initialize output
 		JFileChooser GetGenomes = new JFileChooser();
+		try {
+			//GetGenomes.setLUIManager.getLookAndFeel()
+		} catch (Exception ex){
+			
+		}
 		GetGenomes.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-		GetGenomes.getCurrentDirectory();
 		GetGenomes.setDialogTitle("Select Annotated Genomes Directory or Genome Working Set File");
+		
+		
+		if (this.ReferenceDirectory != null){
+			GetGenomes.setCurrentDirectory(ReferenceDirectory);
+		} else {
+			GetGenomes.setCurrentDirectory(new File("."));
+		}
 		GetGenomes.showOpenDialog(GetGenomes);
 		
 		//retrieve a directory
 		//File[] AllFiles = GetGenomes.getSelectedFiles();
 		File DirectoryOrGWSFile = GetGenomes.getSelectedFile();
 		this.GenomeWorkingSetFile_NoPath = DirectoryOrGWSFile.getName();
+		
+		//note current directory for next time
+		if (GetGenomes.getCurrentDirectory() != null){
+			this.ReferenceDirectory = GetGenomes.getCurrentDirectory();
+		}
+
 		
 		//check if file could be received
 		if (DirectoryOrGWSFile != null){
@@ -639,6 +731,12 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 			}
 		}
 		
+		//System.out.println(DirectoryOrGWSFile.getAbsolutePath());
+//		for (int i = 0; i < GenomeFiles.length; i++){
+//			System.out.println(GenomeFiles[i]);
+//		}
+	
+
 		//return the information.
 		return DirectoryOrGWSFile.getAbsolutePath();
 	}
@@ -649,6 +747,11 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 		//use pre-existing 'FileDialog' GUI window to retrieve file
 		final FileDialog fd = new FileDialog(sf, "English",
 				FileDialog.LOAD);
+
+		//set reference directory to match annotated genomes directory
+		if (ReferenceDirectory != null){
+			fd.setDirectory(this.ReferenceDirectory.getAbsolutePath());
+		}
 
 		fd.setVisible(true);
 		String ClustersFile = fd.getDirectory() + fd.getFile();
@@ -689,7 +792,6 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 			
 			//import	
 			OS = new OrganismSet();
-			TotalOrganisms = OS.determineNumberOfSpecies(GenomeWorkingSetFile);
 			OS.setIncludeTypes(IncludeTypes);
 			OS.setDisplayOnlyTypes(DisplayOnlyTypes);
 			int OrganismsCompleted = 0;
@@ -702,6 +804,9 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 			
 			//import a single genomic working set file
 			if (GenomesAsSingleFile){
+				
+				//determine number of total organisms from the single file
+				TotalOrganisms = OS.determineNumberOfSpecies(GenomeWorkingSetFile);
 				
 				try{
 					//import buffered reader
@@ -808,12 +913,25 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 			} else {
 				
 				try {
+				
+				//determine number of total organisms
+				TotalOrganisms = 0;
+				for (File f: GenomeFiles){
+					if (f.getName().contains(".gff")){
+						TotalOrganisms++;
+					}
+				}
 					
 				//retrieve all files
 				for (File f: GenomeFiles){
 					if (f.getName().contains(".gff")){
+						
 						//new annotated genome
 						AnnotatedGenome AG = new AnnotatedGenome();
+						
+						//set appropriate types to import
+						AG.setIncludeTypes(IncludeTypes);
+						AG.setDisplayOnlyTypes(DisplayOnlyTypes);
 						
 						//Annotation information
 						AG.importElements(f.getAbsolutePath());
@@ -942,7 +1060,7 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 						
 						//First: count lines in the file
 						//import buffered reader
-						BufferedReader br_count = new BufferedReader( new FileReader(ClustersFile));
+						BufferedReader br_count = new BufferedReader(new FileReader(ClustersFile));
 						int TotalLines = 0;
 						
 						//count lines
@@ -954,24 +1072,94 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 						//import buffered reader
 						BufferedReader br = new BufferedReader(new FileReader(ClustersFile));
 						String Line = null;
+						int ClusterNumCounter = 0;
 						
 						while ((Line = br.readLine()) != null){
 							
 							//import each line
 							String[] ImportedLine = Line.split("\t");
 							
-							int GeneStart = Integer.parseInt(ImportedLine[2]);
-							int GeneStop = Integer.parseInt(ImportedLine[3]);
-							int GeneClusterNum = Integer.parseInt(ImportedLine[4]);
+							//Gene Name
+							if (ImportedLine.length == 1) {
 							
-							//set largest cluster number
-							if (OS.LargestCluster < GeneClusterNum){
-								OS.LargestCluster = GeneClusterNum;
+								//increment cluster counter.
+								ClusterNumCounter++;
+								
+								//add cluster number
+								for (AnnotatedGenome AG : OS.getSpecies().values()){
+									AG.addClusterNumber(ImportedLine[0].replace("_ "," "), ClusterNumCounter);
+								}
+								
+								//largest cluster designation is always the last
+								OS.LargestCluster = TotalLines;
+								
+							//Gene Name - Cluster Number
+							} else if (ImportedLine.length == 2) {
+							
+								//recover bioinfo
+								int GeneClusterNum = Integer.parseInt(ImportedLine[1]);
+								
+								//set largest cluster number
+								if (OS.LargestCluster < GeneClusterNum){
+									OS.LargestCluster = GeneClusterNum;
+								}
+								
+								//add cluster number
+								for (AnnotatedGenome AG : OS.getSpecies().values()){
+									AG.addClusterNumber(ImportedLine[0].replace("_"," "), GeneClusterNum);
+								}
+								
+								
+							//Organism - Gene Name - Cluster Number
+							} else if (ImportedLine.length == 3 ){
+								
+								//recover bioinfo
+								int GeneClusterNum = Integer.parseInt(ImportedLine[2]);
+								
+								//set largest cluster number
+								if (OS.LargestCluster < GeneClusterNum){
+									OS.LargestCluster = GeneClusterNum;
+								}
+								
+								//add cluster number 
+								OS.getSpecies().get(ImportedLine[0])
+									.addClusterNumber(ImportedLine[1].replace("_", " "), GeneClusterNum);
+							
+							//Organism - Contig - Gene Name - Cluster Number	
+							} else if (ImportedLine.length == 4){
+								
+								//recover bioinfo
+								int GeneClusterNum = Integer.parseInt(ImportedLine[3]);
+								
+								//set largest cluster number
+								if (OS.LargestCluster < GeneClusterNum){
+									OS.LargestCluster = GeneClusterNum;
+								}
+								
+								//add cluster number 
+								OS.getSpecies().get(ImportedLine[0])
+									.addClusterNumber(ImportedLine[1], ImportedLine[2].replace("_", " "), GeneClusterNum);
+
+							//Organism - Contig - Gene Start - Gene Stop - Cluster Number
+							} else if (ImportedLine.length == 5) {
+								
+								//recover bioinfo
+								int GeneStart = Integer.parseInt(ImportedLine[2]);
+								int GeneStop = Integer.parseInt(ImportedLine[3]);
+								int GeneClusterNum = Integer.parseInt(ImportedLine[4]);
+								
+								//set largest cluster number
+								if (OS.LargestCluster < GeneClusterNum){
+									OS.LargestCluster = GeneClusterNum;
+								}
+								
+								//add cluster number 
+								OS.getSpecies().get(ImportedLine[0])
+									.addClusterNumber(ImportedLine[1], GeneStart, GeneStop, GeneClusterNum);
+								
+							} else {
+								throw new Exception();
 							}
-							
-							//add cluster number 
-							OS.getSpecies().get(ImportedLine[0])
-								.addClusterNumber(ImportedLine[1], GeneStart, GeneStop, GeneClusterNum);
 							
 							//report to SwingWorker
 							LineCounter++;
