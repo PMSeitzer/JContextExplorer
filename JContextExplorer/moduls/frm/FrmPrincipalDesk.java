@@ -109,8 +109,7 @@ public class FrmPrincipalDesk extends JFrame{
 		
 		//INITIALIZATIONS
 		super(title);
-		//FesLog.LOG.info("New instance created.");
-		OS = theOrganismSet;
+		this.OS = theOrganismSet;
 		
 		//DESKTOP FRAME INFORMATION
 		pan_Desk = new JDesktopPane();
