@@ -451,7 +451,7 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 			doc.insertString(doc.getLength(), "load", doc.getStyle("bold"));
 			doc.insertString(doc.getLength(), " button below the banner, and select the appropriate file.  Homology clusters may be defined according to gene name " +
 					"or precise feature coordinates.", doc.getStyle("regular"));
-			doc.insertString(doc.getLength(),"   All Files must be tab-delimited, and ",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(),"   All files must be tab-delimited, and ",doc.getStyle("regular"));
 			doc.insertString(doc.getLength(), "each line in the file " +
 					"describes an individual feature - homology group relationship.", doc.getStyle("bold"));
 			doc.insertString(doc.getLength(), "  Depending on the number of columns provided, each line is parsed differently.  " +
@@ -499,7 +499,34 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 			doc.insertString(doc.getLength(), "Genome Name", doc.getStyle("bold"));
 			doc.insertString(doc.getLength(), ", this feature is assigned the provided ", doc.getStyle("regular"));
 			doc.insertString(doc.getLength(), "Homology Cluster ID Number", doc.getStyle("bold"));
-			doc.insertString(doc.getLength(), ".\n\nInstead of spaces, please use underscores.", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), ".\n\nIn the Annotation Key field, please use underscores instead of spaces.\n\n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "(3) Three-Column Format\n",doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "If there are 3 tab-delimited entries in the line, entries take on the following values:\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 1:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Genome Name\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 2:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Annotation Key\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 3:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Homology Cluster ID Number\n\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "This format is identical to Four-column format, however does not check for agreement in the sequence name.\n\n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "(4) Two-Column Format\n",doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "If there are 2 tab-delimited entries in the line, entries take on the following values:\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 1:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Annotation Key\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Column 3:", doc.getStyle("bold"));
+			doc.insertString(doc.getLength()," Homology Cluster ID Number\n\n",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "All features in all genomes in the genomic working set with an annotation that" +
+					" contains the ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Annotation Key", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), " are assigned the provided ", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Homology Cluster ID Number", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), ".\n\n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "(5) Single Column Format\n",doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "If there is only a single entry in the line, This entry is taken to be the ",doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "Annotation Key", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), ". All annotated features that contain the annotation key are given a homology cluster ID number," +
+					" which is determined by the line number in the file.\n\n", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "For additional help and examples, please consult the JContextExplorer manual.", doc.getStyle("regular"));
 
         } catch (BadLocationException e) {
 			e.printStackTrace();
@@ -1079,91 +1106,95 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 							//import each line
 							String[] ImportedLine = Line.split("\t");
 							
-							//Gene Name
-							if (ImportedLine.length == 1) {
+							//increment cluster counter.
+							ClusterNumCounter++;
 							
-								//increment cluster counter.
-								ClusterNumCounter++;
+							//try to parse every line
+							try {
+								//Gene Name
+								if (ImportedLine.length == 1) {
+									
+									//add cluster number
+									for (AnnotatedGenome AG : OS.getSpecies().values()){
+										AG.addClusterNumber(ImportedLine[0].replace("_ "," "), ClusterNumCounter);
+									}
+									
+									//largest cluster designation is always the last
+									OS.LargestCluster = TotalLines;
+									
+								//Gene Name - Cluster Number
+								} else if (ImportedLine.length == 2) {
 								
-								//add cluster number
-								for (AnnotatedGenome AG : OS.getSpecies().values()){
-									AG.addClusterNumber(ImportedLine[0].replace("_ "," "), ClusterNumCounter);
-								}
+									//recover bioinfo
+									int GeneClusterNum = Integer.parseInt(ImportedLine[1]);
+									
+									//set largest cluster number
+									if (OS.LargestCluster < GeneClusterNum){
+										OS.LargestCluster = GeneClusterNum;
+									}
+									
+									//add cluster number
+									for (AnnotatedGenome AG : OS.getSpecies().values()){
+										AG.addClusterNumber(ImportedLine[0].replace("_"," "), GeneClusterNum);
+									}
+									
+									
+								//Organism - Gene Name - Cluster Number
+								} else if (ImportedLine.length == 3 ){
+									
+									//recover bioinfo
+									int GeneClusterNum = Integer.parseInt(ImportedLine[2]);
+									
+									//set largest cluster number
+									if (OS.LargestCluster < GeneClusterNum){
+										OS.LargestCluster = GeneClusterNum;
+									}
+									
+									//add cluster number 
+									OS.getSpecies().get(ImportedLine[0])
+										.addClusterNumber(ImportedLine[1].replace("_", " "), GeneClusterNum);
 								
-								//largest cluster designation is always the last
-								OS.LargestCluster = TotalLines;
-								
-							//Gene Name - Cluster Number
-							} else if (ImportedLine.length == 2) {
-							
-								//recover bioinfo
-								int GeneClusterNum = Integer.parseInt(ImportedLine[1]);
-								
-								//set largest cluster number
-								if (OS.LargestCluster < GeneClusterNum){
-									OS.LargestCluster = GeneClusterNum;
-								}
-								
-								//add cluster number
-								for (AnnotatedGenome AG : OS.getSpecies().values()){
-									AG.addClusterNumber(ImportedLine[0].replace("_"," "), GeneClusterNum);
-								}
-								
-								
-							//Organism - Gene Name - Cluster Number
-							} else if (ImportedLine.length == 3 ){
-								
-								//recover bioinfo
-								int GeneClusterNum = Integer.parseInt(ImportedLine[2]);
-								
-								//set largest cluster number
-								if (OS.LargestCluster < GeneClusterNum){
-									OS.LargestCluster = GeneClusterNum;
-								}
-								
-								//add cluster number 
-								OS.getSpecies().get(ImportedLine[0])
-									.addClusterNumber(ImportedLine[1].replace("_", " "), GeneClusterNum);
-							
-							//Organism - Contig - Gene Name - Cluster Number	
-							} else if (ImportedLine.length == 4){
-								
-								//recover bioinfo
-								int GeneClusterNum = Integer.parseInt(ImportedLine[3]);
-								
-								//set largest cluster number
-								if (OS.LargestCluster < GeneClusterNum){
-									OS.LargestCluster = GeneClusterNum;
-								}
-								
-								//add cluster number 
-								OS.getSpecies().get(ImportedLine[0])
-									.addClusterNumber(ImportedLine[1], ImportedLine[2].replace("_", " "), GeneClusterNum);
+								//Organism - Contig - Gene Name - Cluster Number	
+								} else if (ImportedLine.length == 4){
+									
+									//recover bioinfo
+									int GeneClusterNum = Integer.parseInt(ImportedLine[3]);
+									
+									//set largest cluster number
+									if (OS.LargestCluster < GeneClusterNum){
+										OS.LargestCluster = GeneClusterNum;
+									}
+									
+									//add cluster number 
+									OS.getSpecies().get(ImportedLine[0])
+										.addClusterNumber(ImportedLine[1], ImportedLine[2].replace("_", " "), GeneClusterNum);
 
-							//Organism - Contig - Gene Start - Gene Stop - Cluster Number
-							} else if (ImportedLine.length == 5) {
-								
-								//recover bioinfo
-								int GeneStart = Integer.parseInt(ImportedLine[2]);
-								int GeneStop = Integer.parseInt(ImportedLine[3]);
-								int GeneClusterNum = Integer.parseInt(ImportedLine[4]);
-								
-								//set largest cluster number
-								if (OS.LargestCluster < GeneClusterNum){
-									OS.LargestCluster = GeneClusterNum;
+								//Organism - Contig - Gene Start - Gene Stop - Cluster Number
+								} else if (ImportedLine.length == 5) {
+									
+									//recover bioinfo
+									int GeneStart = Integer.parseInt(ImportedLine[2]);
+									int GeneStop = Integer.parseInt(ImportedLine[3]);
+									int GeneClusterNum = Integer.parseInt(ImportedLine[4]);
+									
+									//set largest cluster number
+									if (OS.LargestCluster < GeneClusterNum){
+										OS.LargestCluster = GeneClusterNum;
+									}
+									
+									//add cluster number 
+									OS.getSpecies().get(ImportedLine[0])
+										.addClusterNumber(ImportedLine[1], GeneStart, GeneStop, GeneClusterNum);
+									
+								} else {
+									throw new Exception();
 								}
-								
-								//add cluster number 
-								OS.getSpecies().get(ImportedLine[0])
-									.addClusterNumber(ImportedLine[1], GeneStart, GeneStop, GeneClusterNum);
-								
-							} else {
-								throw new Exception();
-							}
-							
+							} catch (Exception ex){}
+
 							//report to SwingWorker
 							LineCounter++;
 							
+							//update progress
 							clusterProgress= (int) Math.round(100*((double)LineCounter/(double)TotalLines));
 							setProgress(clusterProgress);
 							
