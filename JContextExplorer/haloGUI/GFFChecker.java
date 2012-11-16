@@ -133,6 +133,8 @@ public class GFFChecker extends JFrame implements ActionListener{
 			doc.insertString(doc.getLength(), "Features in the GFF file may not overlap in the genomic coordinates they span.  In the case that they do overlap, JContextExplorer will exhibit unpredictable behavior ", doc.getStyle("Regular"));
 			doc.insertString(doc.getLength(), "and likely fail.\n", doc.getStyle("Regular"));
 			doc.insertString(doc.getLength(), "Please ensure that no annotated features overlap prior to loading GFF files.", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "\n\nFor additional help and examples, please consult the JContextExplorer manual.", doc.getStyle("regular"));
+
         } catch (BadLocationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

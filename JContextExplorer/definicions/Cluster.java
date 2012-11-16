@@ -98,6 +98,10 @@ public class Cluster {
 		return id;
 	}
 
+	public int getNumSubclusters() {
+		return (lst.size() > 0 ? lst.size() : 1);
+	}
+	
 	public double setAlcada(final double alcada) {
 		this.alcada = alcada;
 		base = alcada;
@@ -186,7 +190,7 @@ public class Cluster {
 		}
 		return c;
 	}
-
+	
 	public String getNom() {
 		return nom;
 	}

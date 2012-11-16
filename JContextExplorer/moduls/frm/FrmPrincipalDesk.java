@@ -51,6 +51,7 @@ import moduls.frm.Panels.Jpan_genome;
 import moduls.frm.children.DeviationMeasuresBox;
 import moduls.frm.children.FrmPiz;
 import parser.ToNewick;
+import parser.ToNewick2;
 import parser.ToTXT;
 import parser.Ultrametric;
 import parser.EPS.EPSExporter;
@@ -310,12 +311,13 @@ public class FrmPrincipalDesk extends JFrame{
 		}
 	}
 
+	//save Newick tree format
 	public void saveNewick(Cluster root, int precision, tipusDades typeData)
 			throws Exception {
 		String msgBox, sPath;
 		FileDialog fd;
 		double heightBottom, heightMin, heightMax, extraSpace;
-		ToNewick toNewick;
+		//ToNewick toNewick;
 
 		msgBox = Language.getLabel(80) + " Newick";
 		String sNameNoExt = Jpan_btn.getFileNameNoExt();
@@ -335,8 +337,14 @@ public class FrmPrincipalDesk extends JFrame{
 				extraSpace = MiMath.Arodoneix(extraSpace, precision);
 				heightBottom = heightMax + extraSpace;
 			}
-			toNewick = new ToNewick(root, precision, typeData, heightBottom);
-			toNewick.saveAsNewick(sPath);
+			//old version
+//			toNewick = new ToNewick(root, precision, typeData, heightBottom);
+//			toNewick.saveAsNewick(sPath);
+			
+			//new version
+			ToNewick2 toNewick2 = new ToNewick2(root, precision, typeData, heightBottom);
+			toNewick2.saveAsNewick(sPath);
+
 		}
 	}
 
