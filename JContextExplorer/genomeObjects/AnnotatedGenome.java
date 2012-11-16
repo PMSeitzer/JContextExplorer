@@ -77,34 +77,41 @@ public void importElements(String filename){
 					
 					//add this element to the list, if necessary
 					if (RetainElement){
-						//create a new element
-						GenomicElement E = new GenomicElement();
 						
-						//set appropriate fields of this genomic element with inputs achieved from the GFF file
-						E.setContig(ImportedLine[0]);
-						E.setType(ImportedLine[2]);
-						E.setStart(Integer.parseInt(ImportedLine[3]));
-						E.setStop(Integer.parseInt(ImportedLine[4]));
-						E.setElementID(Counter);
-						
+						//if a line or two are not formatted correctly, just ignore these lines.
 						try {
-							if(Integer.parseInt(ImportedLine[6])==1){
-								E.setStrand(Strand.POSITIVE);
-							}else{
-								E.setStrand(Strand.NEGATIVE);
-							}
-						} catch (Exception ex) {
-							if (ImportedLine[6].contentEquals("+")){
-								E.setStrand(Strand.POSITIVE);
-							} else {
-								E.setStrand(Strand.NEGATIVE);
-							}
-						} 
+							
+							//create a new element
+							GenomicElement E = new GenomicElement();
+							
+							//set appropriate fields of this genomic element with inputs achieved from the GFF file
+							E.setContig(ImportedLine[0]);
+							E.setType(ImportedLine[2]);
+							E.setStart(Integer.parseInt(ImportedLine[3]));
+							E.setStop(Integer.parseInt(ImportedLine[4]));
+							E.setElementID(Counter);
+							
+							try {
+								if(Integer.parseInt(ImportedLine[6])==1){
+									E.setStrand(Strand.POSITIVE);
+								}else{
+									E.setStrand(Strand.NEGATIVE);
+								}
+							} catch (Exception ex) {
+								if (ImportedLine[6].contentEquals("+")){
+									E.setStrand(Strand.POSITIVE);
+								} else {
+									E.setStrand(Strand.NEGATIVE);
+								}
+							} 
+							
+							E.setAnnotation(ImportedLine[8]);
 						
-						E.setAnnotation(ImportedLine[8]);
-					
-						//add to list
-						Elements.add(E);
+							//add to list
+							Elements.add(E);
+							
+						} catch (Exception ex) {}
+
 					}
 			}
 			br.close();		

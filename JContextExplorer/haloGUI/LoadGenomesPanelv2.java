@@ -842,6 +842,8 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 					
 					while((Line = br.readLine()) != null){
 						
+						//if a line or two in the file are incorrectly formatted, no worries.
+						try {
 							//initialize species name
 							String SpeciesName;
 						
@@ -899,6 +901,8 @@ public class LoadGenomesPanelv2 extends JLayeredPane
 							//add name to array of species
 							SpeciesNames.add(SpeciesName);
 							
+						} catch (Exception ex) {}
+						
 							//update progress bar
 							OrganismsCompleted++;
 							progress= (int) Math.round(100*((double)OrganismsCompleted/(double)TotalOrganisms));
