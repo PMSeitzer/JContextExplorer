@@ -43,7 +43,10 @@ import javax.swing.JScrollPane;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 
+import moduls.frm.Panels.Jpan_GraphMenu;
 import moduls.frm.Panels.Jpan_Menu;
+import moduls.frm.Panels.Jpan_MotifOptions;
+import moduls.frm.Panels.Jpan_TabbedMenu;
 import moduls.frm.Panels.Jpan_btn;
 import moduls.frm.Panels.Jpan_btnExit;
 import moduls.frm.Panels.Jpan_btn_NEW;
@@ -87,7 +90,11 @@ public class FrmPrincipalDesk extends JFrame{
 	private Jpan_btn_NEW panBtn;
 	
 	private final Jpan_Menu panMenu; //Settings panel
-	//private final Jpan_Menu_NEW panMenu;
+	
+	//version 2.0
+	private final Jpan_TabbedMenu panMenuTab;
+	private final Jpan_GraphMenu panGraphMenu;
+	private final Jpan_MotifOptions panMotifOptions;
 	
 	private final Jpan_genome panGenome; // genome-viewing frame
 
@@ -119,9 +126,7 @@ public class FrmPrincipalDesk extends JFrame{
 
 		//CREATE COMPONENT PANELS
 		panMenu = new Jpan_Menu(this); 			//Settings panel (West)
-		//panMenu = new Jpan_Menu_NEW(this);
 		pan_Exit = new Jpan_btnExit(this); 		//About + Exit (SouthWest)
-		//panBtn = new Jpan_btn(this); 			//Load + Update (NorthWest)
 		panBtn = new Jpan_btn_NEW(this);
 		panGenome = new Jpan_genome(this);		//scrollable genome view
 		
@@ -135,9 +140,16 @@ public class FrmPrincipalDesk extends JFrame{
 		pan_West = new JPanel();
 		pan_West.setLayout(new BorderLayout());
 		pan_West.add(panBtn, BorderLayout.NORTH);
-			JScrollPane scrollPane1 = new JScrollPane(panMenu);
-		pan_West.add(scrollPane1, BorderLayout.CENTER);
-		//pan_West.add(pan_Exit, BorderLayout.SOUTH);
+	
+		//switch 1
+//			JScrollPane scrollPane1 = new JScrollPane(panMenu);	
+//		pan_West.add(scrollPane1, BorderLayout.CENTER);
+		
+		//switch 2
+		panGraphMenu = new Jpan_GraphMenu();		//Graph menu
+		panMotifOptions = new Jpan_MotifOptions();	//Motif Options tab
+		panMenuTab = new Jpan_TabbedMenu(panMenu,panGraphMenu,panMotifOptions);
+		pan_West.add(panMenuTab, BorderLayout.CENTER);
 
 		//SOUTH: Genome context viewing
 		pan_South = new JPanel();

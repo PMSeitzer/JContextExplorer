@@ -119,7 +119,7 @@ import definicions.MatriuDistancies;
 		private JLabel ContextSetSelect, SearchGenomes;
 		
 		
-	// ----- New Fields --------------------------------------------//	
+	// ----- New Fields (1.0) --------------------------------------------//	
 		
 		//These fields modify the new scrollable tree
 		
@@ -131,6 +131,10 @@ import definicions.MatriuDistancies;
 		
 		private String currentQuery;
 
+	// ----- New Fields (2.0) --------------------------------------------//			
+		
+		private JLabel AddRegMotif;
+		
 		
 	// ----- Methods -----------------------------------------------//	
 		
@@ -421,6 +425,20 @@ import definicions.MatriuDistancies;
 //			btnUpdate.setFont(fontStandard);
 //			add(btnUpdate, c);
 //			gridy++;
+			
+//			//New elements, version 2.0
+//			// Load sequence Motif label
+//			c.gridx = 0;
+//			c.gridy = gridy;
+//			c.gridheight = 1;
+//			c.fill = GridBagConstraints.HORIZONTAL;
+//			c.gridwidth = 4;
+//			AddRegMotif = new JLabel(" LOAD REGULATORY MOTIF(S)");
+//			AddRegMotif.setBackground(Color.GRAY);
+//			AddRegMotif.setOpaque(true);
+//			AddRegMotif.setFont(fontStandard);
+//			add(AddRegMotif,c);
+//			gridy++;			
 			
 			// empty space
 			c.gridx = 0;
