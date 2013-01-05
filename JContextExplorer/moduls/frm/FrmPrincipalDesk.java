@@ -76,7 +76,7 @@ import definicions.Config;
  */
 public class FrmPrincipalDesk extends JFrame{
 	
-// ----- Fields ---------------------------------------------------//
+	// ----- Fields ---------------------------------------------------//
 	
 	private static final long serialVersionUID = 1L;
 
@@ -109,8 +109,12 @@ public class FrmPrincipalDesk extends JFrame{
 	//data necessary to render contexts
 	private boolean[] SelectedNodeNumbers;
 	private CSDisplayData CSD;
+
+	// ----- New Fields (2.0) ------------------------------------------//
 	
-// ----- Methods ---------------------------------------------------//		
+	private boolean IncludeMotifs = false;
+	
+	// ----- Methods ---------------------------------------------------//		
 
 	//This is the main GUI window.
 	public FrmPrincipalDesk(final String title, OrganismSet theOrganismSet) {
@@ -146,8 +150,8 @@ public class FrmPrincipalDesk extends JFrame{
 //		pan_West.add(scrollPane1, BorderLayout.CENTER);
 		
 		//switch 2
-		panGraphMenu = new Jpan_GraphMenu();		//Graph menu
-		panMotifOptions = new Jpan_MotifOptions();	//Motif Options tab
+		panGraphMenu = new Jpan_GraphMenu(this);		//Graph menu
+		panMotifOptions = new Jpan_MotifOptions(this);	//Motif Options tab
 		panMenuTab = new Jpan_TabbedMenu(panMenu,panGraphMenu,panMotifOptions);
 		pan_West.add(panMenuTab, BorderLayout.CENTER);
 
@@ -456,6 +460,14 @@ public class FrmPrincipalDesk extends JFrame{
 
 	public Jpan_Menu getPanMenu() {
 		return panMenu;
+	}
+
+	public boolean isIncludeMotifs() {
+		return IncludeMotifs;
+	}
+
+	public void setIncludeMotifs(boolean includeMotifs) {
+		IncludeMotifs = includeMotifs;
 	}
 
 

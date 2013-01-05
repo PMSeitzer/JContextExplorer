@@ -50,7 +50,7 @@ public class Dendrograma {
 
 		//carry along OS, create Frm
 		this.OS = theOrganismSet;
-		FrmPrincipalDesk f = new FrmPrincipalDesk("JContextExplorer (1.0): Main Window", theOrganismSet);
+		FrmPrincipalDesk f = new FrmPrincipalDesk("JContextExplorer (1.1): Main Window", theOrganismSet);
 		
 		//Frm specifications
 		Dimension pantalla = Toolkit.getDefaultToolkit().getScreenSize();
