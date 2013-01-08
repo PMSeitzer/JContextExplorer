@@ -46,6 +46,7 @@ import javax.swing.event.InternalFrameListener;
 import moduls.frm.Panels.Jpan_GraphMenu;
 import moduls.frm.Panels.Jpan_Menu;
 import moduls.frm.Panels.Jpan_MotifOptions;
+import moduls.frm.Panels.Jpan_PhyTreeMenu;
 import moduls.frm.Panels.Jpan_TabbedMenu;
 import moduls.frm.Panels.Jpan_btn;
 import moduls.frm.Panels.Jpan_btnExit;
@@ -95,6 +96,7 @@ public class FrmPrincipalDesk extends JFrame{
 	private final Jpan_TabbedMenu panMenuTab;
 	private final Jpan_GraphMenu panGraphMenu;
 	private final Jpan_MotifOptions panMotifOptions;
+	private final Jpan_PhyTreeMenu panPhyTreeMenu;
 	
 	private final Jpan_genome panGenome; // genome-viewing frame
 
@@ -152,7 +154,8 @@ public class FrmPrincipalDesk extends JFrame{
 		//switch 2
 		panGraphMenu = new Jpan_GraphMenu(this);		//Graph menu
 		panMotifOptions = new Jpan_MotifOptions(this);	//Motif Options tab
-		panMenuTab = new Jpan_TabbedMenu(panMenu,panGraphMenu,panMotifOptions);
+		panPhyTreeMenu = new Jpan_PhyTreeMenu(this);	//Loadable phylogenetic tree
+		panMenuTab = new Jpan_TabbedMenu(panMenu,panGraphMenu,panMotifOptions,panPhyTreeMenu);
 		pan_West.add(panMenuTab, BorderLayout.CENTER);
 
 		//SOUTH: Genome context viewing
@@ -161,6 +164,9 @@ public class FrmPrincipalDesk extends JFrame{
 		pan_South.add(panGenome);
 		
 		pan_Center.add(pan_South, BorderLayout.SOUTH);
+		
+		//set precision value
+		Jpan_Menu.setPrecision(18);
 		
 		//SET PROPERTIES OF DESKTOP FRAME
 		//JFrame.setDefaultLookAndFeelDecorated(true);

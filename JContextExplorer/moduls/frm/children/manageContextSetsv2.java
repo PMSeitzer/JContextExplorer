@@ -225,6 +225,8 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		@Override
 		protected Void doInBackground() throws Exception {
 
+			btnAddCS.setEnabled(false);
+			
 			if (OperonsbyComputation == true){
 				
 			int TotalOrganisms = fr.getOS().getSpeciesNames().size();	
@@ -342,9 +344,9 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 			return null;
 		}
 		
-		//after all completed
+		//after all completed, load up this set
 		public void done(){
-
+			btnAddCS.setEnabled(true);
 		}
 		
 	}

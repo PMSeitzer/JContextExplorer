@@ -12,11 +12,13 @@ public class Jpan_TabbedMenu extends JTabbedPane{
 	private Jpan_Menu jm;
 	private Jpan_GraphMenu jgm;
 	private Jpan_MotifOptions jmo;
+	private Jpan_PhyTreeMenu jpm;
 	
 	//Constructor
-	public Jpan_TabbedMenu(Jpan_Menu jm, Jpan_GraphMenu jgm, Jpan_MotifOptions jmo){
+	public Jpan_TabbedMenu(Jpan_Menu jm, Jpan_GraphMenu jgm, Jpan_MotifOptions jmo, Jpan_PhyTreeMenu jpm){
 		 //store data
 		this.jm = jm;
+		this.jpm = jpm;
 		this.jgm = jgm;
 		this.jmo = jmo;
 		
@@ -27,7 +29,25 @@ public class Jpan_TabbedMenu extends JTabbedPane{
 	//create panel
 	public void getPanel(){
 		//Menu tab
-		JScrollPane MenuScroll = new JScrollPane(jm);
+		//JScrollPane MenuScroll = new JScrollPane(jm);
+		
+		//Context tree menu tab
+		JPanel MenuContainerPane = new JPanel();
+		MenuContainerPane.setLayout(new BorderLayout());
+		MenuContainerPane.add(jm, BorderLayout.NORTH);
+		JScrollPane MenuScroll = new JScrollPane(MenuContainerPane);
+		
+		//Graph tab
+		JPanel GraphContainerPane = new JPanel();
+		GraphContainerPane.setLayout(new BorderLayout());
+		GraphContainerPane.add(jgm, BorderLayout.NORTH);
+		JScrollPane GraphScroll = new JScrollPane(GraphContainerPane);		
+		
+		//Phylogenetic tree tab
+		JPanel PhyloContainerPane = new JPanel();
+		PhyloContainerPane.setLayout(new BorderLayout());
+		PhyloContainerPane.add(jpm, BorderLayout.NORTH);
+		JScrollPane PhyloScroll = new JScrollPane(PhyloContainerPane);
 		
 		//Motif options tab
 		JPanel ContainerPane = new JPanel();
@@ -37,7 +57,8 @@ public class Jpan_TabbedMenu extends JTabbedPane{
 		
 		//add tabs to JOptionPanel
 		this.addTab("Tree",null,MenuScroll);
-		this.addTab("Graph",null,jgm);
+		this.addTab("Graph",null,GraphScroll);
+		this.addTab("Phylogeny",null,PhyloScroll);
 		this.addTab("Motifs",null,MotifScroll);
 	}
 

@@ -60,7 +60,6 @@ public class Jpan_MotifOptions extends JPanel implements ActionListener{
 		//initial GridBagLayout parameters
 		c.anchor = GridBagConstraints.FIRST_LINE_START;
 		c.weightx = 1;
-		//c.weighty = 1;
 		c.insets = new Insets(1,1,1,1);
 		
 		//Check boxes banner

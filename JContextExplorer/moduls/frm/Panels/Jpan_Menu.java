@@ -278,12 +278,16 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 	}
 
 	private void getPanel() {
-		setLayout(new GridBagLayout());
-//		setBorder(BorderFactory.createTitledBorder(Language.getLabel(23))); // Settings
-		setBorder(BorderFactory.createTitledBorder("Display Settings")); // Settings
+		this.setLayout(new GridBagLayout());
+		this.setBorder(BorderFactory.createTitledBorder("Context Tree Settings")); // Settings
 		final GridBagConstraints c = new GridBagConstraints();
 		int gridy = 0;
 
+		//initial GridBagLayout parameters
+		c.anchor = GridBagConstraints.FIRST_LINE_START;
+		c.weightx = 1;
+		c.insets = new Insets(1,1,1,1);
+		
 		// group options
 		ButtonGroup optTipus;
 		optTipus = new ButtonGroup();
@@ -354,6 +358,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
 		add(lblMethod, c);
+		
 		// cb method
 		c.gridx = 1;
 		c.gridy = gridy;
@@ -372,6 +377,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
 		add(lblPrecision, c);
+		
 		// txt precision
 		c.gridx = 1;
 		c.gridy = gridy;

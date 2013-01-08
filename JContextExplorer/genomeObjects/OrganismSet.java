@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingWorker;
 
 import definicions.MatriuDistancies;
 
@@ -176,6 +177,130 @@ public class OrganismSet {
 	}
 	
 	//----------------------- Extended CRON computation ---------------//
+	
+	//DE by annotations
+	public class DEAnnotationWorker extends SwingWorker<DadesExternes, Void>{
+
+		//fields
+		public String[] Queries;
+		public String ContextSetName;
+		public String DissimilarityMethod;
+		public String Name;
+		
+		@Override
+		protected DadesExternes doInBackground() throws Exception {
+		
+			ContextSetDescription CurrentCSD = null;
+			
+			//recover the context set description
+			for (ContextSetDescription csd : CSDs){
+				if (csd.getName().contentEquals(this.ContextSetName)){
+					CurrentCSD = csd;
+					break;
+				}
+			}
+			
+			//initialize output
+			ExtendedCRON EC = new ExtendedCRON();
+			
+			//set name and type of CRON.
+			EC.setName(this.Name);
+			EC.setContextSetName(this.ContextSetName);
+			EC.setSearchType("annotation");
+			EC.setQueries(this.Queries);
+			
+			//initialize output
+			//actual context mapping
+			LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> ContextSetList = 
+					new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
+			
+			//species names
+			LinkedHashMap<String, String> SourceNames =
+					new LinkedHashMap<String, String>();
+			
+			//contig names
+			LinkedHashMap<String, String> ContigNames = 
+					new LinkedHashMap<String, String>();
+			
+			//initialize a counter variable
+			int Counter = 0;
+			
+			//System.out.println("before iteration");
+			
+			//iterate through species.
+			for (Entry<String, AnnotatedGenome> entry : Species.entrySet()) {
+
+				//initialize output
+				HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = null;
+				
+				if (CurrentCSD.isPreprocessed()){
+					
+					//pre-processed cases
+					Matches = entry.getValue().AnnotationMatches(this.Queries, this.ContextSetName);
+
+				} else {
+					
+					//on-the-fly
+					if (CurrentCSD.getType().contentEquals("GenesBetween") && Queries.length != 2) {
+						JOptionPane.showMessageDialog(null, "This gene grouping requires exactly two search queries.",
+								"Inappropriate Number of Queries",JOptionPane.ERROR_MESSAGE);
+					} else {
+						Matches = entry.getValue().MatchesOnTheFly(this.Queries, null, CurrentCSD);
+					}
+
+				}
+				
+				//create an iterator for the HashSet
+				Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
+				 
+				//iterate through HashSet, with string-based keys
+				int OperonCounter = 0; //reset operon counter
+				while(it.hasNext()){
+					
+					//context unit object
+					LinkedList<GenomicElementAndQueryMatch> ContextSegment = it.next();
+					
+					//increment counters
+					OperonCounter++;	
+					Counter++;
+					
+					//define key
+					String Key = entry.getKey() + "-" + Integer.toString(OperonCounter);
+					
+					//put elements into hashmap
+					ContextSetList.put(Key, ContextSegment);
+					
+					//record other info
+					SourceNames.put(Key, entry.getValue().getSpecies());
+					ContigNames.put(Key, ContextSegment.getFirst().getE().getContig());
+				}
+				
+			}
+			
+			//add hash map to extended CRON
+			EC.setContexts(ContextSetList);
+			EC.setNumberOfEntries(Counter);
+			
+			//add source info
+			EC.setSourceSpeciesNames(SourceNames);
+			EC.setSourceContigNames(ContigNames);
+			
+			//System.out.println("ECRons computed + values set");
+			
+			//compute distances, and format correctly within the ExtendedCRON object.
+			EC.computePairwiseDistances(this.DissimilarityMethod);
+			EC.exportDistancesToField();
+			
+			//System.out.println("OrganismSet().AnnotationSearch() Up to making de");
+			
+			//initialize DadesExternes
+			DadesExternes de = new DadesExternes(EC);
+			
+			return de;
+
+		}
+		
+	}
 	
 	//annotation search
 	public DadesExternes AnnotationSearch(String[] Queries, String ContextSetName, String DissimilarityMethod, String Name) throws Exception{

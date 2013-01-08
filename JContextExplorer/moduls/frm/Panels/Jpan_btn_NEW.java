@@ -1,7 +1,10 @@
 package moduls.frm.Panels;
 
-	import genomeObjects.CSDisplayData;
+	import genomeObjects.AnnotatedGenome;
+import genomeObjects.CSDisplayData;
 import genomeObjects.ContextSetDescription;
+import genomeObjects.ExtendedCRON;
+import genomeObjects.GenomicElementAndQueryMatch;
 import genomeObjects.OrganismSet;
 import importExport.DadesExternes;
 	import importExport.FitxerDades;
@@ -19,9 +22,14 @@ import java.awt.Font;
 	import java.awt.event.ActionListener;
 	import java.beans.PropertyChangeEvent;
 	import java.beans.PropertyChangeListener;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.Map.Entry;
 
+import javax.swing.AbstractAction;
 	import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 	import javax.swing.JButton;
@@ -76,8 +84,9 @@ import definicions.MatriuDistancies;
 		private JRadioButton annotationSearch, clusterSearch;
 		
 		// Load and update buttons
-		private static JButton btnManage, btnSubmit, btnCancel, btnUpdate;
-
+		private static JButton btnManage, btnSubmit, btnUpdate;
+		private JButton btnCancel;
+		
 		// Indicates if the buttons Load or Update are being clicked
 		public static boolean buttonClicked = false;
 
@@ -131,12 +140,14 @@ import definicions.MatriuDistancies;
 		
 		private String currentQuery;
 
-	// ----- New Fields (2.0) --------------------------------------------//			
+	// ----- New Fields (1.1) --------------------------------------------//			
 		
-		private JLabel AddRegMotif;
-		
+		//searches are handled by a single Swing Worker
+		private SearchWorker CurrentSearch = null;
 		
 	// ----- Methods -----------------------------------------------//	
+		
+		// ---- Thread Workers for Searches ------------------------//
 		
 		// Swing Worker MultiDendrogram computation
 	 	class MDComputation extends SwingWorker<Void, Void> {
@@ -159,6 +170,7 @@ import definicions.MatriuDistancies;
 				this.nbElements = nbElements;
 				this.minBase = minBase;
 //				System.out.println("Step 2");
+
 			}
 
 			@Override
@@ -220,6 +232,535 @@ import definicions.MatriuDistancies;
 			}
 		}
 
+		//DE by annotations
+		class DEAnnotationSearchWorker extends SwingWorker<Void, Void>{
+
+			//fields
+			private String[] Queries;
+			private String ContextSetName;
+			private String DissimilarityMethod;
+			private String Name;
+			private OrganismSet OS;
+			private DadesExternes ProcessedDE;
+			
+			//constructor
+			public DEAnnotationSearchWorker(final String[] Queries, final String ContextSetName, final String DissimilarityMethod,
+					final String Name, final OrganismSet OS){
+				this.Queries = Queries;
+				this.ContextSetName = ContextSetName;
+				this.DissimilarityMethod = DissimilarityMethod;
+				this.Name = Name;
+				this.OS = OS;
+			}
+			
+			@Override
+			protected Void doInBackground(){
+			
+				//Part 1: The search
+				//========================================//
+				
+				int progress = 0;
+				
+				System.out.println("Into the worker");
+				ContextSetDescription CurrentCSD = null;
+				
+				//recover the context set description
+				for (ContextSetDescription csd : OS.getCSDs()){
+					if (csd.getName().contentEquals(this.ContextSetName)){
+						CurrentCSD = csd;
+						break;
+					}
+				}
+				
+				//initialize output
+				ExtendedCRON EC = new ExtendedCRON();
+				
+				//set name and type of CRON.
+				EC.setName(this.Name);
+				EC.setContextSetName(this.ContextSetName);
+				EC.setSearchType("annotation");
+				EC.setQueries(this.Queries);
+				
+				System.out.println("New EC");
+				
+				//initialize output
+				//actual context mapping
+				LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> ContextSetList = 
+						new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
+				
+				//species names
+				LinkedHashMap<String, String> SourceNames =
+						new LinkedHashMap<String, String>();
+				
+				//contig names
+				LinkedHashMap<String, String> ContigNames = 
+						new LinkedHashMap<String, String>();
+				
+				//initialize a counter variable
+				int Counter = 0;
+				int SpeciesCounter = 0;
+				
+				//iterate through species.
+				for (Entry<String, AnnotatedGenome> entry : OS.getSpecies().entrySet()) {
+
+					//initialize output
+					HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = null;
+					
+					if (CurrentCSD.isPreprocessed()){
+						
+						//pre-processed cases
+						Matches = entry.getValue().AnnotationMatches(this.Queries, this.ContextSetName);
+
+					} else {
+						
+						//on-the-fly
+						if (CurrentCSD.getType().contentEquals("GenesBetween") && Queries.length != 2) {
+							JOptionPane.showMessageDialog(null, "This gene grouping requires exactly two search queries.",
+									"Inappropriate Number of Queries",JOptionPane.ERROR_MESSAGE);
+						} else {
+							Matches = entry.getValue().MatchesOnTheFly(this.Queries, null, CurrentCSD);
+						}
+
+					}
+					
+					//create an iterator for the HashSet
+					Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
+					 
+					//iterate through HashSet, with string-based keys
+					int OperonCounter = 0; //reset operon counter
+					while(it.hasNext()){
+						
+						//context unit object
+						LinkedList<GenomicElementAndQueryMatch> ContextSegment = it.next();
+						
+						//increment counters
+						OperonCounter++;	
+						Counter++;
+						
+						//define key
+						String Key = entry.getKey() + "-" + Integer.toString(OperonCounter);
+						
+						//put elements into hashmap
+						ContextSetList.put(Key, ContextSegment);
+						
+						//record other info
+						SourceNames.put(Key, entry.getValue().getSpecies());
+						ContigNames.put(Key, ContextSegment.getFirst().getE().getContig());
+					}
+					
+					SpeciesCounter++;
+					progress = (int) (100*((double)SpeciesCounter/(double)OS.getSpecies().size()));
+					//update progress
+					setProgress(progress);
+				}
+				
+				System.out.println("through the matches");
+				
+				//add hash map to extended CRON
+				EC.setContexts(ContextSetList);
+				EC.setNumberOfEntries(Counter);
+				
+				//add source info
+				EC.setSourceSpeciesNames(SourceNames);
+				EC.setSourceContigNames(ContigNames);
+				
+				//System.out.println("ECRons computed + values set");
+				
+				//compute distances, and format correctly within the ExtendedCRON object.
+				EC.computePairwiseDistances(this.DissimilarityMethod);
+				EC.exportDistancesToField();
+				
+				System.out.println("onto the DE");
+				
+				//retrieve DadesExternes
+				try {
+					this.ProcessedDE = new DadesExternes(EC);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				
+				System.out.println("complete background execute");
+				return null;
+
+			}
+			
+//			//retrieval method
+//			public DadesExternes getDE(){
+//				return this.ProcessedDE;
+//			}
+			
+			//done method - pass information to parent class
+			public void done(){
+				System.out.println(ProcessedDE.getPrecisio());
+				de = this.ProcessedDE;
+				System.out.println("done");
+				progressBar.setString("");
+				progressBar.setBorderPainted(false);
+				progressBar.setValue(0);
+			}
+			
+		}
+
+		//Unified SwingWorker for searches + multidendrogram computations
+		class SearchWorker extends SwingWorker<Void, Void>{
+
+			//fields
+			
+			//search-related
+			private String[] Queries;
+			private int[] ClusterNumber;
+			private String ContextSetName;
+			private String DissimilarityMethod;
+			private String Name;
+			private boolean AnnotationSearch;
+			private DadesExternes ProcessedDE;
+			
+			//dendrogram-related
+			private final String action;
+			private final tipusDades typeData;
+			private final metodo method;
+			private final int precision;
+			private int nbElements;
+			private double minBase;
+			
+			//constructor
+			public SearchWorker(final String[] Queries, final int[] ClusterNumber, final String ContextSetName, final String DissimilarityMethod,
+					final String Name,final boolean AnnotationSearch, final String action,
+					final tipusDades typeData, final metodo method, final int precision){
+				this.Queries = Queries;
+				this.ClusterNumber = ClusterNumber;
+				this.ContextSetName = ContextSetName;
+				this.DissimilarityMethod = DissimilarityMethod;
+				this.Name = Name;
+				this.AnnotationSearch = AnnotationSearch;
+				
+				this.action = action;
+				this.typeData = typeData;
+				this.method = method;
+				this.precision = precision;
+
+			}
+			
+			@Override
+			protected Void doInBackground() throws Exception {
+
+				//set wait cursor
+				fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				
+				//visualization-related things
+				progressBar.setBorderPainted(true);
+				progressBar.setString(null);
+				
+				//part 1 - search organisms
+				if (AnnotationSearch){
+					SearchOrganismsbyAnnotation();
+				} else {
+					SearchOrganismsbyCluster();
+				}
+
+				//intermediate
+				multiDendro = null;
+				multiDendro = ProcessedDE.getMatriuDistancies();
+				minBase = Double.MAX_VALUE;
+				nbElements = multiDendro.getCardinalitat();
+				
+				//part 2 - compute dendrogram
+				ComputeDendrogram();
+				return null;
+			}
+			
+			//part 1 - search organisms
+			//by annotation
+			protected Void SearchOrganismsbyAnnotation(){
+				
+				//re-set progress value
+				int progress = 0;
+
+				ContextSetDescription CurrentCSD = null;
+				
+				//recover the context set description
+				for (ContextSetDescription csd : OS.getCSDs()){
+					if (csd.getName().contentEquals(this.ContextSetName)){
+						CurrentCSD = csd;
+						break;
+					}
+				}
+				
+				//initialize output
+				ExtendedCRON EC = new ExtendedCRON();
+				
+				//set name and type of CRON.
+				EC.setName(this.Name);
+				EC.setContextSetName(this.ContextSetName);
+				EC.setSearchType("annotation");
+				EC.setQueries(this.Queries);
+				
+				//initialize output
+				//actual context mapping
+				LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> ContextSetList = 
+						new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
+				
+				//species names
+				LinkedHashMap<String, String> SourceNames =
+						new LinkedHashMap<String, String>();
+				
+				//contig names
+				LinkedHashMap<String, String> ContigNames = 
+						new LinkedHashMap<String, String>();
+				
+				//initialize a counter variable
+				int Counter = 0;
+				int SpeciesCounter = 0;
+				
+				//iterate through species.
+				for (Entry<String, AnnotatedGenome> entry : OS.getSpecies().entrySet()) {
+
+					//initialize output
+					HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = null;
+					
+					if (CurrentCSD.isPreprocessed()){
+						
+						//pre-processed cases
+						Matches = entry.getValue().AnnotationMatches(this.Queries, this.ContextSetName);
+
+					} else {
+						
+						//on-the-fly
+						if (CurrentCSD.getType().contentEquals("GenesBetween") && Queries.length != 2) {
+							JOptionPane.showMessageDialog(null, "This gene grouping requires exactly two search queries.",
+									"Inappropriate Number of Queries",JOptionPane.ERROR_MESSAGE);
+						} else {
+							Matches = entry.getValue().MatchesOnTheFly(this.Queries, null, CurrentCSD);
+						}
+
+					}
+					
+					//create an iterator for the HashSet
+					Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
+					 
+					//iterate through HashSet, with string-based keys
+					int OperonCounter = 0; //reset operon counter
+					while(it.hasNext()){
+						
+						//context unit object
+						LinkedList<GenomicElementAndQueryMatch> ContextSegment = it.next();
+						
+						//increment counters
+						OperonCounter++;	
+						Counter++;
+						
+						//define key
+						String Key = entry.getKey() + "-" + Integer.toString(OperonCounter);
+						
+						//put elements into hashmap
+						ContextSetList.put(Key, ContextSegment);
+						
+						//record other info
+						SourceNames.put(Key, entry.getValue().getSpecies());
+						ContigNames.put(Key, ContextSegment.getFirst().getE().getContig());
+					}
+					
+					SpeciesCounter++;
+					progress = (int) (50*((double)SpeciesCounter/(double)OS.getSpecies().size()));
+					//update progress
+					setProgress(progress);
+				}
+				
+				//add hash map to extended CRON
+				EC.setContexts(ContextSetList);
+				EC.setNumberOfEntries(Counter);
+				
+				//add source info
+				EC.setSourceSpeciesNames(SourceNames);
+				EC.setSourceContigNames(ContigNames);
+				
+				//System.out.println("ECRons computed + values set");
+				
+				//compute distances, and format correctly within the ExtendedCRON object.
+				EC.computePairwiseDistances(this.DissimilarityMethod);
+				EC.exportDistancesToField();
+				
+				//retrieve DadesExternes
+				try {
+					this.ProcessedDE = new DadesExternes(EC);
+					de = this.ProcessedDE;
+					
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+				return null;
+			}
+			
+			//by cluster
+			protected Void SearchOrganismsbyCluster(){
+				
+				//re-set progress value
+				int progress = 0;
+				ContextSetDescription CurrentCSD = null;
+				
+				//recover the context set description
+				for (ContextSetDescription csd : OS.getCSDs()){
+					if (csd.getName().contentEquals(ContextSetName)){
+						CurrentCSD = csd;
+						break;
+					}
+				}
+				
+				//initialize output
+				ExtendedCRON EC = new ExtendedCRON();
+				
+				//set name and type of CRON.
+				EC.setName("Clusters " + this.Name);
+				EC.setContextSetName(this.ContextSetName);
+				EC.setSearchType("cluster");
+				EC.setContextType(CurrentCSD.getType());
+				EC.setClusterNumbers(this.ClusterNumber);
+				
+				//initialize output
+				LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> ContextSetList = 
+						new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
+				
+				//species names
+				LinkedHashMap<String, String> SourceNames =
+						new LinkedHashMap<String, String>();
+				
+				//contig names
+				LinkedHashMap<String, String> ContigNames = 
+						new LinkedHashMap<String, String>();
+				
+				//initialize a counter variable
+				int Counter = 0;
+				
+				//iterate through species.
+				for (Entry<String, AnnotatedGenome> entry : OS.getSpecies().entrySet()) {
+
+					HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = null;
+					
+					if (CurrentCSD.isPreprocessed()){
+						
+						//pre-processed cases
+						Matches = entry.getValue().ClusterMatches(this.ClusterNumber, this.ContextSetName);
+
+					} else {
+						
+						//on-the-fly
+						if (CurrentCSD.getType().contentEquals("GenesBetween") && ClusterNumber.length != 2) {
+							JOptionPane.showMessageDialog(null, "This gene grouping requires exactly two search queries.",
+									"Inappropriate Number of Queries",JOptionPane.ERROR_MESSAGE);
+						} else {
+							Matches = entry.getValue().MatchesOnTheFly(null, this.ClusterNumber, CurrentCSD);
+						}
+
+					}
+					
+					//create an iterator for the HashSet
+					Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
+					
+					//iterate through HashSet, with string-based keys
+					int OperonCounter = 0; //reset operon counter
+					while(it.hasNext()){
+						
+						//context unit object
+						LinkedList<GenomicElementAndQueryMatch> ContextSegment = it.next();
+						
+						//increment counters
+						OperonCounter++;	
+						Counter++;
+						
+						//define key
+						String Key = entry.getKey() + "-" + Integer.toString(OperonCounter);
+						
+						//put elements into hashmap
+						ContextSetList.put(Key, ContextSegment);
+						
+						//record other info
+						SourceNames.put(Key, entry.getValue().getSpecies());
+						ContigNames.put(Key, ContextSegment.getFirst().getE().getContig());
+					}
+					
+				}
+				
+				//add hash map to extended CRON
+				EC.setContexts(ContextSetList);
+				EC.setNumberOfEntries(Counter);
+				
+				//add source info
+				EC.setSourceSpeciesNames(SourceNames);
+				EC.setSourceContigNames(ContigNames);
+				
+				//compute distances, and format correctly within the ExtendedCRON object.
+				EC.computePairwiseDistances(this.DissimilarityMethod);
+				EC.exportDistancesToField();
+				
+				//retrieve DadesExternes
+				try {
+					this.ProcessedDE = new DadesExternes(EC);
+					de = this.ProcessedDE;
+					
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+				return null;
+			}
+			
+			//part 2 - compute dendrogram
+			protected Void ComputeDendrogram(){
+				Reagrupa rg;
+				MatriuDistancies mdNew;
+				double b;
+				int progress;
+
+				while (multiDendro.getCardinalitat() > 1) {
+					try {
+						
+						//CLUSTERING FROM DISTANCES DATA
+						rg = new Reagrupa(multiDendro, typeData, method, precision);
+						
+						mdNew = rg.Recalcula();
+						
+						//SET THE CURRENT MULTIDENDROGRAM TO THE RESULT FROM RG.RECALCULA()
+						multiDendro = mdNew;
+						
+						b = multiDendro.getArrel().getBase();
+						if ((b < minBase) && (b != 0)) {
+							minBase = b;
+						}
+						progress = 50 + 50
+								* (nbElements - multiDendro.getCardinalitat())
+								/ (nbElements - 1);
+						setProgress(progress);
+					} catch (final Exception e) {
+						//showError(e.getMessage());
+						showError("problems in calculating dendrogram.");
+					}
+				}
+				return null;
+			}
+			
+			//following search + dendrogram computation
+			public void done(){
+				
+				//re-set cursor, values
+				fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+				progressBar.setString("");
+				progressBar.setBorderPainted(false);
+				progressBar.setValue(0);
+				
+				//try to update values
+				try {
+					//update values for display
+					multiDendro.getArrel().setBase(minBase);
+					showCalls(action);
+				} catch (Exception ex) {
+					
+				}
+
+			}
+				
+		}
+		
 		public Jpan_btn_NEW(final FrmPrincipalDesk fr) {
 			super();
 			this.fr = fr;
@@ -331,7 +872,7 @@ import definicions.MatriuDistancies;
 			btnCancel = new JButton(strCancel);
 			btnCancel.addActionListener(this);
 			btnCancel.setFont(fontStandard);
-			//add(btnCancel, c);
+			add(btnCancel, c);
 			gridy++;
 			
 			// progress bar
@@ -582,6 +1123,7 @@ import definicions.MatriuDistancies;
 					
 					//parse into candidates
 					String[] Queries = searchField.getText().split(";");
+					minBase = Double.MAX_VALUE;
 					
 					if (searchType.getSelection().equals(annotationSearch.getModel())){
 						
@@ -612,14 +1154,36 @@ import definicions.MatriuDistancies;
 						
 						if (this.ProceedWithSearch == true){
 						
+						//try: unified swingworker approach
+							CurrentSearch = new SearchWorker(Queries,null,
+									contextSetMenu.getSelectedItem().toString(),
+									Jpan_Menu.getCbDissimilarity().getSelectedItem().toString(),
+									searchField.getText(),true,action,
+									Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
+									Jpan_Menu.getPrecision());
+							CurrentSearch.addPropertyChangeListener(this);
+							CurrentSearch.execute();
 						//set wait cursor
-						fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+						//fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 							
-						//get DE from annotation search
-						de = OS.AnnotationSearch(Queries,
-								contextSetMenu.getSelectedItem().toString(),
-								Jpan_Menu.getCbDissimilarity().getSelectedItem().toString(),
-								searchField.getText());
+//						//adjust search state
+//						SearchState = 1;
+//
+//						DEAnnotationSearchWorker SearchOSbyAnnotation = new DEAnnotationSearchWorker(Queries,
+//								contextSetMenu.getSelectedItem().toString(),
+//								Jpan_Menu.getCbDissimilarity().getSelectedItem().toString(),
+//								searchField.getText(),OS);
+//						SearchOSbyAnnotation.addPropertyChangeListener(this);
+//						SearchOSbyAnnotation.execute();
+////						de = SearchOSbyAnnotation.getDE();
+						
+						
+						//version 1
+//						//get DE from annotation search
+//						de = OS.AnnotationSearch(Queries,
+//								contextSetMenu.getSelectedItem().toString(),
+//								Jpan_Menu.getCbDissimilarity().getSelectedItem().toString(),
+//								searchField.getText());
 						
 						}
 						//System.out.println("Got to the de.");
@@ -636,44 +1200,61 @@ import definicions.MatriuDistancies;
 							NumQueries[i] = NumQueriesList.get(i);
 						}
 						
-						//set wait cursor
-						fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-						
-						de = OS.ClusterSearch(NumQueries,
+						//try: unified swingworker approach
+						CurrentSearch = new SearchWorker(null,NumQueries,
 								contextSetMenu.getSelectedItem().toString(),
 								Jpan_Menu.getCbDissimilarity().getSelectedItem().toString(),
-								searchField.getText());
+								searchField.getText(),false,action,
+								Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
+								Jpan_Menu.getPrecision());
+						CurrentSearch.addPropertyChangeListener(this);
+						CurrentSearch.execute();
+						
+						//set wait cursor
+						//fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+						
+//						//adjust search state
+//						SearchState = 1;
+//						
+//						de = OS.ClusterSearch(NumQueries,
+//								contextSetMenu.getSelectedItem().toString(),
+//								Jpan_Menu.getCbDissimilarity().getSelectedItem().toString(),
+//								searchField.getText());
 						//System.out.println("Got to the de.");
 					}
 						
-					if (action.equals("Load")) {
-						Jpan_Menu.setPrecision(de.getPrecisio());
-						
-					//changing this value changes the computation
-					//places after decimal is a function of the precision.
-					//Jpan_Menu.setPrecision(2);
-					}
-					multiDendro = null;
-					try {
-						multiDendro = de.getMatriuDistancies();
-						minBase = Double.MAX_VALUE;
-						progressBar.setBorderPainted(true);
-						progressBar.setString(null);
-						fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-						// Instances of javax.swing.SwingWorker are not reusable,
-						// so we create new instances as needed.
-						mdComputation = new MDComputation(action,
-							Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
-							Jpan_Menu.getPrecision(),
-							multiDendro.getCardinalitat(), minBase);
-						mdComputation.addPropertyChangeListener(this);
-						mdComputation.execute();
-						
-					} catch (final Exception e2) {
-						buttonClicked = false;
-						//showError(e2.getMessage());
-						showError("Unable to call SwingWorker");
-					}
+					
+					
+//					if (action.equals("Load")) {
+//						Jpan_Menu.setPrecision(de.getPrecisio());
+//						
+//					//changing this value changes the computation
+//					//places after decimal is a function of the precision.
+//					//Jpan_Menu.setPrecision(2);
+//					}
+//					
+//					multiDendro = null;
+//					try {
+//						multiDendro = de.getMatriuDistancies();
+//						minBase = Double.MAX_VALUE;
+//						progressBar.setBorderPainted(true);
+//						progressBar.setString(null);
+//						//fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+//						
+//						// Instances of javax.swing.SwingWorker are not reusable,
+//						// so we create new instances as needed.
+//						CurrentComputation = new MDComputation(action,
+//							Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
+//							Jpan_Menu.getPrecision(),
+//							multiDendro.getCardinalitat(), minBase);
+//						CurrentComputation.addPropertyChangeListener(this);
+//						CurrentComputation.execute();
+//						
+//					} catch (final Exception e2) {
+//						buttonClicked = false;
+//						//showError(e2.getMessage());
+//						showError("Unable to call SwingWorker");
+//					}
 				} catch (Exception e1) {
 					
 					fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -694,6 +1275,17 @@ import definicions.MatriuDistancies;
 				showCalls(action);
 			} else {
 				buttonClicked = false;
+			}
+			
+			//cancel button - version 1.1
+			if (evt.getSource().equals(btnCancel)){
+				//try to kill swing worker
+				if (CurrentSearch != null){
+					CurrentSearch.cancel(true);
+					CurrentSearch = null;
+				}
+
+				System.out.println("Search successfully cancelled.");
 			}
 		} 
 
