@@ -51,6 +51,7 @@ import javax.swing.JRadioButton;
 	import moduls.frm.FrmInternalFrame;
 	import moduls.frm.FrmPrincipalDesk;
 	import moduls.frm.InternalFrameData;
+import moduls.frm.QueryData;
 import moduls.frm.Panels.Jpan_btn.MDComputation;
 	import moduls.frm.children.FrmPiz;
 import moduls.frm.children.manageContextSetsv2;
@@ -107,7 +108,7 @@ import definicions.MatriuDistancies;
 		private JProgressBar progressBar;
 
 		// Menu to select current context set
-		private JComboBox contextSetMenu;
+		private JComboBox<String> contextSetMenu;
 		//private LinkedList<String> ContextList = new LinkedList<String>();
 		
 		// Indicate if the text fields have correct values
@@ -224,7 +225,7 @@ import definicions.MatriuDistancies;
 //				System.out.println("Step 3");
 //				System.out.println(minBase);
 				multiDendro.getArrel().setBase(minBase);
-				showCalls(action);
+				showCalls(action, null);		//temporary modification - remove ,null to recapitulate 
 				progressBar.setString("");
 				progressBar.setBorderPainted(false);
 				progressBar.setValue(0);
@@ -414,6 +415,7 @@ import definicions.MatriuDistancies;
 			private String Name;
 			private boolean AnnotationSearch;
 			private DadesExternes ProcessedDE;
+			private QueryData WorkerQD;
 			
 			//dendrogram-related
 			private final String action;
@@ -424,7 +426,7 @@ import definicions.MatriuDistancies;
 			private double minBase;
 			
 			//constructor
-			public SearchWorker(final String[] Queries, final int[] ClusterNumber, final String ContextSetName, final String DissimilarityMethod,
+			public SearchWorker(final QueryData QD, final String[] Queries, final int[] ClusterNumber, final String ContextSetName, final String DissimilarityMethod,
 					final String Name,final boolean AnnotationSearch, final String action,
 					final tipusDades typeData, final metodo method, final int precision){
 				this.Queries = Queries;
@@ -433,6 +435,7 @@ import definicions.MatriuDistancies;
 				this.DissimilarityMethod = DissimilarityMethod;
 				this.Name = Name;
 				this.AnnotationSearch = AnnotationSearch;
+				this.WorkerQD = QD;
 				
 				this.action = action;
 				this.typeData = typeData;
@@ -466,6 +469,7 @@ import definicions.MatriuDistancies;
 				
 				//part 2 - compute dendrogram
 				ComputeDendrogram();
+				
 				return null;
 			}
 			
@@ -752,7 +756,7 @@ import definicions.MatriuDistancies;
 				try {
 					//update values for display
 					multiDendro.getArrel().setBase(minBase);
-					showCalls(action);
+					showCalls(action, this.WorkerQD); //pass on the QD
 				} catch (Exception ex) {
 					
 				}
@@ -930,7 +934,7 @@ import definicions.MatriuDistancies;
 			c.insets = new Insets(1, 1, 1, 1);
 			strUpdate = Language.getLabel(110); // Update
 			String[] ContextArray = convertContextSets(fr.getOS().getCSDs());
-			contextSetMenu = new JComboBox(ContextArray);
+			contextSetMenu = new JComboBox<String>(ContextArray);
 			contextSetMenu.addActionListener(this);
 			contextSetMenu.setEnabled(true);
 			contextSetMenu.setFont(fontStandard);
@@ -1058,14 +1062,25 @@ import definicions.MatriuDistancies;
 
 			/*
 			 * Available actions:
-			 * (1) manage contexts	 [new]
-			 * (2) update fields	 [borrowed from strUpdate]
-			 * (3) annotation search [take place of Reload]
+			 * (1) Load				 [Create a new Context Tree]
+			 * (2) Reload			 [Update Context Tree - new matrix]
+			 * (3) Redraw			 [Update Context Tree - old matrix]
 			 * (4) cluster search    [take place of Reload]
-			 * (5) Redraw			 [same as before]
 			 */
 			//System.out.println(contextSetMenu.getSelectedItem().toString());
 			//CONVERT BUTTON PUSH TO ACTION
+			
+			//initialize a new 'querydata' object whenever an action is taken - 
+			//represents current search parameter space
+			QueryData QD = new QueryData();
+			if (searchType.getSelection().equals(annotationSearch.getModel())){
+				QD.setAnnotationSearch(true);
+			} else {
+				QD.setAnnotationSearch(false);
+			}
+			System.out.println(contextSetMenu.getSelectedItem().toString());
+			QD.setContextSetName(contextSetMenu.getSelectedItem().toString());
+			QD.setDissimilarityType(Jpan_Menu.getCbDissimilarity().getSelectedItem().toString());
 			
 			if (evt.getSource().equals(searchField) || evt.getSource().equals(btnSubmit)){
 				
@@ -1086,7 +1101,7 @@ import definicions.MatriuDistancies;
 					showError("Please enter a query in the search bar.");
 				}
 				
-			} else if (evt.getActionCommand().equals(strUpdate)) {
+			} else if (evt.getSource().equals(btnUpdate)) {
 				
 				//set wait cursor
 				fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -1094,14 +1109,19 @@ import definicions.MatriuDistancies;
 				// UPDATE
 				buttonClicked = true;
 				ifd = currentInternalFrame.getInternalFrameData();
+//				if ((Jpan_Menu.getTypeData() == ifd.getTypeData())
+//						&& (Jpan_Menu.getMethod() == ifd.getMethod())
+//						&& (Jpan_Menu.getPrecision() == ifd.getPrecision())
+//						&& (Jpan_Menu.getCbDissimilarity().getSelectedItem().toString().equals(
+//								currentInternalFrame.getInternalPanel().getCSD().getEC().getDissimilarityType()))) {
 				if ((Jpan_Menu.getTypeData() == ifd.getTypeData())
 						&& (Jpan_Menu.getMethod() == ifd.getMethod())
 						&& (Jpan_Menu.getPrecision() == ifd.getPrecision())
-						&& (Jpan_Menu.getCbDissimilarity().getSelectedItem().toString().equals(
-								currentInternalFrame.getInternalPanel().getCSD().getEC().getDissimilarityType()))) {
-					action = "Redraw";
+						&& (QD.equals(ifd.getQD()))) {
+				
+					action = "Redraw"; // no new matrix required
 				} else {
-					action = "Reload";
+					action = "Reload"; //a new matrix is required
 				}
 				ambDades = true;
 				
@@ -1113,7 +1133,8 @@ import definicions.MatriuDistancies;
 			}
 
 			//CARRY OUT ACTION
-			if (ambDades && (action.equals("Load") || action.equals("Reload"))) {
+//			if (ambDades && (action.equals("Load") || action.equals("Reload"))) {
+			if (ambDades && (action.equals("Load"))) {
 				try {
 					
 					//DATA SOURCE
@@ -1124,6 +1145,9 @@ import definicions.MatriuDistancies;
 					//parse into candidates
 					String[] Queries = searchField.getText().split(";");
 					minBase = Double.MAX_VALUE;
+					
+					//Store name
+					QD.setName(searchField.getText());
 					
 					if (searchType.getSelection().equals(annotationSearch.getModel())){
 						
@@ -1154,8 +1178,10 @@ import definicions.MatriuDistancies;
 						
 						if (this.ProceedWithSearch == true){
 						
-						//try: unified swingworker approach
-							CurrentSearch = new SearchWorker(Queries,null,
+							QD.setQueries(Queries);
+							
+						//single, interruptable Swing Worker
+							CurrentSearch = new SearchWorker(QD,Queries,null,
 									contextSetMenu.getSelectedItem().toString(),
 									Jpan_Menu.getCbDissimilarity().getSelectedItem().toString(),
 									searchField.getText(),true,action,
@@ -1200,8 +1226,11 @@ import definicions.MatriuDistancies;
 							NumQueries[i] = NumQueriesList.get(i);
 						}
 						
+						//store 
+						QD.setClusters(NumQueries);
+						
 						//try: unified swingworker approach
-						CurrentSearch = new SearchWorker(null,NumQueries,
+						CurrentSearch = new SearchWorker(QD,null,NumQueries,
 								contextSetMenu.getSelectedItem().toString(),
 								Jpan_Menu.getCbDissimilarity().getSelectedItem().toString(),
 								searchField.getText(),false,action,
@@ -1271,8 +1300,34 @@ import definicions.MatriuDistancies;
 						showError(errMsg);
 					}
 				}
+			} else if (ambDades && action.equals("Reload")) {
+				
+				//retrieve information from selected frame
+				QueryData SelectedFrame = currentInternalFrame.getInternalFrameData().getQD();
+				
+				if (SelectedFrame.isAnnotationSearch()){
+					CurrentSearch = new SearchWorker(SelectedFrame,SelectedFrame.getQueries(),null,
+							contextSetMenu.getSelectedItem().toString(),
+							Jpan_Menu.getCbDissimilarity().getSelectedItem().toString(),
+							SelectedFrame.getName(),true,action,
+							Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
+							Jpan_Menu.getPrecision());
+					CurrentSearch.addPropertyChangeListener(this);
+					CurrentSearch.execute();
+				} else {
+					CurrentSearch = new SearchWorker(SelectedFrame,null,SelectedFrame.getClusters(),
+							contextSetMenu.getSelectedItem().toString(),
+							Jpan_Menu.getCbDissimilarity().getSelectedItem().toString(),
+							SelectedFrame.getName(),false,action,
+							Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
+							Jpan_Menu.getPrecision());
+					CurrentSearch.addPropertyChangeListener(this);
+					CurrentSearch.execute();
+				}
+				
+			// in this case, no need to modify what's already in the internal frame.
 			} else if (ambDades && action.equals("Redraw")) {
-				showCalls(action);
+				showCalls(action, currentInternalFrame.getInternalFrameData().getQD());
 			} else {
 				buttonClicked = false;
 			}
@@ -1289,19 +1344,20 @@ import definicions.MatriuDistancies;
 			}
 		} 
 
-		private void showCalls(final String action) {
-//			System.out.println("Step 4");
-			if (action.equals("Reload") || action.equals("Redraw")) {
+		private void showCalls(final String action, QueryData qD) {
+			try {
+				if (action.equals("Reload") || action.equals("Redraw")) {
+					currentInternalFrame.doDefaultCloseAction();
+				}
+				show(action, Jpan_Menu.getMethod(), Jpan_Menu.getPrecision(), qD);
 				currentInternalFrame.doDefaultCloseAction();
-			}
-			show(action, Jpan_Menu.getMethod(), Jpan_Menu.getPrecision());
-			currentInternalFrame.doDefaultCloseAction();
-			show(action, Jpan_Menu.getMethod(), Jpan_Menu.getPrecision());
-			btnUpdate.setEnabled(true);
-			buttonClicked = false;
+				show(action, Jpan_Menu.getMethod(), Jpan_Menu.getPrecision(), qD);
+				btnUpdate.setEnabled(true);
+				buttonClicked = false;
+			} catch (Exception ex) {}
 		}
 
-		public void show(String action, final metodo method, final int precision) {
+		public void show(String action, final metodo method, final int precision, QueryData qD) {
 //			System.out.println("Step 5");
 			boolean isUpdate;
 			FrmInternalFrame pizarra;
@@ -1344,6 +1400,7 @@ import definicions.MatriuDistancies;
 				}
 				//ifd = new InternalFrameData(fitx, multiDendro);
 				ifd = new InternalFrameData(de, multiDendro);
+				ifd.setQD(qD);
 				pizarra.setInternalFrameData(ifd);
 				
 				// Title for the child window
@@ -1401,9 +1458,9 @@ import definicions.MatriuDistancies;
 				//pizarra.setSelectedNodeNumbers(fPiz.getSelectedNodeNumbers());
 				
 			} catch (final Exception e) {
-				e.printStackTrace();
+				//e.printStackTrace();
 //				showError(e.getMessage());
-				showError("problems in show");
+				//showError("problems in show");
 			}
 		}
 

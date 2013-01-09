@@ -87,6 +87,10 @@ public class InternalFrameData {
 	private Color colorAxisLabels = Color.BLACK;
 	private int labelsEvery = 10;
 	private int labelsDecimals = 0;
+	
+	//------Version 1.1 --------//
+	//QUERY DATA
+	private QueryData QD;
 
 // ----- Methods ---------------------------------------------------//		
 	
@@ -289,6 +293,14 @@ public class InternalFrameData {
 
 	public void setAxisDecimals(final int axisDecimals) {
 		labelsDecimals = axisDecimals;
+	}
+
+	public QueryData getQD() {
+		return QD;
+	}
+
+	public void setQD(QueryData qD) {
+		QD = qD;
 	}
 
 }

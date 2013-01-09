@@ -174,7 +174,7 @@ public class FrmPrincipalDesk extends JFrame{
 		final int width_win = Parametres_Inicials.getWidth_frmPrincipal();
 		final int height_win = Parametres_Inicials.getHeight_frmPrincipal();
 		this.setSize(width_win, height_win);
-		this.setVisible(true);
+		//this.setVisible(true);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		//ADD ORIENTATION FRAMES TO DESKTOP FRAME

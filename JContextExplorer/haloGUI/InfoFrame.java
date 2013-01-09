@@ -45,12 +45,14 @@ public class InfoFrame extends JFrame implements ActionListener{
 		//pack frame
 		this.pack();
 		
+		//make frame visible
+		this.setVisible(true);
+		
 	}
 		
 	//Create JFrame
 	private void getFrame() {
 		this.setSize(400,400);
-		this.setVisible(true);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		//this.setLocationRelativeTo(lgp);
 		Point p = lgp.getLocationOnScreen();

@@ -92,6 +92,9 @@ public class GFFChecker extends JFrame implements ActionListener{
 		this.getFrame();
 		this.getPanel();
 		this.pack();
+		
+		//make frame visible
+		this.setVisible(true);
 	}
 
 	//Build instructional message
@@ -145,7 +148,6 @@ public class GFFChecker extends JFrame implements ActionListener{
 	//Create frame
 	public void getFrame(){
 		this.setSize(700,620);
-		this.setVisible(true);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		this.setLocationRelativeTo(null);
 		this.setTitle("GFF File Type Import Settings");
