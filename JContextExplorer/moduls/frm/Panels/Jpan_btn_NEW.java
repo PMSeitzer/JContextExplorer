@@ -110,7 +110,7 @@ import definicions.MatriuDistancies;
 		// Menu to select current context set
 		private JComboBox<String> contextSetMenu;
 		//private LinkedList<String> ContextList = new LinkedList<String>();
-		
+
 		// Indicate if the text fields have correct values
 		public static boolean precisionCorrect = false;
 		public static boolean axisMinCorrect = false;
@@ -447,6 +447,8 @@ import definicions.MatriuDistancies;
 			@Override
 			protected Void doInBackground() throws Exception {
 
+			try {	
+				
 				//set wait cursor
 				fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				
@@ -469,7 +471,9 @@ import definicions.MatriuDistancies;
 				
 				//part 2 - compute dendrogram
 				ComputeDendrogram();
-				
+			} catch (Exception ex) {
+				showError("There were no matches to the query (or queries).");
+			}
 				return null;
 			}
 			
@@ -1073,14 +1077,16 @@ import definicions.MatriuDistancies;
 			//initialize a new 'querydata' object whenever an action is taken - 
 			//represents current search parameter space
 			QueryData QD = new QueryData();
-			if (searchType.getSelection().equals(annotationSearch.getModel())){
-				QD.setAnnotationSearch(true);
-			} else {
-				QD.setAnnotationSearch(false);
+			if (!evt.getSource().equals(contextSetMenu)){
+				if (searchType.getSelection().equals(annotationSearch.getModel())){
+					QD.setAnnotationSearch(true);
+				} else {
+					QD.setAnnotationSearch(false);
+				}
+				QD.setContextSetName(contextSetMenu.getSelectedItem().toString());
+				QD.setDissimilarityType(Jpan_Menu.getCbDissimilarity().getSelectedItem().toString());
 			}
-			System.out.println(contextSetMenu.getSelectedItem().toString());
-			QD.setContextSetName(contextSetMenu.getSelectedItem().toString());
-			QD.setDissimilarityType(Jpan_Menu.getCbDissimilarity().getSelectedItem().toString());
+
 			
 			if (evt.getSource().equals(searchField) || evt.getSource().equals(btnSubmit)){
 				
@@ -1135,6 +1141,8 @@ import definicions.MatriuDistancies;
 			//CARRY OUT ACTION
 //			if (ambDades && (action.equals("Load") || action.equals("Reload"))) {
 			if (ambDades && (action.equals("Load"))) {
+				String TheName = searchField.getText() + " [" + contextSetMenu.getSelectedItem() + "]";
+				QD.setName(TheName);
 				try {
 					
 					//DATA SOURCE
@@ -1145,9 +1153,6 @@ import definicions.MatriuDistancies;
 					//parse into candidates
 					String[] Queries = searchField.getText().split(";");
 					minBase = Double.MAX_VALUE;
-					
-					//Store name
-					QD.setName(searchField.getText());
 					
 					if (searchType.getSelection().equals(annotationSearch.getModel())){
 						
@@ -1405,7 +1410,9 @@ import definicions.MatriuDistancies;
 				
 				// Title for the child window
 				//pizarra.setTitle(fitx.getNom() + " - " + pizarra.getTitle());
-				String WindowTitle = currentQuery + " [" + contextSetMenu.getSelectedItem() + "]";
+				//String WindowTitle = currentQuery + " [" + contextSetMenu.getSelectedItem() + "]";
+				String WindowTitle = qD.getName();
+				
 				pizarra.setTitle(WindowTitle);
 				
 				CSDisplayData CSD = new CSDisplayData();
@@ -1514,9 +1521,9 @@ import definicions.MatriuDistancies;
 		public void internalFrameClosing(InternalFrameEvent e) {
 			FrmInternalFrame.decreaseOpenFrameCount();
 			btnUpdate.setEnabled(false);
-			if (!buttonClicked) {
-				Jpan_Menu.clearConfigPanel();
-			}
+//			if (!buttonClicked) {
+//				Jpan_Menu.clearConfigPanel();
+//			}
 		}
 
 		@Override

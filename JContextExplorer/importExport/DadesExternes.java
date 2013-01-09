@@ -66,7 +66,11 @@ public class DadesExternes {
 
 	}
 
-	private void OmpleMatriuDistancies() throws Exception {
+	private void OmpleMatriuDistancies(){
+		
+		//massive try/catch block
+		try {
+		
 		StructIn<String> s_in;
 		Iterator<StructIn<String>> it;
 		final ComptaDecimals cp = new ComptaDecimals();
@@ -138,6 +142,8 @@ public class DadesExternes {
 			s = e.nextElement();
 			htNoms.put(ht.get(s).getId(), s);
 		}
+		
+		} catch (Exception ex){}
 	}
 
 	private LinkedList<StructIn<String>> LlegeixFitxer() throws Exception {
