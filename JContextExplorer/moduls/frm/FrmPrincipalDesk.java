@@ -43,6 +43,7 @@ import javax.swing.JScrollPane;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 
+import moduls.frm.Panels.Jpan_DisplayOptions;
 import moduls.frm.Panels.Jpan_GraphMenu;
 import moduls.frm.Panels.Jpan_Menu;
 import moduls.frm.Panels.Jpan_MotifOptions;
@@ -97,6 +98,7 @@ public class FrmPrincipalDesk extends JFrame{
 	private final Jpan_GraphMenu panGraphMenu;
 	private final Jpan_MotifOptions panMotifOptions;
 	private final Jpan_PhyTreeMenu panPhyTreeMenu;
+	private final Jpan_DisplayOptions panDisplayOptions;
 	
 	private final Jpan_genome panGenome; // genome-viewing frame
 
@@ -151,11 +153,13 @@ public class FrmPrincipalDesk extends JFrame{
 //			JScrollPane scrollPane1 = new JScrollPane(panMenu);	
 //		pan_West.add(scrollPane1, BorderLayout.CENTER);
 		
-		//switch 2
+		//options/menus
 		panGraphMenu = new Jpan_GraphMenu(this);		//Graph menu
 		panMotifOptions = new Jpan_MotifOptions(this);	//Motif Options tab
 		panPhyTreeMenu = new Jpan_PhyTreeMenu(this);	//Loadable phylogenetic tree
-		panMenuTab = new Jpan_TabbedMenu(panMenu,panGraphMenu,panMotifOptions,panPhyTreeMenu);
+		panDisplayOptions = new Jpan_DisplayOptions(this);//options panel
+		panMenuTab = new Jpan_TabbedMenu(panDisplayOptions, panMenu, panGraphMenu,
+				panMotifOptions,panPhyTreeMenu);
 		pan_West.add(panMenuTab, BorderLayout.CENTER);
 
 		//SOUTH: Genome context viewing

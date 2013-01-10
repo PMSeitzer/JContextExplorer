@@ -17,8 +17,9 @@ public class Jpan_TabbedMenu extends JTabbedPane{
 
 	
 	//Constructor
-	public Jpan_TabbedMenu(Jpan_Menu jm, Jpan_GraphMenu jgm, Jpan_MotifOptions jmo, Jpan_PhyTreeMenu jpm){
+	public Jpan_TabbedMenu(Jpan_DisplayOptions jpo, Jpan_Menu jm, Jpan_GraphMenu jgm, Jpan_MotifOptions jmo, Jpan_PhyTreeMenu jpm){
 		 //store data
+		this.jpo = jpo;
 		this.jm = jm;
 		this.jpm = jpm;
 		this.jgm = jgm;
@@ -36,7 +37,7 @@ public class Jpan_TabbedMenu extends JTabbedPane{
 		//options tab
 		JPanel OptionContainerPane = new JPanel();
 		OptionContainerPane.setLayout(new BorderLayout());
-		
+		OptionContainerPane.add(jpo, BorderLayout.NORTH);
 		JScrollPane OptionScroll = new JScrollPane(OptionContainerPane);
 		
 		//Context tree menu tab
