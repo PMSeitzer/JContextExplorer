@@ -9,10 +9,12 @@ import javax.swing.JTabbedPane;
 public class Jpan_TabbedMenu extends JTabbedPane{
 	
 	//Fields
+	private Jpan_DisplayOptions jpo;
 	private Jpan_Menu jm;
 	private Jpan_GraphMenu jgm;
 	private Jpan_MotifOptions jmo;
 	private Jpan_PhyTreeMenu jpm;
+
 	
 	//Constructor
 	public Jpan_TabbedMenu(Jpan_Menu jm, Jpan_GraphMenu jgm, Jpan_MotifOptions jmo, Jpan_PhyTreeMenu jpm){
@@ -30,6 +32,12 @@ public class Jpan_TabbedMenu extends JTabbedPane{
 	public void getPanel(){
 		//Menu tab
 		//JScrollPane MenuScroll = new JScrollPane(jm);
+		
+		//options tab
+		JPanel OptionContainerPane = new JPanel();
+		OptionContainerPane.setLayout(new BorderLayout());
+		
+		JScrollPane OptionScroll = new JScrollPane(OptionContainerPane);
 		
 		//Context tree menu tab
 		JPanel MenuContainerPane = new JPanel();
@@ -56,6 +64,7 @@ public class Jpan_TabbedMenu extends JTabbedPane{
 		JScrollPane MotifScroll = new JScrollPane(ContainerPane);
 		
 		//add tabs to JOptionPanel
+		this.addTab("Options",null,OptionScroll);
 		this.addTab("Tree",null,MenuScroll);
 		this.addTab("Graph",null,GraphScroll);
 		this.addTab("Phylogeny",null,PhyloScroll);

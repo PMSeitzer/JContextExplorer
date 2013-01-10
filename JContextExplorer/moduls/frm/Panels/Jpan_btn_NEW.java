@@ -76,7 +76,7 @@ import definicions.MatriuDistancies;
 		protected Jpan_btn_NEW jb;
 
 		// Text to show in the buttons
-		private String strSubmit, strUpdate, strAnnsearch, strClusearch;
+		private String strSubmit, strAnnsearch, strClusearch;
         private String strManageCS = "Add/Remove";
         private String strCancel = "Cancel";
         
@@ -145,6 +145,13 @@ import definicions.MatriuDistancies;
 		
 		//searches are handled by a single Swing Worker
 		private SearchWorker CurrentSearch = null;
+		private String strUpdate = "Update";
+		
+//		// radio buttons for search type
+//		private ButtonGroup DrawType;
+//		private JRadioButton DrawContextTree, DrawChangeGraph;
+//		private String strDrawTree = "Context Tree";
+//		private String strChngGraph = "Context Graph";
 		
 	// ----- Methods -----------------------------------------------//	
 		
@@ -1012,7 +1019,6 @@ import definicions.MatriuDistancies;
 			c.insets = new Insets(1, 1, 1, 1);
 			//strUpdate = Language.getLabel(110); // Update
 			//strUpdate = "Update Display Settings";
-			strUpdate = "Update Tree";
 			btnUpdate = new JButton(strUpdate);
 			btnUpdate.addActionListener(this);
 			btnUpdate.setEnabled(false);
@@ -1343,6 +1349,7 @@ import definicions.MatriuDistancies;
 				if (CurrentSearch != null){
 					CurrentSearch.cancel(true);
 					CurrentSearch = null;
+					de = null;
 				}
 
 				System.out.println("Search successfully cancelled.");
