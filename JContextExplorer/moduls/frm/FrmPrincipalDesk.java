@@ -205,8 +205,6 @@ public class FrmPrincipalDesk extends JFrame{
 			String methodName) {
 		int x, y, width, height;
 		FrmInternalFrame pizarra;
-
-//		System.out.println("Step 6");
 		
 		if (isUpdate) {
 			x = currentFpiz.getX();
@@ -230,23 +228,13 @@ public class FrmPrincipalDesk extends JFrame{
 		pizarra.addInternalFrameListener(panGenome);
 
 		pan_Desk.add(pizarra, BorderLayout.CENTER);
-		
-//		JScrollPane scrollPane3 = new JScrollPane(pizarra);
-//		scrollPane3.setPreferredSize(pizarra.getSize()); 
-//		scrollPane3.setVisible(true); 
-//		pizarra.getContentPane().add(scrollPane3); 
-//		pan_Desk.add(scrollPane3, BorderLayout.CENTER);
-		
+				
 		//desktop manager maximizes frame.
 		DefaultDesktopManager ddm = new DefaultDesktopManager();
 		
 		//play with location/size of internal frame
 		//ddm.setBoundsForFrame(pizarra, 0, 0, 800, 800);
 		ddm.maximizeFrame(pizarra);
-		
-		//retrieve these dimensions.
-//		System.out.println(pizarra.getSize().height);
-//		System.out.println(pizarra.getSize().width);
 		
 		return pizarra;
 	}
@@ -478,6 +466,10 @@ public class FrmPrincipalDesk extends JFrame{
 
 	public void setIncludeMotifs(boolean includeMotifs) {
 		IncludeMotifs = includeMotifs;
+	}
+
+	public Jpan_TabbedMenu getPanMenuTab() {
+		return panMenuTab;
 	}
 
 

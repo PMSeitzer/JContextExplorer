@@ -15,7 +15,6 @@ public class Jpan_TabbedMenu extends JTabbedPane{
 	private Jpan_MotifOptions jmo;
 	private Jpan_PhyTreeMenu jpm;
 
-	
 	//Constructor
 	public Jpan_TabbedMenu(Jpan_DisplayOptions jpo, Jpan_Menu jm, Jpan_GraphMenu jgm, Jpan_MotifOptions jmo, Jpan_PhyTreeMenu jpm){
 		 //store data
@@ -70,6 +69,12 @@ public class Jpan_TabbedMenu extends JTabbedPane{
 		this.addTab("Graph",null,GraphScroll);
 		this.addTab("Phylogeny",null,PhyloScroll);
 		this.addTab("Motifs",null,MotifScroll);
+	}
+
+	
+	//setters and getters
+	public Jpan_DisplayOptions getJpo() {
+		return jpo;
 	}
 
 }

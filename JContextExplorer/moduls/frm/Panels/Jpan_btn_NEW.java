@@ -10,6 +10,7 @@ import importExport.DadesExternes;
 	import importExport.FitxerDades;
 	import inicial.Language;
 
+import java.awt.BorderLayout;
 	import java.awt.Color;
 	import java.awt.Cursor;
 	import java.awt.Dimension;
@@ -53,7 +54,10 @@ import javax.swing.JRadioButton;
 	import moduls.frm.InternalFrameData;
 import moduls.frm.QueryData;
 import moduls.frm.Panels.Jpan_btn.MDComputation;
+import moduls.frm.children.FrmGraph;
 	import moduls.frm.children.FrmPiz;
+import moduls.frm.children.FrmSearchResults;
+import moduls.frm.children.FrmTabbed;
 import moduls.frm.children.manageContextSetsv2;
 	import parser.Fig_Pizarra;
 	import tipus.Orientation;
@@ -146,13 +150,7 @@ import definicions.MatriuDistancies;
 		//searches are handled by a single Swing Worker
 		private SearchWorker CurrentSearch = null;
 		private String strUpdate = "Update";
-		
-//		// radio buttons for search type
-//		private ButtonGroup DrawType;
-//		private JRadioButton DrawContextTree, DrawChangeGraph;
-//		private String strDrawTree = "Context Tree";
-//		private String strChngGraph = "Context Graph";
-		
+				
 	// ----- Methods -----------------------------------------------//	
 		
 		// ---- Thread Workers for Searches ------------------------//
@@ -195,12 +193,6 @@ import definicions.MatriuDistancies;
 				//System.out.println("Cardinality is " + multiDendro.getCardinalitat());
 				while (multiDendro.getCardinalitat() > 1) {
 					try {
-						
-//						System.out.println("------");
-//						System.out.println(multiDendro);
-//						System.out.println(typeData);
-//						System.out.println(method);
-//						System.out.println(precision);
 						
 						//CLUSTERING FROM DISTANCES DATA
 						rg = new Reagrupa(multiDendro, typeData, method, precision);
@@ -391,11 +383,6 @@ import definicions.MatriuDistancies;
 				return null;
 
 			}
-			
-//			//retrieval method
-//			public DadesExternes getDE(){
-//				return this.ProcessedDE;
-//			}
 			
 			//done method - pass information to parent class
 			public void done(){
@@ -1378,14 +1365,8 @@ import definicions.MatriuDistancies;
 			FrmPiz fPiz;
 			Fig_Pizarra figPizarra;
 
+			//need to update?
 			isUpdate = !action.equals("Load");
-//			System.out.println("breakpoint in show");
-//			if (action.equals("annotation search") ||
-//					action.equals("cluster search"))
-//					isUpdate = false;
-//			else {
-//				isUpdate = true;
-//			}
 			
 			try {
 
@@ -1417,7 +1398,6 @@ import definicions.MatriuDistancies;
 				
 				// Title for the child window
 				//pizarra.setTitle(fitx.getNom() + " - " + pizarra.getTitle());
-				//String WindowTitle = currentQuery + " [" + contextSetMenu.getSelectedItem() + "]";
 				String WindowTitle = qD.getName();
 				
 				pizarra.setTitle(WindowTitle);
@@ -1444,7 +1424,6 @@ import definicions.MatriuDistancies;
 					Jpan_Menu.ajustaValors(cfg);
 				}
 				
-				
 				// Convert tree into figures
 				figPizarra = new Fig_Pizarra(multiDendro.getArrel(), cfg);
 				
@@ -1461,8 +1440,28 @@ import definicions.MatriuDistancies;
 				//fPizSP.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 				//fPizSP.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 				
-				//pizarra.add(fPiz);
-				pizarra.add(fPizSP);
+				//wrap scrollable tree with new panel + jtabbedpane
+				JPanel TabbedWrapper = new JPanel();
+				TabbedWrapper.setLayout(new BorderLayout());
+				
+				//temporary
+				FrmGraph fGraph = new FrmGraph(fr, CSD);
+				JScrollPane fGraphSP = new JScrollPane(fGraph);
+				
+				FrmSearchResults fSearch = new FrmSearchResults(fr, CSD);
+				JScrollPane fSearchSP = new JScrollPane(fSearch);
+				
+				FrmTabbed fPizFT = new FrmTabbed(fPizSP,fGraphSP,fSearchSP,null,
+						fr.getPanMenuTab().getJpo().getDrawContextTree().isSelected(),
+						fr.getPanMenuTab().getJpo().getDrawContextGraph().isSelected(),
+						fr.getPanMenuTab().getJpo().getDrawSearchResults().isSelected(),
+						fr.getPanMenuTab().getJpo().getDrawPhylogeneticTree().isSelected());
+				TabbedWrapper.add(fPizFT, BorderLayout.CENTER);
+				
+				//pizarra.add(fPiz);	//Original panel
+				//pizarra.add(fPizSP);	//Scroll panel
+				pizarra.add(TabbedWrapper);	//Tabbed menu component with panel
+				
 				pizarra.setInternalPanel(fPiz);
 				
 				// Current internal frame is the activated frame.

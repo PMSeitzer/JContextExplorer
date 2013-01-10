@@ -39,7 +39,6 @@ public class Jpan_DisplayOptions extends JPanel implements ActionListener{
 	private String strDrawContextGraph = "Generate Context Change Graph";
 	private String strDrawPhylogeneticTree = "Display Results with Phylogeny";
 
-	
 	//constructor
 	public Jpan_DisplayOptions(FrmPrincipalDesk f){
 		this.f = f;
@@ -132,6 +131,24 @@ public class Jpan_DisplayOptions extends JPanel implements ActionListener{
 	public void actionPerformed(ActionEvent arg0) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	//GETTERS AND SETTERS
+	
+	public JCheckBox getDrawSearchResults() {
+		return DrawSearchResults;
+	}
+
+	public JCheckBox getDrawContextTree() {
+		return DrawContextTree;
+	}
+
+	public JCheckBox getDrawContextGraph() {
+		return DrawContextGraph;
+	}
+
+	public JCheckBox getDrawPhylogeneticTree() {
+		return DrawPhylogeneticTree;
 	}
 	
 }
