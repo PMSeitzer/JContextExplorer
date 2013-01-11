@@ -94,7 +94,7 @@ public class InternalFrameData {
 
 // ----- Methods ---------------------------------------------------//		
 	
-	public InternalFrameData(final FitxerDades fitx, final MatriuDistancies md) {
+	public InternalFrameData(final FitxerDades fitx, MatriuDistancies md) {
 		try {
 			de = new DadesExternes(fitx);
 			multiDendro = md;
@@ -104,9 +104,12 @@ public class InternalFrameData {
 		}
 	}
 	
-	public InternalFrameData(DadesExternes DE, final MatriuDistancies md){
+	public InternalFrameData(final DadesExternes DE, final MatriuDistancies md){
 		try {
-			multiDendro = md;
+			//adjustments
+			this.de = DE;
+			this.multiDendro = md;
+			
 			Jpan_Menu.getConfigPanel(this);
 		} catch (Exception e){
 			showError("Problem loading internal frame data");	

@@ -192,11 +192,18 @@ public class FrmPrincipalDesk extends JFrame{
 	}
 
 	public Config getConfig() {
+		//System.out.println("enter getconfig");
 		cfg = new Config(Jpan_Menu.getCfgPanel());
+		//System.out.println("made a config");
+		
+		//problem 11-
 		cfg.setMatriu(panBtn.getMatriu());
+		//System.out.println("set matrix");
 		if (cfg.getValorMaxim() == 0) {
 			cfg.getConfigMenu().setValMax(cfg.getCimDendograma());
+			//System.out.println("set valmax");
 		}
+		//System.out.println("return");
 		return cfg;
 	}
 
@@ -388,14 +395,6 @@ public class FrmPrincipalDesk extends JFrame{
 	public JDesktopPane getPan_Desk() {
 		return this.pan_Desk;
 	}
-
-//	public void setCurrentFrame(JInternalFrame internalFrame) {
-//		this.currentFpiz = internalFrame;
-//	}
-//	
-//	public JInternalFrame getCurrentFrame(){
-//		return currentFpiz;
-//	}
 
 	public void setCurrentFrame(FrmInternalFrame internalFrame) {
 		this.currentFpiz = internalFrame;
