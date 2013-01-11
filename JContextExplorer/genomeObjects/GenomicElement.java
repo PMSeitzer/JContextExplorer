@@ -16,6 +16,7 @@ public class GenomicElement {
 	private int ElementID;				//
     private int CDSID;					//-Other Designations------------
     private int ClusterID;				//
+    private int GeneID;
 
     //Constructor
     // ----------------------- Constructor-----------------------------//
@@ -27,6 +28,7 @@ public class GenomicElement {
     	Stop = 0;
     	CDSID  = 0;
     	ClusterID = 0;
+    	GeneID = 0;
     	Annotation = null;
     }
 
@@ -93,6 +95,14 @@ public class GenomicElement {
 	}
 	public void setElementID(int elementID) {
 		ElementID = elementID;
+	}
+
+	public int getGeneID() {
+		return GeneID;
+	}
+
+	public void setGeneID(int geneID) {
+		GeneID = geneID;
 	}
 
 }
