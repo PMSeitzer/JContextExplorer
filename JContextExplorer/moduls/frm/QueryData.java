@@ -9,6 +9,7 @@ public class QueryData {
 	private String Name;
 	private String ContextSetName;
 	private String DissimilarityType;
+	private PostSearchAnalyses AnalysesList;
 	
 	//Constructor
 	public QueryData(){
@@ -61,5 +62,13 @@ public class QueryData {
 
 	public void setName(String name) {
 		Name = name;
+	}
+
+	public PostSearchAnalyses getAnalysesList() {
+		return AnalysesList;
+	}
+
+	public void setAnalysesList(PostSearchAnalyses analysesList) {
+		AnalysesList = analysesList;
 	}
 }

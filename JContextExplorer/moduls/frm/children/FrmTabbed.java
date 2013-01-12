@@ -6,6 +6,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 
+import moduls.frm.PostSearchAnalyses;
+
 public class FrmTabbed extends JTabbedPane{
 	
 	//Fields
@@ -23,7 +25,7 @@ public class FrmTabbed extends JTabbedPane{
 	
 	//Constructor
 	public FrmTabbed(JScrollPane fPizSP, JScrollPane fGraphSP, JScrollPane fResultsSP, JScrollPane fPhyloSP,
-			boolean ShowContextTree, boolean ShowContextGraph, boolean ShowSearchResults, boolean ShowPhyloTree){
+			PostSearchAnalyses AnalysesList){
 		
 		//panels
 		this.ContextTreePanel = fPizSP;
@@ -32,10 +34,12 @@ public class FrmTabbed extends JTabbedPane{
 		this.PhyloTreePanel = fPhyloSP;
 		
 		//display options
-		this.ShowContextTree = ShowContextTree;
-		this.ShowContextGraph = ShowContextGraph;
-		this.ShowSearchResults = ShowSearchResults;
-		this.ShowPhyloTree = ShowPhyloTree;
+		this.ShowContextTree = AnalysesList.isOptionComputeDendrogram();
+		this.ShowContextGraph = AnalysesList.isOptionComputeContextGraph();
+		this.ShowSearchResults = AnalysesList.isOptionDisplaySearches();
+		this.ShowPhyloTree = AnalysesList.isOptionRenderPhylogeny();
+		
+		System.out.println("FrmTabbed: " + this.ShowSearchResults);
 		
 		//retrieve panel
 		this.getPanel();

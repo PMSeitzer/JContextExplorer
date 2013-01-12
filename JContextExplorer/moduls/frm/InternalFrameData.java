@@ -28,6 +28,7 @@ import java.awt.Font;
 import javax.swing.JOptionPane;
 
 import moduls.frm.Panels.Jpan_Menu;
+import moduls.frm.children.FrmSearchResults;
 import tipus.Orientation;
 import tipus.metodo;
 import tipus.rotacioNoms;
@@ -90,7 +91,9 @@ public class InternalFrameData {
 	
 	//------Version 1.1 --------//
 	//QUERY DATA
-	private QueryData QD;
+	private QueryData QD;	//Data associated with the original query, info
+	private FrmSearchResults SearchResultsFrame;	
+
 
 // ----- Methods ---------------------------------------------------//		
 	
@@ -304,6 +307,14 @@ public class InternalFrameData {
 
 	public void setQD(QueryData qD) {
 		QD = qD;
+	}
+
+	public FrmSearchResults getSearchResultsFrame() {
+		return SearchResultsFrame;
+	}
+
+	public void setSearchResultsFrame(FrmSearchResults searchResultsFrame) {
+		SearchResultsFrame = searchResultsFrame;
 	}
 
 }

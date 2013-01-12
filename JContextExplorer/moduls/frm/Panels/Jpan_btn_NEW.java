@@ -52,9 +52,11 @@ import javax.swing.JRadioButton;
 	import moduls.frm.FrmInternalFrame;
 	import moduls.frm.FrmPrincipalDesk;
 	import moduls.frm.InternalFrameData;
+import moduls.frm.PostSearchAnalyses;
 import moduls.frm.QueryData;
 import moduls.frm.Panels.Jpan_btn.MDComputation;
 import moduls.frm.children.FrmGraph;
+import moduls.frm.children.FrmPhylo;
 	import moduls.frm.children.FrmPiz;
 import moduls.frm.children.FrmSearchResults;
 import moduls.frm.children.FrmTabbed;
@@ -150,87 +152,13 @@ import definicions.MatriuDistancies;
 		//searches are handled by a single Swing Worker
 		private SearchWorker CurrentSearch = null;
 		private String strUpdate = "Update";
+		
+		//display search results
+		private FrmSearchResults SearchResultsFrame = null;
 				
 	// ----- Methods -----------------------------------------------//	
 		
 		// ---- Thread Workers for Searches ------------------------//
-		
-		// Swing Worker MultiDendrogram computation
-	 	class MDComputation extends SwingWorker<Void, Void> {
-			private final String action;
-			private final tipusDades typeData;
-			private final metodo method;
-			private final int precision;
-			private final int nbElements;
-			private double minBase;
-
-			public MDComputation(final String action, final tipusDades typeData,
-					final metodo method, final int precision, final int nbElements,
-					double minBase) {
-				this.action = action;
-				this.typeData = typeData;
-				this.method = method;
-				this.precision = precision;
-//				this.precision = 2;
-				
-				this.nbElements = nbElements;
-				this.minBase = minBase;
-//				System.out.println("Step 2");
-
-			}
-
-			@Override
-			public Void doInBackground() {
-//				System.out.println("Step 2.5");
-				Reagrupa rg;
-				MatriuDistancies mdNew;
-				double b;
-				int progress;
-
-				// Initialize progress property
-				progress = 0;
-				setProgress(progress);
-				//System.out.println("Cardinality is " + multiDendro.getCardinalitat());
-				while (multiDendro.getCardinalitat() > 1) {
-					try {
-						
-						//CLUSTERING FROM DISTANCES DATA
-						rg = new Reagrupa(multiDendro, typeData, method, precision);
-						
-						mdNew = rg.Recalcula();
-						//System.out.println("mdnew = " + mdNew.toString());
-						
-						//SET THE CURRENT MULTIDENDROGRAM TO THE RESULT FROM RG.RECALCULA()
-						multiDendro = mdNew;
-						
-						b = multiDendro.getArrel().getBase();
-						if ((b < minBase) && (b != 0)) {
-							minBase = b;
-						}
-						progress = 100
-								* (nbElements - multiDendro.getCardinalitat())
-								/ (nbElements - 1);
-						setProgress(progress);
-					} catch (final Exception e) {
-						//showError(e.getMessage());
-						showError("problems in calculating dendrogram.");
-					}
-				}
-				return null;
-			}
-
-			@Override
-			public void done() {
-//				System.out.println("Step 3");
-//				System.out.println(minBase);
-				multiDendro.getArrel().setBase(minBase);
-				showCalls(action, null);		//temporary modification - remove ,null to recapitulate 
-				progressBar.setString("");
-				progressBar.setBorderPainted(false);
-				progressBar.setValue(0);
-				fr.setCursor(null); // turn off the wait cursor
-			}
-		}
 
 		//DE by annotations
 		class DEAnnotationSearchWorker extends SwingWorker<Void, Void>{
@@ -400,7 +328,6 @@ import definicions.MatriuDistancies;
 		class SearchWorker extends SwingWorker<Void, Void>{
 
 			//fields
-			
 			//search-related
 			private String[] Queries;
 			private int[] ClusterNumber;
@@ -412,10 +339,7 @@ import definicions.MatriuDistancies;
 			private QueryData WorkerQD;
 			
 			//options-related
-			private boolean OptionDisplaySearches;
-			private boolean OptionComputeDendrogram;
-			private boolean OptionComputeContextGraph;
-			private boolean OptionRenderPhylogeny;
+			private PostSearchAnalyses AnalysesList;
 			
 			//dendrogram-related
 			private final String action;
@@ -426,17 +350,22 @@ import definicions.MatriuDistancies;
 			private double minBase;
 			
 			//constructor
-			public SearchWorker(final QueryData QD, final String[] Queries, final int[] ClusterNumber, final String ContextSetName, final String DissimilarityMethod,
-					final String Name,final boolean AnnotationSearch, final String action,
+			public SearchWorker(final QueryData QD, final String action,
 					final tipusDades typeData, final metodo method, final int precision){
-				this.Queries = Queries;
-				this.ClusterNumber = ClusterNumber;
-				this.ContextSetName = ContextSetName;
-				this.DissimilarityMethod = DissimilarityMethod;
-				this.Name = Name;
-				this.AnnotationSearch = AnnotationSearch;
+
+				//Query Data (QD)
 				this.WorkerQD = QD;
+				this.Queries = QD.getQueries();
+				this.ClusterNumber = QD.getClusters();
+				this.ContextSetName = QD.getContextSetName();
+				this.DissimilarityMethod = QD.getDissimilarityType();
+				this.Name = QD.getName();
+				this.AnnotationSearch = QD.isAnnotationSearch();
 				
+				//Analyses options
+				this.AnalysesList = QD.getAnalysesList();
+				
+				//multidendrogram-related parameters
 				this.action = action;
 				this.typeData = typeData;
 				this.method = method;
@@ -449,28 +378,34 @@ import definicions.MatriuDistancies;
 
 			try {	
 				
-				//set wait cursor
-				fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				
 				//visualization-related things
+				fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				progressBar.setBorderPainted(true);
 				progressBar.setString(null);
 				
-				//part 1 - search organisms
+				//Search organisms
 				if (AnnotationSearch){
 					SearchOrganismsbyAnnotation();
 				} else {
 					SearchOrganismsbyCluster();
 				}
 
-				//intermediate
+				//maintenance
 				multiDendro = null;
-				multiDendro = ProcessedDE.getMatriuDistancies();
-				minBase = Double.MAX_VALUE;
-				nbElements = multiDendro.getCardinalitat();
 				
-				//part 2 - compute dendrogram
-				ComputeDendrogram();
+				//Analyses options
+				//=================================//
+				
+				//(1) Construct search pane
+				if (AnalysesList.isOptionDisplaySearches()){
+					CreateSearchPanel();
+				}
+				
+				//(2) Compute dendrogram
+				if (AnalysesList.isOptionComputeDendrogram()){
+					ComputeDendrogram();
+				}
+				
 			} catch (Exception ex) {
 				showError("There were no matches to the query (or queries).");
 			}
@@ -720,12 +655,23 @@ import definicions.MatriuDistancies;
 			//(1) Create a tree panel of search results
 			//============================================//
 			protected Void CreateSearchPanel(){
+				
+				//update search results frame
+				CSDisplayData CSD = new CSDisplayData();
+				CSD.setEC(ProcessedDE.getEC());
+				SearchResultsFrame = new FrmSearchResults(fr,CSD);
+				
 				return null;
 			}
 			
 			//(2) Compute Dendrogram, render tree
 			//============================================//
 			protected Void ComputeDendrogram(){
+
+				multiDendro = ProcessedDE.getMatriuDistancies();
+				minBase = Double.MAX_VALUE;
+				nbElements = multiDendro.getCardinalitat();
+				
 				Reagrupa rg;
 				MatriuDistancies mdNew;
 				double b;
@@ -782,8 +728,10 @@ import definicions.MatriuDistancies;
 				//try to update values
 				try {
 					//update values for display
-					multiDendro.getArrel().setBase(minBase);
-					showCalls(action, this.WorkerQD); //pass on the QD
+					if (AnalysesList.isOptionComputeDendrogram()){
+						multiDendro.getArrel().setBase(minBase);
+					}
+					showCalls(action, this.WorkerQD); //pass on the QD + display options
 				} catch (Exception ex) {
 					
 				}
@@ -1107,6 +1055,12 @@ import definicions.MatriuDistancies;
 				}
 				QD.setContextSetName(contextSetMenu.getSelectedItem().toString());
 				QD.setDissimilarityType(Jpan_Menu.getCbDissimilarity().getSelectedItem().toString());
+				QD.setAnalysesList(new PostSearchAnalyses(
+						fr.getPanMenuTab().getJpo().getDrawSearchResults().isSelected(), //search results
+						fr.getPanMenuTab().getJpo().getDrawContextTree().isSelected(), //draw context tree
+						fr.getPanMenuTab().getJpo().getDrawContextGraph().isSelected(), //draw context graph
+						fr.getPanMenuTab().getJpo().getDrawPhylogeneticTree().isSelected()//phylogeny
+						));
 			}
 
 			//Search Query
@@ -1142,7 +1096,8 @@ import definicions.MatriuDistancies;
 						&& (Jpan_Menu.getMethod() == ifd.getMethod())
 						&& (Jpan_Menu.getPrecision() == ifd.getPrecision())
 						&& (QD.getDissimilarityType().equals(ifd.getQD().getDissimilarityType()))
-						&& (QD.getContextSetName().equals(ifd.getQD().getContextSetName()))){
+						&& (QD.getContextSetName().equals(ifd.getQD().getContextSetName()))
+						&& (QD.getAnalysesList().equals(ifd.getQD().getAnalysesList()))){
 				
 					action = "Redraw"; // no new matrix required
 					//System.out.println("Action = Redraw");
@@ -1206,10 +1161,7 @@ import definicions.MatriuDistancies;
 							QD.setQueries(Queries);
 							
 							//single, interruptable Swing Worker
-							CurrentSearch = new SearchWorker(QD,Queries,null,
-									contextSetMenu.getSelectedItem().toString(),
-									Jpan_Menu.getCbDissimilarity().getSelectedItem().toString(),
-									searchField.getText(),true,action,
+							CurrentSearch = new SearchWorker(QD,action,
 									Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
 									Jpan_Menu.getPrecision());
 							CurrentSearch.addPropertyChangeListener(this);
@@ -1234,15 +1186,11 @@ import definicions.MatriuDistancies;
 						QD.setClusters(NumQueries);
 						
 						//try: unified swingworker approach
-						CurrentSearch = new SearchWorker(QD,null,NumQueries,
-								contextSetMenu.getSelectedItem().toString(),
-								Jpan_Menu.getCbDissimilarity().getSelectedItem().toString(),
-								searchField.getText(),false,action,
+						CurrentSearch = new SearchWorker(QD,action,
 								Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
-								Jpan_Menu.getPrecision());
+								Jpan_Menu.getPrecision());//phylogeny
 						CurrentSearch.addPropertyChangeListener(this);
 						CurrentSearch.execute();
-
 					}
 
 
@@ -1272,21 +1220,15 @@ import definicions.MatriuDistancies;
 				SelectedFrame.setContextSetName(QD.getContextSetName());
 				
 				if (SelectedFrame.isAnnotationSearch()){
-					CurrentSearch = new SearchWorker(SelectedFrame,SelectedFrame.getQueries(),null,
-							contextSetMenu.getSelectedItem().toString(),
-							Jpan_Menu.getCbDissimilarity().getSelectedItem().toString(),
-							SelectedFrame.getName(),true,action,
+					CurrentSearch = new SearchWorker(SelectedFrame,action,
 							Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
-							Jpan_Menu.getPrecision());
+							Jpan_Menu.getPrecision());//phylogeny
 					CurrentSearch.addPropertyChangeListener(this);
 					CurrentSearch.execute();
 				} else {
-					CurrentSearch = new SearchWorker(SelectedFrame,null,SelectedFrame.getClusters(),
-							contextSetMenu.getSelectedItem().toString(),
-							Jpan_Menu.getCbDissimilarity().getSelectedItem().toString(),
-							SelectedFrame.getName(),false,action,
+					CurrentSearch = new SearchWorker(SelectedFrame,action,
 							Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
-							Jpan_Menu.getPrecision());
+							Jpan_Menu.getPrecision());//phylogeny
 					CurrentSearch.addPropertyChangeListener(this);
 					CurrentSearch.execute();
 				}
@@ -1294,7 +1236,7 @@ import definicions.MatriuDistancies;
 			// in this case, no need to modify what's already in the internal frame.
 			} else if (ambDades && action.equals("Redraw")) {
 				//only GUI updates - no recomputations
-				showCalls(action, currentInternalFrame.getInternalFrameData().getQD());
+				showCalls(action, currentInternalFrame.getInternalFrameData().getQD());//phylogeny
 				fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 
 			} else {
@@ -1322,42 +1264,54 @@ import definicions.MatriuDistancies;
 					currentInternalFrame.doDefaultCloseAction();
 				}
 				show(action, Jpan_Menu.getMethod(), Jpan_Menu.getPrecision(), qD);
+				System.out.println(currentInternalFrame);
 				currentInternalFrame.doDefaultCloseAction();
 				show(action, Jpan_Menu.getMethod(), Jpan_Menu.getPrecision(), qD);
 				btnUpdate.setEnabled(true);
 				buttonClicked = false;
 			} catch (Exception ex) {
 				//showError("ShowCalls");
+				ex.printStackTrace();
 			}
 		}
 
 		public void show(String action, final metodo method, final int precision, QueryData qD) {
 
+			System.out.println("Into show");
+			
 			boolean isUpdate;
 			FrmInternalFrame pizarra;
-			Config cfg;
+			Config cfg;					//Configuration information for multidendrogram only
 			InternalFrameData ifd;
-			FrmPiz fPiz;
 			Fig_Pizarra figPizarra;
 
-			//need to update?
+			//INTERNAL FRAMES
+			JScrollPane fPizSP = null;
+			JScrollPane fSearchSP = null;
+			JScrollPane fGraphSP = null;
+			JScrollPane fPhyloSP = null;
+			
+			//hold over
+			FrmPiz fPiz = null;
+			
+			//update or not
 			isUpdate = !action.equals("Load");
 
 			try {
 
-				//Internal frame
+				//CREATE INTERNAL FRAME + ADD DATA
 				pizarra = fr.createInternalFrame(isUpdate, method.name());
-
-				//configuration information
+				ifd = new InternalFrameData(de, multiDendro);
+				ifd.setQD(qD);
+				pizarra.setInternalFrameData(ifd);
+				pizarra.setTitle(qD.getName());
+				
+				//UPDATE CONFIGURATION INFORMATION
 				cfg = fr.getConfig();
 				cfg.setPizarra(pizarra);
 				cfg.setFitxerDades(fitx);
 				cfg.setMatriu(multiDendro);
 				cfg.setHtNoms(de.getTaulaNoms()); //table names
-
-				//determine size of tree rendering based on number of elements
-				setVerticalScrollValue(de.getTaulaNoms().size());
-				
 				if (!cfg.isTipusDistancia()) {
 					if (cfg.getOrientacioDendo().equals(Orientation.NORTH)) {
 						cfg.setOrientacioDendo(Orientation.SOUTH);
@@ -1370,84 +1324,88 @@ import definicions.MatriuDistancies;
 					}
 				}
 				
-				//create a new internal frame
-				ifd = new InternalFrameData(de, multiDendro);
-				ifd.setQD(qD);
-				pizarra.setInternalFrameData(ifd);
-				
-				// Title for the child window
-				String WindowTitle = qD.getName();
-				pizarra.setTitle(WindowTitle);
-				
-				//appropaite context set display data
+				//PREPARE INTERNAL FRAME DATA
 				CSDisplayData CSD = new CSDisplayData();
 				CSD.setEC(de.getEC());
 				
-				//create a new context tree panel
-				fPiz = new FrmPiz(fr, CSD);
-				
-				// Set sizes
-				fPiz.setSize(pizarra.getSize());
-				fPiz.setPreferredSize(pizarra.getSize());
-				
-				//determine appropriate rendering dimensions
-				Dimension d = new Dimension(pizarra.getWidth()-
-						HorizontalScrollBuffer, VerticalScrollValue);
-				
-				fPiz.setPreferredSize(d);
-				
-				// Call Jpan_Menu -> internalFrameActivated()
-				pizarra.setVisible(true);
-				if (action.equals("Load") || action.equals("Reload")) {
-					Jpan_Menu.ajustaValors(cfg);
+				//OPTION: SEARCHES
+				if (qD.getAnalysesList().isOptionDisplaySearches()){
+					
+					//search results pane
+					fSearchSP = new JScrollPane(SearchResultsFrame);
+					System.out.println("show() creates search panel.");
+					
 				}
 				
-				// Convert tree into figures
-				figPizarra = new Fig_Pizarra(multiDendro.getArrel(), cfg);
-				
-				// Pass figures to the window
-				fPiz.setFigures(figPizarra.getFigures());
-				fPiz.setConfig(cfg);
-				
-				//scroll panel, with sizes
-				JScrollPane fPizSP = new JScrollPane(fPiz);
-				fPizSP.setSize(pizarra.getSize());
-				fPizSP.setPreferredSize(pizarra.getSize());
+				//OPTION: DENDROGRAM
+				if (qD.getAnalysesList().isOptionComputeDendrogram()){
 
-				//wrap scrollable tree with new panel + jtabbedpane
+					//create a new context tree panel
+					fPiz = new FrmPiz(fr, CSD);
+					
+					// Set sizes
+					fPiz.setSize(pizarra.getSize());
+					fPiz.setPreferredSize(pizarra.getSize());
+					
+					//determine size of tree rendering based on number of elements
+					setVerticalScrollValue(de.getTaulaNoms().size());
+					Dimension d = new Dimension(pizarra.getWidth()-
+							HorizontalScrollBuffer, VerticalScrollValue);
+					fPiz.setPreferredSize(d);
+					
+					// Call Jpan_Menu -> internalFrameActivated()
+					pizarra.setVisible(true);
+					if (action.equals("Load") || action.equals("Reload")) {
+						Jpan_Menu.ajustaValors(cfg);
+					}
+					
+					// Convert tree into figures
+					figPizarra = new Fig_Pizarra(multiDendro.getArrel(), cfg);
+					
+					// Pass figures to the window
+					fPiz.setFigures(figPizarra.getFigures());
+					fPiz.setConfig(cfg);
+					
+					//scroll panel, with sizes
+					fPizSP = new JScrollPane(fPiz);
+					fPizSP.setSize(pizarra.getSize());
+					fPizSP.setPreferredSize(pizarra.getSize());
+				}
+				
+				//OPTION: GRAPH
+				if (qD.getAnalysesList().isOptionComputeContextGraph()){
+					FrmGraph fGraph = new FrmGraph(fr, CSD);
+					fGraphSP = new JScrollPane(fGraph);
+				}
+
+				//OPTION: PHYLOGENY
+				if (qD.getAnalysesList().isOptionRenderPhylogeny()){
+					FrmPhylo fPhylo = new FrmPhylo(fr, CSD);
+					fPhyloSP = new JScrollPane(fPhylo);
+				}
+				
+				//CREATE FINAL FRAME
 				JPanel TabbedWrapper = new JPanel();
 				TabbedWrapper.setLayout(new BorderLayout());
-				
-				//temporary - other panels
-				FrmGraph fGraph = new FrmGraph(fr, CSD);
-				JScrollPane fGraphSP = new JScrollPane(fGraph);
-				
-				//search results pane
-				FrmSearchResults fSearch = new FrmSearchResults(fr, CSD);
-				JScrollPane fSearchSP = new JScrollPane(fSearch);
-				
+
 				//tabbed frame for internal frame
-				FrmTabbed fPizFT = new FrmTabbed(fPizSP,fGraphSP,fSearchSP,null,
-						fr.getPanMenuTab().getJpo().getDrawContextTree().isSelected(),
-						fr.getPanMenuTab().getJpo().getDrawContextGraph().isSelected(),
-						fr.getPanMenuTab().getJpo().getDrawSearchResults().isSelected(),
-						fr.getPanMenuTab().getJpo().getDrawPhylogeneticTree().isSelected());
-				TabbedWrapper.add(fPizFT, BorderLayout.CENTER);
+				FrmTabbed AnalysisResults = new FrmTabbed(fPizSP,fGraphSP,fSearchSP,fPhyloSP,
+						qD.getAnalysesList());
+				TabbedWrapper.add(AnalysisResults, BorderLayout.CENTER);
 				
-				//pizarra.add(fPiz);	//Original panel
-				//pizarra.add(fPizSP);	//Scroll panel
+				//ADD TABBED PANEL TO FRAME
 				pizarra.add(TabbedWrapper);	//Tabbed menu component with panel
 				
-				//set internal context tree panel
+				//CONTAINER OWNERSHIP
 				pizarra.setInternalPanel(fPiz);
-				
-				// Adjust activated frame in FrmPrincipalDesk
+				this.currentInternalFrame = pizarra;
 				fr.setCurrentFrame(pizarra);
 				fr.setCurrentFpizpanel(fPiz);
-
+				
+				System.out.println("Complete show()");
 				
 			} catch (final Exception e) {
-				//e.printStackTrace();
+				e.printStackTrace();
 				//showError(e.getMessage());
 				//showError("problems in show");
 			}
@@ -1497,6 +1455,7 @@ import definicions.MatriuDistancies;
 				de = ifd.getDadesExternes();
 				//fitx = de.getFitxerDades();
 				multiDendro = ifd.getMultiDendrogram();
+				SearchResultsFrame = ifd.getSearchResultsFrame();
 				Jpan_Menu.setConfigPanel(ifd);
 				
 				//also set current panel (if it exists)

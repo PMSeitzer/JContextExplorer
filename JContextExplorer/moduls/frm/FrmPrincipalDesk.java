@@ -213,18 +213,27 @@ public class FrmPrincipalDesk extends JFrame{
 		int x, y, width, height;
 		FrmInternalFrame pizarra;
 		
-		if (isUpdate) {
-			x = currentFpiz.getX();
-			y = currentFpiz.getY();
-			width = currentFpiz.getWidth();
-			height = currentFpiz.getHeight();
-			
-		} else {
-			x = 0;
-			y = 0;
-			width = Parametres_Inicials.getWidth_frmDesk();
-			height = Parametres_Inicials.getHeight_frmDesk();
-		}
+//		if (isUpdate) {
+//			x = currentFpiz.getX();
+//			y = currentFpiz.getY();
+//			width = currentFpiz.getWidth();
+//			height = currentFpiz.getHeight();
+//			x = 0;
+//			y = 0;
+//			width = Parametres_Inicials.getWidth_frmDesk();
+//			height = Parametres_Inicials.getHeight_frmDesk();
+//			
+//		} else {
+//			x = 0;
+//			y = 0;
+//			width = Parametres_Inicials.getWidth_frmDesk();
+//			height = Parametres_Inicials.getHeight_frmDesk();
+//		}
+		
+		x = 0;
+		y = 0;
+		width = Parametres_Inicials.getWidth_frmDesk();
+		height = Parametres_Inicials.getHeight_frmDesk();
 		
 		//pizarra translates to "slate" - internal tree frame
 		pizarra = new FrmInternalFrame(methodName, isUpdate, x, y);
@@ -233,14 +242,10 @@ public class FrmPrincipalDesk extends JFrame{
 		pizarra.setLayout(new BorderLayout());
 		pizarra.addInternalFrameListener(panBtn);
 		pizarra.addInternalFrameListener(panGenome);
-
 		pan_Desk.add(pizarra, BorderLayout.CENTER);
 				
 		//desktop manager maximizes frame.
 		DefaultDesktopManager ddm = new DefaultDesktopManager();
-		
-		//play with location/size of internal frame
-		//ddm.setBoundsForFrame(pizarra, 0, 0, 800, 800);
 		ddm.maximizeFrame(pizarra);
 		
 		return pizarra;
