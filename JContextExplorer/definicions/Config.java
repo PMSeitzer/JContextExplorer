@@ -111,7 +111,8 @@ public class Config {
 			de = new DadesExternes(fitx);
 			md = de.getMatriuDistancies();
 		} catch (Exception e) {
-			FesLog.LOG.throwing("Config", "getMatriuDistancies", e);
+			e.printStackTrace();
+			//FesLog.LOG.throwing("Config", "getMatriuDistancies", e);
 		}
 		return md;
 	}

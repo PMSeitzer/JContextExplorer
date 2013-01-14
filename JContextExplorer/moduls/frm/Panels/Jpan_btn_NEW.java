@@ -189,7 +189,7 @@ import definicions.MatriuDistancies;
 				
 				int progress = 0;
 				
-				System.out.println("Into the worker");
+				//System.out.println("Into the worker");
 				ContextSetDescription CurrentCSD = null;
 				
 				//recover the context set description
@@ -1059,7 +1059,7 @@ import definicions.MatriuDistancies;
 						fr.getPanMenuTab().getJpo().getDrawSearchResults().isSelected(), //search results
 						fr.getPanMenuTab().getJpo().getDrawContextTree().isSelected(), //draw context tree
 						fr.getPanMenuTab().getJpo().getDrawContextGraph().isSelected(), //draw context graph
-						fr.getPanMenuTab().getJpo().getDrawPhylogeneticTree().isSelected()//phylogeny
+						fr.getPanMenuTab().getJpo().getDrawPhylogeneticTree().isSelected() //phylogeny
 						));
 			}
 
@@ -1097,13 +1097,39 @@ import definicions.MatriuDistancies;
 						&& (Jpan_Menu.getPrecision() == ifd.getPrecision())
 						&& (QD.getDissimilarityType().equals(ifd.getQD().getDissimilarityType()))
 						&& (QD.getContextSetName().equals(ifd.getQD().getContextSetName()))
-						&& (QD.getAnalysesList().equals(ifd.getQD().getAnalysesList()))){
+						
+						/* TODO:
+						 * Currently set so that any tab change will cause for re-computation.  This should be changed, later,
+						 * to account for re-computations of different kinds, for different analyses. (1-14-2013)
+						 */
+						&& (QD.getAnalysesList().isOptionDisplaySearches() == ifd.getQD().getAnalysesList().isOptionDisplaySearches())
+						&& (QD.getAnalysesList().isOptionComputeDendrogram() == ifd.getQD().getAnalysesList().isOptionComputeDendrogram())
+						&& (QD.getAnalysesList().isOptionComputeContextGraph() == ifd.getQD().getAnalysesList().isOptionComputeContextGraph())
+						&& (QD.getAnalysesList().isOptionRenderPhylogeny() == ifd.getQD().getAnalysesList().isOptionRenderPhylogeny())){
+						//&& (QD.getAnalysesList().equals(ifd.getQD().getAnalysesList()))){
 				
 					action = "Redraw"; // no new matrix required
 					//System.out.println("Action = Redraw");
 				} else {
 					action = "Reload"; //a new matrix is required
 					//System.out.println("Action = Reloaded");
+//					System.out.println("Method:" + (Jpan_Menu.getMethod() == ifd.getMethod()));
+//					System.out.println("Precision: " + (Jpan_Menu.getPrecision() == ifd.getPrecision()));
+//					System.out.println("Dissimilarity Type: " + (QD.getDissimilarityType().equals(ifd.getQD().getDissimilarityType())));
+//					System.out.println("Context Set Name: " + (QD.getContextSetName().equals(ifd.getQD().getContextSetName())));
+					
+					//the problem!
+					//System.out.println("Analyses List: " + (QD.getAnalysesList().equals(ifd.getQD().getAnalysesList())));
+//					
+//					System.out.println("QD List:" + QD.getAnalysesList().isOptionDisplaySearches() 
+//							+ " " + QD.getAnalysesList().isOptionComputeDendrogram()
+//							+ " " + QD.getAnalysesList().isOptionComputeContextGraph()
+//							+ " " + QD.getAnalysesList().isOptionRenderPhylogeny());
+//					
+//					System.out.println("ifd:" + ifd.getQD().getAnalysesList().isOptionDisplaySearches() 
+//							+ " " + ifd.getQD().getAnalysesList().isOptionComputeDendrogram()
+//							+ " " + ifd.getQD().getAnalysesList().isOptionComputeContextGraph()
+//							+ " " + ifd.getQD().getAnalysesList().isOptionRenderPhylogeny());
 				}
 				ambDades = true;
 				
@@ -1218,6 +1244,7 @@ import definicions.MatriuDistancies;
 				//update internal frame data
 				SelectedFrame.setDissimilarityType(QD.getDissimilarityType());
 				SelectedFrame.setContextSetName(QD.getContextSetName());
+				SelectedFrame.setAnalysesList(QD.getAnalysesList());
 				
 				if (SelectedFrame.isAnnotationSearch()){
 					CurrentSearch = new SearchWorker(SelectedFrame,action,
@@ -1254,7 +1281,7 @@ import definicions.MatriuDistancies;
 				}
 
 				//message to console
-				System.out.println("Search successfully cancelled.");
+//				System.out.println("Search successfully cancelled.");
 			}
 		} 
 
@@ -1264,7 +1291,8 @@ import definicions.MatriuDistancies;
 					currentInternalFrame.doDefaultCloseAction();
 				}
 				show(action, Jpan_Menu.getMethod(), Jpan_Menu.getPrecision(), qD);
-				System.out.println(currentInternalFrame);
+				//currentInternalFrame.setVisible(true);
+				//System.out.println(currentInternalFrame);
 				currentInternalFrame.doDefaultCloseAction();
 				show(action, Jpan_Menu.getMethod(), Jpan_Menu.getPrecision(), qD);
 				btnUpdate.setEnabled(true);
@@ -1277,7 +1305,7 @@ import definicions.MatriuDistancies;
 
 		public void show(String action, final metodo method, final int precision, QueryData qD) {
 
-			System.out.println("Into show");
+			//System.out.println("Into show");
 			
 			boolean isUpdate;
 			FrmInternalFrame pizarra;
@@ -1331,9 +1359,8 @@ import definicions.MatriuDistancies;
 				//OPTION: SEARCHES
 				if (qD.getAnalysesList().isOptionDisplaySearches()){
 					
-					//search results pane
+					//create scroll panel from search results pane
 					fSearchSP = new JScrollPane(SearchResultsFrame);
-					System.out.println("show() creates search panel.");
 					
 				}
 				
@@ -1398,11 +1425,10 @@ import definicions.MatriuDistancies;
 				
 				//CONTAINER OWNERSHIP
 				pizarra.setInternalPanel(fPiz);
+				pizarra.setVisible(true);
 				this.currentInternalFrame = pizarra;
 				fr.setCurrentFrame(pizarra);
 				fr.setCurrentFpizpanel(fPiz);
-				
-				System.out.println("Complete show()");
 				
 			} catch (final Exception e) {
 				e.printStackTrace();

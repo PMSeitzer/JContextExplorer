@@ -39,7 +39,9 @@ public class FrmTabbed extends JTabbedPane{
 		this.ShowSearchResults = AnalysesList.isOptionDisplaySearches();
 		this.ShowPhyloTree = AnalysesList.isOptionRenderPhylogeny();
 		
-		System.out.println("FrmTabbed: " + this.ShowSearchResults);
+//		//optional print statements (for debugging)
+//		System.out.println("FrmTabbed Show search results:" + this.ShowSearchResults);
+//		System.out.println("FrmTabbed Show dendrogram:" + this.ShowContextTree);
 		
 		//retrieve panel
 		this.getPanel();
