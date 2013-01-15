@@ -425,14 +425,14 @@ public class FrmPrincipalDesk extends JFrame{
 		SelectedNodeNumbers = selectedNodeNumbers;
 	}
 
-	//internal frame methods - added, + highly experimental
-	public FrmPiz getCurrentFpizpanel() {
-		return currentFpizpanel;
-	}
-
-	public void setCurrentFpizpanel(FrmPiz currentFpizpanel) {
-		this.currentFpizpanel = currentFpizpanel;
-	}
+//	//internal frame methods - added, + highly experimental
+//	public FrmPiz getCurrentFpizpanel() {
+//		return currentFpizpanel;
+//	}
+//
+//	public void setCurrentFpizpanel(FrmPiz currentFpizpanel) {
+//		this.currentFpizpanel = currentFpizpanel;
+//	}
 
 	public void UpdateSelectedNodes() {
 //		this.currentFpizpanel.setCSD(this.getCSD());
@@ -440,7 +440,13 @@ public class FrmPrincipalDesk extends JFrame{
 //		this.currentFpizpanel.setSelectedNodeNumbers(this.getSelectedNodeNumbers());
 //		this.currentFpizpanel.repaint();
 		
-		this.currentFpiz.getInternalPanel().repaint();
+		//context tree update
+		if (this.currentFpiz.getInternalPanel() != null){
+			this.currentFpiz.getInternalPanel().repaint();
+		}
+
+		//internal frame update
+		this.getPanBtn().getCurrentInternalFrame().getInternalFrameData().getSearchResultsFrame().UpdateNodes();
 
 	}
 

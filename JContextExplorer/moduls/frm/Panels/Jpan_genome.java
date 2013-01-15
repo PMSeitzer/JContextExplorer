@@ -434,20 +434,28 @@ public class Jpan_genome extends JPanel implements ActionListener,
 					JOptionPane.showMessageDialog(null, MessageString);
 				} else {
 					
-					boolean[] UpdatedNodeNumbers = new boolean [fr.getCurrentFrame().getInternalPanel().getRectanglesSurroundingLabels().length];
+					int NumberOfNodes = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD().getEC().getContexts().keySet().size();
+					
+					//intialize updated node numbers
+					boolean[] UpdatedNodeNumbers = new boolean[NumberOfNodes];
+
+					//boolean[] UpdatedNodeNumbers = new boolean [fr.getCurrentFrame().getInternalPanel().getRectanglesSurroundingLabels().length];
 					
 					//set all to unselected
 					Arrays.fill(UpdatedNodeNumbers, Boolean.FALSE);
 					
 					//update
-					fr.getCurrentFrame().getInternalPanel().setSelectedNodeNumbers(UpdatedNodeNumbers);
+					if (fr.getCurrentFrame().getInternalPanel() != null){
+						fr.getCurrentFrame().setSelectedNodeNumbers(UpdatedNodeNumbers);
+					}
 					fr.UpdateSelectedNodes();
 					
 					//retrieve currently selected nodes
-					boolean[] currentlySelected = this.fr.getCurrentFrame().getInternalPanel().getSelectedNodeNumbers();
+					//boolean[] currentlySelected = this.fr.getCurrentFrame().getInternalPanel().getSelectedNodeNumbers();
 					
 					//create a new array, initialize to false
-					boolean[] UpdatedNodes = new boolean[currentlySelected.length];
+					//boolean[] UpdatedNodes = new boolean[currentlySelected.length];
+					boolean[] UpdatedNodes = new boolean[NumberOfNodes];
 					Arrays.fill(UpdatedNodes,false);
 					
 					//recover query
@@ -465,8 +473,13 @@ public class Jpan_genome extends JPanel implements ActionListener,
 					if (Queries.length ==1) {
 						Queries = Query.split("\\s+");
 					}
+					
+					//initialize hash map (for internalframedata)
+					LinkedHashMap<String, Boolean> UpdatedSelections = new LinkedHashMap<String, Boolean>();
+					
 					//search for node names + annotations
-					CSDisplayData CompareCSD = fr.getCurrentFrame().getInternalPanel().getCSD();
+					//CSDisplayData CompareCSD = fr.getCurrentFrame().getInternalPanel().getCSD();
+					CSDisplayData CompareCSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
 					for (int i = 0; i < CompareCSD.getNodeNames().length; i++){
 						
 						//check node names against all queries
@@ -477,11 +490,18 @@ public class Jpan_genome extends JPanel implements ActionListener,
 								UpdatedNodes[i] = true;
 							} 
 						}
-
+						
+						//update in hash map
+						UpdatedSelections.put(CompareCSD.getNodeNames()[i],UpdatedNodes[i]);
 					}
 					
+					//update frame
+					if (fr.getCurrentFrame().getInternalPanel() != null){
+						fr.getCurrentFrame().getInternalPanel().setSelectedNodeNumbers(UpdatedNodes);
+					}
+					fr.getCurrentFrame().getInternalFrameData().getQD().getCSD().setCurrentlySelectedNodes(UpdatedSelections);
+					
 					//update
-					fr.getCurrentFrame().getInternalPanel().setSelectedNodeNumbers(UpdatedNodes);
 					fr.UpdateSelectedNodes();
 				}
 
@@ -490,6 +510,7 @@ public class Jpan_genome extends JPanel implements ActionListener,
 			} catch (Exception e1){
 					JOptionPane.showMessageDialog(null,"Please enter a query in the search bar (top left-hand corner).",
 							"Submit Query",JOptionPane.INFORMATION_MESSAGE);
+					e1.printStackTrace();
 			}
 		}
 	}

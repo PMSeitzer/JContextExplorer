@@ -100,6 +100,10 @@ import definicions.MatriuDistancies;
 		// Internal frame currently active
 		private FrmInternalFrame currentInternalFrame = null;
 
+		public FrmInternalFrame getCurrentInternalFrame() {
+			return currentInternalFrame;
+		}
+
 		// File with the input data
 		private static FitxerDades fitx = null; //path to file
 		private DadesExternes de; //determined by annotation search / clustering
@@ -392,6 +396,11 @@ import definicions.MatriuDistancies;
 
 				//maintenance
 				multiDendro = null;
+				
+				//add appropriate CSDisplayData
+				CSDisplayData CSD = new CSDisplayData();
+				CSD.setEC(de.getEC());
+				this.WorkerQD.setCSD(CSD);
 				
 				//Analyses options
 				//=================================//
@@ -1305,23 +1314,23 @@ import definicions.MatriuDistancies;
 
 		public void show(String action, final metodo method, final int precision, QueryData qD) {
 
-			//System.out.println("Into show");
-			
+
 			boolean isUpdate;
 			FrmInternalFrame pizarra;
 			Config cfg;					//Configuration information for multidendrogram only
 			InternalFrameData ifd;
 			Fig_Pizarra figPizarra;
 
-			//INTERNAL FRAMES
+			//INTERNAL PANELS
+			FrmSearchResults fSearch = null;
+			FrmPiz fPiz = null;
+			FrmGraph fGraph = null;
+			FrmPhylo fPhylo = null;
 			JScrollPane fPizSP = null;
 			JScrollPane fSearchSP = null;
 			JScrollPane fGraphSP = null;
 			JScrollPane fPhyloSP = null;
-			
-			//hold over
-			FrmPiz fPiz = null;
-			
+
 			//update or not
 			isUpdate = !action.equals("Load");
 
@@ -1329,9 +1338,6 @@ import definicions.MatriuDistancies;
 
 				//CREATE INTERNAL FRAME + ADD DATA
 				pizarra = fr.createInternalFrame(isUpdate, method.name());
-				ifd = new InternalFrameData(de, multiDendro);
-				ifd.setQD(qD);
-				pizarra.setInternalFrameData(ifd);
 				pizarra.setTitle(qD.getName());
 				
 				//UPDATE CONFIGURATION INFORMATION
@@ -1353,15 +1359,15 @@ import definicions.MatriuDistancies;
 				}
 				
 				//PREPARE INTERNAL FRAME DATA
-				CSDisplayData CSD = new CSDisplayData();
-				CSD.setEC(de.getEC());
+				CSDisplayData CSD = qD.getCSD();
 				
 				//OPTION: SEARCHES
 				if (qD.getAnalysesList().isOptionDisplaySearches()){
 					
 					//create scroll panel from search results pane
+					fSearch = SearchResultsFrame;
 					fSearchSP = new JScrollPane(SearchResultsFrame);
-					
+	
 				}
 				
 				//OPTION: DENDROGRAM
@@ -1401,15 +1407,24 @@ import definicions.MatriuDistancies;
 				
 				//OPTION: GRAPH
 				if (qD.getAnalysesList().isOptionComputeContextGraph()){
-					FrmGraph fGraph = new FrmGraph(fr, CSD);
+					fGraph = new FrmGraph(fr, CSD);
 					fGraphSP = new JScrollPane(fGraph);
 				}
 
 				//OPTION: PHYLOGENY
 				if (qD.getAnalysesList().isOptionRenderPhylogeny()){
-					FrmPhylo fPhylo = new FrmPhylo(fr, CSD);
+					fPhylo = new FrmPhylo(fr, CSD);
 					fPhyloSP = new JScrollPane(fPhylo);
 				}
+				
+				//INTERNAL FRAME DATA
+				ifd = new InternalFrameData(de, multiDendro);
+				ifd.setQD(qD);
+				ifd.setContextGraphPanel(fGraph);
+				ifd.setContextTreePanel(fPiz);
+				ifd.setSearchResultsFrame(fSearch);
+				ifd.setPhyloTreePanel(fPhylo);
+				pizarra.setInternalFrameData(ifd);
 				
 				//CREATE FINAL FRAME
 				JPanel TabbedWrapper = new JPanel();
@@ -1428,12 +1443,9 @@ import definicions.MatriuDistancies;
 				pizarra.setVisible(true);
 				this.currentInternalFrame = pizarra;
 				fr.setCurrentFrame(pizarra);
-				fr.setCurrentFpizpanel(fPiz);
 				
 			} catch (final Exception e) {
 				e.printStackTrace();
-				//showError(e.getMessage());
-				//showError("problems in show");
 			}
 		}
 
@@ -1485,7 +1497,7 @@ import definicions.MatriuDistancies;
 				Jpan_Menu.setConfigPanel(ifd);
 				
 				//also set current panel (if it exists)
-				fr.setCurrentFpizpanel(currentInternalFrame.getInternalPanel());
+				//fr.setCurrentFpizpanel(currentInternalFrame.getInternalPanel());
 			}
 			
 		}

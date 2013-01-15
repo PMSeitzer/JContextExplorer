@@ -18,16 +18,21 @@
 
 package moduls.frm;
 
+import genomeObjects.CSDisplayData;
 import importExport.DadesExternes;
 import importExport.FitxerDades;
 import inicial.Language;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.util.LinkedHashMap;
 
 import javax.swing.JOptionPane;
 
 import moduls.frm.Panels.Jpan_Menu;
+import moduls.frm.children.FrmGraph;
+import moduls.frm.children.FrmPhylo;
+import moduls.frm.children.FrmPiz;
 import moduls.frm.children.FrmSearchResults;
 import tipus.Orientation;
 import tipus.metodo;
@@ -91,12 +96,40 @@ public class InternalFrameData {
 	
 	//------Version 1.1 --------//
 	//QUERY DATA
-	private QueryData QD;	//Data associated with the original query, info
-	private FrmSearchResults SearchResultsFrame;	
-
+	private QueryData QD;	//Data associated with the original query + CSD
+	
+	//FRAMES
+	private FrmSearchResults SearchResultsPanel;	
+	private FrmPiz ContextTreePanel;
+	private FrmGraph ContextGraphPanel;
+	private FrmPhylo PhyloTreePanel;
 
 // ----- Methods ---------------------------------------------------//		
 	
+	public FrmPiz getContextTreePanel() {
+		return ContextTreePanel;
+	}
+
+	public void setContextTreePanel(FrmPiz contextTreePanel) {
+		ContextTreePanel = contextTreePanel;
+	}
+
+	public FrmGraph getContextGraphPanel() {
+		return ContextGraphPanel;
+	}
+
+	public void setContextGraphPanel(FrmGraph contextGraphPanel) {
+		ContextGraphPanel = contextGraphPanel;
+	}
+
+	public FrmPhylo getPhyloTreePanel() {
+		return PhyloTreePanel;
+	}
+
+	public void setPhyloTreePanel(FrmPhylo phyloTreePanel) {
+		PhyloTreePanel = phyloTreePanel;
+	}
+
 	public InternalFrameData(final FitxerDades fitx, MatriuDistancies md) {
 		try {
 			de = new DadesExternes(fitx);
@@ -310,11 +343,14 @@ public class InternalFrameData {
 	}
 
 	public FrmSearchResults getSearchResultsFrame() {
-		return SearchResultsFrame;
+		return SearchResultsPanel;
 	}
 
 	public void setSearchResultsFrame(FrmSearchResults searchResultsFrame) {
-		SearchResultsFrame = searchResultsFrame;
+		SearchResultsPanel = searchResultsFrame;
 	}
+
+
+
 
 }

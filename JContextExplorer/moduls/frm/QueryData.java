@@ -1,5 +1,7 @@
 package moduls.frm;
 
+import genomeObjects.CSDisplayData;
+
 public class QueryData {
 
 	//Fields
@@ -10,6 +12,7 @@ public class QueryData {
 	private String ContextSetName;
 	private String DissimilarityType;
 	private PostSearchAnalyses AnalysesList;
+	private CSDisplayData CSD;
 	
 	//Constructor
 	public QueryData(){
@@ -70,5 +73,13 @@ public class QueryData {
 
 	public void setAnalysesList(PostSearchAnalyses analysesList) {
 		AnalysesList = analysesList;
+	}
+
+	public CSDisplayData getCSD() {
+		return CSD;
+	}
+
+	public void setCSD(CSDisplayData cSD) {
+		CSD = cSD;
 	}
 }
