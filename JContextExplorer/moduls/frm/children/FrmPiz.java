@@ -64,6 +64,7 @@ import javax.swing.SwingUtilities;
 
 import org.sourceforge.jlibeps.epsgraphics.EpsGraphics2D;
 
+import moduls.frm.ContextLeaf;
 import moduls.frm.FrmPrincipalDesk;
 import moduls.frm.XYBox;
 import moduls.frm.Panels.Jpan_btn_NEW;
@@ -494,32 +495,56 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 	@Override
 	public void paint(Graphics arg0) {
 
+//		super.paint(arg0);
+//		Graphics2D g2d = (Graphics2D) arg0;
+//		this.g = g2d;
+//		this.draftDendo(g);
+//		
+//		//restore values from action events
+//		if (this.getSelectedNodeNumbers() != null){
+//		
+//		//retrieve node numbers to check
+//		//boolean[] CheckNodeNumbers = this.CSD.getSelectedNodes();
+//		boolean[] CheckNodeNumbers = this.getSelectedNodeNumbers();
+//			
+//		//paint appropriate nodenumbers
+//		for (int i = 0; i < CheckNodeNumbers.length; i++)
+//			if (CheckNodeNumbers[i] == true){
+//				//System.out.println("repaint " + i + ": " + CheckNodeNumbers[i]);
+//				g.setPaint(Color.RED);
+//				g.draw(RectanglesSurroundingLabels[i]);
+//			} 
+//		}
+//		
+////		//draw selection box
+////		if (this.isMousePressed == true){
+////			g.setPaint(Color.BLUE);
+////			g.fill(SelectionRectangle);
+////		}
+		
+		//basic painting parameters
 		super.paint(arg0);
 		Graphics2D g2d = (Graphics2D) arg0;
 		this.g = g2d;
 		this.draftDendo(g);
+		g.setPaint(Color.RED);
 		
-		//restore values from action events
-		if (this.getSelectedNodeNumbers() != null){
-		
-		//retrieve node numbers to check
-		//boolean[] CheckNodeNumbers = this.CSD.getSelectedNodes();
-		boolean[] CheckNodeNumbers = this.getSelectedNodeNumbers();
-			
-		//paint appropriate nodenumbers
-		for (int i = 0; i < CheckNodeNumbers.length; i++)
-			if (CheckNodeNumbers[i] == true){
-				//System.out.println("repaint " + i + ": " + CheckNodeNumbers[i]);
-				g.setPaint(Color.RED);
-				g.draw(RectanglesSurroundingLabels[i]);
+		//boxes around nodes
+		for (ContextLeaf CL : CSD.getGraphicalContexts()){
+			if (CL.isSelected()){
+				g.draw(CL.getContextGraphCoordinates());
 			} 
 		}
 		
-		//draw selection box
-		if (this.isMousePressed == true){
-			g.setPaint(Color.BLUE);
-			g.fill(SelectionRectangle);
-		}
+		g.setPaint(Color.BLACK);
+		
+//		//draw selection box
+//		if (this.isMousePressed == true){
+//			g.setPaint(Color.BLUE);
+//			g.fill(SelectionRectangle);
+//		}
+		
+		
 	}
 
 	//render the image, using info and calling this.draftDendo()
@@ -685,9 +710,23 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 			nomsD.setColor(cfg.getConfigMenu().getColorNoms());
 			nomsD.setFont(cfg.getConfigMenu().getFontNoms());
 			nomsD.dibuixa(g2d, orientacioClusters, orientacioNoms);
+			
+			//retrieve rectangles from names
 			this.setRectanglesSurroundingLabels(nomsD.getRectangles());
+			
+			//Map info to contexts
 			CSD.setCoordinates(nomsD.getRectangles());
 			CSD.setNodeNames(nomsD.getNodeNames());
+			
+			//write data to graphical contexts
+			for (ContextLeaf CL : CSD.getGraphicalContexts()){
+				for (int i = 0; i < CSD.getNodeNames().length; i++){
+					if (CL.getName().equals(CSD.getNodeNames()[i])){
+						CL.setContextGraphCoordinates(CSD.getCoordinates()[i]);
+						break;
+					}
+				}
+			}
 			
 //			//initialize all nodes as unselected
 //			boolean[] InitialNodeNumbers = new boolean[RectanglesSurroundingLabels.length];
@@ -804,9 +843,12 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 	}
 
 	public void UpdateNodes(){
-		
-		//update CSD
+				
+		//retrieve most current set of selected nodes
 		this.CSD = frm.getCurrentFrame().getInternalFrameData().getQD().getCSD();
+		
+		//repaint nodes
+		this.repaint();
 		
 	}
 	
@@ -816,31 +858,37 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 	public void mouseClicked(MouseEvent e){
 		
 		//left click
-		if (SwingUtilities.isLeftMouseButton(e)){
-			int x ,y ;
+		if (SwingUtilities.isLeftMouseButton(e)){			
 			
-			x = e.getX() ;    
-			y = e.getY() ; 
+			//update CSD
+			this.CSD = frm.getCurrentFrame().getInternalFrameData().getQD().getCSD();
 			
-			//Display coordinates
-			//String strpaint = " x = "   +  x  +   " , y = "   +  y  ;
-			//System.out.println(strpaint);
+			int x ,y;
+			
+			x = e.getX();    
+			y = e.getY(); 
 			
 			//initialize
 			boolean[] SelectedAfterClick = new boolean[RectanglesSurroundingLabels.length];
 			Arrays.fill(SelectedAfterClick, Boolean.FALSE);
 			
-			//update with the current existing set, if appropriate
-			if (this.getSelectedNodeNumbers() != null){
-				if (e.isShiftDown() == true || e.isControlDown() == true){
-					SelectedAfterClick = this.getSelectedNodeNumbers();
+			//update with current existing set (if appropriate)
+			if (e.isShiftDown() == true || e.isControlDown() == true){
+				for (ContextLeaf CL : CSD.getGraphicalContexts()){
+					for (int i = 0; i < CSD.getNodeNames().length; i++){
+						if (CL.getName().equals(CSD.getNodeNames()[i])){
+							SelectedAfterClick[i] = CL.isSelected();
+							break;
+						}
+					}
 				}
-			}		
-			
+			}
+
 			//draw a box around the correct coordinate
 			for (int i = 0; i < RectanglesSurroundingLabels.length; i++){
+				
 				Point p = new Point(x,-y);
-				//System.out.println(RectanglesSurroundingLabels[i].getMinX() + " and " + RectanglesSurroundingLabels[i].getMinY());
+			
 				if (RectanglesSurroundingLabels[i].contains(p)){
 					if (e.isShiftDown() == false && e.isControlDown() == false){
 						SelectedAfterClick[i] = true; //no button
@@ -874,11 +922,22 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 				} 
 			}
 			
-			//update selected node numbers
-			this.setSelectedNodeNumbers(SelectedAfterClick);
+			//update status of currently selected nodes
+			for (ContextLeaf CL : CSD.getGraphicalContexts()){
+				for (int i = 0; i < CSD.getNodeNames().length; i++){
+					if (CL.getName().equals(CSD.getNodeNames()[i])){
+						CL.setSelected(SelectedAfterClick[i]);
+						break;
+					}
+				}
+			}
+			
+			//update master CSD
+			frm.getCurrentFrame().getInternalFrameData().getQD().setCSD(CSD);
+			
+			//call main frame to update this and all other panels
+			this.frm.UpdateSelectedNodes();
 
-			//redraw
-			repaint();
 		}
 		
 		//right click
@@ -929,25 +988,6 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 		isMousePressed = false;
 	}
 
-	
-//	@Override
-//	public void mouseDragged(MouseEvent e) {
-//		
-//		System.out.println("Dragging mouse through" + e.getX() + "," + e.getY());
-//		
-//		//update size
-//		SelectionRectangle.setSize(e.getX()-PivotX,e.getY()-PivotY);
-//
-//		repaint();
-//	}
-//
-//	@Override
-//	public void mouseMoved(MouseEvent e) {
-//		// TODO Auto-generated method stub
-//		
-//	}
-
-	
     void eventOutput(String eventDescription, MouseEvent e) {
         String Line = (eventDescription
                 + " (" + e.getX() + "," + e.getY() + ")"
@@ -967,7 +1007,6 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
     public CSDisplayData getCSD() {
 		return CSD;
 	}
-    
 
 	public void setCSD(CSDisplayData cSD) {
 		CSD = cSD;

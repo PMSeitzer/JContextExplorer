@@ -20,13 +20,14 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import moduls.frm.ContextLeaf;
 import moduls.frm.FrmPrincipalDesk;
 
-public class FrmSearchResults extends JPanel implements ActionListener{
+public class FrmSearchResults extends JPanel implements ActionListener, MouseListener{
 
 	//Fields
 	private FrmPrincipalDesk fr;	//master CSD available here
@@ -59,6 +60,7 @@ public class FrmSearchResults extends JPanel implements ActionListener{
 		
 		//get panel
 		this.getPanel();
+		this.addMouseListener(this);
 	}
 
 	//create panel
@@ -179,18 +181,8 @@ public class FrmSearchResults extends JPanel implements ActionListener{
 
 		//retrieve updated CSD
 		this.CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
-				
-//		//check every node
-//		for (String NodeName: TreeNodeMapping.keySet()){
-//			DefaultMutableTreeNode Node = TreeNodeMapping.get(NodeName);
-//			if (CSD.getCurrentlySelectedNodes().get(NodeName)){
-//				SearchResults.addSelectionPath(new TreePath(Node.getPath()));
-//			} else {
-//				SearchResults.removeSelectionPath(new TreePath(Node.getPath()));
-//			}
-//		}
 		
-		//check every node
+		//mark selected nodes
 		for (ContextLeaf CL : CSD.getGraphicalContexts()){
 			if (CL.isSelected()){
 				SearchResults.addSelectionPath(new TreePath(CL.getSearchResultsTreeNode().getPath()));
@@ -199,5 +191,57 @@ public class FrmSearchResults extends JPanel implements ActionListener{
 			}
 		}
 
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		
+		//left click
+		if (SwingUtilities.isLeftMouseButton(e)){	
+			
+			//retrieve selected rows
+			int[] Selected = SearchResults.getSelectionRows();
+			
+			//update appropriate nodes in the list
+			for (ContextLeaf CL : CSD.getGraphicalContexts()){
+				for (int i = 0; i < Selected.length; i++){
+					if (SearchResults.getPathForRow(i).equals(new TreePath(CL.getSearchResultsTreeNode().getPath()))){
+						CL.setSelected(true);
+					}
+				}
+			}
+			
+			//update master CSD
+			fr.getCurrentFrame().getInternalFrameData().getQD().setCSD(CSD);
+			
+			//call main frame to update this and all other panels
+			this.fr.UpdateSelectedNodes();
+			
+		}
+
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
 	}
 }
