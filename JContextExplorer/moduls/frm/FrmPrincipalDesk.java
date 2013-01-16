@@ -438,8 +438,8 @@ public class FrmPrincipalDesk extends JFrame{
 	public void UpdateSelectedNodes() {
 		
 		//search results frame
-		if (this.getPanBtn().getCurrentInternalFrame().getInternalFrameData().getSearchResultsFrame() != null){
-			this.getPanBtn().getCurrentInternalFrame().getInternalFrameData().getSearchResultsFrame().UpdateNodes();
+		if (this.getCurrentFrame().getInternalFrameData().getSearchResultsFrame() != null){
+			this.getCurrentFrame().getInternalFrameData().getSearchResultsFrame().UpdateNodes();
 		}
 		
 		//context tree update
@@ -447,7 +447,7 @@ public class FrmPrincipalDesk extends JFrame{
 		if (this.getPanBtn().getCurrentInternalFrame().getInternalFrameData().getContextTreePanel() != null){
 			this.getPanBtn().getCurrentInternalFrame().getInternalFrameData().getContextTreePanel().UpdateNodes();
 		}
-
+		
 	}
 
 	public Jpan_genome getPanGenome() {

@@ -65,6 +65,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 
+import moduls.frm.ContextLeaf;
 import moduls.frm.Panels.Jpan_btn_NEW;
 
 import org.biojava3.core.sequence.Strand;
@@ -403,10 +404,17 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		
 		ExceededRangeLimit = new LinkedList<String>();
 		
-		//determine number of segments
+//		//determine number of segments
+//		int SegmentstoDraw = 0;
+//		for (int i =0; i<this.mf.getCSD().getSelectedNodes().length; i++){
+//			if (this.mf.getCSD().getSelectedNodes()[i] == true){
+//				SegmentstoDraw++;
+//			}
+//		}
+		
 		int SegmentstoDraw = 0;
-		for (int i =0; i<this.mf.getCSD().getSelectedNodes().length; i++){
-			if (this.mf.getCSD().getSelectedNodes()[i] == true){
+		for (ContextLeaf CL : this.mf.getCSD().getGraphicalContexts()){
+			if (CL.isSelected()){
 				SegmentstoDraw++;
 			}
 		}
@@ -434,8 +442,10 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		
 		//add information
 		int CoordinateNumber = -1;
-		for (int i =0; i<this.mf.getCSD().getSelectedNodes().length; i++){
-			if (this.mf.getCSD().getSelectedNodes()[i] == true){
+		for (ContextLeaf CL : this.mf.getCSD().getGraphicalContexts()){
+			if (CL.isSelected()){
+//		for (int i =0; i<this.mf.getCSD().getSelectedNodes().length; i++){
+//			if (this.mf.getCSD().getSelectedNodes()[i] == true){
 				
 				//initialize a new genomic segment
 				GenomicSegment GSelement = new GenomicSegment();
@@ -444,7 +454,8 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 				int QueryStrandPlus = 0; int QueryStrandMinus = 0;
 				
 				//add node name
-				GSelement.setLabel(this.mf.getCSD().getNodeNames()[i]);
+				//GSelement.setLabel(this.mf.getCSD().getNodeNames()[i]);
+				GSelement.setLabel(CL.getName());
 				
 				//determine the longest range
 				LinkedList<GenomicElementAndQueryMatch> LL = contexts.get(GSelement.getLabel());
@@ -508,7 +519,8 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 					AcceptableSegments.add(GSelement);
 					
 				} else {
-					ExceededRangeLimit.add(this.mf.getCSD().getNodeNames()[i]);
+					//ExceededRangeLimit.add(this.mf.getCSD().getNodeNames()[i]);
+					ExceededRangeLimit.add(CL.getName());
 					ContextsExcluded = true;
 				}
 			}

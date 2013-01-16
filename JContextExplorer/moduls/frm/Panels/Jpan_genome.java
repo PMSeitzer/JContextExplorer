@@ -147,7 +147,7 @@ public class Jpan_genome extends JPanel implements ActionListener,
 		btnViewAnnotations = new JButton(strViewAnnotations);
 		btnViewAnnotations.addActionListener(this);
 		btnViewAnnotations.setFont(fontStandard);
-		add(btnViewAnnotations, c);
+		//add(btnViewAnnotations, c);
 		
 		//search for nodes bar
 		c.gridx = 0;
@@ -223,17 +223,23 @@ public class Jpan_genome extends JPanel implements ActionListener,
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		//select all button
+		
 		if (e.getSource()==btnSelectAll){
 			
 			try {
-			//retrieve values
-			boolean[] UpdatedNodeNumbers = new boolean [fr.getCurrentFrame().getInternalPanel().getRectanglesSurroundingLabels().length];
 			
-			//set all to selected
-			Arrays.fill(UpdatedNodeNumbers, Boolean.TRUE);
+			//retrieve most current
+			CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
+			
+			//Change all leaves to selected state
+			for (ContextLeaf CL : CSD.getGraphicalContexts()){
+				CL.setSelected(true);
+			}
 			
 			//update
-			fr.getCurrentFrame().getInternalPanel().setSelectedNodeNumbers(UpdatedNodeNumbers);
+			fr.getCurrentFrame().getInternalFrameData().getQD().setCSD(CSD);
+			
+			//update displays
 			fr.UpdateSelectedNodes();
 			
 			} catch (Exception e1){
@@ -246,15 +252,21 @@ public class Jpan_genome extends JPanel implements ActionListener,
 		if (e.getSource() == btndeSelectAll){
 			
 			try {
-			//retrieve values
-			boolean[] UpdatedNodeNumbers = new boolean [fr.getCurrentFrame().getInternalPanel().getRectanglesSurroundingLabels().length];
 			
-			//set all to unselected
-			Arrays.fill(UpdatedNodeNumbers, Boolean.FALSE);
+			//retrieve most current
+			CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
+			
+			//Change all leaves to selected state
+			for (ContextLeaf CL : CSD.getGraphicalContexts()){
+				CL.setSelected(false);
+			}
 			
 			//update
-			fr.getCurrentFrame().getInternalPanel().setSelectedNodeNumbers(UpdatedNodeNumbers);
+			fr.getCurrentFrame().getInternalFrameData().getQD().setCSD(CSD);
+			
+			//update displays
 			fr.UpdateSelectedNodes();
+			
 			} catch (Exception e1) {
 				JOptionPane.showMessageDialog(null,"Please enter a query in the search bar (top left-hand corner).",
 						"Submit Query",JOptionPane.INFORMATION_MESSAGE);
@@ -265,17 +277,18 @@ public class Jpan_genome extends JPanel implements ActionListener,
 		if (e.getSource() == btnViewContexts){
 		
 				try {
-					//set CSD to appropriate value
-					this.setCSD(fr.getCurrentFrame().getInternalPanel().getCSD());
+					
+					//retrieve most current
+					CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
 			
 					//count number selected
 					int NumSelected = 0;
-					for (int i = 0; i <CSD.getSelectedNodes().length; i++){
-						if (CSD.getSelectedNodes()[i] == true){
+					for (ContextLeaf CL : CSD.getGraphicalContexts()){
+						if (CL.isSelected()){
 							NumSelected++;
 						}
 					}
-					
+
 					//issue warning if the number is very high
 					if (NumSelected >= ViewingThreshold ) {
 						String SureYouWantToView = "You are attempting to view a large number (" + NumSelected +
@@ -300,12 +313,14 @@ public class Jpan_genome extends JPanel implements ActionListener,
 					if (ProceedWithContextView == true){
 					
 						//open context viewer frame
-						String Title =  "Context Viewer: " + fr.getCurrentFrame().getInternalPanel().getCSD().getEC().getName();
+						//String Title =  "Context Viewer: " + fr.getCurrentFrame().getInternalPanel().getCSD().getEC().getName();
+						String Title =  "Context Viewer: " + fr.getCurrentFrame().getInternalFrameData().getQD().getName();
 						new mainFrame(CSD, OS, Title);
 						
 					}
 					
 				} catch (Exception e1){
+					e1.printStackTrace();
 					String exceptionString = "Select nodes of interest by clicking on the node name in the dendrogram." + "\n" +
 								"ctrl+click and shift+click can be used to select several nodes simultaneously." + "\n" + 
 								"You may select all or deselect all nodes by pushing the 'select all' and 'deselect all' buttons.";
@@ -449,10 +464,81 @@ public class Jpan_genome extends JPanel implements ActionListener,
 					boolean SelectNode = false;
 					for (ContextLeaf CL : CSD.getGraphicalContexts()){
 						SelectNode = false;
+						
+						//Search basic node name
 						for (int j = 0; j <Queries.length; j++){
 							if (CL.getName().toUpperCase().contains(Queries[j].toUpperCase().replaceAll("\\s",""))){
 								SelectNode = true;
 							}
+						}
+						
+						//check all genes associated with this context leaf
+						LinkedList<GenomicElementAndQueryMatch> Genes = CSD.getEC().getContexts().get(CL.getName());
+						
+						//Search contexts
+						for (int j = 0; j <Queries.length; j++){
+							
+							//search gene ids of genes
+							if (Queries[j].toUpperCase().contains("GENEID:")){
+								try {
+									
+									//retrieve Id number
+									int GeneIDNumber = Integer.parseInt(Queries[j].substring(7));
+									
+									//if a gene matches, select this context
+									for (GenomicElementAndQueryMatch GandE : Genes){
+										if (GandE.getE().getGeneID() == GeneIDNumber){
+											SelectNode = true;
+										}
+									}
+									
+								} catch (Exception ex) {
+									JOptionPane.showMessageDialog(null,"GENEID values must be integers.",
+											"GENEID value unreadable",JOptionPane.ERROR_MESSAGE);
+								}
+
+							}
+							
+							//search homology clusters
+							if (Queries[j].toUpperCase().contains("CLUSTERID:")){
+								try {
+									
+									//retrieve Id number
+									int ClusterIDNumber = Integer.parseInt(Queries[j].substring(10));
+									
+									//if a gene matches, select this context
+									for (GenomicElementAndQueryMatch GandE : Genes){
+										if (GandE.getE().getClusterID() == ClusterIDNumber){
+											SelectNode = true;
+										}
+									}
+									
+								} catch (Exception ex) {
+									JOptionPane.showMessageDialog(null,"CLUSTERID values must be integers.",
+											"CLUSTERID value unreadable",JOptionPane.ERROR_MESSAGE);
+								}
+							}
+							
+							//search annotation
+							if (Queries[j].toUpperCase().contains("ANNOTATION:")){
+								try {
+									
+									//retrieve Id number
+									String AnnotationFragment = Queries[j].substring(11).toUpperCase();
+									
+									//if a gene matches, select this context
+									for (GenomicElementAndQueryMatch GandE : Genes){
+										if (GandE.getE().getAnnotation().toUpperCase().contains(AnnotationFragment)){
+											SelectNode = true;
+										}
+									}
+									
+								} catch (Exception ex) {
+									JOptionPane.showMessageDialog(null,"CLUSTERID values must be integers.",
+											"CLUSTERID value unreadable",JOptionPane.ERROR_MESSAGE);
+								}
+							}
+							
 						}
 						CL.setSelected(SelectNode);
 					}
@@ -460,7 +546,7 @@ public class Jpan_genome extends JPanel implements ActionListener,
 					//update CSD + frame
 					fr.getCurrentFrame().getInternalFrameData().getQD().setCSD(CSD);
 					fr.UpdateSelectedNodes();
-
+					
 				}
 
 				
@@ -468,7 +554,7 @@ public class Jpan_genome extends JPanel implements ActionListener,
 			} catch (Exception e1){
 					JOptionPane.showMessageDialog(null,"Please enter a query in the search bar (top left-hand corner).",
 							"Submit Query",JOptionPane.INFORMATION_MESSAGE);
-					e1.printStackTrace();
+					//e1.printStackTrace();
 			}
 		}
 	}

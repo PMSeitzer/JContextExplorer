@@ -165,170 +165,6 @@ import definicions.MatriuDistancies;
 		
 		// ---- Thread Workers for Searches ------------------------//
 
-		//DE by annotations
-		class DEAnnotationSearchWorker extends SwingWorker<Void, Void>{
-
-			//fields
-			private String[] Queries;
-			private String ContextSetName;
-			private String DissimilarityMethod;
-			private String Name;
-			private OrganismSet OS;
-			private DadesExternes ProcessedDE;
-			
-			//constructor
-			public DEAnnotationSearchWorker(final String[] Queries, final String ContextSetName, final String DissimilarityMethod,
-					final String Name, final OrganismSet OS){
-				this.Queries = Queries;
-				this.ContextSetName = ContextSetName;
-				this.DissimilarityMethod = DissimilarityMethod;
-				this.Name = Name;
-				this.OS = OS;
-			}
-			
-			@Override
-			protected Void doInBackground(){
-			
-				//Part 1: The search
-				//========================================//
-				
-				int progress = 0;
-				
-				//System.out.println("Into the worker");
-				ContextSetDescription CurrentCSD = null;
-				
-				//recover the context set description
-				for (ContextSetDescription csd : OS.getCSDs()){
-					if (csd.getName().contentEquals(this.ContextSetName)){
-						CurrentCSD = csd;
-						break;
-					}
-				}
-				
-				//initialize output
-				ExtendedCRON EC = new ExtendedCRON();
-				
-				//set name and type of CRON.
-				EC.setName(this.Name);
-				EC.setContextSetName(this.ContextSetName);
-				EC.setSearchType("annotation");
-				EC.setQueries(this.Queries);
-				
-				System.out.println("New EC");
-				
-				//initialize output
-				//actual context mapping
-				LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> ContextSetList = 
-						new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
-				
-				//species names
-				LinkedHashMap<String, String> SourceNames =
-						new LinkedHashMap<String, String>();
-				
-				//contig names
-				LinkedHashMap<String, String> ContigNames = 
-						new LinkedHashMap<String, String>();
-				
-				//initialize a counter variable
-				int Counter = 0;
-				int SpeciesCounter = 0;
-				
-				//iterate through species.
-				for (Entry<String, AnnotatedGenome> entry : OS.getSpecies().entrySet()) {
-
-					//initialize output
-					HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = null;
-					
-					if (CurrentCSD.isPreprocessed()){
-						
-						//pre-processed cases
-						Matches = entry.getValue().AnnotationMatches(this.Queries, this.ContextSetName);
-
-					} else {
-						
-						//on-the-fly
-						if (CurrentCSD.getType().contentEquals("GenesBetween") && Queries.length != 2) {
-							JOptionPane.showMessageDialog(null, "This gene grouping requires exactly two search queries.",
-									"Inappropriate Number of Queries",JOptionPane.ERROR_MESSAGE);
-						} else {
-							Matches = entry.getValue().MatchesOnTheFly(this.Queries, null, CurrentCSD);
-						}
-
-					}
-					
-					//create an iterator for the HashSet
-					Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
-					 
-					//iterate through HashSet, with string-based keys
-					int OperonCounter = 0; //reset operon counter
-					while(it.hasNext()){
-						
-						//context unit object
-						LinkedList<GenomicElementAndQueryMatch> ContextSegment = it.next();
-						
-						//increment counters
-						OperonCounter++;	
-						Counter++;
-						
-						//define key
-						String Key = entry.getKey() + "-" + Integer.toString(OperonCounter);
-						
-						//put elements into hashmap
-						ContextSetList.put(Key, ContextSegment);
-						
-						//record other info
-						SourceNames.put(Key, entry.getValue().getSpecies());
-						ContigNames.put(Key, ContextSegment.getFirst().getE().getContig());
-					}
-					
-					SpeciesCounter++;
-					progress = (int) (100*((double)SpeciesCounter/(double)OS.getSpecies().size()));
-					//update progress
-					setProgress(progress);
-				}
-				
-				System.out.println("through the matches");
-				
-				//add hash map to extended CRON
-				EC.setContexts(ContextSetList);
-				EC.setNumberOfEntries(Counter);
-				
-				//add source info
-				EC.setSourceSpeciesNames(SourceNames);
-				EC.setSourceContigNames(ContigNames);
-				
-				//System.out.println("ECRons computed + values set");
-				
-				//compute distances, and format correctly within the ExtendedCRON object.
-				EC.computePairwiseDistances(this.DissimilarityMethod);
-				EC.exportDistancesToField();
-				
-				System.out.println("onto the DE");
-				
-				//retrieve DadesExternes
-				try {
-					this.ProcessedDE = new DadesExternes(EC);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				
-				System.out.println("complete background execute");
-				return null;
-
-			}
-			
-			//done method - pass information to parent class
-			public void done(){
-				System.out.println(ProcessedDE.getPrecisio());
-				de = this.ProcessedDE;
-				System.out.println("done");
-				progressBar.setString("");
-				progressBar.setBorderPainted(false);
-				progressBar.setValue(0);
-			}
-			
-		}
-
 		//Unified SwingWorker for searches + multidendrogram computations
 		class SearchWorker extends SwingWorker<Void, Void>{
 
@@ -1073,6 +909,16 @@ import definicions.MatriuDistancies;
 						fr.getPanMenuTab().getJpo().getDrawPhylogeneticTree().isSelected() //phylogeny
 						));
 			}
+			
+			//check: if none selected, show search results only.
+			if (!fr.getPanMenuTab().getJpo().getDrawSearchResults().isSelected() &&
+					!fr.getPanMenuTab().getJpo().getDrawContextTree().isSelected() &&
+					!fr.getPanMenuTab().getJpo().getDrawContextGraph().isSelected() &&
+					!fr.getPanMenuTab().getJpo().getDrawPhylogeneticTree().isSelected()){
+				System.out.println("No analyses were specified. Switching 'Print Search Results' on.");
+				QD.getAnalysesList().setOptionDisplaySearches(true);
+				fr.getPanMenuTab().getJpo().getDrawSearchResults().setSelected(true);
+			}
 
 			//Search Query
 			if (evt.getSource().equals(searchField) || evt.getSource().equals(btnSubmit)){
@@ -1150,7 +996,7 @@ import definicions.MatriuDistancies;
 				//new manageContextSets(this.fr, fr.getOS().getCSDs(), this);
 				new manageContextSetsv2(this.fr, this);
 			}
-
+			
 			//CARRY OUT ACTION
 			if (ambDades && (action.equals("Load"))) {
 				String TheName = searchField.getText() + " [" + contextSetMenu.getSelectedItem() + "]";

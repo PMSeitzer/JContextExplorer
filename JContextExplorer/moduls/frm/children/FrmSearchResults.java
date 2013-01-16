@@ -21,28 +21,26 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import moduls.frm.ContextLeaf;
 import moduls.frm.FrmPrincipalDesk;
 
-public class FrmSearchResults extends JPanel implements ActionListener, MouseListener{
+public class FrmSearchResults extends JPanel implements ActionListener, TreeSelectionListener{
 
 	//Fields
+	//Management
 	private FrmPrincipalDesk fr;	//master CSD available here
 	private CSDisplayData CSD;	//The local CSD
-	public CSDisplayData getCSD() {
-		return CSD;
-	}
 
-	public void setCSD(CSDisplayData cSD) {
-		CSD = cSD;
-	}
-
+	//Tree components
 	private JTree SearchResults;
 	private DefaultMutableTreeNode Query;
 	private LinkedHashMap<String, DefaultMutableTreeNode> TreeNodeMapping;
+	private boolean SelectedbyMouse = true;
 	
 	//GUI Components
 	private JPanel TreeDisplay;
@@ -60,7 +58,6 @@ public class FrmSearchResults extends JPanel implements ActionListener, MouseLis
 		
 		//get panel
 		this.getPanel();
-		this.addMouseListener(this);
 	}
 
 	//create panel
@@ -76,6 +73,7 @@ public class FrmSearchResults extends JPanel implements ActionListener, MouseLis
         CreateNodes(Query);
         
         SearchResults = new JTree(Query);
+        SearchResults.addTreeSelectionListener(this);
         
         //Create the scroll pane and add the tree to it. 
         JScrollPane treeView = new JScrollPane(SearchResults);
@@ -179,6 +177,9 @@ public class FrmSearchResults extends JPanel implements ActionListener, MouseLis
 
 	public void UpdateNodes(){
 
+		//This method is only called when not invoked by mouse event.
+		SelectedbyMouse = false;
+		
 		//retrieve updated CSD
 		this.CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
 		
@@ -190,23 +191,32 @@ public class FrmSearchResults extends JPanel implements ActionListener, MouseLis
 				SearchResults.removeSelectionPath(new TreePath(CL.getSearchResultsTreeNode().getPath()));
 			}
 		}
+		
+		//Now that nodes no longer affected, revert to old protocol
+		SelectedbyMouse = true;
 
 	}
 
 	@Override
-	public void mouseClicked(MouseEvent e) {
+	public void valueChanged(TreeSelectionEvent e) {
 		
-		//left click
-		if (SwingUtilities.isLeftMouseButton(e)){	
+		//only do things when selected by mouse.
+		if (SelectedbyMouse){
 			
-			//retrieve selected rows
-			int[] Selected = SearchResults.getSelectionRows();
+			//retrieve updated CSD
+			this.CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
 			
-			//update appropriate nodes in the list
+			//Update selected/deselected
+			TreePath[] SelectionChanges = e.getPaths();
 			for (ContextLeaf CL : CSD.getGraphicalContexts()){
-				for (int i = 0; i < Selected.length; i++){
-					if (SearchResults.getPathForRow(i).equals(new TreePath(CL.getSearchResultsTreeNode().getPath()))){
-						CL.setSelected(true);
+				for (int i = 0; i < SelectionChanges.length; i++){
+					if (SelectionChanges[i].equals(new TreePath(CL.getSearchResultsTreeNode().getPath()))){
+						if (CL.isSelected()){
+							CL.setSelected(false);
+						} else {
+							CL.setSelected(true);
+						}
+						break;
 					}
 				}
 			}
@@ -214,34 +224,15 @@ public class FrmSearchResults extends JPanel implements ActionListener, MouseLis
 			//update master CSD
 			fr.getCurrentFrame().getInternalFrameData().getQD().setCSD(CSD);
 			
-			//call main frame to update this and all other panels
+			//call main frame to update this and all other panels.
 			this.fr.UpdateSelectedNodes();
-			
 		}
 
 	}
-
-	@Override
-	public void mouseEntered(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		
+	public void setCSD(CSDisplayData cSD) {
+		CSD = cSD;
 	}
-
-	@Override
-	public void mouseExited(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mousePressed(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mouseReleased(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		
+	public CSDisplayData getCSD() {
+		return CSD;
 	}
 }

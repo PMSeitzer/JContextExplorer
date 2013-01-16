@@ -76,7 +76,6 @@ public class mainFrame extends JFrame implements ComponentListener{
 		//SET PROPERTIES OF DESKTOP FRAME
 		JFrame.setDefaultLookAndFeelDecorated(false);
 		this.setSize(dim);
-		this.setVisible(true);
 		this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		this.setLocationRelativeTo(null);
 		this.setResizable(true);
@@ -100,6 +99,7 @@ public class mainFrame extends JFrame implements ComponentListener{
 		};
 		
 		this.addWindowListener(closeSubFrames);
+		this.setVisible(true);
 	}
 
 	public CSDisplayData getCSD() {

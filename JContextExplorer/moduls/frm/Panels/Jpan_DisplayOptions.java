@@ -38,6 +38,8 @@ public class Jpan_DisplayOptions extends JPanel implements ActionListener{
 	private String strDrawContextTree = "Render Context Tree";
 	private String strDrawContextGraph = "Generate Context Change Graph";
 	private String strDrawPhylogeneticTree = "Display Results with Phylogeny";
+	private JButton btnSelectAll;
+	private JButton btndeSelectAll;
 
 	//constructor
 	public Jpan_DisplayOptions(FrmPrincipalDesk f){
@@ -81,7 +83,7 @@ public class Jpan_DisplayOptions extends JPanel implements ActionListener{
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 4;
 		DrawSearchResults = new JCheckBox(strDrawSearchResults);
-		DrawSearchResults.setSelected(false);
+		DrawSearchResults.setSelected(true);
 		DrawSearchResults.setFont(fontStandard);
 		DrawSearchResults.addActionListener(this);
 		add(DrawSearchResults,c);
@@ -94,7 +96,7 @@ public class Jpan_DisplayOptions extends JPanel implements ActionListener{
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 4;
 		DrawContextTree = new JCheckBox(strDrawContextTree);
-		DrawContextTree.setSelected(true);
+		DrawContextTree.setSelected(false);
 		DrawContextTree.setFont(fontStandard);
 		DrawContextTree.addActionListener(this);
 		add(DrawContextTree,c);
@@ -125,12 +127,45 @@ public class Jpan_DisplayOptions extends JPanel implements ActionListener{
 		DrawPhylogeneticTree.addActionListener(this);
 		add(DrawPhylogeneticTree,c);
 		gridy++;
+		
+		//Load Motifs button
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 2;
+		btnSelectAll = new JButton("Select All");
+		btnSelectAll.setFont(fontStandard);
+		btnSelectAll.addActionListener(this);
+		add(btnSelectAll,c);
+		
+		c.gridx = 2;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 2;
+		btndeSelectAll = new JButton("Deselect All");
+		btndeSelectAll.setFont(fontStandard);
+		btndeSelectAll.addActionListener(this);
+		add(btndeSelectAll,c);
+
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent arg0) {
-		// TODO Auto-generated method stub
+	public void actionPerformed(ActionEvent evt) {
+		if (evt.getSource().equals(btnSelectAll)){
+			DrawSearchResults.setSelected(true);
+			DrawContextTree.setSelected(true);
+			DrawContextGraph.setSelected(true);
+			DrawPhylogeneticTree.setSelected(true);
+		}
 		
+		if (evt.getSource().equals(btndeSelectAll)){
+			DrawSearchResults.setSelected(false);
+			DrawContextTree.setSelected(false);
+			DrawContextGraph.setSelected(false);
+			DrawPhylogeneticTree.setSelected(false);
+		}
 	}
 
 	//GETTERS AND SETTERS
