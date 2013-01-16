@@ -42,6 +42,7 @@ import javax.swing.text.StyledDocument;
 import contextViewer.AnnotationFrame;
 import contextViewer.mainFrame;
 
+import moduls.frm.ContextLeaf;
 import moduls.frm.FrmInternalFrame;
 import moduls.frm.FrmPrincipalDesk;
 
@@ -433,76 +434,33 @@ public class Jpan_genome extends JPanel implements ActionListener,
 									+ "This will select all appropriate nodes in the tree.";
 					JOptionPane.showMessageDialog(null, MessageString);
 				} else {
-					
-					int NumberOfNodes = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD().getEC().getContexts().keySet().size();
-					
-					//intialize updated node numbers
-					boolean[] UpdatedNodeNumbers = new boolean[NumberOfNodes];
 
-					//boolean[] UpdatedNodeNumbers = new boolean [fr.getCurrentFrame().getInternalPanel().getRectanglesSurroundingLabels().length];
-					
-					//set all to unselected
-					Arrays.fill(UpdatedNodeNumbers, Boolean.FALSE);
-					
-					//update
-					if (fr.getCurrentFrame().getInternalPanel() != null){
-						fr.getCurrentFrame().setSelectedNodeNumbers(UpdatedNodeNumbers);
-					}
-					fr.UpdateSelectedNodes();
-					
-					//retrieve currently selected nodes
-					//boolean[] currentlySelected = this.fr.getCurrentFrame().getInternalPanel().getSelectedNodeNumbers();
-					
-					//create a new array, initialize to false
-					//boolean[] UpdatedNodes = new boolean[currentlySelected.length];
-					boolean[] UpdatedNodes = new boolean[NumberOfNodes];
-					Arrays.fill(UpdatedNodes,false);
-					
-					//recover query
+					//recover query, split by semicolon, comma, or white space
 					String Query = searchForNodes.getText();
-					
-					//parse into candidates
-					//try to split by semi-colon
 					String[] Queries = Query.split(";");
-					
-					//try to split by commas
 					if (Queries.length == 1){
 						Queries = Query.split(",");
 					}
-					
-					if (Queries.length ==1) {
+					if (Queries.length == 1) {
 						Queries = Query.split("\\s+");
 					}
 					
-					//initialize hash map (for internalframedata)
-					LinkedHashMap<String, Boolean> UpdatedSelections = new LinkedHashMap<String, Boolean>();
-					
-					//search for node names + annotations
-					//CSDisplayData CompareCSD = fr.getCurrentFrame().getInternalPanel().getCSD();
-					CSDisplayData CompareCSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
-					for (int i = 0; i < CompareCSD.getNodeNames().length; i++){
-						
-						//check node names against all queries
-						for (int j =0; j < Queries.length; j++){
-							//TestQuery = Queries[j].toUpperCase().replaceAll("\\s","");
-							//if (CompareCSD.getNodeNames()[i].toUpperCase().contains(Queries[j].toUpperCase())){
-							if (CompareCSD.getNodeNames()[i].toUpperCase().contains(Queries[j].toUpperCase().replaceAll("\\s",""))){
-								UpdatedNodes[i] = true;
-							} 
+					//check queries against node name
+					boolean SelectNode = false;
+					for (ContextLeaf CL : CSD.getGraphicalContexts()){
+						SelectNode = false;
+						for (int j = 0; j <Queries.length; j++){
+							if (CL.getName().toUpperCase().contains(Queries[j].toUpperCase().replaceAll("\\s",""))){
+								SelectNode = true;
+							}
 						}
-						
-						//update in hash map
-						UpdatedSelections.put(CompareCSD.getNodeNames()[i],UpdatedNodes[i]);
+						CL.setSelected(SelectNode);
 					}
 					
-					//update frame
-					if (fr.getCurrentFrame().getInternalPanel() != null){
-						fr.getCurrentFrame().getInternalPanel().setSelectedNodeNumbers(UpdatedNodes);
-					}
-					fr.getCurrentFrame().getInternalFrameData().getQD().getCSD().setCurrentlySelectedNodes(UpdatedSelections);
-					
-					//update
+					//update CSD + frame
+					fr.getCurrentFrame().getInternalFrameData().getQD().setCSD(CSD);
 					fr.UpdateSelectedNodes();
+
 				}
 
 				

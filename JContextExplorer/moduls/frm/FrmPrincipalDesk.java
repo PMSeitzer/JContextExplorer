@@ -434,20 +434,24 @@ public class FrmPrincipalDesk extends JFrame{
 //		this.currentFpizpanel = currentFpizpanel;
 //	}
 
+	//centralized select node update source
 	public void UpdateSelectedNodes() {
-//		this.currentFpizpanel.setCSD(this.getCSD());
-//		this.currentFpizpanel.repaint();
-//		this.currentFpizpanel.setSelectedNodeNumbers(this.getSelectedNodeNumbers());
-//		this.currentFpizpanel.repaint();
+		
+		//search results frame
+		if (this.getPanBtn().getCurrentInternalFrame().getInternalFrameData().getSearchResultsFrame() != null){
+			this.getPanBtn().getCurrentInternalFrame().getInternalFrameData().getSearchResultsFrame().UpdateNodes();
+		}
 		
 		//context tree update
-		if (this.currentFpiz.getInternalPanel() != null){
-			this.currentFpiz.getInternalPanel().repaint();
+		//if (this.currentFpiz.getInternalPanel() != null){
+		if (this.getPanBtn().getCurrentInternalFrame().getInternalFrameData().getContextTreePanel() != null){
+			this.getPanBtn().getCurrentInternalFrame().getInternalFrameData().getContextTreePanel().UpdateNodes();
 		}
 
-		//internal frame update
-		this.getPanBtn().getCurrentInternalFrame().getInternalFrameData().getSearchResultsFrame().UpdateNodes();
+	}
 
+	public Jpan_genome getPanGenome() {
+		return panGenome;
 	}
 
 	public CSDisplayData getCSD() {

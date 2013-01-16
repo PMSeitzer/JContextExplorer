@@ -49,6 +49,7 @@ import javax.swing.JRadioButton;
 	import javax.swing.event.InternalFrameListener;
 
 	import methods.Reagrupa;
+import moduls.frm.ContextLeaf;
 	import moduls.frm.FrmInternalFrame;
 	import moduls.frm.FrmPrincipalDesk;
 	import moduls.frm.InternalFrameData;
@@ -417,6 +418,7 @@ import definicions.MatriuDistancies;
 				
 			} catch (Exception ex) {
 				showError("There were no matches to the query (or queries).");
+				ex.printStackTrace();
 			}
 				return null;
 			}
@@ -1231,6 +1233,8 @@ import definicions.MatriuDistancies;
 
 				} catch (Exception e1) {
 					
+					e1.printStackTrace();
+					
 					fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 					
 					buttonClicked = false;
@@ -1314,7 +1318,6 @@ import definicions.MatriuDistancies;
 
 		public void show(String action, final metodo method, final int precision, QueryData qD) {
 
-
 			boolean isUpdate;
 			FrmInternalFrame pizarra;
 			Config cfg;					//Configuration information for multidendrogram only
@@ -1367,6 +1370,9 @@ import definicions.MatriuDistancies;
 					//create scroll panel from search results pane
 					fSearch = SearchResultsFrame;
 					fSearchSP = new JScrollPane(SearchResultsFrame);
+					
+					//update CSD with default mutable tree nodes
+					CSD = fSearch.getCSD();
 	
 				}
 				
@@ -1403,21 +1409,31 @@ import definicions.MatriuDistancies;
 					fPizSP = new JScrollPane(fPiz);
 					fPizSP.setSize(pizarra.getSize());
 					fPizSP.setPreferredSize(pizarra.getSize());
+					
+					//update CSD with context tree rectangles
+					CSD = fPiz.getCSD();
 				}
 				
 				//OPTION: GRAPH
 				if (qD.getAnalysesList().isOptionComputeContextGraph()){
 					fGraph = new FrmGraph(fr, CSD);
 					fGraphSP = new JScrollPane(fGraph);
+					
+					//update CSD with context graph rectangles
+					CSD = fGraph.getCSD();
 				}
 
 				//OPTION: PHYLOGENY
 				if (qD.getAnalysesList().isOptionRenderPhylogeny()){
 					fPhylo = new FrmPhylo(fr, CSD);
 					fPhyloSP = new JScrollPane(fPhylo);
+					
+					//update CSD with phylogenetic tree rectangles
+					CSD = fPhylo.getCSD();
 				}
 				
 				//INTERNAL FRAME DATA
+				qD.setCSD(CSD);
 				ifd = new InternalFrameData(de, multiDendro);
 				ifd.setQD(qD);
 				ifd.setContextGraphPanel(fGraph);
@@ -1443,6 +1459,11 @@ import definicions.MatriuDistancies;
 				pizarra.setVisible(true);
 				this.currentInternalFrame = pizarra;
 				fr.setCurrentFrame(pizarra);
+				
+				//set Jpan_genome
+				if (!isUpdate){
+					fr.getPanGenome().setCSD(CSD);
+				}
 				
 			} catch (final Exception e) {
 				e.printStackTrace();

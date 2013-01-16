@@ -23,13 +23,22 @@ import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
+import moduls.frm.ContextLeaf;
 import moduls.frm.FrmPrincipalDesk;
 
 public class FrmSearchResults extends JPanel implements ActionListener{
 
 	//Fields
-	private FrmPrincipalDesk fr;
-	private CSDisplayData CSD;
+	private FrmPrincipalDesk fr;	//master CSD available here
+	private CSDisplayData CSD;	//The local CSD
+	public CSDisplayData getCSD() {
+		return CSD;
+	}
+
+	public void setCSD(CSDisplayData cSD) {
+		CSD = cSD;
+	}
+
 	private JTree SearchResults;
 	private DefaultMutableTreeNode Query;
 	private LinkedHashMap<String, DefaultMutableTreeNode> TreeNodeMapping;
@@ -99,16 +108,18 @@ public class FrmSearchResults extends JPanel implements ActionListener{
 		TreeNodeMapping = new LinkedHashMap<String, DefaultMutableTreeNode>();
 		
 		//iterate through all contexts
-		for (String S : CSD.getEC().getContexts().keySet()){
+		//for (String S : CSD.getEC().getContexts().keySet()){
+		for (ContextLeaf CL : CSD.getGraphicalContexts()){	
 			
 			//create a new node, with the consistent name
-			DefaultMutableTreeNode SM = new DefaultMutableTreeNode(S);
+			DefaultMutableTreeNode SM = new DefaultMutableTreeNode(CL.getName());
+			CL.setSearchResultsTreeNode(SM);
 			
 			//Retrieve individual gene information
-			LinkedList<GenomicElementAndQueryMatch> Genes = CSD.getEC().getContexts().get(S);
+			LinkedList<GenomicElementAndQueryMatch> Genes = CSD.getEC().getContexts().get(CL.getName());
 			
 			//store mapping
-			TreeNodeMapping.put(S,SM);
+			//TreeNodeMapping.put(S,SM);
 			
 			for (GenomicElementAndQueryMatch GandE : Genes){
 
@@ -134,7 +145,7 @@ public class FrmSearchResults extends JPanel implements ActionListener{
 				DefaultMutableTreeNode GM = new DefaultMutableTreeNode(GeneInfo);
 				SM.add(GM);
 				
-				String GeneInfoWithSource = "SOURCE: " + S + ": " + GeneInfo;
+				String GeneInfoWithSource = "SOURCE: " + CL.getName() + ": " + GeneInfo;
 				//TreeNodeMapping.put(GeneInfoWithSource, GM);
 			}
 			
@@ -152,99 +163,41 @@ public class FrmSearchResults extends JPanel implements ActionListener{
 				SearchResults.expandRow(i);
 			}
 		}
-		
+
 		//collapse rows
 		if (evt.getSource().equals(btnCollapseAll)){
 			for (int i = 1; i < SearchResults.getRowCount(); i++){
 				SearchResults.collapseRow(i);
 			}
 		}
+		
+		//re-draw figure (adjust button sizes)
+		this.repaint();
 	}
-	
-	 public DefaultMutableTreeNode findNode(DefaultMutableTreeNode root, String search) {
-		    Enumeration nodeEnumeration = root.breadthFirstEnumeration();
-		    while( nodeEnumeration.hasMoreElements() ) {
-		      DefaultMutableTreeNode node =
-		        (DefaultMutableTreeNode)nodeEnumeration.nextElement();
-		      String found = (String)node.getUserObject();
-		      if( search.equals( found ) ) {
-		        return node;
-		      }
-		    }
-		    return null;
-		  }
-	
+
 	public void UpdateNodes(){
 
-		//update CSD
+		//retrieve updated CSD
 		this.CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
-		
-		//initialize path arrays
-		TreePath[] SelectedNodes;
-		LinkedList<DefaultMutableTreeNode> SelectedNodesList = new LinkedList<DefaultMutableTreeNode>();
-		boolean SelectNode = false;
-		//update selected nodes - strings, names of nodes
+				
+//		//check every node
+//		for (String NodeName: TreeNodeMapping.keySet()){
+//			DefaultMutableTreeNode Node = TreeNodeMapping.get(NodeName);
+//			if (CSD.getCurrentlySelectedNodes().get(NodeName)){
+//				SearchResults.addSelectionPath(new TreePath(Node.getPath()));
+//			} else {
+//				SearchResults.removeSelectionPath(new TreePath(Node.getPath()));
+//			}
+//		}
 		
 		//check every node
-		for (String NodeName: TreeNodeMapping.keySet()){
-			DefaultMutableTreeNode Node = TreeNodeMapping.get(NodeName);
-			if (CSD.getCurrentlySelectedNodes().get(NodeName)){
-				SearchResults.addSelectionPath(new TreePath(Node.getPath()));
+		for (ContextLeaf CL : CSD.getGraphicalContexts()){
+			if (CL.isSelected()){
+				SearchResults.addSelectionPath(new TreePath(CL.getSearchResultsTreeNode().getPath()));
 			} else {
-				SearchResults.removeSelectionPath(new TreePath(Node.getPath()));
+				SearchResults.removeSelectionPath(new TreePath(CL.getSearchResultsTreeNode().getPath()));
 			}
 		}
-		
-//		
-//		for (String s : CSD.getCurrentlySelectedNodes().keySet()){
-//			if (CSD.getCurrentlySelectedNodes().get(s) == true){
-//				//SelectedNodesList.add(TreeNodeMapping.get(s));
-//			} else {
-//				
-//			}
-//		}
-//		
-//		
-//		
-//		//select nodes that ought to be selected
-//		for (DefaultMutableTreeNode node : SelectedNodesList){
-//			//check all nodes
-//		    Enumeration nodeEnumeration = Query.breadthFirstEnumeration();
-//		    while(nodeEnumeration.hasMoreElements() ) {
-//			      DefaultMutableTreeNode NextNode =
-//					        (DefaultMutableTreeNode)nodeEnumeration.nextElement();
-//			      if (NextNode.equals(node)){
-//			    	  SearchResults.addSelectionPath(new TreePath(node.getPath()));
-//			      }
-//		    }
-//		}
-		
-
-		
-//		//iterate through, find all appropriate nodes
-//		for (int i = 0; i < SelectedNodesList.size(); i++){
-//			DefaultMutableTreeNode Node = TreeNodeMapping.get(SelectedNodesList.get(i));
-//			for (int j = 0; i < SearchResults.getRowCount(); j++){
-//				if (SearchResults.getPathForRow(j).getLastPathComponent().equals(Node)){
-//					SearchResults.addSelectionRow(j);
-//				}
-//			}
-//		}
-		
-
-//		//create array
-//		SelectedNodes = new TreePath[SelectedNodesList.size()];
-//		for (int i = 0; i < SelectedNodes.length; i++){
-//			//SelectedNodes[i] = SearchResults.getRowForPath(SelectedNodesList.get(i).getPath()); 
-//			//SearchResults.addSelectionPaths((TreePath[]) SelectedNodesList.get(i).getPath());
-//			DefaultMutableTreeNode Node = SelectedNodesList.get(i);
-//			Node.getPath();
-//			TreePath TP = new TreePath(Node);
-//			SearchResults.addSelectionPath(TP);
-//		}
-		
-		//update selection
-		//SearchResults.setSelectionPaths(SelectedNodesList.get(i).getPath());
 
 	}
 }

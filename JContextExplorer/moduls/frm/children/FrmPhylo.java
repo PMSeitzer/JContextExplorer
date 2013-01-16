@@ -17,4 +17,21 @@ public class FrmPhylo extends JPanel{
 		this.fr = f;
 		this.CSD = CSD;
 	}
+
+	public FrmPrincipalDesk getFr() {
+		return fr;
+	}
+
+	public void setFr(FrmPrincipalDesk fr) {
+		this.fr = fr;
+	}
+
+	public CSDisplayData getCSD() {
+		return CSD;
+	}
+
+	public void setCSD(CSDisplayData cSD) {
+		CSD = cSD;
+	}
+
 }

@@ -49,6 +49,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 import javax.swing.AbstractAction;
@@ -791,8 +792,26 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 		this.frm.setSelectedNodeNumbers(selectedNodeNumbers);
 		this.CSD.setSelectedNodes(selectedNodeNumbers);
 		this.frm.setCSD(this.CSD);
+		
+//		//update selected nodes -> internal frame data
+//		this.SelectedNodeNumbers = selectedNodeNumbers;
+//		
+//		LinkedHashMap<String,Boolean> CurrentlySelectedNodes = new LinkedHashMap<String,Boolean>();
+//		
+//		for (int i = 0; i < selectedNodeNumbers.length; i++){
+//			CurrentlySelectedNodes.put(arg0, selectedNodeNumbers[i]);
+//		}
 	}
 
+	public void UpdateNodes(){
+		
+		//update CSD
+		this.CSD = frm.getCurrentFrame().getInternalFrameData().getQD().getCSD();
+		
+	}
+	
+	// ----- Mouse Events --------------------------------------------//
+	
 	@Override
 	public void mouseClicked(MouseEvent e){
 		
@@ -945,7 +964,6 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
         eventOutput("Mouse dragged", e);
     }
 
-	
     public CSDisplayData getCSD() {
 		return CSD;
 	}
