@@ -576,6 +576,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> ClusterMatches(int[] Clu
 	return Hits;
 }
 
+//preprocessed == false
 //return a hashset of gene groupings
 public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[] Queries,
 		int[] ClusterNumbers, 

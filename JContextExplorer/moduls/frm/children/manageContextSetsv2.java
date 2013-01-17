@@ -3,7 +3,6 @@ package moduls.frm.children;
 import genomeObjects.AnnotatedGenome;
 import genomeObjects.ContextSet;
 import genomeObjects.ContextSetDescription;
-import genomeObjects.ContextSetDescriptions;
 import genomeObjects.OrganismSet;
 import haloGUI.StartFrame;
 import inicial.Language;
@@ -44,6 +43,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
@@ -80,6 +80,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 	 * 
 	 */
 	private JPanel jp;
+	private JPanel NorthPanel;
 	
 	//dummy components (for spacing)
 	private JLabel d1, d2, d3, d4, d5;
@@ -141,7 +142,14 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 	private String strCSLoaded = "Load gene groupings from file";
 	private JButton btnLoadCS;
 	
-	//CSType (7) CS
+	//CSType (7) Cassette
+	private LinkedList<Component> CSCassette_group;
+	private JRadioButton CSCassette;
+	private String strCSCassette = "Construct a cassette based on an existing context set";
+	private JComboBox<String> contextSetMenuforCassette;
+	private JTextField contextSetHeaderforCassette;
+	
+	//CSType (8) CS
 	private LinkedList<Component> CSCombination_group;
 	private JRadioButton CSCombination;
 	private String strCSCombination = "Create a new context set by combining existing context sets";
@@ -187,7 +195,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		
 		//frame settings
 		//this.setSize(new Dimension(400, 350));
-		this.setSize(700,620);
+		this.setSize(700,650);
 		
 		this.setTitle("Add or Remove Context Sets");
 		this.setLocationRelativeTo(null);
@@ -423,11 +431,13 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		CSGenesBetween = new JRadioButton(strCSGenesBetween);
 		CSMultipleQuery = new JRadioButton(strCSMultipleQuery);
 		CSLoaded = new JRadioButton(strCSLoaded);
+		CSCassette = new JRadioButton(strCSCassette);
 		CSCombination = new JRadioButton(strCSCombination);
-		
+
 		//define button group
 		CSType = new ButtonGroup(); CSType.add(CSIntergenicDist); CSType.add(CSRange); CSType.add(CSGenesAround);
-		CSType.add(CSGenesBetween); CSType.add(CSMultipleQuery); CSType.add(CSLoaded); CSType.add(CSCombination);
+		CSType.add(CSGenesBetween); CSType.add(CSMultipleQuery); CSType.add(CSLoaded); CSType.add(CSCassette);
+		CSType.add(CSCombination);
 		//CSType.setSelected(CSIntergenicDist.getModel(), true);
 		/*
 		 * ADD COMPONENTS TO PANEL!!!
@@ -734,7 +744,59 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		//add this mapping to hash map.
 		RadioButtonComponents.put(CSLoaded.getModel(), CSLoaded_group);
 		
-		//(7) CSCOMBINATION
+		//(7) CSCASSETTE
+		
+		//grouping
+		CSCassette_group = new LinkedList<Component>();
+		
+		//add radio button
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 5;
+		c.insets = new Insets(10,1,1,1);
+		jp.add(CSCassette, c);
+		CSCassette.addActionListener(this);
+		gridy++;
+		
+		// Context Set Text label
+		c.ipady = 5;
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(1,20,1,1);
+		//c.fill = GridBagConstraints.NONE;
+		contextSetHeaderforCassette = new JTextField();
+		contextSetHeaderforCassette.setText("Context Set:"); // context set currently loaded
+		contextSetHeaderforCassette.addActionListener(this);
+		contextSetHeaderforCassette.setEditable(false);
+		CSCassette_group.add(contextSetHeaderforCassette);
+		jp.add(contextSetHeaderforCassette, c);
+		
+		// drop down menu
+		c.ipady = 0;
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridwidth = 2;
+		c.gridheight = 1;
+		c.insets = new Insets(1,1,1,1);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		String[] CurrentContextLists = this.convertContextSets(fr.getOS().getCSDs());
+		contextSetMenuforCassette = new JComboBox<String>(CurrentContextLists);
+		contextSetMenuforCassette.addActionListener(this);
+		contextSetMenuforCassette.setEnabled(true);
+		jp.add(contextSetMenuforCassette, c);
+		CSCassette_group.add(contextSetMenuforCassette);
+		
+		gridy++;
+		
+		//add this mapping to hash map.
+		RadioButtonComponents.put(CSCassette.getModel(), CSCassette_group);
+		
+		//(8) CSCOMBINATION
 		
 		//grouping
 		CSCombination_group = new LinkedList<Component>();
@@ -849,7 +911,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		c.gridwidth = 2;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		String[] CurrentContextLists = this.convertContextSets(fr.getOS().getCSDs());
+		//String[] CurrentContextLists = this.convertContextSets(fr.getOS().getCSDs());
 		contextSetMenu = new JComboBox<String>(CurrentContextLists);
 		contextSetMenu.addActionListener(this);
 		contextSetMenu.setEnabled(true);
@@ -878,6 +940,13 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		btnOK = new JButton(strbtnOK);
 		btnOK.addActionListener(this);
 		jp.add(btnOK, c);
+		
+//		//add information to panel
+//		NorthPanel = new JPanel();
+//		NorthPanel.setLayout(new BorderLayout());
+//		NorthPanel.add(jp, BorderLayout.NORTH);
+//		JScrollPane PanelScroll = new JScrollPane(NorthPanel);
+//		this.getContentPane().add(PanelScroll);
 		
 		this.getContentPane().add(jp, BorderLayout.NORTH);
 	}
@@ -944,7 +1013,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 				}
 		} 
 
-		//CSType (7) CSCombination
+		//CSType (8) CSCombination
 		if (evt.getSource().equals(btnLaunchCombiner)){
 			
 			//check if name is acceptable
@@ -984,10 +1053,14 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 					
 					//initialize context set description
 					ToAdd = new ContextSetDescription();
-					ToAdd.setPreprocessed(true);
 					
-					//add appropriate type, w necessary information
-					if (CSType.isSelected(CSRange.getModel())){ 				//CSType (2) - CSRange
+					if (CSType.isSelected(CSIntergenicDist.getModel())){		//CSType (1) - CSIntergenicDist
+						ToAdd.setType("IntergenicDist");
+						ToAdd.setPreprocessed(true);
+					} else if (CSType.isSelected(CSLoaded.getModel())){ 		//CSType (6) - CSLoaded
+						ToAdd.setType("Loaded");
+						ToAdd.setPreprocessed(true);
+					} else if (CSType.isSelected(CSRange.getModel())){ 				//CSType (2) - CSRange
 						ToAdd.setType("Range");	ToAdd.setPreprocessed(false);
 						ToAdd.setNtRangeBefore(Integer.parseInt(ntBefore.getText()));
 						ToAdd.setNtRangeAfter(Integer.parseInt(ntAfter.getText()));
@@ -1002,7 +1075,15 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 						
 					} else if (CSType.isSelected(CSMultipleQuery.getModel())){  //CSType (5) - CSMultipleQuery
 						ToAdd.setType("MultipleQuery");	ToAdd.setPreprocessed(false);
-					}
+						
+					} else if (CSType.isSelected(CSCassette.getModel())){	//CSType (7) - Cassette
+						ToAdd.setType("Cassette"); ToAdd.setPreprocessed(false);
+						
+						//cassette-related parameters
+						ToAdd.setCassette(true);
+						String CassetteOf = contextSetMenu.getSelectedItem().toString();
+						ToAdd.setCassetteOf(CassetteOf);
+					} 
 
 					//add description to the OS
 					ToAdd.setName(CSName.getText());
@@ -1010,6 +1091,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 				
 					//insert item into the menu
 					contextSetMenu.insertItemAt(CSName.getText(), 0);
+					contextSetMenuforCassette.insertItemAt(CSName.getText(), 0);
 					
 					//pre-processed sets are reset
 					ComputedGrouping = false;
@@ -1050,9 +1132,19 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 					}
 				}
 				
-				//remove from JComboBox
+				//remove from JComboBoxes
+				//add/remove menu
+				Object Item = contextSetMenu.getSelectedItem();
 				contextSetMenu.removeItem(contextSetMenu.getSelectedItem());
 				
+				//cassette menu
+				for (int i = 0; i < contextSetMenuforCassette.getItemCount(); i++){
+					if (contextSetMenuforCassette.getItemAt(i).equals(Item)){
+						contextSetMenuforCassette.removeItem(Item);
+						break;
+					}
+				}
+
 			} else {
 				
 				//remove the one and only context set
@@ -1136,6 +1228,13 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 			}
 		} else if (CSType.isSelected(CSCombination.getModel())){
 			LoadedFileName.setText("Combine existing gene groupings to create a more complex gene grouping.");
+		} else if (CSType.isSelected(CSCassette.getModel())){
+			LoadedFileName.setText("Create a cassette associated with an existing Context Set.");
+			if (CSName.getText().contentEquals("") || CSName.getText().contentEquals("MultipleQuery") ||
+					CSName.getText().contentEquals("Between")){
+				String DefaultCassetteName = contextSetMenuforCassette.getSelectedItem().toString() + " - Cassette";
+				CSName.setText(DefaultCassetteName);
+			}
 		}
 
 	}

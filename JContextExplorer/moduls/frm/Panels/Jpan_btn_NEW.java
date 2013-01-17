@@ -230,14 +230,11 @@ import definicions.MatriuDistancies;
 				} else {
 					SearchOrganismsbyCluster();
 				}
+				System.out.println("Search Completed. " + this.WorkerQD.getCSD().getEC().getNumberOfEntries() + " Gene Groupings Recovered.");
 
-				//maintenance
+				//maintenance - reset values to null
 				multiDendro = null;
-				
-				//add appropriate CSDisplayData
-				CSDisplayData CSD = new CSDisplayData();
-				CSD.setEC(de.getEC());
-				this.WorkerQD.setCSD(CSD);
+				de = null;
 				
 				//Analyses options
 				//=================================//
@@ -267,10 +264,9 @@ import definicions.MatriuDistancies;
 				
 				//re-set progress value
 				int progress = 0;
-
-				ContextSetDescription CurrentCSD = null;
 				
 				//recover the context set description
+				ContextSetDescription CurrentCSD = null;
 				for (ContextSetDescription csd : OS.getCSDs()){
 					if (csd.getName().contentEquals(this.ContextSetName)){
 						CurrentCSD = csd;
@@ -286,7 +282,7 @@ import definicions.MatriuDistancies;
 				EC.setContextSetName(this.ContextSetName);
 				EC.setSearchType("annotation");
 				EC.setQueries(this.Queries);
-				
+								
 				//initialize output
 				//actual context mapping
 				LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> ContextSetList = 
@@ -303,13 +299,31 @@ import definicions.MatriuDistancies;
 				//initialize a counter variable
 				int Counter = 0;
 				int SpeciesCounter = 0;
+				boolean isCassette = false;
 				
+				//Cassette Option - Switch to the subordintae, or Cassette, Type
+				if (CurrentCSD.getType().contentEquals("Cassette")){
+					isCassette = true;
+					String SubordinateContextSetType = CurrentCSD.getCassetteOf();
+					
+					//recover the context set description of the cassette
+					for (ContextSetDescription csd : OS.getCSDs()){
+						if (csd.getName().contentEquals(SubordinateContextSetType)){
+							CurrentCSD = csd;
+							break;
+						}
+					}
+				} 
+				
+				//Initialize a hash map to use for the case of cassette contexts.
+				HashSet<String> GenesForCassettes = new HashSet<String>();
+
 				//iterate through species.
 				for (Entry<String, AnnotatedGenome> entry : OS.getSpecies().entrySet()) {
 
 					//initialize output
 					HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = null;
-					
+										
 					if (CurrentCSD.isPreprocessed()){
 						
 						//pre-processed cases
@@ -326,7 +340,7 @@ import definicions.MatriuDistancies;
 						}
 
 					}
-					
+
 					//create an iterator for the HashSet
 					Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
 					 
@@ -352,6 +366,15 @@ import definicions.MatriuDistancies;
 						ContigNames.put(Key, ContextSegment.getFirst().getE().getContig());
 					}
 					
+					//Cassette cases: add genes
+					if (isCassette){
+						for (LinkedList<GenomicElementAndQueryMatch> MatchList : Matches){
+							for (GenomicElementAndQueryMatch GandE : MatchList){
+								GenesForCassettes.add(GandE.getE().getAnnotation());
+							}
+						}
+					}
+					
 					SpeciesCounter++;
 					progress = (int) (50*((double)SpeciesCounter/(double)OS.getSpecies().size()));
 					//update progress
@@ -366,21 +389,11 @@ import definicions.MatriuDistancies;
 				EC.setSourceSpeciesNames(SourceNames);
 				EC.setSourceContigNames(ContigNames);
 				
-				//System.out.println("ECRons computed + values set");
+				//Update the query data with all changes.
+				CSDisplayData CSD = new CSDisplayData();
+				CSD.setEC(EC);
+				WorkerQD.setCSD(CSD);
 				
-				//compute distances, and format correctly within the ExtendedCRON object.
-				EC.computePairwiseDistances(this.DissimilarityMethod);
-				EC.exportDistancesToField();
-				
-				//retrieve DadesExternes
-				try {
-					this.ProcessedDE = new DadesExternes(EC);
-					de = this.ProcessedDE;
-					
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-
 				return null;
 			}
 			
@@ -481,18 +494,14 @@ import definicions.MatriuDistancies;
 				EC.setSourceSpeciesNames(SourceNames);
 				EC.setSourceContigNames(ContigNames);
 				
-				//compute distances, and format correctly within the ExtendedCRON object.
-				EC.computePairwiseDistances(this.DissimilarityMethod);
-				EC.exportDistancesToField();
+				//add source info
+				EC.setSourceSpeciesNames(SourceNames);
+				EC.setSourceContigNames(ContigNames);
 				
-				//retrieve DadesExternes
-				try {
-					this.ProcessedDE = new DadesExternes(EC);
-					de = this.ProcessedDE;
-					
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				//Update the query data with all changes.
+				CSDisplayData CSD = new CSDisplayData();
+				CSD.setEC(EC);
+				WorkerQD.setCSD(CSD);
 
 				return null;
 			}
@@ -504,9 +513,7 @@ import definicions.MatriuDistancies;
 			protected Void CreateSearchPanel(){
 				
 				//update search results frame
-				CSDisplayData CSD = new CSDisplayData();
-				CSD.setEC(ProcessedDE.getEC());
-				SearchResultsFrame = new FrmSearchResults(fr,CSD);
+				SearchResultsFrame = new FrmSearchResults(fr,WorkerQD.getCSD());
 				
 				return null;
 			}
@@ -515,6 +522,16 @@ import definicions.MatriuDistancies;
 			//============================================//
 			protected Void ComputeDendrogram(){
 
+				//Create DE
+				try {
+					this.ProcessedDE = new DadesExternes(WorkerQD.getCSD().getEC());
+					this.ProcessedDE.getEC().computePairwiseDistances(this.DissimilarityMethod);
+					this.ProcessedDE.getEC().exportDistancesToField();
+					de = this.ProcessedDE;
+					
+				} catch (Exception e1) {}
+
+				//get distances, compute dendrogram
 				multiDendro = ProcessedDE.getMatriuDistancies();
 				minBase = Double.MAX_VALUE;
 				nbElements = multiDendro.getCardinalitat();
@@ -1189,24 +1206,6 @@ import definicions.MatriuDistancies;
 				pizarra = fr.createInternalFrame(isUpdate, method.name());
 				pizarra.setTitle(qD.getName());
 				
-				//UPDATE CONFIGURATION INFORMATION
-				cfg = fr.getConfig();
-				cfg.setPizarra(pizarra);
-				cfg.setFitxerDades(fitx);
-				cfg.setMatriu(multiDendro);
-				cfg.setHtNoms(de.getTaulaNoms()); //table names
-				if (!cfg.isTipusDistancia()) {
-					if (cfg.getOrientacioDendo().equals(Orientation.NORTH)) {
-						cfg.setOrientacioDendo(Orientation.SOUTH);
-					} else if (cfg.getOrientacioDendo().equals(Orientation.SOUTH)) {
-						cfg.setOrientacioDendo(Orientation.NORTH);
-					} else if (cfg.getOrientacioDendo().equals(Orientation.EAST)) {
-						cfg.setOrientacioDendo(Orientation.WEST);
-					} else if (cfg.getOrientacioDendo().equals(Orientation.WEST)) {
-						cfg.setOrientacioDendo(Orientation.EAST);
-					}
-				}
-				
 				//PREPARE INTERNAL FRAME DATA
 				CSDisplayData CSD = qD.getCSD();
 				
@@ -1225,6 +1224,24 @@ import definicions.MatriuDistancies;
 				//OPTION: DENDROGRAM
 				if (qD.getAnalysesList().isOptionComputeDendrogram()){
 
+					//update configuration information
+					cfg = fr.getConfig();
+					cfg.setPizarra(pizarra);
+					cfg.setFitxerDades(fitx);
+					cfg.setMatriu(multiDendro);
+					cfg.setHtNoms(de.getTaulaNoms()); //table names
+					if (!cfg.isTipusDistancia()) {
+						if (cfg.getOrientacioDendo().equals(Orientation.NORTH)) {
+							cfg.setOrientacioDendo(Orientation.SOUTH);
+						} else if (cfg.getOrientacioDendo().equals(Orientation.SOUTH)) {
+							cfg.setOrientacioDendo(Orientation.NORTH);
+						} else if (cfg.getOrientacioDendo().equals(Orientation.EAST)) {
+							cfg.setOrientacioDendo(Orientation.WEST);
+						} else if (cfg.getOrientacioDendo().equals(Orientation.WEST)) {
+							cfg.setOrientacioDendo(Orientation.EAST);
+						}
+					}
+					
 					//create a new context tree panel
 					fPiz = new FrmPiz(fr, CSD);
 					

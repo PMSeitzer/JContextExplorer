@@ -104,6 +104,35 @@ public class InternalFrameData {
 	private FrmGraph ContextGraphPanel;
 	private FrmPhylo PhyloTreePanel;
 
+	//Constructors
+	
+	public InternalFrameData(final FitxerDades fitx, MatriuDistancies md) {
+		try {
+			de = new DadesExternes(fitx);
+			multiDendro = md;
+			Jpan_Menu.getConfigPanel(this);
+		} catch (Exception e) {
+			showError("Error: \n" + e.toString());
+		}
+	}
+	
+	public InternalFrameData(final DadesExternes DE, final MatriuDistancies md){
+		try {
+			//adjustments
+			this.de = DE;
+			this.multiDendro = md;
+			
+			//only update configure panel when appropriate, ie, a de has been computed.
+			if (this.de != null){
+				Jpan_Menu.getConfigPanel(this);
+			}
+
+		} catch (Exception e){
+			showError("Problem loading internal frame data");	
+		}
+	}
+	
+	
 // ----- Methods ---------------------------------------------------//		
 	
 	public FrmPiz getContextTreePanel() {
@@ -130,27 +159,6 @@ public class InternalFrameData {
 		PhyloTreePanel = phyloTreePanel;
 	}
 
-	public InternalFrameData(final FitxerDades fitx, MatriuDistancies md) {
-		try {
-			de = new DadesExternes(fitx);
-			multiDendro = md;
-			Jpan_Menu.getConfigPanel(this);
-		} catch (Exception e) {
-			showError("Error: \n" + e.toString());
-		}
-	}
-	
-	public InternalFrameData(final DadesExternes DE, final MatriuDistancies md){
-		try {
-			//adjustments
-			this.de = DE;
-			this.multiDendro = md;
-			
-			Jpan_Menu.getConfigPanel(this);
-		} catch (Exception e){
-			showError("Problem loading internal frame data");	
-		}
-	}
 
 	private void showError(String message) {
 		JOptionPane.showMessageDialog(null, message, Language.getLabel(7),

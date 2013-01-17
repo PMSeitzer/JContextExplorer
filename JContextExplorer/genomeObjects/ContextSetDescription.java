@@ -6,12 +6,14 @@ public class ContextSetDescription {
 	private String Name;
 	private String Type;
 	private boolean Preprocessed;
+	private boolean isCassette = false;
 	
 	//optional fields
 	private int NtRangeBefore;
 	private int NtRangeAfter;
 	private int GenesBefore;
 	private int GenesAfter;
+	private String CassetteOf; 		//Name of another ContextSetDescription
 	
 	//constructor
 	public ContextSetDescription(){
@@ -72,5 +74,21 @@ public class ContextSetDescription {
 
 	public void setGenesAfter(int genesAfter) {
 		GenesAfter = genesAfter;
+	}
+
+	public boolean isCassette() {
+		return isCassette;
+	}
+
+	public void setCassette(boolean isCassette) {
+		this.isCassette = isCassette;
+	}
+
+	public String getCassetteOf() {
+		return CassetteOf;
+	}
+
+	public void setCassetteOf(String cassetteOf) {
+		CassetteOf = cassetteOf;
 	}
 }

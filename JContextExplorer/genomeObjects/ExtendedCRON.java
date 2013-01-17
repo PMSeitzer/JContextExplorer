@@ -176,7 +176,7 @@ public class ExtendedCRON {
 	//Export dissimilarity set into an array of strings
 	public void exportDistancesToField(){
 
-		//initialize relatinships field
+		//initialize relationships field
 		LinkedList<String> PairwiseRelationships = new LinkedList<String>();
 		
 		//initialize counter

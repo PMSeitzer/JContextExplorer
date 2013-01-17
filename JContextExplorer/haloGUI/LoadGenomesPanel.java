@@ -2,7 +2,6 @@ package haloGUI;
 
 import genomeObjects.AnnotatedGenome;
 import genomeObjects.ContextSet;
-import genomeObjects.ContextSetDescriptions;
 import genomeObjects.OrganismSet;
 //import importExport.FitxerDades;
 import inicial.Dendrograma;
