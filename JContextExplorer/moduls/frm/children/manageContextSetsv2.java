@@ -1081,7 +1081,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 						
 						//cassette-related parameters
 						ToAdd.setCassette(true);
-						String CassetteOf = contextSetMenu.getSelectedItem().toString();
+						String CassetteOf = contextSetMenuforCassette.getSelectedItem().toString();
 						ToAdd.setCassetteOf(CassetteOf);
 					} 
 

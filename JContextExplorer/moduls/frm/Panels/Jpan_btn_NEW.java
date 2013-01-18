@@ -4,6 +4,7 @@ package moduls.frm.Panels;
 import genomeObjects.CSDisplayData;
 import genomeObjects.ContextSetDescription;
 import genomeObjects.ExtendedCRON;
+import genomeObjects.GenomicElement;
 import genomeObjects.GenomicElementAndQueryMatch;
 import genomeObjects.OrganismSet;
 import importExport.DadesExternes;
@@ -223,6 +224,8 @@ import definicions.MatriuDistancies;
 				fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				progressBar.setBorderPainted(true);
 				progressBar.setString(null);
+				multiDendro = null;
+				de = null;
 				
 				//Search organisms
 				if (AnnotationSearch){
@@ -232,16 +235,13 @@ import definicions.MatriuDistancies;
 				}
 				System.out.println("Search Completed. " + this.WorkerQD.getCSD().getEC().getNumberOfEntries() + " Gene Groupings Recovered.");
 
-				//maintenance - reset values to null
-				multiDendro = null;
-				de = null;
-				
 				//Analyses options
 				//=================================//
 				
 				//(1) Construct search pane
 				if (AnalysesList.isOptionDisplaySearches()){
 					CreateSearchPanel();
+					
 				}
 				
 				//(2) Compute dendrogram
@@ -265,6 +265,9 @@ import definicions.MatriuDistancies;
 				//re-set progress value
 				int progress = 0;
 				
+				//cassette versus non-cassette context sets
+				boolean isCassette = false;
+				
 				//recover the context set description
 				ContextSetDescription CurrentCSD = null;
 				for (ContextSetDescription csd : OS.getCSDs()){
@@ -274,6 +277,24 @@ import definicions.MatriuDistancies;
 					}
 				}
 				
+				//set context set name
+				String ContextSetName = this.ContextSetName;
+				
+				//Cassette Option - Switch to the subordintae, or Cassette, Type
+				if (CurrentCSD.isCassette()){
+					isCassette = true;
+					String SubordinateContextSetType = CurrentCSD.getCassetteOf();
+					ContextSetName = CurrentCSD.getCassetteOf();
+					
+					//recover the context set description of the cassette
+					for (ContextSetDescription csd : OS.getCSDs()){
+						if (csd.getName().contentEquals(SubordinateContextSetType)){
+							CurrentCSD = csd;
+							break;
+						}
+					}
+				} 
+
 				//initialize output
 				ExtendedCRON EC = new ExtendedCRON();
 				
@@ -299,21 +320,6 @@ import definicions.MatriuDistancies;
 				//initialize a counter variable
 				int Counter = 0;
 				int SpeciesCounter = 0;
-				boolean isCassette = false;
-				
-				//Cassette Option - Switch to the subordintae, or Cassette, Type
-				if (CurrentCSD.getType().contentEquals("Cassette")){
-					isCassette = true;
-					String SubordinateContextSetType = CurrentCSD.getCassetteOf();
-					
-					//recover the context set description of the cassette
-					for (ContextSetDescription csd : OS.getCSDs()){
-						if (csd.getName().contentEquals(SubordinateContextSetType)){
-							CurrentCSD = csd;
-							break;
-						}
-					}
-				} 
 				
 				//Initialize a hash map to use for the case of cassette contexts.
 				HashSet<String> GenesForCassettes = new HashSet<String>();
@@ -327,7 +333,7 @@ import definicions.MatriuDistancies;
 					if (CurrentCSD.isPreprocessed()){
 						
 						//pre-processed cases
-						Matches = entry.getValue().AnnotationMatches(this.Queries, this.ContextSetName);
+						Matches = entry.getValue().AnnotationMatches(this.Queries, ContextSetName);
 
 					} else {
 						
@@ -385,6 +391,50 @@ import definicions.MatriuDistancies;
 				EC.setContexts(ContextSetList);
 				EC.setNumberOfEntries(Counter);
 				
+				//adjust values, if necessary, if context set type is a cassette
+				if (isCassette){
+					int CassetteCounter = 0;
+					
+					//create a new context list
+					LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> CassetteContextSetList = 
+							new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
+					
+					//parameters for each
+					String SpeciesKey;
+					LinkedList<GenomicElementAndQueryMatch> SpeciesGenes;
+					
+					for (AnnotatedGenome AG : OS.getSpecies().values()){
+						
+						//Species Name
+						SpeciesKey = AG.getSpecies();
+						SpeciesGenes = new LinkedList<GenomicElementAndQueryMatch>();
+						
+						for (GenomicElement E : AG.getElements()){
+							if (GenesForCassettes.contains(E.getAnnotation())){
+								
+								//create appropriate GenomicElementAndQueryMatch
+								GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+								GandE.setQueryMatch(true);
+								GandE.setE(E);
+								
+								//add to list
+								SpeciesGenes.add(GandE);
+							}
+						}
+						
+						//add, if not empty
+						if (!SpeciesGenes.isEmpty()){
+							CassetteContextSetList.put(SpeciesKey,SpeciesGenes);
+							CassetteCounter++;
+						}
+					}
+					
+					//When complete, add completed structures
+					EC.setContexts(CassetteContextSetList);
+					EC.setNumberOfEntries(CassetteCounter);
+					
+				}
+
 				//add source info
 				EC.setSourceSpeciesNames(SourceNames);
 				EC.setSourceContigNames(ContigNames);
@@ -514,6 +564,7 @@ import definicions.MatriuDistancies;
 				
 				//update search results frame
 				SearchResultsFrame = new FrmSearchResults(fr,WorkerQD.getCSD());
+				WorkerQD.setCSD(SearchResultsFrame.getCSD());
 				
 				return null;
 			}
@@ -524,12 +575,22 @@ import definicions.MatriuDistancies;
 
 				//Create DE
 				try {
-					this.ProcessedDE = new DadesExternes(WorkerQD.getCSD().getEC());
-					this.ProcessedDE.getEC().computePairwiseDistances(this.DissimilarityMethod);
-					this.ProcessedDE.getEC().exportDistancesToField();
+					
+					//retrieve EC, + modify
+					ExtendedCRON EC = this.WorkerQD.getCSD().getEC();
+					EC.computePairwiseDistances(DissimilarityMethod);
+					EC.exportDistancesToField();
+					
+					//create a DE out of the deal
+					this.ProcessedDE = new DadesExternes(EC);
 					de = this.ProcessedDE;
 					
-				} catch (Exception e1) {}
+					//replace EC
+					this.WorkerQD.getCSD().setEC(EC);
+					
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
 
 				//get distances, compute dendrogram
 				multiDendro = ProcessedDE.getMatriuDistancies();
@@ -588,6 +649,9 @@ import definicions.MatriuDistancies;
 				progressBar.setString("");
 				progressBar.setBorderPainted(false);
 				progressBar.setValue(0);
+				
+//				CSDisplayData CSD = SearchResultsFrame.getCSD();
+//				System.out.println("SearchWorker.done(): " + CSD.getGraphicalContexts()[0]);
 				
 				//try to update values
 				try {
@@ -886,7 +950,10 @@ import definicions.MatriuDistancies;
 		public MatriuDistancies getMatriu() {
 			//System.out.println(de);
 			//System.out.println("tried to return");
+
 			return de.getMatriuDistancies();
+
+
 		}
 
 		// BUTTONS PUSHED -> LOAD FILE OR UPDATE TREE
@@ -1208,6 +1275,11 @@ import definicions.MatriuDistancies;
 				
 				//PREPARE INTERNAL FRAME DATA
 				CSDisplayData CSD = qD.getCSD();
+				System.out.println("show().try block: " + CSD.getGraphicalContexts()[0]);
+				
+				//UPDATE CONFIGURATION INFORMATION
+				cfg = fr.getConfig();
+				cfg.setPizarra(pizarra);
 				
 				//OPTION: SEARCHES
 				if (qD.getAnalysesList().isOptionDisplaySearches()){
@@ -1218,15 +1290,14 @@ import definicions.MatriuDistancies;
 					
 					//update CSD with default mutable tree nodes
 					CSD = fSearch.getCSD();
+					System.out.println("show().searches: " + CSD.getGraphicalContexts()[0]);
 	
 				}
 				
 				//OPTION: DENDROGRAM
 				if (qD.getAnalysesList().isOptionComputeDendrogram()){
 
-					//update configuration information
-					cfg = fr.getConfig();
-					cfg.setPizarra(pizarra);
+					//update configuration menu panel
 					cfg.setFitxerDades(fitx);
 					cfg.setMatriu(multiDendro);
 					cfg.setHtNoms(de.getTaulaNoms()); //table names
@@ -1275,6 +1346,7 @@ import definicions.MatriuDistancies;
 					
 					//update CSD with context tree rectangles
 					CSD = fPiz.getCSD();
+					System.out.println("show().dendrogram: " + CSD.getGraphicalContexts()[0]);
 				}
 				
 				//OPTION: GRAPH
@@ -1326,6 +1398,7 @@ import definicions.MatriuDistancies;
 				//set Jpan_genome
 				if (!isUpdate){
 					fr.getPanGenome().setCSD(CSD);
+					System.out.println("show().pangenome: " + CSD.getGraphicalContexts()[0]);
 				}
 				
 			} catch (final Exception e) {

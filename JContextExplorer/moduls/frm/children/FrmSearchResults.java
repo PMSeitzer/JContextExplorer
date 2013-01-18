@@ -149,6 +149,7 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 				//TreeNodeMapping.put(GeneInfoWithSource, GM);
 			}
 			
+			//add tree node to root
 			root.add(SM);
 		}
 		
@@ -183,8 +184,13 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 		//retrieve updated CSD
 		this.CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
 		
+		System.out.println(CSD.getGraphicalContexts().length);
 		//mark selected nodes
 		for (ContextLeaf CL : CSD.getGraphicalContexts()){
+			System.out.println(CL.getName());
+			System.out.println(CL.isSelected());
+			System.out.println(CL.getSearchResultsTreeNode());
+			System.out.println(CL.getSearchResultsTreeNode().getPath());
 			if (CL.isSelected()){
 				SearchResults.addSelectionPath(new TreePath(CL.getSearchResultsTreeNode().getPath()));
 			} else {

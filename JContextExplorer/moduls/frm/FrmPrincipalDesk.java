@@ -197,7 +197,10 @@ public class FrmPrincipalDesk extends JFrame{
 		//System.out.println("made a config");
 		
 		//problem 11-
-		cfg.setMatriu(panBtn.getMatriu());
+		try {
+			cfg.setMatriu(panBtn.getMatriu());
+		} catch (Exception ex) {}
+
 		//System.out.println("set matrix");
 		if (cfg.getValorMaxim() == 0) {
 			cfg.getConfigMenu().setValMax(cfg.getCimDendograma());
