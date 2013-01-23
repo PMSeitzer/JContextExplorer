@@ -1041,6 +1041,10 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 	}
 
 	public static void setConfigPanel(final InternalFrameData ifd) {
+		
+		//try-catch block with no catch action!!
+		try {
+
 		// Type of measure
 		rbDistances.setSelected(ifd.getTypeData().equals(tipusDades.DISTANCIA));
 		rbWeights.setSelected(ifd.getTypeData().equals(tipusDades.PESO));
@@ -1095,6 +1099,8 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 
 		// Labels decimals
 		setLabelsDecimals(ifd.getAxisDecimals());
+		
+		} catch (Exception ex) {}
 	}
 
 	public static void clearConfigPanel() {

@@ -233,8 +233,22 @@ import definicions.MatriuDistancies;
 				} else {
 					SearchOrganismsbyCluster();
 				}
-				System.out.println("Search Completed. " + this.WorkerQD.getCSD().getEC().getNumberOfEntries() + " Gene Groupings Recovered.");
+				if (this.WorkerQD.getCSD().getEC().getNumberOfEntries() == 1){
+					System.out.println("Search Completed. " + this.WorkerQD.getCSD().getEC().getNumberOfEntries() + " Gene Grouping Recovered.");					
+				} else {
+					System.out.println("Search Completed. " + this.WorkerQD.getCSD().getEC().getNumberOfEntries() + " Gene Groupings Recovered.");					
+				}
 
+				//adjust analyses options based on number of matches.
+				if (this.WorkerQD.getCSD().getEC().getNumberOfEntries() < 2){
+					this.WorkerQD.getAnalysesList().setOptionComputeDendrogram(false);
+					this.WorkerQD.getAnalysesList().setOptionComputeContextGraph(false);
+					if (this.WorkerQD.getCSD().getEC().getNumberOfEntries() == 0){
+						String errMsg = "There were no matches to the query (or queries).";
+						showError(errMsg);
+					}
+				}
+				
 				//Analyses options
 				//=================================//
 				
@@ -281,21 +295,20 @@ import definicions.MatriuDistancies;
 				//set context set name
 				String ContextSetName = this.ContextSetName;
 				
-				//Cassette Option - Switch to the subordintae, or Cassette, Type
+				//Cassette Option - Switch to the cassette type
 				if (CurrentCSD.isCassette()){
 					isCassette = true;
-					String SubordinateContextSetType = CurrentCSD.getCassetteOf();
 					ContextSetName = CurrentCSD.getCassetteOf();
 					
 					//recover the context set description of the cassette
 					for (ContextSetDescription csd : OS.getCSDs()){
-						if (csd.getName().contentEquals(SubordinateContextSetType)){
+						if (csd.getName().contentEquals(ContextSetName)){
 							CurrentCSD = csd;
 							break;
 						}
 					}
 				} 
-
+				
 				//initialize output
 				ExtendedCRON EC = new ExtendedCRON();
 				
@@ -388,10 +401,6 @@ import definicions.MatriuDistancies;
 					setProgress(progress);
 				}
 				
-				//add hash map to extended CRON
-				EC.setContexts(ContextSetList);
-				EC.setNumberOfEntries(Counter);
-				
 				//adjust values, if necessary, if context set type is a cassette
 				if (isCassette){
 					int CassetteCounter = 0;
@@ -400,6 +409,14 @@ import definicions.MatriuDistancies;
 					LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> CassetteContextSetList = 
 							new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
 					
+					//species names
+					LinkedHashMap<String, String> CassetteSourceNames =
+							new LinkedHashMap<String, String>();
+					
+					//contig names
+					LinkedHashMap<String, String> CassetteContigNames = 
+							new LinkedHashMap<String, String>();
+					
 					//parameters for each
 					String SpeciesKey;
 					LinkedList<GenomicElementAndQueryMatch> SpeciesGenes;
@@ -407,8 +424,11 @@ import definicions.MatriuDistancies;
 					for (AnnotatedGenome AG : OS.getSpecies().values()){
 						
 						//Species Name
-						SpeciesKey = AG.getSpecies();
+						SpeciesKey = AG.getSpecies() + "-1";
 						SpeciesGenes = new LinkedList<GenomicElementAndQueryMatch>();
+						
+						//Contigs
+						HashSet<String> Contigs = new HashSet<String>();
 						
 						for (GenomicElement E : AG.getElements()){
 							if (GenesForCassettes.contains(E.getAnnotation())){
@@ -417,6 +437,7 @@ import definicions.MatriuDistancies;
 								GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
 								GandE.setQueryMatch(true);
 								GandE.setE(E);
+								Contigs.add(E.getContig());
 								
 								//add to list
 								SpeciesGenes.add(GandE);
@@ -425,7 +446,25 @@ import definicions.MatriuDistancies;
 						
 						//add, if not empty
 						if (!SpeciesGenes.isEmpty()){
+							
+							//update information
 							CassetteContextSetList.put(SpeciesKey,SpeciesGenes);
+							CassetteSourceNames.put(SpeciesKey, AG.getSpecies());
+							
+							//compress contigs to a single string
+							String AllContigs = "";
+							int ContigCounter = 0;
+							for (String s : Contigs){
+								ContigCounter++;
+								AllContigs = AllContigs + "[Contig_" + ContigCounter + "]=" + s + ";";
+								
+								//displayable case (single contig)
+								if (Contigs.size() == 1){
+									AllContigs = s;
+								}
+							}
+							CassetteContigNames.put(SpeciesKey, AllContigs);
+							
 							CassetteCounter++;
 						}
 					}
@@ -434,12 +473,21 @@ import definicions.MatriuDistancies;
 					EC.setContexts(CassetteContextSetList);
 					EC.setNumberOfEntries(CassetteCounter);
 					
+					//add source info
+					EC.setSourceSpeciesNames(CassetteSourceNames);
+					EC.setSourceContigNames(CassetteContigNames);
+					
+				} else {
+					
+					//add hash map to extended CRON
+					EC.setContexts(ContextSetList);
+					EC.setNumberOfEntries(Counter);
+					
+					//add source info
+					EC.setSourceSpeciesNames(SourceNames);
+					EC.setSourceContigNames(ContigNames);
 				}
 
-				//add source info
-				EC.setSourceSpeciesNames(SourceNames);
-				EC.setSourceContigNames(ContigNames);
-				
 				//Update the query data with all changes.
 				CSDisplayData CSD = new CSDisplayData();
 				CSD.setECandInitializeTreeLeaves(EC);
@@ -453,24 +501,43 @@ import definicions.MatriuDistancies;
 				
 				//re-set progress value
 				int progress = 0;
-				ContextSetDescription CurrentCSD = null;
+				
+				//cassette versus non-cassette context sets
+				boolean isCassette = false;
 				
 				//recover the context set description
+				ContextSetDescription CurrentCSD = null;
 				for (ContextSetDescription csd : OS.getCSDs()){
-					if (csd.getName().contentEquals(ContextSetName)){
+					if (csd.getName().contentEquals(this.ContextSetName)){
 						CurrentCSD = csd;
 						break;
 					}
 				}
 				
+				//set context set name
+				String ContextSetName = this.ContextSetName;
+				
+				//Cassette Option - Switch to the cassette type
+				if (CurrentCSD.isCassette()){
+					isCassette = true;
+					ContextSetName = CurrentCSD.getCassetteOf();
+					
+					//recover the context set description of the cassette
+					for (ContextSetDescription csd : OS.getCSDs()){
+						if (csd.getName().contentEquals(ContextSetName)){
+							CurrentCSD = csd;
+							break;
+						}
+					}
+				} 
+
 				//initialize output
 				ExtendedCRON EC = new ExtendedCRON();
 				
 				//set name and type of CRON.
-				EC.setName("Clusters " + this.Name);
+				EC.setName(this.Name);
 				EC.setContextSetName(this.ContextSetName);
 				EC.setSearchType("cluster");
-				EC.setContextType(CurrentCSD.getType());
 				EC.setClusterNumbers(this.ClusterNumber);
 				
 				//initialize output
@@ -487,6 +554,10 @@ import definicions.MatriuDistancies;
 				
 				//initialize a counter variable
 				int Counter = 0;
+				int SpeciesCounter = 0;
+				
+				//Initialize a hash map to use for the case of cassette contexts.
+				HashSet<String> GenesForCassettes = new HashSet<String>();
 				
 				//iterate through species.
 				for (Entry<String, AnnotatedGenome> entry : OS.getSpecies().entrySet()) {
@@ -496,7 +567,7 @@ import definicions.MatriuDistancies;
 					if (CurrentCSD.isPreprocessed()){
 						
 						//pre-processed cases
-						Matches = entry.getValue().ClusterMatches(this.ClusterNumber, this.ContextSetName);
+						Matches = entry.getValue().ClusterMatches(this.ClusterNumber, ContextSetName);
 
 					} else {
 						
@@ -535,25 +606,115 @@ import definicions.MatriuDistancies;
 						ContigNames.put(Key, ContextSegment.getFirst().getE().getContig());
 					}
 					
+					
+					//Cassette cases: add genes
+					if (isCassette){
+						for (LinkedList<GenomicElementAndQueryMatch> MatchList : Matches){
+							for (GenomicElementAndQueryMatch GandE : MatchList){
+								GenesForCassettes.add(GandE.getE().getAnnotation());
+							}
+						}
+					}
+					
+					SpeciesCounter++;
+					progress = (int) (50*((double)SpeciesCounter/(double)OS.getSpecies().size()));
+					//update progress
+					setProgress(progress);
+					
 				}
 				
-				//add hash map to extended CRON
-				EC.setContexts(ContextSetList);
-				EC.setNumberOfEntries(Counter);
-				
-				//add source info
-				EC.setSourceSpeciesNames(SourceNames);
-				EC.setSourceContigNames(ContigNames);
-				
-				//add source info
-				EC.setSourceSpeciesNames(SourceNames);
-				EC.setSourceContigNames(ContigNames);
-				
+				//adjust values, if necessary, if context set type is a cassette
+				if (isCassette){
+					int CassetteCounter = 0;
+					
+					//create a new context list
+					LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> CassetteContextSetList = 
+							new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
+					
+					//species names
+					LinkedHashMap<String, String> CassetteSourceNames =
+							new LinkedHashMap<String, String>();
+					
+					//contig names
+					LinkedHashMap<String, String> CassetteContigNames = 
+							new LinkedHashMap<String, String>();
+					
+					//parameters for each
+					String SpeciesKey;
+					LinkedList<GenomicElementAndQueryMatch> SpeciesGenes;
+					
+					for (AnnotatedGenome AG : OS.getSpecies().values()){
+						
+						//Species Name
+						SpeciesKey = AG.getSpecies() + "-1";
+						SpeciesGenes = new LinkedList<GenomicElementAndQueryMatch>();
+						
+						//Contigs
+						HashSet<String> Contigs = new HashSet<String>();
+						
+						for (GenomicElement E : AG.getElements()){
+							if (GenesForCassettes.contains(E.getAnnotation())){
+								
+								//create appropriate GenomicElementAndQueryMatch
+								GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+								GandE.setQueryMatch(true);
+								GandE.setE(E);
+								Contigs.add(E.getContig());
+								
+								//add to list
+								SpeciesGenes.add(GandE);
+							}
+						}
+						
+						//add, if not empty
+						if (!SpeciesGenes.isEmpty()){
+							
+							//update information
+							CassetteContextSetList.put(SpeciesKey,SpeciesGenes);
+							CassetteSourceNames.put(SpeciesKey, AG.getSpecies());
+							
+							//compress contigs to a single string
+							String AllContigs = "";
+							int ContigCounter = 0;
+							for (String s : Contigs){
+								ContigCounter++;
+								AllContigs = AllContigs + "[Contig_" + ContigCounter + "]=" + s + ";";
+								
+								//displayable case (single contig)
+								if (Contigs.size() == 1){
+									AllContigs = s;
+								}
+							}
+							CassetteContigNames.put(SpeciesKey, AllContigs);
+							
+							CassetteCounter++;
+						}
+					}
+					
+					//When complete, add completed structures
+					EC.setContexts(CassetteContextSetList);
+					EC.setNumberOfEntries(CassetteCounter);
+					
+					//add source info
+					EC.setSourceSpeciesNames(CassetteSourceNames);
+					EC.setSourceContigNames(CassetteContigNames);
+					
+				} else {
+					
+					//add hash map to extended CRON
+					EC.setContexts(ContextSetList);
+					EC.setNumberOfEntries(Counter);
+					
+					//add source info
+					EC.setSourceSpeciesNames(SourceNames);
+					EC.setSourceContigNames(ContigNames);
+				}
+
 				//Update the query data with all changes.
 				CSDisplayData CSD = new CSDisplayData();
 				CSD.setECandInitializeTreeLeaves(EC);
 				WorkerQD.setCSD(CSD);
-
+				
 				return null;
 			}
 			
