@@ -47,7 +47,11 @@ public class CSDisplayData {
 	public ExtendedCRON getEC() {
 		return EC;
 	}
-	public void setEC(ExtendedCRON eC) {
+	public void setEC(ExtendedCRON eC){
+		EC = eC;
+	}
+	
+	public void setECandInitializeTreeLeaves(ExtendedCRON eC) {
 		//set ec value
 		EC = eC;
 		

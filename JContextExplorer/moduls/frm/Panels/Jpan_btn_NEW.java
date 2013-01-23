@@ -243,7 +243,7 @@ import definicions.MatriuDistancies;
 					CreateSearchPanel();
 					
 				}
-				
+
 				//(2) Compute dendrogram
 				if (AnalysesList.isOptionComputeDendrogram()){
 					ComputeDendrogram();
@@ -253,6 +253,7 @@ import definicions.MatriuDistancies;
 				showError("There were no matches to the query (or queries).");
 				ex.printStackTrace();
 			}
+			
 				return null;
 			}
 			
@@ -441,7 +442,7 @@ import definicions.MatriuDistancies;
 				
 				//Update the query data with all changes.
 				CSDisplayData CSD = new CSDisplayData();
-				CSD.setEC(EC);
+				CSD.setECandInitializeTreeLeaves(EC);
 				WorkerQD.setCSD(CSD);
 				
 				return null;
@@ -550,7 +551,7 @@ import definicions.MatriuDistancies;
 				
 				//Update the query data with all changes.
 				CSDisplayData CSD = new CSDisplayData();
-				CSD.setEC(EC);
+				CSD.setECandInitializeTreeLeaves(EC);
 				WorkerQD.setCSD(CSD);
 
 				return null;
@@ -565,7 +566,7 @@ import definicions.MatriuDistancies;
 				//update search results frame
 				SearchResultsFrame = new FrmSearchResults(fr,WorkerQD.getCSD());
 				WorkerQD.setCSD(SearchResultsFrame.getCSD());
-				
+
 				return null;
 			}
 			
@@ -580,7 +581,7 @@ import definicions.MatriuDistancies;
 					ExtendedCRON EC = this.WorkerQD.getCSD().getEC();
 					EC.computePairwiseDistances(DissimilarityMethod);
 					EC.exportDistancesToField();
-					
+
 					//create a DE out of the deal
 					this.ProcessedDE = new DadesExternes(EC);
 					de = this.ProcessedDE;
@@ -644,15 +645,12 @@ import definicions.MatriuDistancies;
 			//following search + dendrogram computation
 			public void done(){
 				
-				//re-set cursor, values
+				//re-set cursor, progress bar
 				fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				progressBar.setString("");
 				progressBar.setBorderPainted(false);
 				progressBar.setValue(0);
-				
-//				CSDisplayData CSD = SearchResultsFrame.getCSD();
-//				System.out.println("SearchWorker.done(): " + CSD.getGraphicalContexts()[0]);
-				
+
 				//try to update values
 				try {
 					//update values for display
@@ -1275,8 +1273,7 @@ import definicions.MatriuDistancies;
 				
 				//PREPARE INTERNAL FRAME DATA
 				CSDisplayData CSD = qD.getCSD();
-				System.out.println("show().try block: " + CSD.getGraphicalContexts()[0]);
-				
+
 				//UPDATE CONFIGURATION INFORMATION
 				cfg = fr.getConfig();
 				cfg.setPizarra(pizarra);
@@ -1288,10 +1285,8 @@ import definicions.MatriuDistancies;
 					fSearch = SearchResultsFrame;
 					fSearchSP = new JScrollPane(SearchResultsFrame);
 					
-					//update CSD with default mutable tree nodes
+					//update CSD with tree nodes
 					CSD = fSearch.getCSD();
-					System.out.println("show().searches: " + CSD.getGraphicalContexts()[0]);
-	
 				}
 				
 				//OPTION: DENDROGRAM
@@ -1346,7 +1341,7 @@ import definicions.MatriuDistancies;
 					
 					//update CSD with context tree rectangles
 					CSD = fPiz.getCSD();
-					System.out.println("show().dendrogram: " + CSD.getGraphicalContexts()[0]);
+
 				}
 				
 				//OPTION: GRAPH
@@ -1398,9 +1393,8 @@ import definicions.MatriuDistancies;
 				//set Jpan_genome
 				if (!isUpdate){
 					fr.getPanGenome().setCSD(CSD);
-					System.out.println("show().pangenome: " + CSD.getGraphicalContexts()[0]);
 				}
-				
+
 			} catch (final Exception e) {
 				e.printStackTrace();
 			}

@@ -58,6 +58,7 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 		
 		//get panel
 		this.getPanel();
+
 	}
 
 	//create panel
@@ -70,7 +71,7 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
         Query = new DefaultMutableTreeNode(CSD.getEC().getName());
         
         //create nodes method
-        CreateNodes(Query);
+        this.CreateNodes(Query);
         
         SearchResults = new JTree(Query);
         SearchResults.addTreeSelectionListener(this);
@@ -184,13 +185,8 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 		//retrieve updated CSD
 		this.CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
 		
-		System.out.println(CSD.getGraphicalContexts().length);
 		//mark selected nodes
 		for (ContextLeaf CL : CSD.getGraphicalContexts()){
-			System.out.println(CL.getName());
-			System.out.println(CL.isSelected());
-			System.out.println(CL.getSearchResultsTreeNode());
-			System.out.println(CL.getSearchResultsTreeNode().getPath());
 			if (CL.isSelected()){
 				SearchResults.addSelectionPath(new TreePath(CL.getSearchResultsTreeNode().getPath()));
 			} else {
@@ -214,6 +210,7 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 			
 			//Update selected/deselected
 			TreePath[] SelectionChanges = e.getPaths();
+			
 			for (ContextLeaf CL : CSD.getGraphicalContexts()){
 				for (int i = 0; i < SelectionChanges.length; i++){
 					if (SelectionChanges[i].equals(new TreePath(CL.getSearchResultsTreeNode().getPath()))){
