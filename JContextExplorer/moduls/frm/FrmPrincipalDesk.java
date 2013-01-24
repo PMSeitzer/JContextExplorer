@@ -98,6 +98,7 @@ public class FrmPrincipalDesk extends JFrame{
 	private final Jpan_GraphMenu panGraphMenu;
 	private final Jpan_MotifOptions panMotifOptions;
 	private final Jpan_PhyTreeMenu panPhyTreeMenu;
+
 	private final Jpan_DisplayOptions panDisplayOptions;
 	
 	private final Jpan_genome panGenome; // genome-viewing frame
@@ -489,5 +490,8 @@ public class FrmPrincipalDesk extends JFrame{
 		return panMenuTab;
 	}
 
+	public Jpan_PhyTreeMenu getPanPhyTreeMenu() {
+		return panPhyTreeMenu;
+	}
 
 }

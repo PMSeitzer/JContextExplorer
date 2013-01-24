@@ -26,6 +26,8 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 
+import newickTreeParsing.TreeNode;
+
 import parser.figures.Cercle;
 import parser.figures.Linia;
 import parser.figures.Marge;
@@ -85,6 +87,28 @@ public class Fig_Pizarra {
 		construeixMatriuUltrametrica(c);
 	}
 
+	//TODO: resolve this constructor
+	public Fig_Pizarra(final TreeNode tn, final Config cf) throws Exception {
+		
+		//Convert the tree node into a cluster
+		Cluster c = new Cluster();
+		//TODO: figure out how to convert a cluster to a tree node.
+		
+		//Usual cluster processing
+		abre = c;
+		val_Max_show = cf.getValorMaxim();
+		radi = cf.getRadi();
+		Fig_Pizarra.tip = cf.getTipusMatriu();
+		prec = cf.getPrecision();
+		if (tip.equals(tipusDades.DISTANCIA)) {
+			posNodes = 0.0;
+		} else {
+			posNodes = val_Max_show;
+		}
+		Branca(abre, cf.getConfigMenu().isFranjaVisible()); //branch
+		construeixMatriuUltrametrica(c);
+	}
+	
 	//		Coordinates		   Leaf
 	private Coordenada<Double> Fulla(final Cluster c) {
 		double x;
@@ -117,16 +141,16 @@ public class Fig_Pizarra {
 				} catch (Exception e) {
 					String msg_err = Language.getLabel(64) + "\n"
 							+ e.getMessage();
-					FesLog.LOG.throwing(msg_err, "Branca(final Cluster c)", e);
+					//FesLog.LOG.throwing(msg_err, "Branca(final Cluster c)", e);
 					throw new Exception(msg_err);
 				}
 
 				// change of level, line store
 				figura[Fig_Pizarra.LINIA].add(new Linia(pos, c.getAlcada(),
 						prec));
-				FesLog.LOG
-						.finer("new Linia: (" + pos.getX() + ", " + pos.getY()
-								+ ", " + c.getAlcada() + ", " + prec + ")");
+//				FesLog.LOG
+//						.finer("new Linia: (" + pos.getX() + ", " + pos.getY()
+//								+ ", " + c.getAlcada() + ", " + prec + ")");
 
 				min = min > pos.getX() ? pos.getX() : min;
 				max = max < pos.getX() ? pos.getX() : max;
@@ -136,13 +160,13 @@ public class Fig_Pizarra {
 			if (franja) {
 				figura[Fig_Pizarra.MARGE].add(new Marge(min, c.getAlcada(),
 						aglo, (max - min), prec));
-				FesLog.LOG.finer("Marge: (" + min + ", " + c.getAlcada() + ", "
-						+ aglo + ", " + (max - min));
+//				FesLog.LOG.finer("Marge: (" + min + ", " + c.getAlcada() + ", "
+//						+ aglo + ", " + (max - min));
 			} else {
 				figura[Fig_Pizarra.MARGE].add(new Marge(min, c.getAlcada(), 0,
 						(max - min), prec));
-				FesLog.LOG.finer("Marge: (" + min + ", " + c.getAlcada() + ", "
-						+ 0 + ", " + (max - min));
+//				FesLog.LOG.finer("Marge: (" + min + ", " + c.getAlcada() + ", "
+//						+ 0 + ", " + (max - min));
 			}
 
 			pos.setX((min + max) / 2);

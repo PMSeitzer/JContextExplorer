@@ -1516,9 +1516,20 @@ import definicions.MatriuDistancies;
 
 				//OPTION: PHYLOGENY
 				if (qD.getAnalysesList().isOptionRenderPhylogeny()){
-					fPhylo = new FrmPhylo(fr, CSD);
-					fPhyloSP = new JScrollPane(fPhylo);
 					
+					//initialize panel
+					fPhylo = new FrmPhylo(fr, CSD);
+					
+					// Convert tree into figures
+					figPizarra = new Fig_Pizarra(fr.getPanPhyTreeMenu().getCurrentParsedTree().getRoot(), cfg);
+					
+					//add figures + configuration information to frame
+					fPhylo.setFigures(figPizarra.getFigures());
+					fPhylo.setConfig(cfg);
+					
+					//scroll panel
+					fPhyloSP = new JScrollPane(fPhylo);
+
 					//update CSD with phylogenetic tree rectangles
 					CSD = fPhylo.getCSD();
 				}

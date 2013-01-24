@@ -36,24 +36,25 @@ import java.util.LinkedList;
 public class Cluster {
 
 	// Incremented for each cluster to ensure that there are no repetitions
+	//				   lastID
 	private static int darrerId = 0;
 
 	// Variables that define the cluster characteristics
 	private Integer id;
 	private String nom = "";
-	private double alcada = 0.0;
-	private double aglomeracio = 0.0;
+	private double alcada = 0.0;		//height
+	private double aglomeracio = 0.0;	//agglomeration
 
 	// Initial nodes
-	private int fills = 0;
+	private int fills = 0;				//children
 	private LinkedList<Cluster> lst;
 	private LinkedList<Cluster> lstFills;
 
 	// To know if it is a supercluster
-	private boolean nado = true;
+	private boolean nado = true;		//baby
 
 	// Highest value of the cluster
-	private double cim = 0;
+	private double cim = 0;				//top
 	private double base;
 
 	public Cluster() {
