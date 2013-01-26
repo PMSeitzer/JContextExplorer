@@ -121,8 +121,7 @@ public class Fig_Pizarra {
 		
 		//save the value as a field.
 		this.ComputedRootCluster = c;
-		
-		System.out.println("Breakpoint!");
+
 	}
 	
     void recursive_print (int currkey, int currdepth, Tree treeoflife) {
@@ -220,20 +219,16 @@ public class Fig_Pizarra {
 		// Create intermediate cluster nodes at every step, starting from the leaf nodes.
 					//<Key,Value> = <ID, cluster>
 		LinkedHashMap<Integer,Cluster> CreatedClusters = new LinkedHashMap<Integer,Cluster>();
-		HashSet<TreeNode> CurrentBatch = new HashSet<TreeNode>();
-		int NodesReceived = 0;
+		HashSet<TreeNode> Children = new HashSet<TreeNode>();
 		int RootKey = 0;
 
-//		System.out.println("Before making the leaves.");		
-		
-		//recover all children
+		//recover all nodes at the deepest level - initial children set
 		for (int i = 0; i <T.nodes.size(); i++){
 			TreeNode TN = T.getNodeByKey(i);
-			if (TN.isLeaf()){
+			if (TN.height == MaxHeight){
 				
-				//update lists
-				CurrentBatch.add(TN);
-				NodesReceived++;
+				//update list of children
+				Children.add(TN);
 				
 				//Initialize cluster info
 				Cluster c = new Cluster();
@@ -246,51 +241,52 @@ public class Fig_Pizarra {
 				}
 			}
 		}
-		
-//		System.out.println("Before the iterative cluster adding.");		
-		
-		boolean PassedFirstRound = false;
-		
+
+		HashSet<TreeNode> Parents;
+
 		//keep scanning, organizing, until not possible any more
-		while (NodesReceived < T.nodes.size()){
+		//while (NodesReceived < T.nodes.size()){
+		for (int CurrentHeight = MaxHeight-1; CurrentHeight > 0; CurrentHeight--){
 			
-			//intialize parents
-			HashSet<TreeNode> Parents = new HashSet<TreeNode>();
+			//determine parents of current children
+			Parents = new HashSet<TreeNode>();
+			for (int i = 0; i <T.nodes.size(); i++){
+				TreeNode TN = T.getNodeByKey(i);
+				if (TN.height == CurrentHeight){
+					Parents.add(TN);
+				}
 			
-			//add all parents
-			for (TreeNode TN : CurrentBatch){
-				Parents.add(TN.parent);
 			}
-			
-			//update counts
-			NodesReceived = NodesReceived + Parents.size();
-			
+
+			//Translate each parent tree node into a cluster structure
 			for (TreeNode TN : Parents){
 				
 				//Initialize cluster info for the parent
 				Cluster c = new Cluster();
 				c.setAlcada(TN.Alcada);
-				c.setNom(Integer.toString(TN.getKey()));
-				
-				if (PassedFirstRound){
-					c.setNado(true);
-				} else {
+				if (TN.isLeaf()){
+					c.setNom(TN.label);
 					c.setNado(false);
-				}
-				
-				try {
-					
-					//find all children for each parent
-					for (TreeNode CN : CurrentBatch){
-						if (CN.parent.getKey() == TN.getKey()){
-							//System.out.println("parent: " + CN.parent + ", current:" + TN);
-							System.out.println("Family for " + c.getNom() + ": " + c.getFamily());
-							c.addCluster(CreatedClusters.get(CN.getKey()));
+				} else {
+					c.setNom(Integer.toString(TN.getKey()));
+
+					try {
+						
+						boolean SetNado = true;
+						//find all children for this node
+						for (TreeNode CN : Children){
+							if (CN.parent.getKey() == TN.getKey()){
+								if (CN.isLeaf()){
+									SetNado = false;
+								}
+								c.addCluster(CreatedClusters.get(CN.getKey()));
+							}
 						}
+						c.setNado(SetNado);
+
+					} catch (Exception ex) {
+						ex.printStackTrace();
 					}
-					
-				} catch (Exception ex) {
-					ex.printStackTrace();
 				}
 				
 				//mark root key
@@ -300,14 +296,11 @@ public class Fig_Pizarra {
 				
 				//add to hash map
 				CreatedClusters.put(TN.getKey(), c);
-				
-				//update passed first round
-				PassedFirstRound = true;
 
 			}
 			
 			//update
-			CurrentBatch = Parents;
+			Children = Parents;
 		}
 
 		return CreatedClusters.get(RootKey);
