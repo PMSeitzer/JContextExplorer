@@ -85,6 +85,7 @@ public class Reagrupa {
 //		System.out.println(grups);
 	}
 
+	//				inRange
 	private boolean inRang(final double d) {
 		double max, min, val;
 		boolean enRango;
@@ -116,11 +117,17 @@ public class Reagrupa {
 		// introduim cada cluster en un grup, si dos clusters s'han de
 		// fusionar, aquest s'introduiran en un mateix grup, igual amb
 		// la resta de clusters que hi puguin exitir en el grup.
+		
+		// Enter each cluster in a group, if two clusters should
+		// fuse, introduced in the same group with the same
+		// other clusters that may have success in the group.
 		for (int i = 0; i < numElements; i++) {
 			// grup del cluster, si en te, si no null.
+			// cluster group, if any, otherwise null.
 			grupActual = new Integer(grups.get(i));
 
 			// l'element "i" el comparem amb tots els que te per sota.
+			// element "i" is compared to all those below it.
 			for (int inext = i + 1; inext < numElements; inext++) {
 				// inext = cluster proxim
 				dist = mdAct.getDistancia(v.get(i), v.get(inext));
@@ -351,10 +358,12 @@ public class Reagrupa {
 				lhm.put(mdAct.getCluster(i).hashCode(), mdAct.getCluster(i));
 			} else {
 				// s'afegeix el cluster al supercluster corresponent
+				// added to the cluster corresponding Supercluster
 				if (lhm.containsKey(id)) {
 					lhm.get(id).addCluster(mdAct.getCluster(i));
 				} else {
 					// en ell el primer cluster de l'agrupacio
+					// in fact the first cluster grouping
 					sc = new Cluster();
 
 					// alcada de l'agrupacio

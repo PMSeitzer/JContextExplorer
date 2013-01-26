@@ -22,10 +22,14 @@ import inicial.FesLog;
 import inicial.Language;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import newickTreeParsing.Tree;
 import newickTreeParsing.TreeNode;
 
 import parser.figures.Cercle;
@@ -50,6 +54,12 @@ import definicions.Coordenada;
 public class Fig_Pizarra {
 
 // ----- Fields -----------------------------------------------//
+	
+	
+	//New fields
+	private Tree ImportedNewickTree;
+	public Cluster ComputedRootCluster;
+	public Cluster DendrogramCluster;
 	
 	private static final int CERCLE = 0;
 	private static final int LINIA = 1;
@@ -87,12 +97,13 @@ public class Fig_Pizarra {
 		construeixMatriuUltrametrica(c);
 	}
 
-	//TODO: resolve this constructor
-	public Fig_Pizarra(final TreeNode tn, final Config cf) throws Exception {
+	public Fig_Pizarra(Tree ImportedNewickTree, final Config cf, Cluster DendrogramRootNode) throws Exception {
 		
 		//Convert the tree node into a cluster
-		Cluster c = new Cluster();
-		//TODO: figure out how to convert a cluster to a tree node.
+		this.ImportedNewickTree = ImportedNewickTree;
+		
+		//convert the tree to a cluster
+		Cluster c = ConvertTree2Cluster(ImportedNewickTree);
 		
 		//Usual cluster processing
 		abre = c;
@@ -107,8 +118,201 @@ public class Fig_Pizarra {
 		}
 		Branca(abre, cf.getConfigMenu().isFranjaVisible()); //branch
 		construeixMatriuUltrametrica(c);
+		
+		//save the value as a field.
+		this.ComputedRootCluster = c;
+		
+		System.out.println("Breakpoint!");
 	}
 	
+    void recursive_print (int currkey, int currdepth, Tree treeoflife) {
+        TreeNode currNode = treeoflife.getNodeByKey(currkey);
+        int numChildren = currNode.numberChildren();
+        for (int i = 0; i < numChildren; i++) {
+            int childkey = currNode.getChild(i).key;
+            TreeNode childnode = treeoflife.getNodeByKey(childkey);
+            System.out.println("child name is: " + childnode.getName()
+                                 + " depth is: " + currdepth);
+            recursive_print(childkey, currdepth+1, treeoflife);
+        }
+    }
+	
+	//method to convert between data types
+	private Cluster ConvertTree2Cluster(Tree T) {
+
+		//iterate through nodes, determine heights
+		boolean HasParent;
+		double TotalWeights;
+		double LongestJourney = 0;
+		int MaxHeight = 1;
+		
+		for (int i = 0; i < T.nodes.size(); i++){
+			//Retrieve Tree Node
+			TreeNode TN = T.getNodeByKey(i);
+
+			//re-initialize
+			if (TN.isRoot()){
+				HasParent = false;
+			} else {
+				HasParent = true;
+			}
+
+			TotalWeights = 0;
+			
+			//CN = Current Node, initially, this particular tree node TN
+			TreeNode CN = TN;
+			TreeNode PN;
+			
+			//Determine Height
+			while (HasParent){
+				PN = CN.parent();
+				if (PN != null){
+					TotalWeights = TotalWeights + CN.weight;
+					CN = PN;
+				} else {
+					HasParent = false;
+				}
+					
+			}
+			
+			//update total length
+			if (TotalWeights > LongestJourney){
+				LongestJourney = TotalWeights;
+			}
+			
+			//update max height
+			if (TN.height > MaxHeight){
+				MaxHeight = TN.height;
+			}
+		}
+		
+		for (int i = 0; i < T.nodes.size(); i++){
+			TreeNode TN = T.getNodeByKey(i);
+			
+			//re-initialize
+			if (TN.isRoot()){
+				HasParent = false;
+			} else {
+				HasParent = true;
+			}
+			
+			//CN = Current Node, initially, this particular tree node TN
+			TreeNode CN = TN;
+			TreeNode PN;
+			TotalWeights = 0;
+			
+			//Determine Height
+			while (HasParent){
+				PN = CN.parent();
+				if (PN != null){
+					TotalWeights = TotalWeights + CN.weight;
+					CN = PN;
+				} else {
+					HasParent = false;
+				}
+			}
+			
+			//update Alcada <height> value
+			TN.Alcada = 1 - (TotalWeights/LongestJourney);
+			
+		}
+
+		// Create intermediate cluster nodes at every step, starting from the leaf nodes.
+					//<Key,Value> = <ID, cluster>
+		LinkedHashMap<Integer,Cluster> CreatedClusters = new LinkedHashMap<Integer,Cluster>();
+		HashSet<TreeNode> CurrentBatch = new HashSet<TreeNode>();
+		int NodesReceived = 0;
+		int RootKey = 0;
+
+//		System.out.println("Before making the leaves.");		
+		
+		//recover all children
+		for (int i = 0; i <T.nodes.size(); i++){
+			TreeNode TN = T.getNodeByKey(i);
+			if (TN.isLeaf()){
+				
+				//update lists
+				CurrentBatch.add(TN);
+				NodesReceived++;
+				
+				//Initialize cluster info
+				Cluster c = new Cluster();
+				c.setAlcada(TN.Alcada);
+				c.setNom(TN.label);
+				c.setNado(false);
+				CreatedClusters.put(TN.getKey(), c);
+				if (TN.isRoot()){
+					RootKey = i;
+				}
+			}
+		}
+		
+//		System.out.println("Before the iterative cluster adding.");		
+		
+		boolean PassedFirstRound = false;
+		
+		//keep scanning, organizing, until not possible any more
+		while (NodesReceived < T.nodes.size()){
+			
+			//intialize parents
+			HashSet<TreeNode> Parents = new HashSet<TreeNode>();
+			
+			//add all parents
+			for (TreeNode TN : CurrentBatch){
+				Parents.add(TN.parent);
+			}
+			
+			//update counts
+			NodesReceived = NodesReceived + Parents.size();
+			
+			for (TreeNode TN : Parents){
+				
+				//Initialize cluster info for the parent
+				Cluster c = new Cluster();
+				c.setAlcada(TN.Alcada);
+				c.setNom(Integer.toString(TN.getKey()));
+				
+				if (PassedFirstRound){
+					c.setNado(true);
+				} else {
+					c.setNado(false);
+				}
+				
+				try {
+					
+					//find all children for each parent
+					for (TreeNode CN : CurrentBatch){
+						if (CN.parent.getKey() == TN.getKey()){
+							//System.out.println("parent: " + CN.parent + ", current:" + TN);
+							System.out.println("Family for " + c.getNom() + ": " + c.getFamily());
+							c.addCluster(CreatedClusters.get(CN.getKey()));
+						}
+					}
+					
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+				
+				//mark root key
+				if (TN.isRoot()){
+					RootKey = TN.getKey();
+				}
+				
+				//add to hash map
+				CreatedClusters.put(TN.getKey(), c);
+				
+				//update passed first round
+				PassedFirstRound = true;
+
+			}
+			
+			//update
+			CurrentBatch = Parents;
+		}
+
+		return CreatedClusters.get(RootKey);
+	}
+
 	//		Coordinates		   Leaf
 	private Coordenada<Double> Fulla(final Cluster c) {
 		double x;
@@ -157,7 +361,7 @@ public class Fig_Pizarra {
 			}
 
 			// store the group
-			if (franja) {
+			if (franja) { 		//strip
 				figura[Fig_Pizarra.MARGE].add(new Marge(min, c.getAlcada(),
 						aglo, (max - min), prec));
 //				FesLog.LOG.finer("Marge: (" + min + ", " + c.getAlcada() + ", "

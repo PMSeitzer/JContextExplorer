@@ -67,6 +67,7 @@ import moduls.frm.children.manageContextSetsv2;
 	import tipus.Orientation;
 	import tipus.metodo;
 	import tipus.tipusDades;
+import definicions.Cluster;
 	import definicions.Config;
 import definicions.MatriuDistancies;
 
@@ -1517,21 +1518,29 @@ import definicions.MatriuDistancies;
 				//OPTION: PHYLOGENY
 				if (qD.getAnalysesList().isOptionRenderPhylogeny()){
 					
-					//initialize panel
-					fPhylo = new FrmPhylo(fr, CSD);
-					
-					// Convert tree into figures
-					figPizarra = new Fig_Pizarra(fr.getPanPhyTreeMenu().getCurrentParsedTree().getRoot(), cfg);
-					
-					//add figures + configuration information to frame
-					fPhylo.setFigures(figPizarra.getFigures());
-					fPhylo.setConfig(cfg);
-					
-					//scroll panel
-					fPhyloSP = new JScrollPane(fPhylo);
+					//tree must be loaded 
+					if (fr.getPanPhyTreeMenu().getCurrentParsedTree() != null){
+						
+						//initialize panel
+						fPhylo = new FrmPhylo(fr, CSD, multiDendro.getArrel());
+						
+						// Convert tree into figures
+						figPizarra = new Fig_Pizarra(fr.getPanPhyTreeMenu().getCurrentParsedTree(), cfg, multiDendro.getArrel());
+						
+						//add figures + configuration information to frame
+						fPhylo.setFigures(figPizarra.getFigures());
+						fPhylo.setConfig(cfg);
+						
+						//scroll panel
+						fPhyloSP = new JScrollPane(fPhylo);
 
-					//update CSD with phylogenetic tree rectangles
-					CSD = fPhylo.getCSD();
+						//update CSD with phylogenetic tree rectangles
+						CSD = fPhylo.getCSD();
+						
+						//Cluster RootCluster = figPizarra.ComputedRootCluster;
+						
+					} 
+
 				}
 				
 				//INTERNAL FRAME DATA

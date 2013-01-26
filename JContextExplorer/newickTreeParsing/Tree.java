@@ -321,7 +321,7 @@ public class Tree {
 				nodesByName.remove(curr); // before all nodes with
 				// same name were being ignored in search and comparing two identically named
 				// leaves was broken, much fewer differences in trees with many leaves that
-				// have the same name (imagine: all index.html occurences being marked as
+				// have the same name (imagine: all index.html occurrences being marked as
 				// different since numbering convention doesn't string match the original node name)
 				curr.setName(name+ " " + index); //sb.toString());
 				nodesByName.put(name+ " " + index, curr);//sortedLeafArray[i].getName(), sortedLeafArray[i]); // add the node back with number convention

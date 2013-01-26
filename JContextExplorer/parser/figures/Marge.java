@@ -97,11 +97,11 @@ public class Marge extends Figura {
 		hh = MiMath
 				.Arodoneix(this.getPosReal().getY() + this.getAlcada(), prec);
 
-		FesLog.LOG.finest("Orientacio: " + or.toString());
-		FesLog.LOG.finest("Precisio: " + prec);
-		FesLog.LOG.finest("Coord. Real: x=" + xx1 + "    y=("
-				+ getPosReal().getY() + ") " + yy1 + "   aglom: ("
-				+ getAlcada() + ")  " + hh + "    ample= " + ww);
+//		FesLog.LOG.finest("Orientacio: " + or.toString());
+//		FesLog.LOG.finest("Precisio: " + prec);
+//		FesLog.LOG.finest("Coord. Real: x=" + xx1 + "    y=("
+//				+ getPosReal().getY() + ") " + yy1 + "   aglom: ("
+//				+ getAlcada() + ")  " + hh + "    ample= " + ww);
 
 		if (or == Orientation.EAST) {
 			y1 = yy1;
@@ -175,8 +175,8 @@ public class Marge extends Figura {
 			g.draw(new Rectangle2D.Double(x1, y1, w - x1, h - y1));
 		}
 
-		FesLog.LOG.finest("draw Rectangle2D(" + x1 + ", " + y1 + ", "
-				+ (w - x1) + ", " + (h - y1) + ")");
+//		FesLog.LOG.finest("draw Rectangle2D(" + x1 + ", " + y1 + ", "
+//				+ (w - x1) + ", " + (h - y1) + ")");
 
 		g.setColor(col_org);
 	}

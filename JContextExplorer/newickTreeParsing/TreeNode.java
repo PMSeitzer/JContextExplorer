@@ -368,4 +368,8 @@ public class TreeNode {
 	public Double getBcnScore() {
 		return bcnScore;
 	}
+
+	//NEW FIELDS!!
+	public double Alcada;		//'Alcada' value from cluster.alcada()
+	public boolean AddedtoClusterStructure;	//For help in the conversion between data types
 }

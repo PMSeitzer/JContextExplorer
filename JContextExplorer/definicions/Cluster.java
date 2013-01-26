@@ -215,4 +215,8 @@ public class Cluster {
 	public double getBase() {
 		return base;
 	}
+
+	public void setNado(boolean nado) {
+		this.nado = nado;
+	}
 }
