@@ -46,7 +46,7 @@ public class Config {
 
 	private MatriuDistancies md = null;
 	private Hashtable<Integer, String> htNoms;
-	private final CfgPanelMenu cfgMenu;
+	private CfgPanelMenu cfgMenu;
 	private JInternalFrame pizarra;
 	private FitxerDades fitx;
 	private double radi = 5.0;
@@ -66,6 +66,10 @@ public class Config {
 
 	public CfgPanelMenu getConfigMenu() {
 		return this.cfgMenu;
+	}
+	
+	public void setConfigMenu(CfgPanelMenu cfgMenu){
+		this.cfgMenu = cfgMenu;
 	}
 
 	public void setFitxerDades(final FitxerDades fd) {
@@ -136,7 +140,7 @@ public class Config {
 	public void setRadi(final double radi) {
 		this.radi = radi;
 	}
-
+	
 	public double getValorMaxim() {
 		return cfgMenu.getValMax();
 	}
@@ -179,6 +183,14 @@ public class Config {
 
 	public void setHtNoms(final Hashtable<Integer, String> htNoms) {
 		this.htNoms = htNoms;
+	}
+
+	public double getVal_max_origen() {
+		return val_max_origen;
+	}
+
+	public void setVal_max_origen(double val_max_origen) {
+		this.val_max_origen = val_max_origen;
 	}
 
 }

@@ -103,7 +103,9 @@ public class FrmPrincipalDesk extends JFrame{
 	
 	private final Jpan_genome panGenome; // genome-viewing frame
 
-	private Config cfg;
+	private Config cfg; 	//context trees
+	private Config cfgPhylo;	//phylo trees
+	
 	//private JInternalFrame currentFpiz; //internal frame that contains tree pane
 	private FrmInternalFrame currentFpiz;
 	
@@ -492,6 +494,43 @@ public class FrmPrincipalDesk extends JFrame{
 
 	public Jpan_PhyTreeMenu getPanPhyTreeMenu() {
 		return panPhyTreeMenu;
+	}
+
+	//try to return a phylo config, if possible
+	public Config getCfgPhylo() {
+		try {
+			return cfgPhylo;
+		} catch (Exception ex){
+			cfgPhylo = new Config(Jpan_Menu.getCfgPanel());
+			//System.out.println("made a config");
+			
+			//problem 11-
+			try {
+				cfgPhylo.setMatriu(panBtn.getMatriu());
+			} catch (Exception ex2) {}
+
+			//System.out.println("set matrix");
+			if (cfgPhylo.getValorMaxim() == 0) {
+				cfgPhylo.getConfigMenu().setValMax(cfgPhylo.getCimDendograma());
+				//System.out.println("set valmax");
+			}
+			
+			return cfgPhylo;
+		}
+		
+
+	}
+
+	public void setCfgPhylo(Config cfgPhylo) {
+		this.cfgPhylo = cfgPhylo;
+	}
+
+	public Config getCfg() {
+		return cfg;
+	}
+
+	public void setCfg(Config cfg) {
+		this.cfg = cfg;
 	}
 
 }

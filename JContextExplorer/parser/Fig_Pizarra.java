@@ -18,13 +18,12 @@
 
 package parser;
 
-import inicial.FesLog;
 import inicial.Language;
 
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -57,9 +56,9 @@ public class Fig_Pizarra {
 	
 	
 	//New fields
-	private Tree ImportedNewickTree;
 	public Cluster ComputedRootCluster;
 	public Cluster DendrogramCluster;
+	private double LongestBranch = 0.0;
 	
 	private static final int CERCLE = 0;
 	private static final int LINIA = 1;
@@ -97,10 +96,7 @@ public class Fig_Pizarra {
 		construeixMatriuUltrametrica(c);
 	}
 
-	public Fig_Pizarra(Tree ImportedNewickTree, final Config cf, Cluster DendrogramRootNode) throws Exception {
-		
-		//Convert the tree node into a cluster
-		this.ImportedNewickTree = ImportedNewickTree;
+	public Fig_Pizarra(Tree ImportedNewickTree, final Config cf) throws Exception {
 		
 		//convert the tree to a cluster
 		Cluster c = ConvertTree2Cluster(ImportedNewickTree);
@@ -108,6 +104,7 @@ public class Fig_Pizarra {
 		//Usual cluster processing
 		abre = c;
 		val_Max_show = cf.getValorMaxim();
+		//val_Max_show = 1.0;
 		radi = cf.getRadi();
 		Fig_Pizarra.tip = cf.getTipusMatriu();
 		prec = cf.getPrecision();
@@ -123,18 +120,6 @@ public class Fig_Pizarra {
 		this.ComputedRootCluster = c;
 
 	}
-	
-    void recursive_print (int currkey, int currdepth, Tree treeoflife) {
-        TreeNode currNode = treeoflife.getNodeByKey(currkey);
-        int numChildren = currNode.numberChildren();
-        for (int i = 0; i < numChildren; i++) {
-            int childkey = currNode.getChild(i).key;
-            TreeNode childnode = treeoflife.getNodeByKey(childkey);
-            System.out.println("child name is: " + childnode.getName()
-                                 + " depth is: " + currdepth);
-            recursive_print(childkey, currdepth+1, treeoflife);
-        }
-    }
 	
 	//method to convert between data types
 	private Cluster ConvertTree2Cluster(Tree T) {
@@ -185,6 +170,9 @@ public class Fig_Pizarra {
 			}
 		}
 		
+		//update longest branch
+		this.LongestBranch = LongestJourney;
+		
 		for (int i = 0; i < T.nodes.size(); i++){
 			TreeNode TN = T.getNodeByKey(i);
 			
@@ -212,7 +200,8 @@ public class Fig_Pizarra {
 			}
 			
 			//update Alcada <height> value
-			TN.Alcada = 1 - (TotalWeights/LongestJourney);
+			//TN.Alcada = 1 - (TotalWeights/LongestJourney);
+			TN.Alcada = LongestBranch - TotalWeights;
 			
 		}
 
@@ -399,21 +388,7 @@ public class Fig_Pizarra {
 		for (int i = 0; i < lNoms.size(); i++) {
 			htNoms.put(lNoms.get(i), i); // 'a'->0, 'b'->1, ...
 			noms[i] = lNoms.get(i);
-			
-			
-			//messing with the stuff below doesn't do much
-//			System.out.println(noms[i]);
-//			if (i == 3){
-//				noms[i] = "jooky!";
-//			}
-//			System.out.println((i+1) + ": " + noms[i]);
-			
-			/*
-			 * this print statement displays the names in 
-			 * the order they were written in the file.
-			 */
-			//System.out.println(noms[i]);
-			
+
 		}
 
 		ompleMatriuUltrametrica(c);
@@ -462,6 +437,25 @@ public class Fig_Pizarra {
 
 	public LinkedList[] getFigures() {
 		return figura;
+	}
+
+	public Hashtable<Integer, String> getHtNoms() {
+		// Need to switch arguments for output
+		Hashtable<Integer, String> HtNomsSwitched = new Hashtable<Integer, String>();
+		Enumeration Names = htNoms.keys();
+		while (Names.hasMoreElements()){
+			String Key = (String) Names.nextElement();
+			HtNomsSwitched.put(htNoms.get(Key),Key);
+		}
+		return HtNomsSwitched;
+	}
+
+	public double getLongestBranch() {
+		return LongestBranch;
+	}
+
+	public void setLongestBranch(double longestBranch) {
+		LongestBranch = longestBranch;
 	}
 
 }

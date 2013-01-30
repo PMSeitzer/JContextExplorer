@@ -234,4 +234,8 @@ public class MatriuDistancies {
 		return tipDades.equals(tipusDades.DISTANCIA);
 	}
 
+	public void setArrel(Cluster c) {
+		arrClusters.add(0,c);
+	}
+
 }

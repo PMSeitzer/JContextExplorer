@@ -141,7 +141,6 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 	 */
 	private double val_Max_show;
 	private double val_Min_show;
-
 	
 	//private Orientation orientacioClusters = Orientation.NORTH;
 	private Orientation orientacioClusters = Orientation.EAST;
@@ -184,7 +183,7 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 		this.frmpiz = this;
 		 
 //		System.out.println("Step 7");
-		//System.out.println("val_Max_show is :" + val_Max_show);
+		System.out.println("val_Max_show is :" + val_Max_show);
 	}
 	
 	private void initComponentsMenu() {
@@ -349,7 +348,7 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 			super.processMouseEvent(evt);
 	}
 
-	public void setConfig(final Config cfg) {
+	public void setConfig(Config cfg) {
 		this.cfg = cfg;
 
 		radi = cfg.getRadi();
@@ -359,8 +358,7 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 
 		val_Max_show = cfg.getValorMaxim();
 		val_Min_show = cfg.getValorMinim();
-		
-		//System.out.println("val_Max_show after Config is:" + val_Max_show);
+
 	}
 
 	public void setFigures(final LinkedList[] lst) {
@@ -495,32 +493,11 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 	@Override
 	public void paint(Graphics arg0) {
 
-//		super.paint(arg0);
-//		Graphics2D g2d = (Graphics2D) arg0;
-//		this.g = g2d;
-//		this.draftDendo(g);
-//		
-//		//restore values from action events
-//		if (this.getSelectedNodeNumbers() != null){
-//		
-//		//retrieve node numbers to check
-//		//boolean[] CheckNodeNumbers = this.CSD.getSelectedNodes();
-//		boolean[] CheckNodeNumbers = this.getSelectedNodeNumbers();
-//			
-//		//paint appropriate nodenumbers
-//		for (int i = 0; i < CheckNodeNumbers.length; i++)
-//			if (CheckNodeNumbers[i] == true){
-//				//System.out.println("repaint " + i + ": " + CheckNodeNumbers[i]);
-//				g.setPaint(Color.RED);
-//				g.draw(RectanglesSurroundingLabels[i]);
-//			} 
-//		}
-//		
-////		//draw selection box
-////		if (this.isMousePressed == true){
-////			g.setPaint(Color.BLUE);
-////			g.fill(SelectionRectangle);
-////		}
+		//update painting?
+		//this.setConfig(frm.getCfg());
+		
+		//parameters
+		//System.out.println("FrmPiz.paint(): valmax = " + val_Max_show);
 		
 		//basic painting parameters
 		super.paint(arg0);
@@ -536,15 +513,9 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 			} 
 		}
 		
+		//reset color
 		g.setPaint(Color.BLACK);
-		
-//		//draw selection box
-//		if (this.isMousePressed == true){
-//			g.setPaint(Color.BLUE);
-//			g.fill(SelectionRectangle);
-//		}
-		
-		
+
 	}
 
 	//render the image, using info and calling this.draftDendo()
@@ -617,6 +588,8 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 		final XYBox posbox = new XYBox(cfg, inset_Mon, HorizontalRenderScaleFactor*width_Mon, 
 				VerticalRenderScaleFactor*height_Mon,
 				m_d, m_b, m_n, m_e, m_l);
+		
+		//System.out.println("FrmPiz() scale height,width: " + m_e.getHeight() + "," + m_e.getWidth());
 		
 		// define the box
 		boxDendograma = posbox.getBoxDendo();
@@ -752,6 +725,8 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 			esc.dibuixa(g2d, orientacioClusters, cfg.getTipusMatriu(),
 					cfg.getTics());
 		}
+		
+		//System.out.println("FrmPiz.draftdendo():" + boxEscala.getVal_max_X());
 		
 		//show numerical scale labels
 		if (cfg.getConfigMenu().isEtiquetaEscalaVisible() && cfg.getTics() > 0) { 

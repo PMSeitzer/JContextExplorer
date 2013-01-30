@@ -68,7 +68,7 @@ public class CfgPanelMenu {
 	private boolean escalaVisible = true;
 	private Color colorEix = Color.BLACK;
 	private double valMin = 0.0;
-	private double valMax = 1.0;
+	private double valMax = 0.0;
 	private double increment = 0.1;
 	private boolean etiquetaEscalaVisible = true;
 	private Font fontLabels;

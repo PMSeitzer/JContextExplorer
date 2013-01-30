@@ -94,6 +94,10 @@ public class Cluster {
 		else
 			return fills;
 	}
+	
+	public void setFills(int Leaves){
+		fills = Leaves;
+	}
 
 	public Integer getId() {
 		return id;

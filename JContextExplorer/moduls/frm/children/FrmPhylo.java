@@ -1,6 +1,14 @@
 package moduls.frm.children;
 
+import inicial.Parametres_Inicials;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
@@ -8,208 +16,488 @@ import genomeObjects.CSDisplayData;
 
 import javax.swing.JPanel;
 
+import definicions.BoxContainer;
 import definicions.Cluster;
+import definicions.Config;
+import definicions.Dimensions;
 
+import parser.EscalaFigures;
+import parser.EscaladoBox;
 import parser.Fig_Pizarra;
+import parser.figures.Cercle;
+import parser.figures.Escala;
+import parser.figures.Linia;
+import parser.figures.Marge;
+import parser.figures.NomsDendo;
+import parser.figures.NomsLabelsEscala;
+import tipus.Orientation;
+import tipus.rotacioNoms;
+import utils.BoxFont;
 
 import newickTreeParsing.Tree;
 import newickTreeParsing.TreeNode;
 
+import moduls.frm.ContextLeaf;
 import moduls.frm.FrmPrincipalDesk;
+import moduls.frm.XYBox;
 
-public class FrmPhylo extends FrmPiz{
+public class FrmPhylo extends JPanel{
 
 	//fields
+	//baseline
 	private FrmPrincipalDesk fr;
 	private CSDisplayData CSD;
-	private Tree PhyloTree;
-	public Cluster ComputedRootCluster;
+	
+	// =========== Borrowed from FrmPiz ===================/
+	// ---- Drawing -----
+	// Conversion of tree -> figures
+	private LinkedList<?>[] figures = { new LinkedList<Cercle>(),
+			new LinkedList<Linia>(), new LinkedList<Marge>() };
+	private static final int CERCLE = 0;
+	private static final int LINIA = 1;
+	private static final int MARGE = 2;
+	
+	//Drawing / painting related
+	private Graphics2D g;
+	
+	// ----- Configurataion + Parmaeters ---------//
+	//Configuration related
+	private Config cfg = null;
+	private double radi;
+	private int numClusters;
+	private Orientation orientacioClusters = Orientation.EAST;
+	private rotacioNoms orientacioNoms = rotacioNoms.HORITZ;
+	
+	//Component Sizes
+	private double val_Max_show;		//size to show
+	private double val_Min_show;
+	double width_dendograma = 0.0;		//dendrogram sizes
+	double height_dendograma = 0.0;
+	double width_escala = 0.0;			//scale sizes
+	double height_escala = 0.0;
+	double height_butlles = 0.0;		//circle sizes
+	double width_butlles = 0.0;
+	double width_lbl_escala = 0.0;		//scale label
+	double height_lbl_escala = 0.0;
+	double width_nom_nodes = 0.0;		//Node names
+	double height_nom_nodes = 0.0;
+	private String max_s = "";
+	private double VerticalRenderScaleFactor = 1.0;		//JPanel stretching parameters
+	private double HorizontalRenderScaleFactor = 1.0;
+	
+	//Scale boxes (for graphical rendering)
+	private EscaladoBox parserDendograma = null;
+	private EscaladoBox parserBulles = null;
+	private EscaladoBox parserEscala = null;
+	private EscaladoBox parserNoms = null;
+	private EscaladoBox parserLbl = null;
 	
 	//constructor
-	public FrmPhylo(FrmPrincipalDesk f, CSDisplayData CSD, Cluster root){
-		super(f, CSD);
+	public FrmPhylo(FrmPrincipalDesk f, CSDisplayData CSD){
 		this.fr = f;
 		this.CSD = CSD;
-
-//		
-//		//Retrieve tree from main menu
-//		PhyloTree = fr.getPanPhyTreeMenu().getCurrentParsedTree();
-//		Tree PhyTree = PhyloTree;
-//		TreeNode RootNode = PhyloTree.getRoot();
-//		
-//		//iterate through nodes, determine heights
-//		Tree T = PhyloTree;
-//		boolean HasParent;
-//		double TotalWeights;
-//		double LongestJourney = 0;
-//		int MaxHeight = 1;
-//		
-//		for (int i = 0; i < T.nodes.size(); i++){
-//			//Retrieve Tree Node
-//			TreeNode TN = T.getNodeByKey(i);
-//
-//			//re-initialize
-//			if (TN.isRoot()){
-//				HasParent = false;
-//			} else {
-//				HasParent = true;
-//			}
-//
-//			TotalWeights = 0;
-//			
-//			//CN = Current Node, initially, this particular tree node TN
-//			TreeNode CN = TN;
-//			TreeNode PN;
-//			
-//			//Determine Height
-//			while (HasParent){
-//				PN = CN.parent();
-//				if (PN != null){
-//					TotalWeights = TotalWeights + CN.weight;
-//					CN = PN;
-//				} else {
-//					HasParent = false;
-//				}
-//					
-//			}
-//			
-//			//update total length
-//			if (TotalWeights > LongestJourney){
-//				LongestJourney = TotalWeights;
-//			}
-//			
-//			//update max height
-//			if (TN.height > MaxHeight){
-//				MaxHeight = TN.height;
-//			}
-//		}
-//		
-//		for (int i = 0; i < T.nodes.size(); i++){
-//			TreeNode TN = T.getNodeByKey(i);
-//			
-//			//re-initialize
-//			if (TN.isRoot()){
-//				HasParent = false;
-//			} else {
-//				HasParent = true;
-//			}
-//			
-//			//CN = Current Node, initially, this particular tree node TN
-//			TreeNode CN = TN;
-//			TreeNode PN;
-//			TotalWeights = 0;
-//			
-//			//Determine Height
-//			while (HasParent){
-//				PN = CN.parent();
-//				if (PN != null){
-//					TotalWeights = TotalWeights + CN.weight;
-//					CN = PN;
-//				} else {
-//					HasParent = false;
-//				}
-//			}
-//			
-//			//update Alcada <height> value
-//			TN.Alcada = 1 - (TotalWeights/LongestJourney);
-//			
-////			//display
-////			System.out.println("Node " + i  + ": " + TN.label + ": (" + i + " @ " + TN.height +") " + "Alcada: " + TN.Alcada);
-////			
-//		}
-//
-//		// Create intermediate cluster nodes at every step, starting from the leaf nodes.
-//					//<Key,Value> = <ID, cluster>
-//		LinkedHashMap<Integer,Cluster> CreatedClusters = new LinkedHashMap<Integer,Cluster>();
-//		HashSet<TreeNode> CurrentBatch = new HashSet<TreeNode>();
-//		int NodesReceived = 0;
-//		int RootKey = 0;
-//
-//		System.out.println("Before making the leaves.");		
-//		
-//		//recover all children
-//		for (int i = 0; i <T.nodes.size(); i++){
-//			TreeNode TN = T.getNodeByKey(i);
-//			if (TN.isLeaf()){
-//				
-//				//update lists
-//				CurrentBatch.add(TN);
-//				NodesReceived++;
-//				
-//				//Initialize cluster info
-//				Cluster c = new Cluster();
-//				c.setAlcada(TN.Alcada);
-//				c.setNom(TN.label);
-//				CreatedClusters.put(i, c);
-//				if (TN.isRoot()){
-//					RootKey = i;
-//				}
-//			}
-//		}
-//		
-//		System.out.println("Before the iterative cluster adding.");		
-//		
-//		//keep scanning, organizing, until not possible any more
-//		while (NodesReceived < T.nodes.size()){
-//			
-//			//intialize parents
-//			HashSet<TreeNode> Parents = new HashSet<TreeNode>();
-//			
-//			//add all parents
-//			for (TreeNode TN : CurrentBatch){
-//				Parents.add(TN.parent);
-//			}
-//			
-//			//update counts
-//			NodesReceived = NodesReceived + Parents.size();
-//			
-//			for (TreeNode TN : Parents){
-//				
-//				//Initialize cluster info for the parent
-//				Cluster c = new Cluster();
-//				c.setAlcada(TN.Alcada);
-//				c.setNom(TN.label);
-//				
-//				try {
-//					
-//					//find all children for each parent
-//					for (TreeNode CN : CurrentBatch){
-//						if (CN.parent.getKey() == TN.getKey()){
-//							System.out.println("parent: " + CN.parent + ", current:" + TN);
-//							c.addCluster(CreatedClusters.get(CN.getKey()));
-//						}
-//					}
-//					
-//				} catch (Exception ex) {
-//					ex.printStackTrace();
-//				}
-//				
-//				//mark root key
-//				if (TN.isRoot()){
-//					RootKey = TN.getKey();
-//				}
-//				
-//				//add to hash map
-//				CreatedClusters.put(TN.getKey(), c);
-//
-//			}
-//			
-//			//update
-//			CurrentBatch = Parents;
-//		}
-//
-//		Cluster RootCluster = CreatedClusters.get(RootKey);
-//		
-//		System.out.println("Break!");
+		
 	}
 
-	public LinkedList[] GenerateFiguresFromTree(){
-		LinkedList[] Figures = null;
-		
-
-		
-		return Figures;
+	// ------------- Methods from FrmPiz -------------- //
+	//====== Configuration/Setting - type methods =====//
+	
+	//Figure import and parsing + configuration related
+	public void setFigures(final LinkedList[] lst) {
+		this.setFigura(lst);
 	}
+	public void setFigura(LinkedList figura[]) {
+		this.figures = figura;
+	}
+	public LinkedList[] getFigura() {
+		return figures;
+	}
+	public void setConfig(Config cfg) {
+		this.cfg = cfg;
+
+		radi = cfg.getRadi();
+		numClusters = fr.getPanBtn().getPhyloTreeLeaves();
+		orientacioClusters = cfg.getOrientacioDendo();
+		orientacioNoms = cfg.getOrientacioNoms();
+
+		//old way
+		val_Max_show = cfg.getValorMaxim();
+		val_Min_show = cfg.getValorMinim();
+
+//		//new way!
+//		val_Max_show = fr.getPanBtn().val_Max_show_Phylo;
+//		val_Min_show = 0;
+
+	}
+	
+	//====== Drawing Methods =========================//
+
+	//Set all size parameters for all dendrogram objects.
+	private void setAmplades(Graphics2D g) {
+		final Orientation or = cfg.getOrientacioDendo();
+
+		/* dendrogram */
+		if (Orientation.NORTH.equals(or) || Orientation.SOUTH.equals(or)) {
+			width_dendograma = this.AmpladaBoxClusters();
+			height_dendograma = val_Max_show - val_Min_show;
+		} else {
+			width_dendograma = val_Max_show - val_Min_show;
+			//width_dendograma = 400; //no effect
+			height_dendograma = this.AmpladaBoxClusters();
+		}
+
+		/* show the scale */
+		if (cfg.getConfigMenu().isEscalaVisible()) {
+			/* size of the scale */
+			if (Orientation.NORTH.equals(or) || Orientation.SOUTH.equals(or)) {
+				width_escala = 2 * radi; // east and west
+				height_escala = val_Max_show - val_Min_show;
+			} else {
+				height_escala = 2 * radi; // north and south
+				width_escala = val_Max_show - val_Min_show;
+				//Reading width = 1.0, height = 10.0
+				//System.out.println("Width: " + width_escala + " Height: " + height_escala);
+			}
+		} else {
+			width_escala = 0;
+			height_escala = 0;
+		}
+
+		/*
+		 * Comments:
+		 * commenting out this whole section removes bullets, but changing the size
+		 * of rr or the quantities of rr doesn't chage anything.
+		 */
+		/* show the bullets */ //rr = node size
+		double rr = cfg.getConfigMenu().getRadiBullets();
+		//System.out.println("rr is " + rr);
+		if ((rr = cfg.getConfigMenu().getRadiBullets()) > 0) {
+			if (Orientation.NORTH.equals(or) || Orientation.SOUTH.equals(or)) {
+				width_butlles = this.AmpladaBoxClusters();
+				height_butlles = 2 * rr;
+			} else {
+				width_butlles = 2 * rr;
+				height_butlles = 2*this.AmpladaBoxClusters();
+			}
+		} else {
+			width_butlles = 0;
+			height_butlles = 0;
+		}
+		
+		/* show the labels of the scale */
+		if (cfg.getConfigMenu().isEtiquetaEscalaVisible()) {
+			final BoxFont bf = new BoxFont(cfg.getConfigMenu().getFontLabels());
+			String txt;
+			int ent;
+			Dimensions<Double> dim;
+			ent = (int) Math.round(val_Max_show);
+			txt = Integer.toString(ent);
+			if (Orientation.EAST.equals(or) || Orientation.WEST.equals(or)) {
+				if (cfg.isTipusDistancia()) {
+					dim = bf.getBoxNumberNatural(90, (txt.trim()).length(),
+							cfg.getAxisDecimals());
+				} else {
+					dim = bf.getBoxNumberEnters(90, (txt.trim()).length(),
+							cfg.getAxisDecimals());
+				}
+			} else {
+				if (cfg.isTipusDistancia()) {
+					dim = bf.getBoxNumberNatural(0, (txt.trim()).length(),
+							cfg.getAxisDecimals());
+				} else {
+					dim = bf.getBoxNumberEnters(0, (txt.trim()).length(),
+							cfg.getAxisDecimals());
+				}
+			}
+			width_lbl_escala = dim.getWidth();
+			height_lbl_escala = dim.getHeight();
+		} else {
+			width_lbl_escala = 0;
+			height_lbl_escala = 0;
+		}
+
+		/* names of the bullets */
+		if (cfg.getConfigMenu().isNomsVisibles()) {
+			int alf;
+			final BoxFont bf = new BoxFont(cfg.getConfigMenu().getFontNoms());
+			String tmp;
+			Dimensions<Double> dim;
+
+			/* width of names of the bullets */
+			if (cfg.getOrientacioNoms().equals(rotacioNoms.HORITZ))
+				alf = 0;
+			else if (cfg.getOrientacioNoms().equals(rotacioNoms.INCLINAT))
+				alf = 45;
+			else
+				alf = -90;
+			if (max_s.equals("")) {
+				final Enumeration<String> el = cfg.getHtNoms().elements();
+				while (el.hasMoreElements()) {
+					tmp = el.nextElement();
+					if (tmp.length() > max_s.length())
+						max_s = tmp;
+				}
+			}
+			dim = bf.getBox(alf, max_s);
+
+			width_nom_nodes = dim.getWidth();
+			height_nom_nodes = dim.getHeight();
+		} else {
+			width_nom_nodes = 0;
+			height_nom_nodes = 0;
+		}
+	}
+
+	//determine a box of coordinates to contain all objects.
+	private void DesplacaPantalla(final BoxContainer b, final double h_mon) {
+		double h;
+		h = h_mon - b.getCorner_y();
+		b.setCorner_y(-h);
+	}
+	
+	private double AmpladaBoxClusters() {
+		return ((2 * radi * numClusters) + ((numClusters - 1) * radi));
+	}
+	
+	private void draftDendo(Graphics2D g2d) {
+		//boxes (on the screen) defining coordinates for rendering
+		BoxContainer boxDendograma, boxBulles, boxEscala, boxEscalalbl, boxNoms;
+
+		//Set a preference for the rendering algorithms.
+		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_ON);
+
+		/* Symmetric frame where it won't be able to paint anything */
+		final double inset_Mon = Parametres_Inicials.getMarco();// 15
+
+		/* World size */
+		final double width_Mon = this.getSize().getWidth();
+		final double height_Mon = this.getSize().getHeight();
+
+		// set widths ---?
+		this.setAmplades(g2d);
+
+		// size of the box
+		Dimensions<Double> m_d, m_b, m_n, m_e, m_l;
+
+		m_d = new Dimensions<Double>(width_dendograma, height_dendograma);
+		
+									// 		bullets?
+		m_b = new Dimensions<Double>(width_butlles, height_butlles);
+		m_n = new Dimensions<Double>(width_nom_nodes, height_nom_nodes);
+		m_e = new Dimensions<Double>(width_escala, height_escala);
+		m_l = new Dimensions<Double>(width_lbl_escala, height_lbl_escala);
+
+		/* Calculates the free space and places the box on the screen */
+//		final XYBox posbox = new XYBox(cfg, inset_Mon, width_Mon, height_Mon,
+//				m_d, m_b, m_n, m_e, m_l);
+
+		/*
+		 * messing with these parameters affects how the dendogram info is displayed.
+		 * 
+		 * width_Mon = width of the dendogram figure + labels within the frame
+		 * height_Mon = height ''
+		 * inset_Mon = size of border around figure
+		 * m_* describe the dimensions (width and height) of different quantities
+		 * 
+		 */
+
+		//m_n = new Dimensions<Double>(width_nom_nodes, 10*height_nom_nodes);
+
+		//Added render scale factors render the vertical spacing between objects accurately.
+		final XYBox posbox = new XYBox(cfg, inset_Mon, HorizontalRenderScaleFactor*width_Mon, 
+				VerticalRenderScaleFactor*height_Mon,
+				m_d, m_b, m_n, m_e, m_l);
+		
+		//System.out.println("FrmPhylo() scale height,width: " + m_e.getHeight() + "," + m_e.getWidth());
+		
+		// define the box
+		boxDendograma = posbox.getBoxDendo();
+		boxBulles = posbox.getBoxBulles();
+		boxEscala = posbox.getBoxEscala();
+		boxEscalalbl = posbox.getBoxLabelsEscala();
+		boxNoms = posbox.getBoxNames();
+		
+		//System.out.println("boxNoms at" + boxNoms.getVal_min_X() + " by " + boxNoms.getVal_min_Y());
+		// locate on screen
+		// 'DesplacaPantalla' = scroll screen
+				
+		//   move box
+		this.DesplacaPantalla(boxDendograma, height_Mon);
+		this.DesplacaPantalla(boxBulles, height_Mon);
+		this.DesplacaPantalla(boxEscala, height_Mon);
+		this.DesplacaPantalla(boxEscalalbl, height_Mon);
+		this.DesplacaPantalla(boxNoms, height_Mon);
+
+		// reverse the axis of growth
+		g2d.scale(1, -1);
+		g2d.setBackground(Color.GREEN);
+
+		/*
+		 * calculates the factor that allows coordinates to world coordinates screen
+		 */
+		parserDendograma = new EscaladoBox(boxDendograma);
+		if (cfg.getConfigMenu().getRadiBullets() > 0)
+			parserBulles = new EscaladoBox(boxBulles);
+		if (cfg.getConfigMenu().isNomsVisibles())
+			parserNoms = new EscaladoBox(boxNoms);
+		if (cfg.getConfigMenu().isEscalaVisible())
+			parserEscala = new EscaladoBox(boxEscala);
+		if (cfg.getConfigMenu().isEtiquetaEscalaVisible())
+			parserLbl = new EscaladoBox(boxEscalalbl);
+
+//		System.out.println("FrmPhylo.parserLbl: " + parserLbl);
+//		System.out.println("FrmPhylo.parserEscala: " + parserEscala);
+//		
+		// range and  data type to represent
+		//EDIT!!!!!!!!!
+		
+		final EscalaFigures ef = new EscalaFigures(val_Max_show, 
+				val_Min_show,
+				cfg.getTipusMatriu(), cfg.getPrecision());
+
+		Marge m; //margin
+		final Iterator<Marge> itm = ef.ParserMarge(getFigura()[MARGE])
+				.iterator();
+		while (itm.hasNext()) {
+			m = itm.next();
+			m.setEscala(parserDendograma);
+			m.setColor(cfg.getConfigMenu().getColorMarge());
+			m.setFilled(true);
+			m.dibuixa(g2d, orientacioClusters); //draw
+		}
+
+		Linia lin;
+		final Iterator<Linia> it = ef.ParserLinies(getFigura()[LINIA])
+				.iterator();
+		while (it.hasNext()) {
+			lin = it.next();
+			lin.setEscala(parserDendograma);
+			lin.dibuixa(g2d, orientacioClusters);
+		}
+
+		final Iterator<Marge> itm2 = ef.ParserMarge(getFigura()[MARGE])
+				.iterator();
+		while (itm2.hasNext()) {
+			m = itm2.next();
+			m.setEscala(parserDendograma);
+			m.setColor(cfg.getConfigMenu().getColorMarge());
+			m.setFilled(false);
+			m.dibuixa(g2d, orientacioClusters);
+		}
+
+		// --- show things ------------------------------------------------//
+		
+		//show nodes (bullets)
+		if (cfg.getConfigMenu().getRadiBullets() > 0) { 
+			final Iterator<Cercle> itc = getFigura()[CERCLE].iterator();
+			while (itc.hasNext()) {
+				final Cercle cer = itc.next();
+				cer.setEscala(parserBulles);
+				cer.dibuixa(g2d, orientacioClusters);
+			}
+		}
+
+		//show names of nodes
+		if (cfg.getConfigMenu().isNomsVisibles()) { 
+			NomsDendo nomsD;
+			nomsD = new NomsDendo(getFigura()[CERCLE], cfg.getTipusMatriu());
+			nomsD.setEscala(parserNoms);
+			nomsD.setColor(cfg.getConfigMenu().getColorNoms());
+			nomsD.setFont(cfg.getConfigMenu().getFontNoms());
+			nomsD.dibuixa(g2d, orientacioClusters, orientacioNoms);
+			
+			//retrieve rectangles from names
+			//this.setRectanglesSurroundingLabels(nomsD.getRectangles());
+			
+			//Map info to contexts
+			CSD.setCoordinates(nomsD.getRectangles());
+			CSD.setNodeNames(nomsD.getNodeNames());
+			
+			//write data to graphical contexts
+			for (ContextLeaf CL : CSD.getGraphicalContexts()){
+				for (int i = 0; i < CSD.getNodeNames().length; i++){
+					if (CL.getName().equals(CSD.getNodeNames()[i])){
+						CL.setContextGraphCoordinates(CSD.getCoordinates()[i]);
+						break;
+					}
+				}
+			}
+			
+//			//initialize all nodes as unselected
+//			boolean[] InitialNodeNumbers = new boolean[RectanglesSurroundingLabels.length];
+//			Arrays.fill(InitialNodeNumbers, Boolean.FALSE);
+//			this.setSelectedNodeNumbers(InitialNodeNumbers);
+		}
+
+		// show scale
+		if (cfg.getConfigMenu().isEscalaVisible()) {
+			Escala esc;
+			if (orientacioClusters.equals(Orientation.WEST)
+					|| orientacioClusters.equals(Orientation.EAST))
+				esc = new Escala(boxEscala.getVal_min_X(),
+						boxEscala.getVal_max_X(), cfg.getIncrement(),
+						cfg.getTics());
+			else
+				esc = new Escala(boxEscala.getVal_min_Y(),
+						boxEscala.getVal_max_Y(), cfg.getIncrement(),
+						cfg.getTics());
+
+			esc.setEscala(parserEscala);
+			esc.setColor(cfg.getConfigMenu().getColorEix());
+			esc.dibuixa(g2d, orientacioClusters, cfg.getTipusMatriu(),
+					cfg.getTics());
+		}
+		
+		//System.out.println("FrmPhylo.draftdendo():" + boxEscala.getVal_max_X());
+		
+		//show numerical scale labels
+		if (cfg.getConfigMenu().isEtiquetaEscalaVisible() && cfg.getTics() > 0) { 
+																																						
+			NomsLabelsEscala nomsEsc;
+			if (orientacioClusters.equals(Orientation.WEST)
+					|| orientacioClusters.equals(Orientation.EAST)) {
+				nomsEsc = new NomsLabelsEscala(boxEscalalbl.getVal_min_X(),
+						boxEscalalbl.getVal_max_X(),
+						boxEscalalbl.getVal_max_Y(), cfg.getIncrement(),
+						cfg.getTics(), cfg.getAxisDecimals());
+			} else {
+				nomsEsc = new NomsLabelsEscala(boxEscalalbl.getVal_min_Y(),
+						boxEscalalbl.getVal_max_Y(),
+						boxEscalalbl.getVal_max_X(), cfg.getIncrement(),
+						cfg.getTics(), cfg.getAxisDecimals());
+			}
+			nomsEsc.setEscala(parserLbl);
+			nomsEsc.setColor(cfg.getConfigMenu().getColorLabels());
+			nomsEsc.setFont(cfg.getConfigMenu().getFontLabels());
+			nomsEsc.dibuixa(g2d, orientacioClusters, cfg.getTipusMatriu());
+		}
+	}
+
+	public void paint(Graphics arg0) {
+
+		//update configuration information
+		//val_Max_show = fr.getPanBtn().val_Max_show_Phylo;
+		//System.out.println("FrmPhylo.paint(): valmax = " + val_Max_show);
+		
+		//this does not seem to change much.
+		//this.setConfig(fr.getCurrentFrame().getInternalFrameData().getCfgp());
+		
+		//basic painting parameters
+		super.paint(arg0);
+		Graphics2D g2d = (Graphics2D) arg0;
+		this.g = g2d;
+		this.draftDendo(g);
+		
+		//boxes
+		g.setPaint(Color.RED);
+		
+		//reset color
+		g.setPaint(Color.BLACK);
+
+	}
+	
+	//-------------- Getters and Setters -------------- //
 	
 	public FrmPrincipalDesk getFr() {
 		return fr;

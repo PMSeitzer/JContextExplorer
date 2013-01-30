@@ -38,6 +38,7 @@ import tipus.Orientation;
 import tipus.metodo;
 import tipus.rotacioNoms;
 import tipus.tipusDades;
+import definicions.Config;
 import definicions.MatriuDistancies;
 
 /**
@@ -104,6 +105,10 @@ public class InternalFrameData {
 	private FrmGraph ContextGraphPanel;
 	private FrmPhylo PhyloTreePanel;
 
+	//configuration info
+	private Config cfg;				//info for drawing dendrograms
+	private Config cfgp;			//info for drawing phylogenetic trees
+	
 	//Constructors
 	
 	public InternalFrameData(final FitxerDades fitx, MatriuDistancies md) {
@@ -356,6 +361,22 @@ public class InternalFrameData {
 
 	public void setSearchResultsFrame(FrmSearchResults searchResultsFrame) {
 		SearchResultsPanel = searchResultsFrame;
+	}
+
+	public Config getCfg() {
+		return cfg;
+	}
+
+	public void setCfg(Config cfg) {
+		this.cfg = cfg;
+	}
+
+	public Config getCfgp() {
+		return cfgp;
+	}
+
+	public void setCfgp(Config cfgp) {
+		this.cfgp = cfgp;
 	}
 
 

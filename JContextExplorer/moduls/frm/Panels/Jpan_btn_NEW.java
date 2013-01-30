@@ -67,6 +67,7 @@ import moduls.frm.children.manageContextSetsv2;
 	import tipus.Orientation;
 	import tipus.metodo;
 	import tipus.tipusDades;
+import definicions.CfgPanelMenu;
 import definicions.Cluster;
 	import definicions.Config;
 import definicions.MatriuDistancies;
@@ -109,7 +110,7 @@ import definicions.MatriuDistancies;
 
 		// File with the input data
 		private static FitxerDades fitx = null; //path to file
-		private DadesExternes de; //determined by annotation search / clustering
+		public DadesExternes de; //determined by annotation search / clustering
 		
 		private static JTextField txtFileName, contextSetHeader, searchField;
 		private final Dimension searchFieldSize;
@@ -151,7 +152,7 @@ import definicions.MatriuDistancies;
 		
 		//organism set
 		private OrganismSet OS;
-		
+
 		private String currentQuery;
 
 	// ----- New Fields (1.1) --------------------------------------------//			
@@ -162,6 +163,10 @@ import definicions.MatriuDistancies;
 		
 		//display search results
 		private FrmSearchResults SearchResultsFrame = null;
+		
+		//parameters associated with phylo tree
+		private double PhyloTreeLength;
+		private int PhyloTreeLeaves;
 				
 	// ----- Methods -----------------------------------------------//	
 		
@@ -1390,6 +1395,7 @@ import definicions.MatriuDistancies;
 
 		private void showCalls(final String action, QueryData qD) {
 			try {
+				fr.setCfgPhylo(null);	//for re-drawing.
 				if (action.equals("Reload") || action.equals("Redraw")) {
 					currentInternalFrame.doDefaultCloseAction();
 				}
@@ -1411,8 +1417,10 @@ import definicions.MatriuDistancies;
 			boolean isUpdate;
 			FrmInternalFrame pizarra;
 			Config cfg;					//Configuration information for multidendrogram only
+			Config cfgp = null;				//Configuration information for phylogenetic tree
 			InternalFrameData ifd;
 			Fig_Pizarra figPizarra;
+			Fig_Pizarra figPhylo;
 
 			//INTERNAL PANELS
 			FrmSearchResults fSearch = null;
@@ -1484,11 +1492,11 @@ import definicions.MatriuDistancies;
 					fPiz.setPreferredSize(d);
 					
 					// Call Jpan_Menu -> internalFrameActivated()
-					pizarra.setVisible(true);
+					//pizarra.setVisible(true);
 					if (action.equals("Load") || action.equals("Reload")) {
 						Jpan_Menu.ajustaValors(cfg);
 					}
-					
+//					
 					// Convert tree into figures
 					figPizarra = new Fig_Pizarra(multiDendro.getArrel(), cfg);
 					
@@ -1503,6 +1511,9 @@ import definicions.MatriuDistancies;
 					
 					//update CSD with context tree rectangles
 					CSD = fPiz.getCSD();
+
+					//update cfg information
+					fr.setCfg(cfg);
 
 				}
 				
@@ -1520,24 +1531,62 @@ import definicions.MatriuDistancies;
 					
 					//tree must be loaded 
 					if (fr.getPanPhyTreeMenu().getCurrentParsedTree() != null){
-						
+												
 						//initialize panel
-						fPhylo = new FrmPhylo(fr, CSD, multiDendro.getArrel());
+						fPhylo = new FrmPhylo(fr, CSD);
+						
+						//update configuration information to be appropriate for the phylogenetic tree
+						if (fr.getCfgPhylo() != null){
+							cfgp = fr.getCfgPhylo();
+						} else {
+							cfgp = new Config(cfg.getConfigMenu());
+						}
+
+//						System.out.println("cfgp.getValorMaxim(): " + cfgp.getValorMaxim());
+//						System.out.println("cfgp.getConfigMenu().isEscalaVisible(): " + cfgp.getConfigMenu().isEscalaVisible());
+//						System.out.println("cfgp.getConfigMenu().isEtiquetaEscalaVisible(): " + cfgp.getConfigMenu().isEtiquetaEscalaVisible());
+//						System.out.println("cfgp.getConfigMenu().isFranjaVisible(): " + cfgp.getConfigMenu().isFranjaVisible());
+//						System.out.println("cfgp.getConfigMenu().isNomsVisibles(): "+ cfgp.getConfigMenu().isNomsVisibles());
+//						
+						//determine size of tree rendering based on number of elements
+						Dimension d = new Dimension(pizarra.getWidth()-
+								HorizontalScrollBuffer,CalculateVerticalScrollValue(PhyloTreeLeaves));
+						fPhylo.setPreferredSize(d);
 						
 						// Convert tree into figures
-						figPizarra = new Fig_Pizarra(fr.getPanPhyTreeMenu().getCurrentParsedTree(), cfg, multiDendro.getArrel());
+						figPhylo = new Fig_Pizarra(fr.getPanPhyTreeMenu().getCurrentParsedTree(), cfgp);
+
+						//Update configuration information
+						CfgPanelMenu PhyloCfgPanel = cfgp.getConfigMenu();
+						PhyloCfgPanel.setTipusDades(tipusDades.DISTANCIA);
+						cfgp.setConfigMenu(PhyloCfgPanel);
+						cfgp.setHtNoms(figPhylo.getHtNoms());
+						PhyloCfgPanel.setValMax(figPhylo.getLongestBranch());
+						cfgp.setConfigMenu(PhyloCfgPanel);
 						
+						//add fields
+						this.setPhyloTreeLength(figPhylo.getLongestBranch());
+						this.setPhyloTreeLeaves(figPhylo.getHtNoms().size());
+						
+						//create a dummy 'MatriuDistancies' for this phylo tree.
+						MatriuDistancies md = new MatriuDistancies(0);
+						Cluster c = new Cluster();
+						c.setFills(PhyloTreeLeaves);
+						md.setArrel(c);
+						cfgp.setMatriu(md);
+
 						//add figures + configuration information to frame
-						fPhylo.setFigures(figPizarra.getFigures());
-						fPhylo.setConfig(cfg);
+						fPhylo.setFigures(figPhylo.getFigures());
+						fPhylo.setConfig(cfgp);
 						
 						//scroll panel
 						fPhyloSP = new JScrollPane(fPhylo);
-
+						
 						//update CSD with phylogenetic tree rectangles
 						CSD = fPhylo.getCSD();
 						
-						//Cluster RootCluster = figPizarra.ComputedRootCluster;
+						//update config panel
+						fr.setCfgPhylo(cfgp);
 						
 					} 
 
@@ -1551,6 +1600,9 @@ import definicions.MatriuDistancies;
 				ifd.setContextTreePanel(fPiz);
 				ifd.setSearchResultsFrame(fSearch);
 				ifd.setPhyloTreePanel(fPhylo);
+				ifd.setCfg(cfg);
+				ifd.setCfgp(cfgp);
+				
 				pizarra.setInternalFrameData(ifd);
 				
 				//CREATE FINAL FRAME
@@ -1575,6 +1627,9 @@ import definicions.MatriuDistancies;
 				if (!isUpdate){
 					fr.getPanGenome().setCSD(CSD);
 				}
+//				
+//				//debugging
+//				System.out.println("Breakpoint!");
 
 			} catch (final Exception e) {
 				e.printStackTrace();
@@ -1626,6 +1681,8 @@ import definicions.MatriuDistancies;
 				//fitx = de.getFitxerDades();
 				multiDendro = ifd.getMultiDendrogram();
 				SearchResultsFrame = ifd.getSearchResultsFrame();
+				//this is not likely the point of contention.
+				System.out.println("Jpan_btn_New.internalFrameActivated(): " + ifd.getValMax());
 				Jpan_Menu.setConfigPanel(ifd);
 				
 				//also set current panel (if it exists)
@@ -1691,7 +1748,13 @@ import definicions.MatriuDistancies;
 		}
 
 		public void setVerticalScrollValue(int numberOfEntries) {
-			VerticalScrollValue = 15*numberOfEntries + 250;
+			//VerticalScrollValue = 15*numberOfEntries + 250;
+			VerticalScrollValue = CalculateVerticalScrollValue(numberOfEntries);
+		}
+		
+		public int CalculateVerticalScrollValue(int numberOfEntries){
+			int CalculatedScrollValue = 15*numberOfEntries + 250;
+			return CalculatedScrollValue;
 		}
 
 		public boolean isInteger( String input ) {
@@ -1723,5 +1786,21 @@ import definicions.MatriuDistancies;
 
 		public void setContextSetMenu(JComboBox contextSetMenu) {
 			this.contextSetMenu = contextSetMenu;
+		}
+
+		public double getPhyloTreeLength() {
+			return PhyloTreeLength;
+		}
+
+		public void setPhyloTreeLength(double phyloTreeLength) {
+			PhyloTreeLength = phyloTreeLength;
+		}
+
+		public int getPhyloTreeLeaves() {
+			return PhyloTreeLeaves;
+		}
+
+		public void setPhyloTreeLeaves(int phyloTreeLeaves) {
+			PhyloTreeLeaves = phyloTreeLeaves;
 		}
 	}
