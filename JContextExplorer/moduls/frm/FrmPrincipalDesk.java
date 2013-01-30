@@ -120,6 +120,7 @@ public class FrmPrincipalDesk extends JFrame{
 	// ----- New Fields (2.0) ------------------------------------------//
 	
 	private boolean IncludeMotifs = false;
+	private String SelectedAnalysisType = "Search Results";
 	
 	// ----- Methods ---------------------------------------------------//		
 
@@ -449,9 +450,13 @@ public class FrmPrincipalDesk extends JFrame{
 		}
 		
 		//context tree update
-		//if (this.currentFpiz.getInternalPanel() != null){
-		if (this.getPanBtn().getCurrentInternalFrame().getInternalFrameData().getContextTreePanel() != null){
-			this.getPanBtn().getCurrentInternalFrame().getInternalFrameData().getContextTreePanel().UpdateNodes();
+		if (this.getCurrentFrame().getInternalFrameData().getContextTreePanel() != null){
+			this.getCurrentFrame().getInternalFrameData().getContextTreePanel().UpdateNodes();
+		}
+		
+		//phylo tree update
+		if (this.getCurrentFrame().getInternalFrameData().getPhyloTreePanel() != null){
+			this.getCurrentFrame().getInternalFrameData().getPhyloTreePanel().UpdateNodes();
 		}
 		
 	}
@@ -533,4 +538,11 @@ public class FrmPrincipalDesk extends JFrame{
 		this.cfg = cfg;
 	}
 
+	public String getSelectedAnalysisType() {
+		return SelectedAnalysisType;
+	}
+
+	public void setSelectedAnalysisType(String selectedAnalysisType) {
+		SelectedAnalysisType = selectedAnalysisType;
+	}
 }

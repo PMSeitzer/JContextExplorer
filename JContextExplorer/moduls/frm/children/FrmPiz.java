@@ -509,7 +509,7 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 		//boxes around nodes
 		for (ContextLeaf CL : CSD.getGraphicalContexts()){
 			if (CL.isSelected()){
-				g.draw(CL.getContextGraphCoordinates());
+				g.draw(CL.getContextTreeCoordinates());
 			} 
 		}
 		
@@ -695,7 +695,7 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 			for (ContextLeaf CL : CSD.getGraphicalContexts()){
 				for (int i = 0; i < CSD.getNodeNames().length; i++){
 					if (CL.getName().equals(CSD.getNodeNames()[i])){
-						CL.setContextGraphCoordinates(CSD.getCoordinates()[i]);
+						CL.setContextTreeCoordinates(CSD.getCoordinates()[i]);
 						break;
 					}
 				}

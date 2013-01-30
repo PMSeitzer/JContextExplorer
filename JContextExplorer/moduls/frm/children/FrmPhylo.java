@@ -5,7 +5,12 @@ import inicial.Parametres_Inicials;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.RenderingHints;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.geom.Rectangle2D;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,6 +20,7 @@ import java.util.LinkedList;
 import genomeObjects.CSDisplayData;
 
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import definicions.BoxContainer;
 import definicions.Cluster;
@@ -41,7 +47,7 @@ import moduls.frm.ContextLeaf;
 import moduls.frm.FrmPrincipalDesk;
 import moduls.frm.XYBox;
 
-public class FrmPhylo extends JPanel{
+public class FrmPhylo extends JPanel implements MouseListener{
 
 	//fields
 	//baseline
@@ -59,8 +65,10 @@ public class FrmPhylo extends JPanel{
 	
 	//Drawing / painting related
 	private Graphics2D g;
+	private int LastSelectedNode = -1;
+	private Rectangle2D[] RectanglesSurroundingLabels;
 	
-	// ----- Configurataion + Parmaeters ---------//
+	// ----- Configurataion + Parameters ---------//
 	//Configuration related
 	private Config cfg = null;
 	private double radi;
@@ -96,6 +104,8 @@ public class FrmPhylo extends JPanel{
 	public FrmPhylo(FrmPrincipalDesk f, CSDisplayData CSD){
 		this.fr = f;
 		this.CSD = CSD;
+		
+		this.addMouseListener(this);
 		
 	}
 
@@ -408,22 +418,22 @@ public class FrmPhylo extends JPanel{
 			nomsD.dibuixa(g2d, orientacioClusters, orientacioNoms);
 			
 			//retrieve rectangles from names
-			//this.setRectanglesSurroundingLabels(nomsD.getRectangles());
+			this.setRectanglesSurroundingLabels(nomsD.getRectangles());
 			
 			//Map info to contexts
-			CSD.setCoordinates(nomsD.getRectangles());
-			CSD.setNodeNames(nomsD.getNodeNames());
+			CSD.setPhyloCoordinates(nomsD.getRectangles());
+			CSD.setPhyloNodeNames(nomsD.getNodeNames());
 			
-			//write data to graphical contexts
+			//map each graphical context to the appropriate source species, in the phylogenetic tree.
 			for (ContextLeaf CL : CSD.getGraphicalContexts()){
-				for (int i = 0; i < CSD.getNodeNames().length; i++){
-					if (CL.getName().equals(CSD.getNodeNames()[i])){
-						CL.setContextGraphCoordinates(CSD.getCoordinates()[i]);
+				for (int i = 0; i < CSD.getPhyloNodeNames().length; i++){
+					if (CL.getSourceSpecies().equals(CSD.getPhyloNodeNames()[i])){
+						CL.setPhyloTreeCoordinates(CSD.getPhyloCoordinates()[i]);
 						break;
 					}
 				}
 			}
-			
+//			
 //			//initialize all nodes as unselected
 //			boolean[] InitialNodeNumbers = new boolean[RectanglesSurroundingLabels.length];
 //			Arrays.fill(InitialNodeNumbers, Boolean.FALSE);
@@ -474,6 +484,11 @@ public class FrmPhylo extends JPanel{
 		}
 	}
 
+	public void setRectanglesSurroundingLabels(
+			Rectangle2D[] rectanglesSurroundingLabels) {
+		RectanglesSurroundingLabels = rectanglesSurroundingLabels;
+	}
+
 	public void paint(Graphics arg0) {
 
 		//update configuration information
@@ -489,8 +504,17 @@ public class FrmPhylo extends JPanel{
 		this.g = g2d;
 		this.draftDendo(g);
 		
-		//boxes
+		//change color for drawing
 		g.setPaint(Color.RED);
+		
+		//boxes around nodes
+		for (ContextLeaf CL : CSD.getGraphicalContexts()){
+			if (CL.isSelected()){
+				if (CL.getPhyloTreeCoordinates() != null){
+					g.draw(CL.getPhyloTreeCoordinates());
+				}
+			} 
+		}
 		
 		//reset color
 		g.setPaint(Color.BLACK);
@@ -515,4 +539,126 @@ public class FrmPhylo extends JPanel{
 		CSD = cSD;
 	}
 
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		
+		//left click
+		if (SwingUtilities.isLeftMouseButton(e)){			
+			
+			//update CSD
+			this.CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
+			
+			int x ,y;
+			
+			x = e.getX();    
+			y = e.getY(); 
+			
+			//initialize
+			boolean[] SelectedAfterClick = new boolean[RectanglesSurroundingLabels.length];
+			Arrays.fill(SelectedAfterClick, Boolean.FALSE);
+			
+			//update with current existing set (if appropriate)
+			if (e.isShiftDown() == true || e.isControlDown() == true){
+				for (ContextLeaf CL : CSD.getGraphicalContexts()){
+					for (int i = 0; i < CSD.getPhyloNodeNames().length; i++){
+						if (CL.getSourceSpecies().equals(CSD.getPhyloNodeNames()[i])){
+							SelectedAfterClick[i] = CL.isSelected();
+							break;
+						}
+					}
+				}
+			}
+
+			//draw a box around the correct coordinate
+			for (int i = 0; i < RectanglesSurroundingLabels.length; i++){
+				
+				Point p = new Point(x,-y);
+			
+				if (RectanglesSurroundingLabels[i].contains(p)){
+					if (e.isShiftDown() == false && e.isControlDown() == false){
+						SelectedAfterClick[i] = true; //no button
+					} else if (e.isShiftDown() == false  && e.isControlDown() == true){
+						if (SelectedAfterClick[i] == true){
+							SelectedAfterClick[i] = false;
+						} else {
+							SelectedAfterClick[i] = true;
+						}
+					} else {
+						if (LastSelectedNode != -1){
+							
+							//determine relative location of selected node to current shift+clicked node
+							if (LastSelectedNode <= i){
+								for (int j = LastSelectedNode; j<= i; j++){
+									SelectedAfterClick[j] = true;
+								}
+							} else {
+								for (int j = LastSelectedNode; j >= i; j--){
+									SelectedAfterClick[j] = true;
+								}
+							}
+							
+						} else {
+							SelectedAfterClick[i] = true; //no previous selected node
+						}
+					}
+					
+					//update last selected node
+					LastSelectedNode = i;
+				} 
+			}
+			
+			//update status of currently selected nodes
+			for (ContextLeaf CL : CSD.getGraphicalContexts()){
+				for (int i = 0; i < CSD.getPhyloNodeNames().length; i++){
+					if (CL.getSourceSpecies().equals(CSD.getPhyloNodeNames()[i])){
+						CL.setSelected(SelectedAfterClick[i]);
+						break;
+					}
+				}
+			}
+			
+			//update master CSD
+			fr.getCurrentFrame().getInternalFrameData().getQD().setCSD(CSD);
+			
+			//call main frame to update this and all other panels
+			this.fr.UpdateSelectedNodes();
+
+		}
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	//update display
+	public void UpdateNodes(){
+		
+		//retrieve most current set of selected nodes
+		this.CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
+		
+		//repaint nodes
+		this.repaint();
+		
+	}
+	
 }

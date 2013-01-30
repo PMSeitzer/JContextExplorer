@@ -15,6 +15,9 @@ public class CSDisplayData {
 	private boolean[] SelectedNodes;		//
 	private LinkedHashMap<String,Boolean> CurrentlySelectedNodes; 
 	
+	private Rectangle2D[] PhyloCoordinates;
+	private String[] PhyloNodeNames;
+	
 	
 	private ExtendedCRON EC;				//--Context Set information-----
 	private ContextLeaf[] GraphicalContexts;
@@ -61,6 +64,16 @@ public class CSDisplayData {
 		for (String s : EC.getContexts().keySet()){
 			ContextLeaf CL = new ContextLeaf();
 			CL.setName(s);
+			
+			//determine source species + write to context leaf structure
+			String Species = "";
+			
+			String[] ParsedLine = s.split("-");
+			for (int i = 0 ; i < ParsedLine.length-1; i++){
+				Species = Species + ParsedLine[i];
+			}
+			
+			CL.setSourceSpecies(Species);
 			CL.setSelected(false);
 			GraphicalContexts[Counter] = CL;
 			Counter++;
@@ -95,6 +108,22 @@ public class CSDisplayData {
 
 	public void setGraphicalContexts(ContextLeaf[] graphicalContexts) {
 		GraphicalContexts = graphicalContexts;
+	}
+
+	public Rectangle2D[] getPhyloCoordinates() {
+		return PhyloCoordinates;
+	}
+
+	public void setPhyloCoordinates(Rectangle2D[] phyloCoordinates) {
+		PhyloCoordinates = phyloCoordinates;
+	}
+
+	public String[] getPhyloNodeNames() {
+		return PhyloNodeNames;
+	}
+
+	public void setPhyloNodeNames(String[] phyloNodeNames) {
+		PhyloNodeNames = phyloNodeNames;
 	}
 	
 }

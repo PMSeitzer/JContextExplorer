@@ -1611,8 +1611,17 @@ import definicions.MatriuDistancies;
 
 				//tabbed frame for internal frame
 				FrmTabbed AnalysisResults = new FrmTabbed(fPizSP,fGraphSP,fSearchSP,fPhyloSP,
-						qD.getAnalysesList());
+						qD.getAnalysesList(), fr);
+				
+				//AnalysisResults.setSelectedIndex(SelectedTabbedPane);
+				//System.out.println("Jpan_btn: " + AnalysisResults.getSelectedIndex());
+				
 				TabbedWrapper.add(AnalysisResults, BorderLayout.CENTER);
+
+				//set Jpan_genome
+				if (!isUpdate){
+					fr.getPanGenome().setCSD(CSD);
+				} 
 				
 				//ADD TABBED PANEL TO FRAME
 				pizarra.add(TabbedWrapper);	//Tabbed menu component with panel
@@ -1622,12 +1631,7 @@ import definicions.MatriuDistancies;
 				pizarra.setVisible(true);
 				this.currentInternalFrame = pizarra;
 				fr.setCurrentFrame(pizarra);
-				
-				//set Jpan_genome
-				if (!isUpdate){
-					fr.getPanGenome().setCSD(CSD);
-				}
-//				
+		
 //				//debugging
 //				System.out.println("Breakpoint!");
 
@@ -1803,4 +1807,6 @@ import definicions.MatriuDistancies;
 		public void setPhyloTreeLeaves(int phyloTreeLeaves) {
 			PhyloTreeLeaves = phyloTreeLeaves;
 		}
+
+
 	}

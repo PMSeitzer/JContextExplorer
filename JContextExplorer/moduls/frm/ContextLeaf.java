@@ -1,6 +1,7 @@
 package moduls.frm;
 
 import java.awt.geom.Rectangle2D;
+import java.util.LinkedList;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
@@ -8,10 +9,11 @@ public class ContextLeaf {
 
 	//fields
 	private String Name;
+	private String SourceSpecies;
 	private DefaultMutableTreeNode SearchResultsTreeNode;
 	private Rectangle2D ContextTreeCoordinates;
-	private Rectangle2D ContextGraphCoordinates;
-	private Rectangle2D PhyloTreeCoordinates;
+	private LinkedList<Rectangle2D> ContextGraphCoordinates;
+	private Rectangle2D PhyloTreeCoordinates;					//Source organism node (not actual context leaf)
 
 	private boolean Selected;
 	
@@ -35,11 +37,11 @@ public class ContextLeaf {
 		Selected = selected;
 	}
 
-	public Rectangle2D getContextGraphCoordinates() {
+	public LinkedList<Rectangle2D> getContextGraphCoordinates() {
 		return ContextGraphCoordinates;
 	}
 
-	public void setContextGraphCoordinates(Rectangle2D contextGraphCoordinates) {
+	public void setContextGraphCoordinates(LinkedList<Rectangle2D> contextGraphCoordinates) {
 		ContextGraphCoordinates = contextGraphCoordinates;
 	}
 
@@ -63,6 +65,14 @@ public class ContextLeaf {
 
 	public void setSearchResultsTreeNode(DefaultMutableTreeNode searchResultsTreeNode) {
 		SearchResultsTreeNode = searchResultsTreeNode;
+	}
+
+	public String getSourceSpecies() {
+		return SourceSpecies;
+	}
+
+	public void setSourceSpecies(String sourceSpecies) {
+		SourceSpecies = sourceSpecies;
 	}
 
 
