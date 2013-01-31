@@ -120,6 +120,7 @@ public class FrmPrincipalDesk extends JFrame{
 	// ----- New Fields (2.0) ------------------------------------------//
 	
 	private boolean IncludeMotifs = false;
+	private boolean DisplayMotifs = false;
 	private String SelectedAnalysisType = "Search Results";
 	
 	// ----- Methods ---------------------------------------------------//		
@@ -189,6 +190,10 @@ public class FrmPrincipalDesk extends JFrame{
 		this.add(pan_West, BorderLayout.WEST);
 		this.add(pan_Center, BorderLayout.CENTER);
 		
+	}
+
+	public Jpan_MotifOptions getPanMotifOptions() {
+		return panMotifOptions;
 	}
 
 	public Jpan_btn_NEW getPanBtn() {
@@ -544,5 +549,13 @@ public class FrmPrincipalDesk extends JFrame{
 
 	public void setSelectedAnalysisType(String selectedAnalysisType) {
 		SelectedAnalysisType = selectedAnalysisType;
+	}
+
+	public boolean isDisplayMotifs() {
+		return DisplayMotifs;
+	}
+
+	public void setDisplayMotifs(boolean displayMotifs) {
+		DisplayMotifs = displayMotifs;
 	}
 }

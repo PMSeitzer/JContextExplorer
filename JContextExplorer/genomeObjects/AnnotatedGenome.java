@@ -16,8 +16,9 @@ public class AnnotatedGenome {
 	//Fields 
     private String Genus;               						//-Biological-organization-------------
     private String Species;             						//									
-    private LinkedList<GenomicElement> Elements;		 		//-Genes, SigSeqs, and groups of genes-----------------------
-    private List<SignificantSequence> Sigseqs;					//
+    private LinkedList<GenomicElement> Elements;		 		//-Genes, SigSeqs, and groups of genes--
+    private LinkedList<MotifGroup> Motifs 						//
+    	= new LinkedList<MotifGroup>();						    //
     private LinkedList<ContextSet> Groupings;					//-Predicted Groupings-----------------
     private File GenomeFile; 									//-Associated genome file --------------
     private boolean TryToComputeOperons;
@@ -1128,12 +1129,7 @@ public LinkedList<GenomicElement> getElements() {
 public void setElements(LinkedList<GenomicElement> elements) {
 	Elements = elements;
 }
-public List<SignificantSequence> getSigseqs() {
-	return Sigseqs;
-}
-public void setSigseqs(ArrayList<SignificantSequence> sigseqs) {
-	Sigseqs = sigseqs;
-}
+
 public File getGenomeFile() {
 	return GenomeFile;
 }
@@ -1171,6 +1167,14 @@ public LinkedList<String> getDisplayOnlyTypes() {
 
 public void setDisplayOnlyTypes(LinkedList<String> displayOnlyTypes) {
 	DisplayOnlyTypes = displayOnlyTypes;
+}
+
+public LinkedList<MotifGroup> getMotifs() {
+	return Motifs;
+}
+
+public void setMotifs(LinkedList<MotifGroup> motifs) {
+	Motifs = motifs;
 }
 
 //-----------------------Deprecated ----------------------//

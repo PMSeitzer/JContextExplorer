@@ -1617,11 +1617,12 @@ import definicions.MatriuDistancies;
 				//System.out.println("Jpan_btn: " + AnalysisResults.getSelectedIndex());
 				
 				TabbedWrapper.add(AnalysisResults, BorderLayout.CENTER);
-
+				fr.getPanGenome().setCSD(CSD);
+				
 				//set Jpan_genome
-				if (!isUpdate){
-					fr.getPanGenome().setCSD(CSD);
-				} 
+				//if (!isUpdate){
+					
+				//} 
 				
 				//ADD TABBED PANEL TO FRAME
 				pizarra.add(TabbedWrapper);	//Tabbed menu component with panel
@@ -1686,7 +1687,7 @@ import definicions.MatriuDistancies;
 				multiDendro = ifd.getMultiDendrogram();
 				SearchResultsFrame = ifd.getSearchResultsFrame();
 				//this is not likely the point of contention.
-				System.out.println("Jpan_btn_New.internalFrameActivated(): " + ifd.getValMax());
+				//System.out.println("Jpan_btn_New.internalFrameActivated(): " + ifd.getValMax());
 				Jpan_Menu.setConfigPanel(ifd);
 				
 				//also set current panel (if it exists)

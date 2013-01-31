@@ -5,7 +5,7 @@ import java.util.LinkedList;
 public class MotifGroup {
 
 	//Fields
-	private LinkedList<SequenceMotif> MotifInstances;
+	private LinkedList<SequenceMotif> MotifInstances = new LinkedList<SequenceMotif>();
 	private String Name;
 	private String Notes;
 	private String fileName;

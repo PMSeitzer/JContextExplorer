@@ -24,6 +24,7 @@ public class OrganismSet {
 	private LinkedHashMap<String, AnnotatedGenome> Species;		//-Species-information--------
 	private LinkedList<String> SpeciesNames;					//-Species-Names--------------
 	private LinkedList<ContextSetDescription> CSDs;				//-Info-about-Context-Sets----
+	private LinkedList<MotifGroupDescription> MGDescriptions;
 	private boolean GeneClustersLoaded = false;					//-Gene-Clusters--------------
 	public int LargestCluster = 0;
 	private boolean ContinueImportingOperons = true;			
@@ -579,6 +580,18 @@ public class OrganismSet {
 
 	public void setDisplayOnlyTypes(LinkedList<String> displayOnlyTypes) {
 		DisplayOnlyTypes = displayOnlyTypes;
+	}
+
+	public LinkedList<MotifGroupDescription> getMGDescriptions() {
+		if (MGDescriptions == null){
+			this.MGDescriptions = new LinkedList<MotifGroupDescription>();
+		}
+		
+		return MGDescriptions;
+	}
+
+	public void setMGDescriptions(LinkedList<MotifGroupDescription> mGDescriptions) {
+		MGDescriptions = mGDescriptions;
 	}
 
 } //completes classbody

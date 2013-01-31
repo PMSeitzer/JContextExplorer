@@ -195,7 +195,8 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		
 		//frame settings
 		//this.setSize(new Dimension(400, 350));
-		this.setSize(700,650);
+		//this.setSize(700,650);
+		this.setSize(700,680);
 		
 		this.setTitle("Add or Remove Context Sets");
 		this.setLocationRelativeTo(null);
@@ -882,7 +883,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 5;
-		c.insets = new Insets(1,1,1,1);
+		c.insets = new Insets(3,3,3,3);
 		Remove = new JLabel(" REMOVE A CONTEXT SET");
 		Remove.setBackground(Color.GRAY);
 		Remove.setOpaque(true);
@@ -1196,7 +1197,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		}
 	}
 
-	//enanble message box
+	//enable message box
 	public void UpdateMessageBox(){
 
 		//update the message to the user based on what they're doing
@@ -1306,6 +1307,5 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 			int progress = (Integer) evt.getNewValue();
 			progressBar.setValue(progress);
 		}
-
 	}
 }

@@ -21,6 +21,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import moduls.frm.FrmPrincipalDesk;
+import moduls.frm.children.ManageMotifs;
 
 public class Jpan_MotifOptions extends JPanel implements ActionListener{
 
@@ -187,19 +188,39 @@ public class Jpan_MotifOptions extends JPanel implements ActionListener{
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		//update check box for search options
-		if (e.equals(IncludeMotifsComp)){
+		//update check boxes for motif search/display options.
+		if (e.getSource().equals(IncludeMotifsComp)){
 			f.setIncludeMotifs(IncludeMotifsComp.isSelected());
 		}
 		
+		if (e.getSource().equals(IncludeMotifsDisp)){
+			f.setDisplayMotifs(IncludeMotifsDisp.isSelected());
+		}
+		
 		//launch add/remove motifs window
-		if (e.equals(btnLoadMotifs)){
-			
+		if (e.getSource().equals(btnLoadMotifs)){
+			new ManageMotifs(f);
 		}
 		
 		//launch motif viewer window
-		if (e.equals(btnGetInfo)){
+		if (e.getSource().equals(btnGetInfo)){
 			
 		}
+	}
+
+	public JComboBox<String> getMenuOfMotifs() {
+		return this.menuLoadedMotifs;
+	}
+	
+	public String[] getMenuLoadedMotifs() {
+		String[] NamesOfMotifs = new String[menuLoadedMotifs.getItemCount()];
+		for (int i = 0; i < menuLoadedMotifs.getItemCount(); i++){
+			NamesOfMotifs[i] = menuLoadedMotifs.getItemAt(i);
+		}
+		return NamesOfMotifs;
+	}
+
+	public void setMenuLoadedMotifs(JComboBox<String> menuLoadedMotifs) {
+		this.menuLoadedMotifs = menuLoadedMotifs;
 	}
 }

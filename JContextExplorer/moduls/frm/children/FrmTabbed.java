@@ -104,7 +104,7 @@ public class FrmTabbed extends JTabbedPane implements ChangeListener{
 		for (int i : SelectedPaneMapping.keySet()){
 			if (SelectedPaneMapping.get(i).equals(CurrentlySelected)){
 				this.setSelectedIndex(i);
-				System.out.println("Currently Selected: " + CurrentlySelected);
+				//System.out.println("Currently Selected: " + CurrentlySelected);
 				break;
 			}
 		}
@@ -132,7 +132,7 @@ public class FrmTabbed extends JTabbedPane implements ChangeListener{
 		
 		//update index
 		this.fr.setSelectedAnalysisType(getTitleAt(this.getSelectedIndex()));
-		System.out.println("Currently Selected: " + fr.getSelectedAnalysisType());
+		//System.out.println("Currently Selected: " + fr.getSelectedAnalysisType());
 		
 	}
 
