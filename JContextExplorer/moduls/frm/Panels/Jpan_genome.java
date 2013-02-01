@@ -316,7 +316,7 @@ public class Jpan_genome extends JPanel implements ActionListener,
 						//open context viewer frame
 						//String Title =  "Context Viewer: " + fr.getCurrentFrame().getInternalPanel().getCSD().getEC().getName();
 						String Title =  "Context Viewer: " + fr.getCurrentFrame().getInternalFrameData().getQD().getName();
-						new mainFrame(CSD, OS, Title);
+						new mainFrame(CSD, OS, Title, fr);
 						
 					}
 					

@@ -7,7 +7,7 @@ import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.util.LinkedList;
 
-public class DrawGenes {
+public class DrawGene {
 
 	//fields: before, after, and current
 	private Rectangle Coordinates;		//coordinates of each gene
@@ -22,7 +22,7 @@ public class DrawGenes {
 	private int StopCS;					//pixel x coordinate where CS range stops
 		
 	//Constructor
-	public DrawGenes(){
+	public DrawGene(){
 		super();
 	}
 

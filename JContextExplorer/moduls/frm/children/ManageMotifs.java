@@ -38,6 +38,8 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 
+import org.biojava3.core.sequence.Strand;
+
 import moduls.frm.FrmPrincipalDesk;
 import moduls.frm.children.manageContextSetsv2.btnLoadCS;
 
@@ -211,13 +213,20 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 								SequenceMotif SM = new SequenceMotif();
 								SM.setSource("FIMO");
 								SM.setMotifName(MSName.getText());
-								SM.setSequence(ImportedLine[1]);
+								SM.setContig(ImportedLine[1]);
 								SM.setStart(Integer.parseInt(ImportedLine[2]));
 								SM.setStop(Integer.parseInt(ImportedLine[3]));
 								SM.setScore(Double.parseDouble(ImportedLine[4]));
 								SM.setPvalue(Double.parseDouble(ImportedLine[5]));
 								SM.setQvalue(Double.parseDouble(ImportedLine[6]));
 								SM.setSequence(ImportedLine[7]);
+								
+								//set strand based on order of elements.
+								if (SM.getStart() < SM.getStop()){
+									SM.setStrand(Strand.POSITIVE);
+								} else {
+									SM.setStrand(Strand.NEGATIVE);
+								}
 
 								//add to list
 								MG.getMotifInstances().add(SM);

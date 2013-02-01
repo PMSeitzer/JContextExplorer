@@ -19,6 +19,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 
+import moduls.frm.FrmPrincipalDesk;
+
 public class mainFrame extends JFrame implements ComponentListener{
 
 	//fields
@@ -38,14 +40,16 @@ public class mainFrame extends JFrame implements ComponentListener{
 	//information
 	private CSDisplayData CSD;
 	private OrganismSet OS;
+	private FrmPrincipalDesk fr;
 	
 	//constructor: include all biological information
-	public mainFrame(CSDisplayData csd, OrganismSet os, String title){
+	public mainFrame(CSDisplayData csd, OrganismSet os, String title, FrmPrincipalDesk fr){
 		
 		//INITIALIZATIONS
 		super(title);
 		this.CSD = csd;
 		this.OS = os;
+		this.setFr(fr);
 		this.addComponentListener(this);
 		
 		//RETRIEVE SYSTEM INFO
@@ -164,6 +168,14 @@ public class mainFrame extends JFrame implements ComponentListener{
 	public void componentShown(ComponentEvent arg0) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	public FrmPrincipalDesk getFr() {
+		return fr;
+	}
+
+	public void setFr(FrmPrincipalDesk fr) {
+		this.fr = fr;
 	}
 
 

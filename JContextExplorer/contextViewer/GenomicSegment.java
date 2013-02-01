@@ -8,7 +8,8 @@ import javax.sound.sampled.Line;
 public class GenomicSegment {
 
 	//fields
-	private LinkedList<DrawGenes> dg; 		//individual gene information for display
+	private LinkedList<DrawGene> dg; 		//individual gene information for display
+	private LinkedList<DrawMotif> dm;		//individual motif information for display
 	private String Label;					//Node name
 	private Rectangle2D boundingRect;		//Size information of whole segment
 	
@@ -28,10 +29,10 @@ public class GenomicSegment {
 	private LinkedList<Integer> BarValues;			//genomic coordinates associated with bars
 	
 	//Getters + Setters
-	public LinkedList<DrawGenes> getDg() {
+	public LinkedList<DrawGene> getDg() {
 		return dg;
 	}
-	public void setDg(LinkedList<DrawGenes> dg) {
+	public void setDg(LinkedList<DrawGene> dg) {
 		this.dg = dg;
 	}
 	public String getLabel() {
@@ -99,6 +100,12 @@ public class GenomicSegment {
 	}
 	public void setBarPositionsRev(LinkedList<Integer> barPositionsRev) {
 		BarPositionsRev = barPositionsRev;
+	}
+	public LinkedList<DrawMotif> getDm() {
+		return dm;
+	}
+	public void setDm(LinkedList<DrawMotif> dm) {
+		this.dm = dm;
 	}
 	
 }

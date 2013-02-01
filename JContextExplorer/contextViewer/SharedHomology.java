@@ -1,6 +1,7 @@
 package contextViewer;
 
 import genomeObjects.GenomicElement;
+import genomeObjects.SequenceMotif;
 
 import java.awt.Color;
 import java.awt.Paint;
@@ -15,11 +16,12 @@ public class SharedHomology {
 	private String Annotation;				//Annotation
 	private boolean GeneGroupingMember;		//used to build the tree;
 	private LinkedList<GenomicElement> Members = new LinkedList<GenomicElement>();	//Actual members (used for legend)
-
+	private LinkedList<SequenceMotif> MotifMembers = new LinkedList<SequenceMotif>();
 	//color-related
 	private Integer Frequency;				//Number of matches across organisms compared
 	private Color TheColor;					//associated color
 	private Color[] BaseColors = new Color[9]; //effective color-mapping scheme
+	private int OffSetPoint = 0;				//Offset, as from other color maps
 	
 	//constructor
 	public SharedHomology(){
@@ -69,10 +71,14 @@ public class SharedHomology {
 	
 	//new add color method uses a giant imported list
 	public void addColor(int EntryNumber){
-		if (EntryNumber < BaseColors.length) {
-			this.setColor(BaseColors[EntryNumber]);
-		} else if (EntryNumber < colorPool.length){
-			this.setColor(colorPool[EntryNumber]);
+		
+		//Update: adjust by offsetpoint
+		int ColorCode = EntryNumber + OffSetPoint;
+		
+		if (ColorCode < BaseColors.length) {
+			this.setColor(BaseColors[ColorCode]);
+		} else if (ColorCode < colorPool.length){
+			this.setColor(colorPool[ColorCode]);
 		} else {
 			this.setColor(Color.BLACK);
 		}
@@ -1089,6 +1095,28 @@ public class SharedHomology {
       new Color(0x03, 0x43, 0xdf),  //  blue    
       new Color(0x15, 0xb0, 0x1a),  //  green   
       new Color(0x7e, 0x1e, 0x9c),  //  purple    
-  }; 
+  };
+
+	public int getOffSetPoint() {
+		return OffSetPoint;
+	}
+
+
+
+	public void setOffSetPoint(int offSetPoint) {
+		OffSetPoint = offSetPoint;
+	}
+
+
+
+	public LinkedList<SequenceMotif> getMotifMembers() {
+		return MotifMembers;
+	}
+
+
+
+	public void setMotifMembers(LinkedList<SequenceMotif> motifMembers) {
+		MotifMembers = motifMembers;
+	} 
 
 }

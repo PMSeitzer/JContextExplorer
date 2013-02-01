@@ -4,6 +4,8 @@ import genomeObjects.AnnotatedGenome;
 import genomeObjects.CSDisplayData;
 import genomeObjects.GenomicElement;
 import genomeObjects.GenomicElementAndQueryMatch;
+import genomeObjects.MotifGroup;
+import genomeObjects.SequenceMotif;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -26,6 +28,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
@@ -137,14 +140,18 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	private boolean ShowClusterID = false;
 	private int CharacterMax = 20;
 	private boolean HomologyGroupSelected = false;
-	private DrawGenes CurrentMiddleClickedDrawGene;
-	private DrawGenes CurrentLeftClickedDrawGene;
+	private DrawGene CurrentMiddleClickedDrawGene;
+	private DrawGene CurrentLeftClickedDrawGene;
 	private boolean ClickedOnLegend = false;
 	
 	//legend panel info
 	private LinkedList<Color> CurrentlySelectedGeneColors;
 	private LinkedList<SharedHomology> GeneColorList;
 	private LinkedList<SharedHomology> DisplayedGeneColorList;
+	private LinkedList<SharedHomology> MotifColorList;
+	private LinkedList<SharedHomology> DisplayedMotifColorList;
+	
+	private int OffSetPoint = 0;
 	
 	//formatting information
 	private Font fontStandard = new Font("Dialog", Font.BOLD, 10);
@@ -168,6 +175,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		//computing information for display.
 		computeNucleotideRangesOnSegments();
 		addDrawGenes();
+		addMotifs();
 		addHomologyColors();
 		addCoordinateBars();
 		
@@ -291,7 +299,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 			
 			//add all appropriate colored genes to the hashset
 			for (int i = 0; i < GS.length; i++){
-				for (DrawGenes dg : GS[i].getDg()){
+				for (DrawGene dg : GS[i].getDg()){
 					if (dg.getMembership() == 0){
 						for (SharedHomology SH : GeneColorList){
 							if (ECRONType.equals("annotation")){
@@ -308,6 +316,20 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 						}
 					}
 
+				}
+			}
+			
+			//add all appropriate motifs to the hashset
+			for (int i = 0; i < GS.length; i++){
+				for (DrawMotif dm : GS[i].getDm()){
+					if (dm.getMembership() == 0){
+						for (SharedHomology SH : MotifColorList){
+							if (SH.getAnnotation().contentEquals(dm.getBioInfo().getMotifName().toUpperCase())){
+								SHash.add(SH);
+								break;
+							}
+						}
+					}
 				}
 			}
 
@@ -527,6 +549,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		}
 		
 		CoordinateNumber = -1;
+		
 		//from the list of acceptable nodes, determine rendering regions.
 		GS = new GenomicSegment[AcceptableSegments.size()];
 		for (int i = 0; i < AcceptableSegments.size(); i++){
@@ -585,7 +608,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		for (int i = 0; i <GS.length; i++){
 			
 			//Initialize drawgenes output structures
-			LinkedList<DrawGenes> dgs = new LinkedList<DrawGenes>();
+			LinkedList<DrawGene> dgs = new LinkedList<DrawGene>();
 			
 			//retrieve species + contig name
 			String SpeciesName = SourceSpecies.get(GS[i].getLabel());
@@ -628,7 +651,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 						(DisplayElement) && e.getContig().equals(ContigName)){
 					
 					//upon discovering a single gene, initialize a new "drawgene"
-					DrawGenes dg = new DrawGenes();
+					DrawGene dg = new DrawGene();
 					
 					//add information relevant for coloring
 					dg.setBioInfo(e);
@@ -728,14 +751,6 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 						dg.setMembership(-1);
 					}
 					
-//					if (e.getStart() < GS[i].getStartCS()){
-//						dg.setMembership(-1);
-//					} else if (e.getStop() > GS[i].getStartAfterBuffer()){
-//						dg.setMembership(1);
-//					} else {
-//						dg.setMembership(0);
-//					}
-					
 					//set color to default
 					dg.setColor(Color.LIGHT_GRAY);
 					
@@ -748,8 +763,159 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		}
 	}
 	
+	//add motifs to contexts
+	private void addMotifs(){
+		
+		for (int i = 0; i <GS.length; i++){
+			
+			//Initialize drawgenes output structures
+			LinkedList<DrawMotif> dms = new LinkedList<DrawMotif>();
+			
+			//retrieve species + contig name
+			String SpeciesName = SourceSpecies.get(GS[i].getLabel());
+			String ContigName = SourceContigs.get(GS[i].getLabel());
+
+			//retrieve genome
+			AnnotatedGenome AG = mf.getOS().getSpecies().get(SpeciesName);
+			
+			//information
+			int MotifX; int MotifY;  int MotifWidth; int MotifHeight;
+			//iterate through elements, and add coordinates
+			//this approach assumes an unsorted list
+
+			//iterate through all significant sequences
+			for (MotifGroup MG : AG.getMotifs()){
+				for (SequenceMotif SM : MG.getMotifInstances()){
+					if ((((SM.getStart() < GS[i].getStartBeforeBuffer() && SM.getStop() < GS[i].getStartBeforeBuffer()) ||
+							(SM.getStart() > GS[i].getEndRange() && SM.getStop() > GS[i].getEndRange())==false) &&
+							SM.getContig().equals(ContigName))){
+						
+						//System.out.println("DrawMotif: " + AG.getSpecies() + "," + SM.getContig() + " " + SM.getStart() + ":" + SM.getStop());
+						
+						//Initialize draw motif
+						DrawMotif dm = new DrawMotif();
+						
+						//set information relevant for coloring
+						dm.setBioInfo(SM);
+						
+						//determine rendering coordinates of the ellipse
+						boolean TruncatedStart = false;
+						
+						//x-coordinates
+						//truncate beginning
+						if (SM.getStart() < GS[i].getStartBeforeBuffer()){
+							MotifX = (int) GS[i].getBoundingRect().getMinX();
+							TruncatedStart = true;
+						} else {
+							MotifX = (int) ((genome2displayRatio * (SM.getStart()-GS[i].getStartBeforeBuffer()))
+									+ GS[i].getBoundingRect().getMinX());
+						}
+						
+						//y-coordinate (here, consider strandedness)
+						MotifY = (int) GS[i].getBoundingRect().getCenterY();
+											
+						//width (consider truncating the end)
+						if (SM.getStop() > GS[i].getEndRange()){
+							MotifWidth = (int) (GS[i].getBoundingRect().getMaxX()) - MotifX;
+						} else {
+							if (TruncatedStart == false){
+								MotifWidth = (int)(genome2displayRatio * (SM.getStop() - SM.getStart()));
+							} else {
+								MotifWidth = (int)(genome2displayRatio * (SM.getStop() - GS[i].getStartBeforeBuffer()));
+							}
+						}
+						
+						//Height (always the same)
+						MotifHeight = (int) (GSHeight/3);
+						
+						//Y-coordinate starting point (strandedness matters)
+						if (SM.getStrand().equals(Strand.POSITIVE)){
+							MotifY = (int) GS[i].getBoundingRect().getCenterY() - MotifHeight;
+						} else {
+							//GeneY = (int) GS[i].getBoundingRect().getCenterY(); //original
+							MotifY = (int) GS[i].getBoundingRect().getCenterY()+1; //add 1 for display problems
+						}
+						
+						//create ellipse with appropriate values
+						Ellipse2D motif = new Ellipse2D.Double(MotifX, MotifY, MotifWidth, MotifHeight);
+						dm.setCoordinates(motif);
+						
+						//strand-reversed case
+						if (GS[i].isStrRevFlipGenes()){
+							
+							//height+width do not change
+							int MotifHeightFlip = MotifHeight;
+							int MotifWidthFlip = MotifWidth;
+							int MotifYFlip;
+							
+							//determine Y-coordinate
+							if (MotifY == (int) GS[i].getBoundingRect().getCenterY()+1){ //edit with +1 for display problem
+								MotifYFlip = (int) GS[i].getBoundingRect().getCenterY() - MotifHeight;
+							} else {
+								//GeneYFlip = (int) GS[i].getBoundingRect().getCenterY();// original
+								MotifYFlip = (int) GS[i].getBoundingRect().getCenterY()+1;// add 1 for display problems
+							}
+							
+							//determine X-coordinate
+							double Dist2Center = Math.abs(MotifX - GS[i].getBoundingRect().getCenterX());
+							int MotifXFlip;
+							if (MotifX > GS[i].getBoundingRect().getCenterX()){
+								MotifXFlip = (int) (MotifX - 2*Dist2Center - MotifWidth);
+							} else {
+								MotifXFlip = (int) (MotifX + 2*Dist2Center - MotifWidth);
+							}
+							
+							//create ellipse with appropriate values
+							Ellipse2D motifFlip = new Ellipse2D.Double(MotifXFlip, MotifYFlip, MotifWidthFlip, MotifHeightFlip);
+							dm.setStrRevCoordinates(motifFlip);
+							dm.setStrRevChange(true);
+
+						} else {
+							dm.setStrRevCoordinates(motif);
+							dm.setStrRevChange(false);
+						}
+						
+						//TODO: determine membership.
+//						//determine membership
+//						//Update: compare to ECRON as opposed to range boundaries
+//						LinkedList<GenomicElementAndQueryMatch> LL = contexts.get(GS[i].getLabel());
+//						
+//						boolean MemberOfContextSet = false;
+//						for (int j = 0; j <LL.size(); j++){
+//							if (SM.getStart() == LL.get(j).getE().getStart() &&
+//									SM.getStop() == LL.get(j).getE().getStop()){
+//								MemberOfContextSet = true;
+//							}
+//						}
+//						
+//						if (MemberOfContextSet == true){
+//							SM.setMembership(0);
+//						} else {
+//							SM.setMembership(-1);
+//						}
+						
+						//set color to default
+						dm.setColor(Color.LIGHT_GRAY);
+						
+						//add this draw gene to the set
+						dms.add(dm);
+						
+					}
+				}
+			}
+
+			//update draw genes
+			GS[i].setDm(dms);
+		}	
+	}
+
+	
 	//add appropriate colors according to homology
 	private void addHomologyColors() {
+		
+		//reset offset point
+		this.OffSetPoint = 0;
+		
 		if (ECRONType.equals("annotation")){
 			
 			//define a new counting array
@@ -816,6 +982,48 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	        }
 			
 		}
+		
+		//adjust offset point
+		this.OffSetPoint = this.GeneColorList.size();
+		
+		//Add colors to motifs
+		//define a new counting array
+		Count<String, Integer> MotifColors = new Count<String, Integer>();
+		
+		//collect all colors 
+		for (int i = 0; i < GS.length; i++){
+			for (int j = 0; j <GS[i].getDm().size(); j++){
+				MotifColors.add(GS[i].getDm().get(j).getBioInfo().getMotifName().toUpperCase());
+			}
+		}
+		
+        //sort annotations into a linked list
+        LinkedList<SharedHomology> MotifColorsSorted = SortAndAddColors2Ann(MotifColors);
+        
+        //set 
+        this.MotifColorList = MotifColorsSorted;
+
+        //add these colors back to the elements
+        for (int i = 0; i < GS.length; i++){
+        	if (GS[i].getDm() != null){
+            	for (int j = 0; j < GS[i].getDm().size(); j++){
+            		for (int k = 0; k < MotifColorsSorted.size(); k++){
+            			if (MotifColorsSorted.get(k).getAnnotation().equals(GS[i].getDm().get(j).getBioInfo().getMotifName().toUpperCase())){
+            				//set color appropriately
+            				GS[i].getDm().get(j).setColor(MotifColorsSorted.get(k).getColor());
+            				
+            				//add all elements to the shared homology colors for later parsing
+            				MotifColorsSorted.get(k).getMotifMembers().add(GS[i].getDm().get(j).getBioInfo());
+            			}
+            		}
+            	}
+        	}
+
+        }
+        
+        //reset offset point
+        this.OffSetPoint = 0;
+		
 	}
 	
 	//add coordinate bars
@@ -972,6 +1180,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		//computing information for display.
 		computeNucleotideRangesOnSegments();
 		addDrawGenes();
+		addMotifs();
 		addHomologyColors();
 		addCoordinateBars();
 		
@@ -993,15 +1202,14 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		}
 		draftGenes(g2d);				//draw genes
 		draftLines(g2d); 				//draw centerline
+		
+		if (this.mf.getFr().getPanMotifOptions().getIncludeMotifsDisp().isSelected()){
+			draftMotifs(g2d);			//draw motifs, if desired.
+		}
 		draftLabels(g2d);				//draw label associated with each genomic segment
 		
-		//genes from legend				//draw selected homology groups
-//		if (this.gclp != null) {
-//			draftSelectedGenes(g2d);
-//		}
-		
 		//middle clicked genes
-		draftMiddleClickGenes(g2d);
+		draftMiddleClickGenes(g2d);		//draw selected homology groups
 
 	}
 
@@ -1091,52 +1299,9 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		}
 		
 	}
-	
+		
 	//draw genes selected in legend
-	private void draftSelectedGenes(Graphics2D g){
-		
-		//adjust stroke
-		Stroke DefaultStroke = g.getStroke();
-		g.setStroke(new BasicStroke(6.0f));
 
-		//add all genes to all backgrounds
-		if (gclp.getSelectedColors() != null){
-			for (int i = 0; i <this.GS.length; i++){
-				for (int j = 0; j <this.GS[i].getDg().size(); j++){
-					
-					//render original rectangle, or inverted strand
-					if (StrandNormalize == true){
-						
-						for (SharedHomology sh : gclp.getSelectedColors()){
-							for (GenomicElement E : sh.getMembers()){
-								if (GS[i].getDg().get(j).getBioInfo().equals(E)){
-									g.setPaint(Color.RED);
-									g.draw(this.GS[i].getDg().get(j).getStrRevCoordinates());
-								}
-							}
-						}
-
-						
-					} else {
-					
-						for (SharedHomology sh : gclp.getSelectedColors()){
-							for (GenomicElement E : sh.getMembers()){
-								if (GS[i].getDg().get(j).getBioInfo().equals(E)){
-									g.setPaint(Color.RED);
-									g.draw(this.GS[i].getDg().get(j).getCoordinates());
-								}
-							}
-						}
-					
-					}
-
-				}
-			}
-		}
-		
-		//return to normal
-		g.setStroke(DefaultStroke);
-	}
 	
 	//draw genes selected in click
 	private void draftMiddleClickGenes(Graphics2D g){
@@ -1182,6 +1347,64 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 			g2d.fillRect((int) GS[i].getBoundingRect().getX(), (int)Math.round(GS[i].getBoundingRect().getCenterY()),
 					(int) GS[i].getBoundingRect().getWidth(), GenomeLineThickness);
 		}
+	}
+	
+	//draw motifs
+	private void draftMotifs(Graphics2D g){
+		//add all motifs to all backgrounds
+		for (int i = 0; i <this.GS.length; i++){
+			if (this.GS[i].getDm() != null){
+				for (int j = 0; j <this.GS[i].getDm().size(); j++){
+					
+					//options to display some or all 
+					if ((isShowSurrounding() == true) || 
+							((isShowSurrounding() == false) && (this.GS[i].getDm().get(j).getMembership() == 0))) {
+						
+						//options to color extra regions
+						if (this.GS[i].getDm().get(j).getMembership() == 0){
+							
+							//always color core genes with assigned homology color
+							g.setPaint(this.GS[i].getDm().get(j).getColor());
+							
+						} else {
+							
+							//depending on options, color light gray or original color.
+							if (isColorSurrounding() == true){
+								g.setPaint(this.GS[i].getDm().get(j).getColor());
+							} else {
+								g.setPaint(Color.LIGHT_GRAY);
+							}
+							
+						}
+
+						//render original rectangle, or inverted strand
+						if (StrandNormalize == true){
+							
+							//draw rectangle, with black border
+							g.fill(this.GS[i].getDm().get(j).getStrRevCoordinates());
+							
+							//surround with black border
+							g.setPaint(Color.BLACK);
+							g.draw(this.GS[i].getDm().get(j).getStrRevCoordinates());
+							
+						} else {
+						
+							//draw rectangle
+							g.fill(this.GS[i].getDm().get(j).getCoordinates());
+						
+							//surround with black border
+							g.setPaint(Color.BLACK);
+							g.draw(this.GS[i].getDm().get(j).getCoordinates());
+						
+						}
+						
+					}
+
+				}
+			}
+
+		}
+
 	}
 	
 	//draw coordinates
@@ -1361,6 +1584,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	    	SharedHomology SH = new SharedHomology();
 	    	SH.setAnnotation(mapKeys.get(i));
 	    	SH.setFrequency(mapValues.get(i));
+	    	SH.setOffSetPoint(OffSetPoint);
 	    	SH.addColor(i);
 	    	SH.setECRONType("annotation");
 	    	sortedList.add(SH);
@@ -1411,6 +1635,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	    	SharedHomology SH = new SharedHomology();
 	    	SH.setClusterID(mapKeys.get(i));
 	    	SH.setFrequency(mapValues.get(i));
+	    	SH.setOffSetPoint(OffSetPoint);
 	    	SH.addColor(i);
 	    	SH.setECRONType("cluster");
 	    	sortedList.add(SH);
@@ -1520,7 +1745,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		if(SwingUtilities.isLeftMouseButton(e)){
 		
 			//recover clicked draw gene
-			DrawGenes NewlyClicked = FindCurrentDrawGene(e);
+			DrawGene NewlyClicked = FindCurrentDrawGene(e);
 			
 			//null case (no gene clicked): release all.
 			if (NewlyClicked == null){
@@ -1600,7 +1825,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		} else if (SwingUtilities.isMiddleMouseButton(e)){
 			
 			//recover clicked draw gene
-			DrawGenes NewlyClicked = FindCurrentDrawGene(e);
+			DrawGene NewlyClicked = FindCurrentDrawGene(e);
 			
 			//null case (no gene clicked): release all.
 			if (NewlyClicked == null){
@@ -1675,9 +1900,9 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	}
 
 	//Determine the identity of the clicked on gene.
-	private DrawGenes FindCurrentDrawGene(MouseEvent e) {
+	private DrawGene FindCurrentDrawGene(MouseEvent e) {
 	    
-		DrawGenes SelectedGene = null;
+		DrawGene SelectedGene = null;
 		
 		//find the gene in the selected area.
 	    for (int i = 0; i <GS.length; i++){
@@ -1730,10 +1955,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		JFrame Info = new JFrame();
 		Info.setUndecorated(true);
 		Info.setBackground(Color.YELLOW);
-		//Info.setLocation((e.getX()+FrameMoveRight),(e.getY()+FrameMoveDown));
 		Info.setLocation((int)MouseInfo.getPointerInfo().getLocation().getX()+1,(int)MouseInfo.getPointerInfo().getLocation().getY()+1);
-		
-		//Info.addWindowListener(this);
 		
 		//compute + import text to display
 		JTextPanewLineNumbers txtToDisplay = ComputeJTextField(e);
@@ -2010,6 +2232,61 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	    			
 	    		}
 	    	}
+	    	
+	    	//check for motifs
+	    	if (GS[i].getDm() != null){
+		    	for (int j = 0; j <GS[i].getDm().size(); j++){
+		    		
+		    		//natural strand case
+		    		if (StrandNormalize == false){
+		    			if (GS[i].getDm().get(j).getCoordinates().contains(e.getPoint())){
+		    				
+		    				int Counter = 0;
+		    				for (int k = 0; k <Options.length; k++){
+		    					
+		    					if (k != 0){
+			    					Headers[Counter] = OptionNames[k];
+		    					} else {
+		    						Headers[Counter] = "Motif:";
+		    					}
+
+		    					String EntryString;
+		    					if (k == 0){
+		    						EntryString = GS[i].getDm().get(j).getBioInfo().getMotifName();
+		    					} else if (k ==1) {
+		    						EntryString = "";
+		    					} else if (k == 2){
+	    							EntryString = Integer.toString((GS[i].getDm().get(j).getBioInfo().getStop()
+											-GS[i].getDm().get(j).getBioInfo().getStart()+1)) + " nt";
+		    					} else if (k == 3) {
+		    						EntryString = Integer.toString(GS[i].getDm().get(j).getBioInfo().getStart());
+		    					} else if (k == 4) {
+		    						EntryString = Integer.toString(GS[i].getDm().get(j).getBioInfo().getStop());
+		    					} else {
+		    						EntryString = GS[i].getDm().get(j).getBioInfo().getSource();
+		    					}
+		    					
+	    						//add a new line after the entry.
+	    						if (k != 0){
+	    							Values[Counter] = " " + EntryString + "\n";
+	    							NumberOfLines++;
+	    						} else {
+	    							Values[Counter] = " " + EntryString;
+	    						}
+	    						
+	    						//increment Counter
+	    						Counter++;
+		    					
+		    				}
+		    			}
+		    		} else {
+		    			if (GS[i].getDm().get(j).getStrRevCoordinates().contains(e.getPoint())){
+		    				
+		    			}
+		    		}
+		    	}
+	    	}
+
 	    }
 	    
 		// create a JTextPane + add settings

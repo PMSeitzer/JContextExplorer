@@ -223,4 +223,12 @@ public class Jpan_MotifOptions extends JPanel implements ActionListener{
 	public void setMenuLoadedMotifs(JComboBox<String> menuLoadedMotifs) {
 		this.menuLoadedMotifs = menuLoadedMotifs;
 	}
+
+	public JCheckBox getIncludeMotifsDisp() {
+		return IncludeMotifsDisp;
+	}
+
+	public void setIncludeMotifsDisp(JCheckBox includeMotifsDisp) {
+		IncludeMotifsDisp = includeMotifsDisp;
+	}
 }

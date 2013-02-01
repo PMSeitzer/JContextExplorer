@@ -1,13 +1,15 @@
 package genomeObjects;
 
 import java.util.LinkedList;
-
+import org.biojava3.core.sequence.Strand;
 public class SequenceMotif {
 
 	//Fields
 	private int Start;							//Start coordinate
 	private int Stop;							//Stop coordinate
+	private Strand Strand;						//Strandedness of motif
 	private String Sequence;					//This sequence
+	private String Contig;						//Name of sequence containing the motif
 	private LinkedList<GenomicElement> AssociatedElement;	//Associated gene or genes with this element
 	private double Score;						//Statistical likelihood that this sequence is an instance of the motif
 	private double pvalue;						//associated with fimo
@@ -95,6 +97,22 @@ public class SequenceMotif {
 
 	public void setSource(String source) {
 		Source = source;
+	}
+
+	public String getContig() {
+		return Contig;
+	}
+
+	public void setContig(String contig) {
+		Contig = contig;
+	}
+
+	public Strand getStrand() {
+		return Strand;
+	}
+
+	public void setStrand(Strand strand) {
+		Strand = strand;
 	}
 	
 }

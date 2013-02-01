@@ -143,19 +143,20 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 		//check cluster numbers for agreement
 		if (this.ECronType.contentEquals("annotation")){
 			for (SharedHomology SH : this.GeneList){
-				
+					
 				//collect all annotations
 				HashSet<Integer> Clusters = new HashSet<Integer>();
 				for (GenomicElement E : SH.getMembers()){
 					Clusters.add(E.getClusterID());
 				}
-				
+					
 				// if there was only one cluster ID among all annotations, map this annotation to the cluster.
 				if (Clusters.size() == 1){
 					SH.setClusterID(SH.getMembers().get(0).getClusterID());
 				} else {
 					SH.setClusterID(-1); //indicates a mixed case
 				}
+
 			}
 		} else {
 			for (SharedHomology SH : this.GeneList){
