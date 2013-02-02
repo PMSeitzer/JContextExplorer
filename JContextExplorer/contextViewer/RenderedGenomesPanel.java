@@ -119,6 +119,10 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	private int ArrowHeight = 10;
 	private int LabelAboveGS = 5;
 	
+	//motifs
+	private boolean Motifs2Scale = false;
+	private int MotifWidthMinimum = (int) (GSHeight/6);
+	
 	//boolean variables for check box repainting
 	private boolean ShowSurrounding = true;
 	private boolean ColorSurrounding = false;
@@ -140,8 +144,8 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	private boolean ShowClusterID = false;
 	private int CharacterMax = 20;
 	private boolean HomologyGroupSelected = false;
-	private DrawGene CurrentMiddleClickedDrawGene;
-	private DrawGene CurrentLeftClickedDrawGene;
+	private DrawObject CurrentMiddleClickedDrawObject;
+	private DrawObject CurrentLeftClickedDrawObject;
 	private boolean ClickedOnLegend = false;
 	
 	//legend panel info
@@ -646,8 +650,6 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 				
 				if ((((e.getStart() < GS[i].getStartBeforeBuffer() && e.getStop() < GS[i].getStartBeforeBuffer()) ||
 						(e.getStart() > GS[i].getEndRange() && e.getStop() > GS[i].getEndRange())) == false) &&
-//						(e.getType().contentEquals("CDS") || e.getType().contentEquals("rRNA") ||
-//								e.getType().contentEquals("tRNA")) && e.getContig().equals(ContigName)){
 						(DisplayElement) && e.getContig().equals(ContigName)){
 					
 					//upon discovering a single gene, initialize a new "drawgene"
@@ -787,10 +789,18 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 			for (MotifGroup MG : AG.getMotifs()){
 				for (SequenceMotif SM : MG.getMotifInstances()){
 					if ((((SM.getStart() < GS[i].getStartBeforeBuffer() && SM.getStop() < GS[i].getStartBeforeBuffer()) ||
-							(SM.getStart() > GS[i].getEndRange() && SM.getStop() > GS[i].getEndRange())==false) &&
-							SM.getContig().equals(ContigName))){
+							(SM.getStart() > GS[i].getEndRange() && SM.getStop() > GS[i].getEndRange()))==false) &&
+							SM.getContig().equals(ContigName)){
 						
-						//System.out.println("DrawMotif: " + AG.getSpecies() + "," + SM.getContig() + " " + SM.getStart() + ":" + SM.getStop());
+						//Debugging: display motif
+						//System.out.println("DrawMotif: " + AG.getSpecies() + "," + SM.getContig() + " " + SM.getStart() + ":" + SM.getStop() + " " + SM.getStrand().toString());
+						
+						//in the case of a negative strand, flip positive and negative coordinates.
+						if (SM.getStrand().equals(Strand.NEGATIVE)){
+							int TempStart = SM.getStart();
+							SM.setStart(SM.getStop());
+							SM.setStop(TempStart);
+						}
 						
 						//Initialize draw motif
 						DrawMotif dm = new DrawMotif();
@@ -836,8 +846,13 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 							MotifY = (int) GS[i].getBoundingRect().getCenterY()+1; //add 1 for display problems
 						}
 						
+						//update scale power
+						if (!Motifs2Scale)
+							if (MotifWidth < MotifWidthMinimum)
+								MotifWidth = MotifWidthMinimum;
+						
 						//create ellipse with appropriate values
-						Ellipse2D motif = new Ellipse2D.Double(MotifX, MotifY, MotifWidth, MotifHeight);
+						Ellipse2D motif = new Ellipse2D.Double((double)MotifX, (double)MotifY, (double)MotifWidth, (double)MotifHeight);
 						dm.setCoordinates(motif);
 						
 						//strand-reversed case
@@ -852,7 +867,6 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 							if (MotifY == (int) GS[i].getBoundingRect().getCenterY()+1){ //edit with +1 for display problem
 								MotifYFlip = (int) GS[i].getBoundingRect().getCenterY() - MotifHeight;
 							} else {
-								//GeneYFlip = (int) GS[i].getBoundingRect().getCenterY();// original
 								MotifYFlip = (int) GS[i].getBoundingRect().getCenterY()+1;// add 1 for display problems
 							}
 							
@@ -865,8 +879,13 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 								MotifXFlip = (int) (MotifX + 2*Dist2Center - MotifWidth);
 							}
 							
+							//update scale power
+							if (!Motifs2Scale)
+								if (MotifWidth < MotifWidthMinimum)
+									MotifWidth = MotifWidthMinimum;
+							
 							//create ellipse with appropriate values
-							Ellipse2D motifFlip = new Ellipse2D.Double(MotifXFlip, MotifYFlip, MotifWidthFlip, MotifHeightFlip);
+							Ellipse2D motifFlip = new Ellipse2D.Double((double)MotifXFlip, (double)MotifYFlip, (double)MotifWidthFlip, (double)MotifHeightFlip);
 							dm.setStrRevCoordinates(motifFlip);
 							dm.setStrRevChange(true);
 
@@ -909,7 +928,6 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		}	
 	}
 
-	
 	//add appropriate colors according to homology
 	private void addHomologyColors() {
 		
@@ -1201,11 +1219,12 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 			draftCoordinates(g2d);		//draw numerical coordinates spanning genomic segment
 		}
 		draftGenes(g2d);				//draw genes
-		draftLines(g2d); 				//draw centerline
-		
+
 		if (this.mf.getFr().getPanMotifOptions().getIncludeMotifsDisp().isSelected()){
 			draftMotifs(g2d);			//draw motifs, if desired.
 		}
+		draftLines(g2d); 				//draw centerline
+		
 		draftLabels(g2d);				//draw label associated with each genomic segment
 		
 		//middle clicked genes
@@ -1300,9 +1319,6 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		
 	}
 		
-	//draw genes selected in legend
-
-	
 	//draw genes selected in click
 	private void draftMiddleClickGenes(Graphics2D g){
 		
@@ -1316,8 +1332,10 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		if (CurrentlySelectedGeneColors != null){
 			for (Color c : CurrentlySelectedGeneColors){
 				
-				//check all genes for this color.
+				//check all draw objects for this color.
 			    for (int i = 0; i <GS.length; i++){
+			    	
+			    	//check all genes
 			    	for (int j = 0; j <GS[i].getDg().size(); j++){
 			    		if (GS[i].getDg().get(j).getColor().equals(c)){
 				    		
@@ -1329,7 +1347,20 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 				    		}
 			    		}
 			    	}
+			    	
+			    	//check all motifs
+			    	for (int j = 0; j <GS[i].getDm().size(); j++){
+			    		if (GS[i].getDm().get(j).getColor().equals(c)){
+			    			
+			    			if (StrandNormalize == false){
+			    				g.draw(this.GS[i].getDm().get(j).getCoordinates());
+			    			} else {
+			    				g.draw(this.GS[i].getDm().get(j).getStrRevCoordinates());
+			    			}
+			    		}
+			    	}
 			    }
+			    
 			}
 		}
 
@@ -1351,9 +1382,10 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	
 	//draw motifs
 	private void draftMotifs(Graphics2D g){
+		
 		//add all motifs to all backgrounds
 		for (int i = 0; i <this.GS.length; i++){
-			if (this.GS[i].getDm() != null){
+			if (this.GS[i].getDm() != null){	//some motifs exist on this segment
 				for (int j = 0; j <this.GS[i].getDm().size(); j++){
 					
 					//options to display some or all 
@@ -1377,25 +1409,34 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 							
 						}
 
-						//render original rectangle, or inverted strand
+						//to Surround with a black border or not?
+						boolean SurroundWithBorder = true;
+//						if (g.getPaint().equals(Color.LIGHT_GRAY)){
+//							SurroundWithBorder = true;
+//						}
+						//currently = always
+						
+						//render original ellipse, or inverted strand
 						if (StrandNormalize == true){
 							
-							//draw rectangle, with black border
+							//draw ellipse
 							g.fill(this.GS[i].getDm().get(j).getStrRevCoordinates());
 							
-							//surround with black border
-							g.setPaint(Color.BLACK);
-							g.draw(this.GS[i].getDm().get(j).getStrRevCoordinates());
-							
+							if (SurroundWithBorder){//surround with black border
+								g.setPaint(Color.BLACK);
+								g.draw(this.GS[i].getDm().get(j).getStrRevCoordinates());
+							}
+
 						} else {
 						
-							//draw rectangle
+							//draw ellipse
 							g.fill(this.GS[i].getDm().get(j).getCoordinates());
 						
-							//surround with black border
-							g.setPaint(Color.BLACK);
-							g.draw(this.GS[i].getDm().get(j).getCoordinates());
-						
+							if (SurroundWithBorder){//surround with black border
+								g.setPaint(Color.BLACK);
+								g.draw(this.GS[i].getDm().get(j).getCoordinates());
+							}
+
 						}
 						
 					}
@@ -1745,7 +1786,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		if(SwingUtilities.isLeftMouseButton(e)){
 		
 			//recover clicked draw gene
-			DrawGene NewlyClicked = FindCurrentDrawGene(e);
+			DrawObject NewlyClicked = FindCurrentDrawObject(e);
 			
 			//null case (no gene clicked): release all.
 			if (NewlyClicked == null){
@@ -1758,7 +1799,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 				GeneInformationIsBeingDisplayed = false;
 				
 			//current gene case: release all.
-			} else if (NewlyClicked == CurrentLeftClickedDrawGene){
+			} else if (NewlyClicked == CurrentLeftClickedDrawObject){
 				
 				// update
 				if (GeneInformationIsBeingDisplayed){
@@ -1789,7 +1830,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 					GeneInfo.dispose();
 				}
 				
-				CurrentLeftClickedDrawGene = NewlyClicked;
+				CurrentLeftClickedDrawObject = NewlyClicked;
 				
 				//create new frame
 				JFrame Info = MakeGeneInfo(e);
@@ -1825,20 +1866,20 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		} else if (SwingUtilities.isMiddleMouseButton(e)){
 			
 			//recover clicked draw gene
-			DrawGene NewlyClicked = FindCurrentDrawGene(e);
-			
+			DrawObject NewlyClicked = FindCurrentDrawObject(e);
+
 			//null case (no gene clicked): release all.
 			if (NewlyClicked == null){
 				
 				//reset all colors
 				CurrentlySelectedGeneColors = new LinkedList<Color>();
-				CurrentMiddleClickedDrawGene = null;
+				CurrentMiddleClickedDrawObject = null;
 									
 			//new location case: assign current clicked here.
 			} else {
 				
 				//new location
-				CurrentMiddleClickedDrawGene = NewlyClicked;
+				CurrentMiddleClickedDrawObject = NewlyClicked;
 
 				//check for shift/ctrl buttons
 				if (e.isShiftDown() || e.isControlDown()){
@@ -1847,27 +1888,27 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 					boolean AlreadyInTheList = false;
 					if (CurrentlySelectedGeneColors != null){
 						for (Color c : CurrentlySelectedGeneColors){
-							if (CurrentMiddleClickedDrawGene.getColor().equals(c)){
+							if (CurrentMiddleClickedDrawObject.getColor().equals(c)){
 								AlreadyInTheList = true;
 							}
 						}
 						
 						if (AlreadyInTheList){
-							CurrentlySelectedGeneColors.remove((Color) CurrentMiddleClickedDrawGene.getColor());
+							CurrentlySelectedGeneColors.remove((Color) CurrentMiddleClickedDrawObject.getColor());
 						} else {
 							//add to existing list
-							CurrentlySelectedGeneColors.add((Color) CurrentMiddleClickedDrawGene.getColor());
+							CurrentlySelectedGeneColors.add((Color) CurrentMiddleClickedDrawObject.getColor());
 						}
 					} else {
 						//initialize a new list with a single entry.
 						this.CurrentlySelectedGeneColors = new LinkedList<Color>();
-						CurrentlySelectedGeneColors.add((Color) CurrentMiddleClickedDrawGene.getColor());
+						CurrentlySelectedGeneColors.add((Color) CurrentMiddleClickedDrawObject.getColor());
 					}
 
 				} else {
 					//replace existing list with single entry
 					this.CurrentlySelectedGeneColors = new LinkedList<Color>();
-					CurrentlySelectedGeneColors.add((Color) CurrentMiddleClickedDrawGene.getColor());
+					CurrentlySelectedGeneColors.add((Color) CurrentMiddleClickedDrawObject.getColor());
 				}
 
 			}
@@ -1900,30 +1941,49 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	}
 
 	//Determine the identity of the clicked on gene.
-	private DrawGene FindCurrentDrawGene(MouseEvent e) {
+	private DrawObject FindCurrentDrawObject(MouseEvent e) {
 	    
-		DrawGene SelectedGene = null;
+		DrawObject SelectedObject = null;
 		
-		//find the gene in the selected area.
+		//Check for a gene in the selected area.
 	    for (int i = 0; i <GS.length; i++){
 	    	for (int j = 0; j <GS[i].getDg().size(); j++){
 	    	
 	    		//normal strand case
 	    		if (StrandNormalize == false){
 	    			if (GS[i].getDg().get(j).getCoordinates().contains(e.getPoint())){
-	    				SelectedGene = GS[i].getDg().get(j);
+	    				SelectedObject = GS[i].getDg().get(j);
+	    				break;
 	    			}
 	    		} else {
 	    			if (GS[i].getDg().get(j).getStrRevCoordinates().contains(e.getPoint())){
-	    				SelectedGene = GS[i].getDg().get(j);
+	    				SelectedObject = GS[i].getDg().get(j);
+	    				break;
 	    			}
 	    		}
 	    	}
 	    }
-	    				
-		return SelectedGene;
+	    
+	    //Check for a motif - precedence over genes
+	    for (int i = 0; i < GS.length; i++){
+	    	for (int j = 0; j < GS[i].getDm().size(); j++){
+	    		if (StrandNormalize == false){
+	    			if (GS[i].getDm().get(j).getCoordinates().contains(e.getPoint())){
+	    				SelectedObject = GS[i].getDm().get(j);
+	    				break;
+	    			}
+	    		} else {
+	    			if (GS[i].getDm().get(j).getStrRevCoordinates().contains(e.getPoint())){
+	    				SelectedObject = GS[i].getDm().get(j);
+	    				break;
+	    			}
+	    		}
+	    	}
+	    }
+	    
+	    //return the current object
+		return SelectedObject;
 	}
-
 
 	@Override
 	public void mouseEntered(MouseEvent arg0) {
@@ -2050,7 +2110,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 			this.ShowType = false;
 		}
 		Options[5] = this.ShowType;
-		
+
 		//JTextField computation
 		String[] Headers = new String[NumberToInclude];
 		String[] Values = new String[NumberToInclude];
@@ -2065,6 +2125,9 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	    		//natural strand case
 	    		if (StrandNormalize == false){
 	    			if (GS[i].getDg().get(j).getCoordinates().contains(e.getPoint())){
+	    				
+	    				//re-set count for appropriate sizing.
+	    				NumberOfLines = 1;
 	    				
 	    				int Counter = 0;
 	    				for (int k = 0; k <Options.length; k++){
@@ -2152,7 +2215,11 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	    			
 	    		//corrected strand case
 	    		} else {
+	    			
 	    			if (GS[i].getDg().get(j).getStrRevCoordinates().contains(e.getPoint())){
+	    				
+	    				//re-set count for appropriate sizing.
+	    				NumberOfLines = 1;
 	    				
 	    				int Counter = 0;
 	    				for (int k = 0; k <Options.length; k++){
@@ -2160,6 +2227,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	    						
 	    						//write option name
 	    						Headers[Counter] = OptionNames[k];
+	    						
 	    						String EntryString;
 	    						//retrieve the stored value
 	    						if (k == 0){
@@ -2235,53 +2303,87 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	    	
 	    	//check for motifs
 	    	if (GS[i].getDm() != null){
+	    		//System.out.println("Clicked a motif");
 		    	for (int j = 0; j <GS[i].getDm().size(); j++){
 		    		
 		    		//natural strand case
 		    		if (StrandNormalize == false){
 		    			if (GS[i].getDm().get(j).getCoordinates().contains(e.getPoint())){
 		    				
-		    				int Counter = 0;
+		    				//re-set count for appropriate sizing.
+		    				NumberOfLines = 1;
+		    				
+		    				int MotifCounter = 0;
 		    				for (int k = 0; k <Options.length; k++){
-		    					
-		    					if (k != 0){
-			    					Headers[Counter] = OptionNames[k];
-		    					} else {
-		    						Headers[Counter] = "Motif:";
-		    					}
+		    					if (Options[k] == true){
+		    						
+		    						//Headers
+			    					Headers[MotifCounter] = OptionNames[k];
 
-		    					String EntryString;
-		    					if (k == 0){
-		    						EntryString = GS[i].getDm().get(j).getBioInfo().getMotifName();
-		    					} else if (k ==1) {
-		    						EntryString = "";
-		    					} else if (k == 2){
-	    							EntryString = Integer.toString((GS[i].getDm().get(j).getBioInfo().getStop()
-											-GS[i].getDm().get(j).getBioInfo().getStart()+1)) + " nt";
-		    					} else if (k == 3) {
-		    						EntryString = Integer.toString(GS[i].getDm().get(j).getBioInfo().getStart());
-		    					} else if (k == 4) {
-		    						EntryString = Integer.toString(GS[i].getDm().get(j).getBioInfo().getStop());
-		    					} else {
-		    						EntryString = GS[i].getDm().get(j).getBioInfo().getSource();
-		    					}
-		    					
-	    						//add a new line after the entry.
-	    						if (k != 0){
-	    							Values[Counter] = " " + EntryString + "\n";
+			    					String EntryString;
+			    					if (k == 0){
+			    						Headers[MotifCounter] = "Motif:";
+			    						EntryString = GS[i].getDm().get(j).getBioInfo().getMotifName();
+			    					} else if (k == 1) {
+			    						Headers[MotifCounter] = "Sequence:";
+			    						EntryString = GS[i].getDm().get(j).getBioInfo().getSequence();
+			    					} else if (k == 2){
+		    							EntryString = Integer.toString((GS[i].getDm().get(j).getBioInfo().getStop()
+												-GS[i].getDm().get(j).getBioInfo().getStart()+1)) + " nt";
+			    					} else if (k == 3) {
+			    						EntryString = Integer.toString(GS[i].getDm().get(j).getBioInfo().getStart());
+			    					} else if (k == 4) {
+			    						EntryString = Integer.toString(GS[i].getDm().get(j).getBioInfo().getStop());
+			    					} else {
+			    						Headers[MotifCounter] = "Source:";
+			    						EntryString = GS[i].getDm().get(j).getBioInfo().getSource();
+			    					}
+			    						    						
+		    						//increment Counter + write info
+		    						Values[MotifCounter] = " " + EntryString + "\n";	    							
 	    							NumberOfLines++;
-	    						} else {
-	    							Values[Counter] = " " + EntryString;
-	    						}
-	    						
-	    						//increment Counter
-	    						Counter++;
-		    					
+		    						MotifCounter++;
+		    					}
 		    				}
 		    			}
 		    		} else {
 		    			if (GS[i].getDm().get(j).getStrRevCoordinates().contains(e.getPoint())){
 		    				
+		    				//re-set count for appropriate sizing.
+		    				NumberOfLines = 1;
+		    				
+		    				int MotifCounter = 0;
+		    				for (int k = 0; k <Options.length; k++){
+		    					if (Options[k] == true){
+			    					
+		    						//Headers
+			    					Headers[MotifCounter] = OptionNames[k];
+
+			    					String EntryString;
+			    					if (k == 0){
+			    						Headers[MotifCounter] = "Motif:";
+			    						EntryString = GS[i].getDm().get(j).getBioInfo().getMotifName();
+			    					} else if (k ==1) {
+			    						Headers[MotifCounter] = "Sequence:";
+			    						EntryString = GS[i].getDm().get(j).getBioInfo().getSequence();
+			    					} else if (k == 2){
+		    							EntryString = Integer.toString((GS[i].getDm().get(j).getBioInfo().getStop()
+												-GS[i].getDm().get(j).getBioInfo().getStart()+1)) + " nt";
+			    					} else if (k == 3) {
+			    						EntryString = Integer.toString(GS[i].getDm().get(j).getBioInfo().getStart());
+			    					} else if (k == 4) {
+			    						EntryString = Integer.toString(GS[i].getDm().get(j).getBioInfo().getStop());
+			    					} else {
+			    						Headers[MotifCounter] = "Source:";
+			    						EntryString = GS[i].getDm().get(j).getBioInfo().getSource();
+			    					}
+			    						    						
+		    						//increment Counter + write info
+		    						Values[MotifCounter] = " " + EntryString + "\n";	    							
+	    							NumberOfLines++;
+		    						MotifCounter++;
+		    					}
+		    				}
 		    			}
 		    		}
 		    	}

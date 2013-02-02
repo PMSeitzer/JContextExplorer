@@ -208,26 +208,29 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 			
 			//retrieve file
 			File TreeFile = getPhyTree.getSelectedFile();
-			Tree t = ParseNewickTree(TreeFile);
-			setCurrentParsedTree(t);
+			
+			//if the file is not null (cancel operation), try to parse
+			if (TreeFile != null){
+				Tree t = ParseNewickTree(TreeFile);
+				setCurrentParsedTree(t);
 
-			//add + update, if the tree is new.
-			if (!LoadedPhyTrees.contains(TreeFile) && t != null){
-				
-				//update catalog
-				CurrentParsedTree = t;				//Tree
-				ParsedPhyTrees.add(t);				//LinkedList<Tree>
-				LoadedPhyTrees.add(0,TreeFile);		//LinkedList<File>
-				FilePath = TreeFile;				//Path
-						
-				//update GUI
-				menuLoadedPhyTrees.removeAllItems();
-				String[] PhyTrees = getLoadedPhyTrees();
-				for (String s : PhyTrees){
-					menuLoadedPhyTrees.addItem(s);
+				//add + update, if the tree is new.
+				if (!LoadedPhyTrees.contains(TreeFile) && t != null){
+					
+					//update catalog
+					CurrentParsedTree = t;				//Tree
+					ParsedPhyTrees.add(t);				//LinkedList<Tree>
+					LoadedPhyTrees.add(0,TreeFile);		//LinkedList<File>
+					FilePath = TreeFile;				//Path
+							
+					//update GUI
+					menuLoadedPhyTrees.removeAllItems();
+					String[] PhyTrees = getLoadedPhyTrees();
+					for (String s : PhyTrees){
+						menuLoadedPhyTrees.addItem(s);
+					}
 				}
 			}
-
 		}
 		
 		//switch menu to active tree

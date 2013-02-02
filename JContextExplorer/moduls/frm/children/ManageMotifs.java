@@ -706,9 +706,6 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			}
 		}
 
-
-		
-		
 		//close panel, after updating list.
 		if (evt.getSource().equals(btnOK)){
 			
@@ -717,6 +714,11 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			this.f.getPanMotifOptions().getMenuOfMotifs().removeAllItems();
 			for (int i = 0; i < f.getOS().getMGDescriptions().size(); i++){
 				this.f.getPanMotifOptions().getMenuOfMotifs().addItem(f.getOS().getMGDescriptions().get(i).getName());
+			}
+			
+			//if no motifs, reflect this.
+			if (this.f.getPanMotifOptions().getMenuLoadedMotifs().length == 0){
+				this.f.getPanMotifOptions().getMenuOfMotifs().addItem("<none>");
 			}
 
 			//close this window.

@@ -902,7 +902,6 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 				for (int i = 0; i < CSD.getNodeNames().length; i++){
 					if (CL.getName().equals(CSD.getNodeNames()[i])){
 						CL.setSelected(SelectedAfterClick[i]);
-						break;
 					}
 				}
 			}

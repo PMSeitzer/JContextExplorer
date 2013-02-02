@@ -556,7 +556,7 @@ public class FrmPhylo extends JPanel implements MouseListener{
 			//initialize
 			boolean[] SelectedAfterClick = new boolean[RectanglesSurroundingLabels.length];
 			Arrays.fill(SelectedAfterClick, Boolean.FALSE);
-			
+
 			//update with current existing set (if appropriate)
 			if (e.isShiftDown() == true || e.isControlDown() == true){
 				for (ContextLeaf CL : CSD.getGraphicalContexts()){
@@ -609,10 +609,13 @@ public class FrmPhylo extends JPanel implements MouseListener{
 			
 			//update status of currently selected nodes
 			for (ContextLeaf CL : CSD.getGraphicalContexts()){
+				//initially, de-select.
+				CL.setSelected(false);
+				
+				//option to re-select?
 				for (int i = 0; i < CSD.getPhyloNodeNames().length; i++){
 					if (CL.getSourceSpecies().equals(CSD.getPhyloNodeNames()[i])){
 						CL.setSelected(SelectedAfterClick[i]);
-						break;
 					}
 				}
 			}
