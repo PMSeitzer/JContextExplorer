@@ -106,8 +106,17 @@ public void importElements(String filename){
 								}
 							} 
 							
+							//set annotation
 							E.setAnnotation(ImportedLine[8]);
 						
+							//add gene IDs + homology clusters, if available
+							if (ImportedLine.length > 9){
+								E.setGeneID(Integer.parseInt(ImportedLine[9]));
+								if (ImportedLine.length > 10){
+									E.setClusterID(Integer.parseInt(ImportedLine[10]));
+								}
+							}
+							
 							//add to list
 							Elements.add(E);
 							

@@ -85,13 +85,6 @@ public class FrmTabbed extends JTabbedPane implements ChangeListener{
 			SelectedPaneMapping.put(TabCode, "Context Tree");
 		}
 		
-		//context graph
-		if (this.ShowContextGraph){
-			this.addTab("Context Graph", null, ContextGraphPanel);
-			TabCode++;
-			SelectedPaneMapping.put(TabCode, "Context Graph");
-		}
-		
 		//phylogenetic tree
 		if (this.ShowPhyloTree){
 			this.addTab("Phylogenetic Tree", null, PhyloTreePanel);
@@ -99,6 +92,13 @@ public class FrmTabbed extends JTabbedPane implements ChangeListener{
 			SelectedPaneMapping.put(TabCode, "Phylogenetic Tree");
 		}
 		
+		//context graph
+		if (this.ShowContextGraph){
+			this.addTab("Context Graph", null, ContextGraphPanel);
+			TabCode++;
+			SelectedPaneMapping.put(TabCode, "Context Graph");
+		}
+
 		//Retrieve currently selected frame
 		String CurrentlySelected = fr.getSelectedAnalysisType();
 		for (int i : SelectedPaneMapping.keySet()){

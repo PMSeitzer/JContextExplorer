@@ -158,6 +158,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		super();
 		loadFormats(); //change defaults here! labels are already linked to actions.
 		getPanel();
+
 		//setPrecision(2); //set precision to '2', because initialized at -1.
 		//possible places to change: messing with global font settings?
 		//setUIFont (new javax.swing.plaf.FontUIResource(new Font("MS Mincho",Font.PLAIN, 12)));
@@ -588,7 +589,9 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		chkAxis.setSelected(false);
 		add(chkAxis, c);
+		
 		// btn color axis
 		c.gridx = 1;
 		c.gridy = gridy;
@@ -650,6 +653,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
 		add(lblAxisSeparation, c);
+		
 		// txt axis ticks separation
 		c.gridx = 1;
 		c.gridy = gridy;
@@ -669,6 +673,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		chkAxisLabels.setSelected(false);
 		add(chkAxisLabels, c);
 		// btn font axis labels
 		c.gridx = 1;
@@ -711,6 +716,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.insets = new Insets(1, 1, 1, 1);
 		txtAxisEvery.setName("axis_every");
 		txtAxisEvery.addFocusListener(this);
+		txtAxisEvery.setText("1");
 		add(txtAxisEvery, c);
 		// txt axis ticks
 		c.gridx = 2;
@@ -1144,6 +1150,19 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		setTicksSeparation(separation);
 		setLabelsEvery(1);
 		setLabelsDecimals(cfg.getPrecision());
+	}
+	
+	public static void adjustValuesPhylo(final Config cfg){
+
+		double min = cfg.getConfigMenu().getValMin();
+		double max = cfg.getConfigMenu().getValMax();
+		SmartAxis sa = new SmartAxis(min, max);
+		setMinAxisValue(min);
+		setMaxAxisValue(max);
+		setTicksSeparation(sa.smartTicksSize());
+		setLabelsDecimals(cfg.getPrecision());
+//		chkAxis.setSelected(false);
+//		chkAxisLabels.setSelected(false);
 	}
 
 	private static void setMinAxisValue(double min) {

@@ -141,7 +141,7 @@ public class MovingDistancesbyClusterID implements OperonDissimilarityMeasure {
 			//Any inversions among elements?
 			int MisMatches = 0;
 			for (int i = 0; i <O1.size(); i++){
-				if (O1.get(i).getE().getCDSID() != O2.get(i).getE().getCDSID()){
+				if (O1.get(i).getE().getGeneID() != O2.get(i).getE().getGeneID()){
 					MisMatches++;
 				}
 			}

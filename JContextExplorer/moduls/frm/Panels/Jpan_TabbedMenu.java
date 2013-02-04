@@ -45,18 +45,18 @@ public class Jpan_TabbedMenu extends JTabbedPane{
 		MenuContainerPane.add(jm, BorderLayout.NORTH);
 		JScrollPane MenuScroll = new JScrollPane(MenuContainerPane);
 		
-		//Graph tab
-		JPanel GraphContainerPane = new JPanel();
-		GraphContainerPane.setLayout(new BorderLayout());
-		GraphContainerPane.add(jgm, BorderLayout.NORTH);
-		JScrollPane GraphScroll = new JScrollPane(GraphContainerPane);		
-		
 		//Phylogenetic tree tab
 		JPanel PhyloContainerPane = new JPanel();
 		PhyloContainerPane.setLayout(new BorderLayout());
 		PhyloContainerPane.add(jpm, BorderLayout.NORTH);
 		JScrollPane PhyloScroll = new JScrollPane(PhyloContainerPane);
 		
+		//Graph tab
+		JPanel GraphContainerPane = new JPanel();
+		GraphContainerPane.setLayout(new BorderLayout());
+		GraphContainerPane.add(jgm, BorderLayout.NORTH);
+		JScrollPane GraphScroll = new JScrollPane(GraphContainerPane);		
+
 		//Motif options tab
 		JPanel ContainerPane = new JPanel();
 		ContainerPane.setLayout(new BorderLayout());
@@ -66,8 +66,8 @@ public class Jpan_TabbedMenu extends JTabbedPane{
 		//add tabs to JOptionPanel
 		this.addTab("Options",null,OptionScroll);
 		this.addTab("Tree",null,MenuScroll);
-		this.addTab("Graph",null,GraphScroll);
 		this.addTab("Phylogeny",null,PhyloScroll);
+		//this.addTab("Comparer",null,GraphScroll);
 		this.addTab("Motifs",null,MotifScroll);
 	}
 

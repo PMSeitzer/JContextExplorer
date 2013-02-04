@@ -13,8 +13,7 @@ public class GenomicElement {
     private String Type;				//-Annotation Information--------
     private Strand Strand;				//
     private String Annotation;		    //
-	private int ElementID;				//
-    private int CDSID;					//-Other Designations------------
+	private int ElementID;				//-Other Designations------------
     private int ClusterID;				//
     private int GeneID;
 
@@ -26,7 +25,6 @@ public class GenomicElement {
     	Strand = null;
     	Start = 0;
     	Stop = 0;
-    	CDSID  = 0;
     	ClusterID = 0;
     	GeneID = 0;
     	Annotation = null;
@@ -77,12 +75,6 @@ public class GenomicElement {
 	}
 	public void setAnnotation(String annotation) {
 		Annotation = annotation;
-	}
-	public int getCDSID() {
-		return CDSID;
-	}
-	public void setCDSID(int cDSID) {
-		CDSID = cDSID;
 	}
 	public int getClusterID() {
 		return ClusterID;

@@ -112,7 +112,7 @@ public class Jpan_DisplayOptions extends JPanel implements ActionListener{
 		DrawContextGraph.setSelected(false);
 		DrawContextGraph.setFont(fontStandard);
 		DrawContextGraph.addActionListener(this);
-		add(DrawContextGraph,c);
+		//add(DrawContextGraph,c);
 		gridy++;
 		
 		//Show on Phylogenetic tree
@@ -156,14 +156,14 @@ public class Jpan_DisplayOptions extends JPanel implements ActionListener{
 		if (evt.getSource().equals(btnSelectAll)){
 			DrawSearchResults.setSelected(true);
 			DrawContextTree.setSelected(true);
-			DrawContextGraph.setSelected(true);
+			//DrawContextGraph.setSelected(true);
 			DrawPhylogeneticTree.setSelected(true);
 		}
 		
 		if (evt.getSource().equals(btndeSelectAll)){
 			DrawSearchResults.setSelected(false);
 			DrawContextTree.setSelected(false);
-			DrawContextGraph.setSelected(false);
+			//DrawContextGraph.setSelected(false);
 			DrawPhylogeneticTree.setSelected(false);
 		}
 	}

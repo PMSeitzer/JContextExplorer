@@ -271,7 +271,7 @@ import definicions.MatriuDistancies;
 				
 			} catch (Exception ex) {
 				showError("There were no matches to the query (or queries).");
-				ex.printStackTrace();
+				//ex.printStackTrace();
 			}
 			
 				return null;
@@ -1553,6 +1553,13 @@ import definicions.MatriuDistancies;
 								HorizontalScrollBuffer,CalculateVerticalScrollValue(PhyloTreeLeaves));
 						fPhylo.setPreferredSize(d);
 						
+						
+						//cfgp.getConfigMenu().setValMin(0.0);
+						//adjust values, if necessary.
+//						if (!qD.getAnalysesList().isOptionComputeDendrogram()) {
+//							Jpan_Menu.ajustaValors(cfgp);
+//						}
+						
 						// Convert tree into figures
 						figPhylo = new Fig_Pizarra(fr.getPanPhyTreeMenu().getCurrentParsedTree(), cfgp);
 
@@ -1562,6 +1569,7 @@ import definicions.MatriuDistancies;
 						cfgp.setConfigMenu(PhyloCfgPanel);
 						cfgp.setHtNoms(figPhylo.getHtNoms());
 						PhyloCfgPanel.setValMax(figPhylo.getLongestBranch());
+						PhyloCfgPanel.setValMin(0);
 						cfgp.setConfigMenu(PhyloCfgPanel);
 						
 						//add fields
@@ -1575,6 +1583,11 @@ import definicions.MatriuDistancies;
 						md.setArrel(c);
 						cfgp.setMatriu(md);
 
+						//adjust menu, if no context tree
+						if (!qD.getAnalysesList().isOptionComputeDendrogram()) {
+							Jpan_Menu.adjustValuesPhylo(cfgp);
+						}
+						
 						//add figures + configuration information to frame
 						fPhylo.setFigures(figPhylo.getFigures());
 						fPhylo.setConfig(cfgp);

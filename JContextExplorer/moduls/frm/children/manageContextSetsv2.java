@@ -196,7 +196,8 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		//frame settings
 		//this.setSize(new Dimension(400, 350));
 		//this.setSize(700,650);
-		this.setSize(700,680);
+		this.setSize(700,700);
+					//width, height
 		
 		this.setTitle("Add or Remove Context Sets");
 		this.setLocationRelativeTo(null);

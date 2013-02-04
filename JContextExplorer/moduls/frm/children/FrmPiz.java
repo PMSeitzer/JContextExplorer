@@ -183,7 +183,7 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 		this.frmpiz = this;
 		 
 //		System.out.println("Step 7");
-		System.out.println("val_Max_show is :" + val_Max_show);
+
 	}
 	
 	private void initComponentsMenu() {
