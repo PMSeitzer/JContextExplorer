@@ -30,6 +30,7 @@ public class OrganismSet {
 	private boolean ContinueImportingOperons = true;			
 	private LinkedList<String> IncludeTypes;					//-Types of data worth importing/processing
 	private LinkedList<String> DisplayOnlyTypes;
+	private File SourceDirectory;								//-Source information
 	
 	// ----------------------- Construction ------------------------//
 	 	
@@ -592,6 +593,14 @@ public class OrganismSet {
 
 	public void setMGDescriptions(LinkedList<MotifGroupDescription> mGDescriptions) {
 		MGDescriptions = mGDescriptions;
+	}
+
+	public File getSourceDirectory() {
+		return SourceDirectory;
+	}
+
+	public void setSourceDirectory(File sourceDirectory) {
+		SourceDirectory = sourceDirectory;
 	}
 
 } //completes classbody

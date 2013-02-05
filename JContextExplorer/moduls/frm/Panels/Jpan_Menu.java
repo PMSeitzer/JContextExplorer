@@ -54,6 +54,7 @@ import javax.swing.plaf.FontUIResource;
 import moduls.frm.FrmPrincipalDesk;
 import moduls.frm.InternalFrameData;
 import moduls.frm.children.FontSelection;
+import moduls.frm.children.ManageDissimilarity;
 import tipus.Orientation;
 import tipus.metodo;
 import tipus.rotacioNoms;
@@ -150,12 +151,17 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 	 * -------------------------------------------------------------------------
 	 */
 	
-	
+	// Additions Version 1.10 
+	private JButton btnManageDissimilarity;
+	private String  strManageDissimilarity = "Add/Remove";
+	private FrmPrincipalDesk fr;
+	private JLabel TreeCompBanner;
 
 // ------------------METHODS-------------------------------------------------//
 
 	public Jpan_Menu(final FrmPrincipalDesk fr) {
 		super();
+		this.fr = fr;
 		loadFormats(); //change defaults here! labels are already linked to actions.
 		getPanel();
 
@@ -333,6 +339,20 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		//add(rbWeights, c);
 		//gridy++;
 
+		//tree header
+		//Check boxes banner
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 4;
+		TreeCompBanner = new JLabel(" TREE COMPUTATION");
+		TreeCompBanner.setBackground(Color.GRAY);
+		TreeCompBanner.setOpaque(true);
+		TreeCompBanner.setFont(fontStandard);
+		add(TreeCompBanner,c);
+		gridy++;
+		
 		// lbl dissimilarity
 		c.gridx = 0;
 		c.gridy = gridy;
@@ -340,15 +360,31 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		lblDissimilarity.setFont(fontStandard);
 		add(lblDissimilarity, c);
-		// cb method
+		
+		// cb dissimilarity
 		c.gridx = 1;
 		c.gridy = gridy;
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 11);
+		cbDissimilarity.setFont(fontStandard);
 		add(cbDissimilarity, c);
+		gridy++;
+			
+		//add/remove button
+		btnManageDissimilarity = new JButton(strManageDissimilarity);
+		btnManageDissimilarity.addActionListener(this);
+		btnManageDissimilarity.setFont(fontStandard);
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(1,1,1,1);
+		add(btnManageDissimilarity, c);
 		gridy++;
 		
 		// lbl method
@@ -358,6 +394,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		lblMethod.setFont(fontStandard);
 		add(lblMethod, c);
 		
 		// cb method
@@ -368,6 +405,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 11);
 		add(cbMethod, c);
+		cbMethod.setFont(fontStandard);
 		gridy++;
 
 		// lbl precision
@@ -377,6 +415,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		lblPrecision.setFont(fontStandard);
 		add(lblPrecision, c);
 		
 		// txt precision
@@ -388,9 +427,10 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.insets = new Insets(1, 1, 1, 1);
 		txtPrecision.setName("precision");
 		txtPrecision.addFocusListener(this);
+		txtPrecision.setFont(fontStandard);
 		add(txtPrecision, c);
 		gridy++;
-
+		
 		// empty space
 		c.gridx = 0;
 		c.gridy = gridy;
@@ -410,6 +450,8 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		lblTreeTitle.setFont(fontStandard);
+		lblTreeTitle.setBackground(Color.GRAY);
 		add(lblTreeTitle, c);
 		gridy++;
 
@@ -449,7 +491,9 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		chkBands.setFont(fontStandard);
 		add(chkBands, c);
+		
 		// color bands
 		c.gridx = 1;
 		c.gridy = gridy;
@@ -465,6 +509,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		
 		btnColorBands.setActionCommand("color_marge");
 		btnColorBands.addActionListener(this);
+		btnColorBands.setFont(fontStandard);
 		add(btnColorBands, c);
 		gridy++;
 
@@ -487,6 +532,8 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		lblNodesTitle.setFont(fontStandard);
+		lblNodesTitle.setBackground(Color.GRAY);
 		add(lblNodesTitle, c);
 		gridy++;
 
@@ -497,7 +544,9 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		lblNodesSize.setFont(fontStandard);
 		add(lblNodesSize, c);
+		
 		// cb nodes size
 		c.gridx = 1;
 		c.gridy = gridy;
@@ -505,6 +554,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		cbNodesSize.setFont(fontStandard);
 		add(cbNodesSize, c);
 		gridy++;
 
@@ -516,6 +566,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
 		add(chkNodesLabels, c);
+		
 		// btn font nodes
 		c.gridx = 1;
 		c.gridy = gridy;
@@ -526,7 +577,9 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		btnFontNodes = new JButton(Language.getLabel(34));// Font (nodes)
 		btnFontNodes.setActionCommand("font_noms");
 		btnFontNodes.addActionListener(this);
+		btnFontNodes.setFont(fontStandard);
 		add(btnFontNodes, c);
+		
 		// btn color nodes
 		c.gridx = 2;
 		c.gridy = gridy;
@@ -537,6 +590,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		btnColorNodes = new JButton(Language.getLabel(35));// Color (nodes)
 		btnColorNodes.setActionCommand("color_noms");
 		btnColorNodes.addActionListener(this);
+		btnColorNodes.setFont(fontStandard);
 		add(btnColorNodes, c);
 		gridy++;
 
@@ -579,6 +633,8 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		lblAxisTitle.setFont(fontStandard);
+		lblAxisTitle.setBackground(Color.GRAY);
 		add(lblAxisTitle, c);
 		gridy++;
 
@@ -589,6 +645,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		chkAxis.setFont(fontStandard);
 		chkAxis.setSelected(false);
 		add(chkAxis, c);
 		
@@ -602,6 +659,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		btnColorAxis = new JButton(Language.getLabel(38));// Color (axis)
 		btnColorAxis.setActionCommand("color_axis");
 		btnColorAxis.addActionListener(this);
+		btnColorAxis.setFont(fontStandard);
 		add(btnColorAxis, c);
 		gridy++;
 
@@ -612,6 +670,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		lblAxisMin.setFont(fontStandard);
 		add(lblAxisMin, c);
 		// txt axis min
 		c.gridx = 1;
@@ -622,6 +681,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.insets = new Insets(1, 1, 1, 1);
 		txtAxisMin.setName("axis_min");
 		txtAxisMin.addFocusListener(this);
+		txtAxisMin.setFont(fontStandard);
 		add(txtAxisMin, c);
 		gridy++;
 
@@ -632,6 +692,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		lblAxisMax.setFont(fontStandard);
 		add(lblAxisMax, c);
 		// txt axis max
 		c.gridx = 1;
@@ -642,6 +703,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.insets = new Insets(1, 1, 1, 1);
 		txtAxisMax.setName("axis_max");
 		txtAxisMax.addFocusListener(this);
+		txtAxisMax.setFont(fontStandard);
 		add(txtAxisMax, c);
 		gridy++;
 
@@ -652,6 +714,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		lblAxisSeparation.setFont(fontStandard);
 		add(lblAxisSeparation, c);
 		
 		// txt axis ticks separation
@@ -663,6 +726,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.insets = new Insets(1, 1, 1, 1);
 		txtAxisSeparation.setName("axis_separation");
 		txtAxisSeparation.addFocusListener(this);
+		txtAxisSeparation.setFont(fontStandard);
 		add(txtAxisSeparation, c);
 		gridy++;
 
@@ -674,7 +738,9 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
 		chkAxisLabels.setSelected(false);
+		chkAxisLabels.setFont(fontStandard);
 		add(chkAxisLabels, c);
+		
 		// btn font axis labels
 		c.gridx = 1;
 		c.gridy = gridy;
@@ -685,7 +751,9 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		btnFontAxisLabels = new JButton(Language.getLabel(45));// Font (axis labels)
 		btnFontAxisLabels.setActionCommand("font_axis");
 		btnFontAxisLabels.addActionListener(this);
+		btnFontAxisLabels.setFont(fontStandard);
 		add(btnFontAxisLabels, c);
+		
 		// btn color axis labels
 		c.gridx = 2;
 		c.gridy = gridy;
@@ -696,6 +764,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		btnColorAxisLabels = new JButton(Language.getLabel(40));// Color (axis labels)
 		btnColorAxisLabels.setActionCommand("color_label");
 		btnColorAxisLabels.addActionListener(this);
+		btnColorAxisLabels.setFont(fontStandard);
 		add(btnColorAxisLabels, c);
 		gridy++;
 
@@ -706,6 +775,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		lblAxisEvery.setFont(fontStandard);
 		add(lblAxisEvery, c);
 		// txt axis labels every
 		c.gridx = 1;
@@ -717,6 +787,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		txtAxisEvery.setName("axis_every");
 		txtAxisEvery.addFocusListener(this);
 		txtAxisEvery.setText("1");
+		txtAxisEvery.setFont(fontStandard);
 		add(txtAxisEvery, c);
 		// txt axis ticks
 		c.gridx = 2;
@@ -725,6 +796,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		lblAxisTicks.setFont(fontStandard);
 		add(lblAxisTicks, c);
 		gridy++;
 
@@ -735,6 +807,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
+		lblAxisDecimals.setFont(fontStandard);
 		add(lblAxisDecimals, c);
 		// txt axis decimals
 		c.gridx = 1;
@@ -745,6 +818,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 		c.insets = new Insets(1, 1, 1, 1);
 		txtAxisDecimals.setName("axis_decimals");
 		txtAxisDecimals.addFocusListener(this);
+		txtAxisDecimals.setFont(fontStandard);
 		add(txtAxisDecimals, c);
 		gridy++;
 
@@ -1208,7 +1282,9 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 			fontAxisLabels = f.getNewFont();
 		} else if (evt.getActionCommand().equals("color_label")) {
 			colorAxisLabels = this.changeColorFont(colorAxisLabels);
-		} 
+		} else if (evt.getSource().equals(btnManageDissimilarity)){
+			new ManageDissimilarity(fr);
+		}
 //		else {
 //			FesLog.LOG.warning(Language.getLabel(47) + ": " + evt.toString());
 //		}

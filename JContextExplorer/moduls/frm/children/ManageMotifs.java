@@ -105,6 +105,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 	public ManageMotifs(FrmPrincipalDesk f){
 		super();
 		this.f = f ;
+		this.ReferenceDirectory = f.getFileChooserSource();
 		
 		//Initialize Sequence Motifs array + list
 		SequenceMotifsAsArray = this.f.getPanMotifOptions().getMenuLoadedMotifs();
@@ -116,8 +117,8 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		this.setSize(600,400);
 		
 		this.setTitle("Manage Sequence Motifs");
-		this.setLocationRelativeTo(null);
 		this.setModalityType(ModalityType.DOCUMENT_MODAL);
+		this.setModal(true);
 		
 		//add panel components
 		//attempt - add nested panel structure for inherent organization
@@ -125,9 +126,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		this.DisableComponents();
 		this.setContentPane(jp);
 		//this.pack(); //to pack or not to pack?
-		
-		//modality settings
-		this.setModal(true);
+
 		this.setLocationRelativeTo(null);
 		this.setVisible(true);
 		

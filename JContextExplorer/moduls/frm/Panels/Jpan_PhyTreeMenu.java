@@ -56,6 +56,7 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 	//constructor
 	public Jpan_PhyTreeMenu(FrmPrincipalDesk fr){
 		this.f = fr;
+		this.FilePath = fr.getFileChooserSource();
 		
 		//build components
 		this.getPanel();

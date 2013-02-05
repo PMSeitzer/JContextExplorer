@@ -122,6 +122,7 @@ public class FrmPrincipalDesk extends JFrame{
 	private boolean IncludeMotifs = false;
 	private boolean DisplayMotifs = false;
 	private String SelectedAnalysisType = "Search Results";
+	private File FileChooserSource;
 	
 	// ----- Methods ---------------------------------------------------//		
 
@@ -131,6 +132,7 @@ public class FrmPrincipalDesk extends JFrame{
 		//INITIALIZATIONS
 		super(title);
 		this.OS = theOrganismSet;
+		this.FileChooserSource = OS.getSourceDirectory();
 		
 		//DESKTOP FRAME INFORMATION
 		pan_Desk = new JDesktopPane();
@@ -557,5 +559,13 @@ public class FrmPrincipalDesk extends JFrame{
 
 	public void setDisplayMotifs(boolean displayMotifs) {
 		DisplayMotifs = displayMotifs;
+	}
+
+	public File getFileChooserSource() {
+		return FileChooserSource;
+	}
+
+	public void setFileChooserSource(File fileChooserSource) {
+		FileChooserSource = fileChooserSource;
 	}
 }

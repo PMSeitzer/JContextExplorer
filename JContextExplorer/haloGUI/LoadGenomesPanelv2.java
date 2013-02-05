@@ -901,11 +901,7 @@ public class LoadGenomesPanelv2 extends JLayeredPane implements ActionListener,
 
 		// initialize output
 		JFileChooser GetGenomes = new JFileChooser();
-		try {
-			// GetGenomes.setLUIManager.getLookAndFeel()
-		} catch (Exception ex) {
-
-		}
+		
 		GetGenomes.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 		GetGenomes
 				.setDialogTitle("Select Annotated Genomes Directory or Genome Working Set File");
@@ -959,8 +955,21 @@ public class LoadGenomesPanelv2 extends JLayeredPane implements ActionListener,
 	// retrieve clusters file
 	private String getClustersFile() {
 
+		//TODO finish this
+//		JFileChooser getClusters = new JFileChooser();
+//		getClusters.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+//		getClusters
+//		.setDialogTitle("Select Directory Or File Containing Homology Clusters");
+//		
+//		if (this.ReferenceDirectory != null) {
+//			getClusters.setCurrentDirectory(ReferenceDirectory);
+//		} else {
+//			getClusters.setCurrentDirectory(new File("."));
+//		}
+//		getClusters.showOpenDialog(getClusters);
+
 		// use pre-existing 'FileDialog' GUI window to retrieve file
-		final FileDialog fd = new FileDialog(sf, "English", FileDialog.LOAD);
+		FileDialog fd = new FileDialog(sf, "English", FileDialog.LOAD);
 
 		// set reference directory to match annotated genomes directory
 		if (ReferenceDirectory != null) {
@@ -1547,7 +1556,7 @@ public class LoadGenomesPanelv2 extends JLayeredPane implements ActionListener,
 	public void invokeDendrograma() {
 
 		// System.out.println("Breakpoint!");
-
+		OS.setSourceDirectory(ReferenceDirectory);
 		new Dendrograma(OS);
 
 		// //optional print statements (working)
