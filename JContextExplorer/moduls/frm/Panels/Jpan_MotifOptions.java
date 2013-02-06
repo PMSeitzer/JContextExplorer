@@ -231,4 +231,8 @@ public class Jpan_MotifOptions extends JPanel implements ActionListener{
 	public void setIncludeMotifsDisp(JCheckBox includeMotifsDisp) {
 		IncludeMotifsDisp = includeMotifsDisp;
 	}
+
+	public void setLoadedMotifs(LinkedList<String> loadedMotifs) {
+		LoadedMotifs = loadedMotifs;
+	}
 }

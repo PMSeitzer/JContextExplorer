@@ -72,26 +72,54 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 	private JTextField LblcgWeight, TxtcgWeight, LblcgScale, TxtcgScale;
 	private String strTxtcgWeight = "0.3";
 	private String strTxtcgScale = "1";
+	private JCheckBox chkTreatDuplicatesAsUnique;
+	private String strTreatDuplicatesAsUnique = "Treat duplicate genes as unique";
+	private JRadioButton radDice, radJaccard;
+	private String strDice = "Dice's Coefficient";
+	private String strJaccard = "Jaccard Index";
+	private ButtonGroup DiceOrJaccard;
 	
 	//(2) COMMON MOTIFS
 	private JTextField LblcmWeight, TxtcmWeight, LblcmScale, TxtcmScale;
 	private String strTxtcmWeight = "0.25";
 	private String strTxtcmScale = "2";
+	private JTextField LblSelectMotifs,LblComparisonScheme;
+	private String strSelectMotifs = " Select Motifs:";
+	private String strComparisonScheme = " Comparison Scheme:";
+	private JPanel AvailableMotifsPanel;
+	private CheckCombo AvailableMotifsBox;
+	private JRadioButton radDiceMotif, radJaccardMotif;
+	private ButtonGroup DiceOrJaccardMotif;
+	private JCheckBox chkTreatDuplicatesAsUniqueMotif;
+	private String strTreatDuplicatesAsUniqueMotif = "Treat duplicate motifs as unique";
 	
 	//(3) GENE ORDER
 	private JTextField LblgoWeight, TxtgoWeight, LblgoScale, TxtgoScale;
 	private String strTxtgoWeight = "0.2";
 	private String strTxtgoScale = "3";
+	private JRadioButton radCollinear, radSingle;
+	private ButtonGroup CollinearOrSingle;
+	private String strCollinear = "Collinear group gene reordering";
+	private String strSingle = "Single gene reordering";
 	
 	// (4) GENE GAPS
 	private JTextField LblggWeight, TxtggWeight, LblggScale, TxtggScale;
 	private String strTxtggWeight = "0.15";
 	private String strTxtggScale = "4";
+	//TODO graph for function between gap + dissimilarity
 	
 	// (5) STRANDEDNESS
 	private JTextField LblssWeight, TxtssWeight, LblssScale, TxtssScale;
 	private String strTxtssWeight = "0.10";
 	private String strTxtssScale = "5";
+	private JCheckBox chkIndStrand, chkGrpStrand;
+	private String strIndStrand = "Change in strandedness of individual genes";
+	private String strGrpStrand = "Change in strandedness of entire group";
+	private JTextField LblwtInd, LblwtGrp, TxtwtInd, TxtwtGrp;
+	private String strLblwt = " Relative Weight:";
+	private String strTxtwtInd = "0.5";
+	private String strTxtwtGrp = "0.5";
+	private int StrColNum = 10;
 	
 	//constructor
 	public ManageDissimilarity(FrmPrincipalDesk f){
@@ -317,7 +345,53 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		jp.add(TxtcgScale, c);
 		gridy++;
 		
+		c.ipady = 0;
+		
+		//Dice/Jaccard radio buttons
+		radDice = new JRadioButton(strDice);
+		radJaccard = new JRadioButton(strJaccard);
+		DiceOrJaccard = new ButtonGroup();
+		DiceOrJaccard.add(radDice);
+		DiceOrJaccard.add(radJaccard);
+		
+		//Dice option
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.fill = GridBagConstraints.NONE;
+		c.insets = new Insets(1,20,1,1);
+		radDice.setSelected(true);
+		grpCommonGenes.add(radDice);
+		jp.add(radDice, c);
+		
+		//Jaccard Option
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.fill = GridBagConstraints.NONE;
+		c.insets = new Insets(1,1,1,1);
+		radJaccard.setSelected(false);
+		grpCommonGenes.add(radJaccard);
+		jp.add(radJaccard, c);
+		gridy++;
+		
+		//check box
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 2;
+		c.fill = GridBagConstraints.NONE;
+		c.insets = new Insets(1,20,1,1);
+		chkTreatDuplicatesAsUnique = new JCheckBox(strTreatDuplicatesAsUnique);
+		chkTreatDuplicatesAsUnique.setSelected(false);
+		grpCommonGenes.add(chkTreatDuplicatesAsUnique);
+		jp.add(chkTreatDuplicatesAsUnique, c);
+		gridy++;
+		
 		//(2) COMMON MOTIFS
+		c.ipady = 7;
 		//checkbox
 		c.gridx = 0;
 		c.gridy = gridy;
@@ -379,9 +453,97 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		grpCommonMotifs.add(TxtcmScale);
 		grpScaleHierarchy.add(TxtcmScale);
 		jp.add(TxtcmScale, c);
+		
+		gridy++;
+		c.ipady = 0;
+		
+		//Label: Select motifs
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 2;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,20,1,1);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		LblSelectMotifs = new JTextField(strSelectMotifs);
+		LblSelectMotifs.setEditable(false);
+		LblSelectMotifs.setBorder(null);
+		grpCommonMotifs.add(LblSelectMotifs);
+		jp.add(LblSelectMotifs, c);
+
+		//Drop-down check box menu
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,1,1,1);
+		c.fill = GridBagConstraints.NONE;
+		AvailableMotifsBox = new CheckCombo(this.f.getPanMotifOptions().getLoadedMotifs());
+		AvailableMotifsPanel = AvailableMotifsBox.getContent();
+		grpCommonMotifs.add(AvailableMotifsPanel);
+		grpCommonMotifs.add(AvailableMotifsBox);
+		jp.add(AvailableMotifsPanel, c);
 		gridy++;
 		
+		//Label: comparison scheme
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 2;
+		c.insets = new Insets(1,20,1,1);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		LblComparisonScheme = new JTextField(strComparisonScheme);
+		LblComparisonScheme.setEditable(false);
+		LblComparisonScheme.setBorder(null);
+		grpCommonMotifs.add(LblComparisonScheme);
+		jp.add(LblComparisonScheme, c);
+		gridy++;
+
+		//Dice/Jaccard radio buttons
+		radDiceMotif = new JRadioButton(strDice);
+		radJaccardMotif = new JRadioButton(strJaccard);
+		DiceOrJaccardMotif = new ButtonGroup();
+		DiceOrJaccardMotif.add(radDiceMotif);
+		DiceOrJaccardMotif.add(radJaccardMotif);
+		
+		//Dice option
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.fill = GridBagConstraints.NONE;
+		c.insets = new Insets(1,20,1,1);
+		radDiceMotif.setSelected(true);
+		grpCommonMotifs.add(radDiceMotif);
+		jp.add(radDiceMotif, c);
+		
+		//Jaccard Option
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.fill = GridBagConstraints.NONE;
+		c.insets = new Insets(1,1,1,1);
+		radJaccardMotif.setSelected(false);
+		grpCommonMotifs.add(radJaccardMotif);
+		jp.add(radJaccardMotif, c);
+		gridy++;
+		
+		//check box
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 2;
+		c.fill = GridBagConstraints.NONE;
+		c.insets = new Insets(1,20,1,1);
+		chkTreatDuplicatesAsUniqueMotif = new JCheckBox(strTreatDuplicatesAsUniqueMotif);
+		chkTreatDuplicatesAsUniqueMotif.setSelected(false);
+		grpCommonMotifs.add(chkTreatDuplicatesAsUniqueMotif);
+		jp.add(chkTreatDuplicatesAsUniqueMotif, c);
+		gridy++;
+
 		//(3) GENE ORDER
+		c.ipady = 7;
+		
 		//checkbox
 		c.gridx = 0;
 		c.gridy = gridy;
@@ -443,6 +605,39 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		grpGeneOrder.add(TxtgoScale);
 		grpScaleHierarchy.add(TxtgoScale);
 		jp.add(TxtgoScale, c);
+		gridy++;
+		
+		c.ipady = 0;
+		
+		//button group for single/collinear insertion type
+		radCollinear = new JRadioButton(strCollinear);
+		radSingle = new JRadioButton(strSingle);
+		CollinearOrSingle = new ButtonGroup();
+		CollinearOrSingle.add(radCollinear);
+		CollinearOrSingle.add(radSingle);
+
+		//add collinear group option to panel
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridwidth = 2;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(1,20,1,1);
+		radCollinear.setSelected(true);
+		grpGeneOrder.add(radCollinear);
+		jp.add(radCollinear, c);
+		gridy++;
+		
+		//add single gene insertion option to panel
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridwidth = 2;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(1,20,1,1);
+		radSingle.setEnabled(true);
+		grpGeneOrder.add(radSingle);
+		jp.add(radSingle, c);
 		gridy++;
 
 		//(4) GENE GAPS
@@ -571,6 +766,80 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		grpStrandedness.add(TxtssScale);
 		grpScaleHierarchy.add(TxtssScale);
 		jp.add(TxtssScale, c);
+		
+		gridy++;
+		c.ipady = 0;
+		
+		//individual element strandedness option
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 2;
+		c.insets = new Insets(1,20,1,1);
+		chkIndStrand = new JCheckBox(strIndStrand);
+		grpStrandedness.add(chkIndStrand);
+		jp.add(chkIndStrand, c);
+		gridy++;
+		
+		//relative weights
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,40,1,1);
+		LblwtInd = new JTextField(strLblwt);
+		LblwtInd.setBorder(null);
+		LblwtInd.setEditable(false);
+		grpStrandedness.add(LblwtInd);
+		jp.add(LblwtInd, c);
+		
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,1,1,1);
+		c.fill = GridBagConstraints.NONE;
+		TxtwtInd = new JTextField(strTxtwtInd);
+		TxtwtInd.setEditable(true);
+		TxtwtInd.setColumns(StrColNum);
+		grpStrandedness.add(TxtwtInd);
+		jp.add(TxtwtInd, c);
+		gridy++;
+		
+		//whole group strandedness option
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 2;
+		c.insets = new Insets(1,20,1,1);
+		chkGrpStrand = new JCheckBox(strGrpStrand);
+		grpStrandedness.add(chkGrpStrand);
+		jp.add(chkGrpStrand, c);
+		gridy++;
+		
+		//relative weights
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,40,1,1);
+		LblwtGrp = new JTextField(strLblwt);
+		LblwtGrp.setBorder(null);
+		LblwtGrp.setEditable(false);
+		grpStrandedness.add(LblwtGrp);
+		jp.add(LblwtGrp, c);
+		
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,1,1,1);
+		c.fill = GridBagConstraints.NONE;
+		TxtwtGrp = new JTextField(strTxtwtGrp);
+		TxtwtGrp.setEditable(true);
+		TxtwtGrp.setColumns(StrColNum);
+		grpStrandedness.add(TxtwtGrp);
+		jp.add(TxtwtGrp, c);
 		gridy++;
 		
 		this.add(jp);
@@ -583,6 +852,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		//adjust component states
 		if (SwitchState){
 			for (Component C : list){
+				//Components associated with amalgamation options
 				if (AmalgamationType.isSelected(radLinear.getModel())){
 					if (grpLinear.contains(C)){
 						C.setEnabled(true);
@@ -591,6 +861,11 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 					if (grpScaleHierarchy.contains(C)){
 						C.setEnabled(true);
 					}
+				}
+				
+				//all others
+				if (!grpLinear.contains(C) && !grpScaleHierarchy.contains(C)){
+					C.setEnabled(true);
 				}
 			}
 		} else {

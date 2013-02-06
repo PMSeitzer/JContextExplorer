@@ -711,8 +711,10 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			//set the main frame menu to the existing menu.
 			//remove all items, then add all items back.
 			this.f.getPanMotifOptions().getMenuOfMotifs().removeAllItems();
+			LinkedList<String> MotifNames = new LinkedList<String>();
 			for (int i = 0; i < f.getOS().getMGDescriptions().size(); i++){
 				this.f.getPanMotifOptions().getMenuOfMotifs().addItem(f.getOS().getMGDescriptions().get(i).getName());
+				MotifNames.add(f.getOS().getMGDescriptions().get(i).getName());
 			}
 			
 			//if no motifs, reflect this.
@@ -720,6 +722,9 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 				this.f.getPanMotifOptions().getMenuOfMotifs().addItem("<none>");
 			}
 
+			//update loaded motifs list in main frame
+			this.f.getPanMotifOptions().setLoadedMotifs(MotifNames);
+			
 			//close this window.
 			this.dispose();
 
