@@ -3,6 +3,7 @@ package moduls.frm.children;
 import java.awt.*;  
 import java.awt.event.*;  
 import java.util.Arrays;
+import java.util.LinkedList;
 
 import javax.swing.*;  
    
@@ -81,6 +82,17 @@ public class CheckCombo extends Component implements ActionListener
 	public void setStoredValues(CheckComboStore[] storedValues) {
 		StoredValues = storedValues;
 	}  
+	
+	public LinkedList<String> getSelectedMotifs(){
+		LinkedList<String> SelectedMotifs = new LinkedList<String>();
+		
+		for (CheckComboStore CCS : StoredValues){
+			if (CCS.state){
+				SelectedMotifs.add(CCS.id);
+			}
+		}
+		return SelectedMotifs;
+	}
 }  
    
 /** adapted from comment section of ListCellRenderer api */  

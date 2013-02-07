@@ -1498,5 +1498,9 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 	        }
 	    }
 	}
+
+	public void setCbDissimilarity(JComboBox cbDissimilarity) {
+		this.cbDissimilarity = cbDissimilarity;
+	}
 	
 }

@@ -1,10 +1,13 @@
 package moduls.frm.children;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.Dialog.ModalityType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -12,12 +15,19 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 import javax.swing.ButtonGroup;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
+
+import operonClustering.CustomDissimilarity;
 
 import moduls.frm.FrmPrincipalDesk;
 
@@ -26,12 +36,14 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 	//Fields
 	private FrmPrincipalDesk f;
 	private JPanel jp;
+	private JScrollPane jsp;
 	
 	//GUI fields
 	//Name/intro
 	private JLabel Add;
 	private JTextField DMNameLabel, DMName;
 	private String strDMNameLabel = "Enter Name: ";
+	private Insets TextInsets = new Insets(1,5,1,1);
 	
 	//Options
 	private JLabel LblFactor, LblWeight, LblImportance, LblAmalgamation;
@@ -106,8 +118,16 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 	private JTextField LblggWeight, TxtggWeight, LblggScale, TxtggScale;
 	private String strTxtggWeight = "0.15";
 	private String strTxtggScale = "4";
-	//TODO graph for function between gap + dissimilarity
-	
+	private JRadioButton radThreshold, radInterpolation;
+	private ButtonGroup ThresholdOrInterpolation;
+	private String strThreshold = "Threshold";
+	private String strInterpolation = "Linear Interpolation";
+	private JTextField EnterPointsLabel;
+	private JTextArea EnterPointsTxt;
+	private String strEnterPointsLabel = "Enter points as:       gap_size dissimilarity;";
+	private JButton btnLoadFromFile;
+	private String strLoad = "Load points from file";
+
 	// (5) STRANDEDNESS
 	private JTextField LblssWeight, TxtssWeight, LblssScale, TxtssScale;
 	private String strTxtssWeight = "0.10";
@@ -121,15 +141,42 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 	private String strTxtwtGrp = "0.5";
 	private int StrColNum = 10;
 	
+	//Add button
+	private JButton btnAddDM, btnSelectAll, btnDeselectAll;
+	private String strAddDM = "Add Dissimilarity Measure";
+	private String strSelectAll = "Select All";
+	private String strDeselectAll = "Deselect all";
+	
+	//Remove button
+	private JLabel RemoveDM;
+	private JTextField LblDissimilarity;
+	private String LblstrRemoveDM = " REMOVE A DISSIMILARITY MEASURE";
+	private String strLblDissimilarity = "Dissimilarity Measure:";
+	private JComboBox<String> MenuDM;
+	private String[] CurrentDM;
+	private JButton btnRemoveDM;
+	private String strRemoveDM = "Remove";
+	
+	//Submit button
+	private JButton btnOK;
+	private String strbtnOK = "Submit";
+	
 	//constructor
 	public ManageDissimilarity(FrmPrincipalDesk f){
 		super();
 		this.f = f;
 		
-		this.setSize(700,700);
+		this.setSize(700,400);
 		this.setTitle("Manage Dissimilarity Measures");
 		this.setModalityType(ModalityType.DOCUMENT_MODAL);
 		this.setModal(true);
+		
+		//retrieve current list
+		String[] InitialDissimilarity = new String[f.getPan_Menu().getCbDissimilarity().getItemCount()];
+		for (int i = 0; i < f.getPan_Menu().getCbDissimilarity().getItemCount(); i++){
+			InitialDissimilarity[i] = (String)f.getPan_Menu().getCbDissimilarity().getItemAt(i);
+		}
+		this.CurrentDM = InitialDissimilarity;
 		
 		//build + initialize panel
 		this.getPanel();
@@ -171,18 +218,19 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		c.gridx = 0;
 		c.gridy = gridy;
 		c.gridheight = 1;
-		c.gridwidth = 2;
-		c.insets = new Insets(3,3,3,3);
+		c.gridwidth = 1;
+		c.insets = TextInsets;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		DMNameLabel = new JTextField(strDMNameLabel);
 		DMNameLabel.setEditable(false);
+		DMNameLabel.setBorder(null);
 		jp.add(DMNameLabel,c);
 		
 		//the name itself text field
 		c.ipady = 7;
-		c.gridx = 2;
+		c.gridx = 1;
 		c.gridy = gridy;
-		c.gridwidth = 4;
+		c.gridwidth = 5;
 		c.gridheight = 1;
 		c.insets = new Insets(3,3,3,3);
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -281,6 +329,28 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		chkGeneGaps = new JCheckBox(strGeneGaps);
 		chkStrandedness = new JCheckBox(strStrandedness);
 	
+		//Select/deselect buttons
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.insets = new Insets(3,3,3,3);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		btnSelectAll = new JButton(strSelectAll);
+		btnSelectAll.addActionListener(this);
+		jp.add(btnSelectAll, c);
+		
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.insets = new Insets(3,3,3,3);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		btnDeselectAll = new JButton(strDeselectAll);
+		btnDeselectAll.addActionListener(this);
+		jp.add(btnDeselectAll, c);
+		gridy++;
+		
 		//(1) COMMON GENES
 		//checkbox
 		c.gridx = 0;
@@ -641,6 +711,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		gridy++;
 
 		//(4) GENE GAPS
+		c.ipady = 7;
 		//checkbox
 		c.gridx = 0;
 		c.gridy = gridy;
@@ -702,9 +773,82 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		grpGeneGaps.add(TxtggScale);
 		grpScaleHierarchy.add(TxtggScale);
 		jp.add(TxtggScale, c);
+		
+		gridy++;
+		c.ipady = 0;
+	
+		//btn group
+		radThreshold = new JRadioButton(strThreshold);
+		radInterpolation = new JRadioButton(strInterpolation);
+		ThresholdOrInterpolation = new ButtonGroup();
+		ThresholdOrInterpolation.add(radThreshold);
+		ThresholdOrInterpolation.add(radInterpolation);
+		
+		//radio buttons
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.NONE;
+		c.insets = new Insets(1,20,1,1);
+		radThreshold.setSelected(true);
+		grpGeneGaps.add(radThreshold);
+		jp.add(radThreshold, c);
+		
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.NONE;
+		c.insets = new Insets(1,1,1,1);
+		grpGeneGaps.add(radInterpolation);
+		jp.add(radInterpolation, c);
+		gridy++;
+		
+		//Enter points label
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridwidth = 2;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets  = new Insets(1,20,1,1);
+		EnterPointsLabel = new JTextField(strEnterPointsLabel);
+		EnterPointsLabel.setEditable(false);
+		EnterPointsLabel.setBorder(null);
+		grpGeneGaps.add(EnterPointsLabel);
+		jp.add(EnterPointsLabel, c);
+		gridy++;
+		
+		//Actual enter points form
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridwidth = 2;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(1,20,1,1);
+		EnterPointsTxt = new JTextArea("");
+		EnterPointsTxt.setEditable(true);
+		JScrollPane ptsscroll = new JScrollPane(EnterPointsTxt);
+		ptsscroll.setPreferredSize(new Dimension(100, 50));
+		grpGeneGaps.add(ptsscroll);
+		grpGeneGaps.add(EnterPointsTxt);
+		jp.add(ptsscroll, c);
+		gridy++;
+		
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridwidth = 2;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.NONE;
+		c.insets = new Insets(1,20,1,1);
+		btnLoadFromFile = new JButton(strLoad);
+		btnLoadFromFile.addActionListener(this);
+		grpGeneGaps.add(btnLoadFromFile);
+		jp.add(btnLoadFromFile, c);
 		gridy++;
 		
 		//(5) STRANDEDNESS
+		c.ipady = 7;
 		//checkbox
 		c.gridx = 0;
 		c.gridy = gridy;
@@ -842,7 +986,93 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		jp.add(TxtwtGrp, c);
 		gridy++;
 		
-		this.add(jp);
+		c.ipady = 7;
+		
+
+		
+		//Add button
+		c.gridx = 4;
+		c.gridy = gridy;
+		c.gridwidth = 2;
+		c.gridheight = 1;
+		c.insets = new Insets(3,3,3,3);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		btnAddDM = new JButton(strAddDM);
+		btnAddDM.addActionListener(this);
+		jp.add(btnAddDM, c);
+		gridy++;
+		
+		//add content to pane
+		jsp = new JScrollPane(jp);
+		this.add(jsp);
+
+		/*
+		 * REMOVE DM
+		 */
+		c.ipady = 7;
+		
+		//Remove DM Heading
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 6;
+		c.insets = new Insets(3,3,3,3);
+		RemoveDM = new JLabel(LblstrRemoveDM);
+		RemoveDM.setBackground(Color.GRAY);
+		RemoveDM.setOpaque(true);
+		jp.add(RemoveDM,c);
+		gridy++;
+		
+		// Dissimilarity Measure label
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridwidth = 2;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = TextInsets;
+		LblDissimilarity = new JTextField();
+		LblDissimilarity.setText(strLblDissimilarity); // context set currently loaded
+		LblDissimilarity.setEditable(false);
+		LblDissimilarity.setBorder(null);
+		jp.add(LblDissimilarity, c);
+		
+		// drop-down menu for Dissimilarity Measures
+		c.ipady = 0;
+		c.gridx = 2;
+		c.gridy = gridy;
+		c.gridwidth = 2;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		MenuDM = new JComboBox<String>(CurrentDM);
+		MenuDM.addActionListener(this);
+		MenuDM.setEnabled(true);
+		jp.add(MenuDM, c);
+		
+		//remove button
+		c.gridx = 4;
+		c.gridy = gridy;
+		c.gridwidth = 2;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		btnRemoveDM = new JButton(strRemoveDM);
+		btnRemoveDM.addActionListener(this);
+		btnRemoveDM.setEnabled(true);
+		jp.add(btnRemoveDM, c);
+		gridy++;
+		gridy++;
+
+		//submit button
+		c.gridx = 4;
+		c.gridy = gridy;
+		c.gridwidth = 2;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(20,1,1,1);
+		btnOK = new JButton(strbtnOK);
+		btnOK.addActionListener(this);
+		jp.add(btnOK, c);
+		
 	}
 
 	
@@ -919,10 +1149,15 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		}
 	}
 	
+	//Determine gap mapping
+	public LinkedList<Point> ComputeGapMapping(){
+		return null;
+	}
+	
 	@Override
 	public void actionPerformed(ActionEvent evt) {
 		
-		//activating/deactivating states
+		//activating/deactivating states by chkbox, btn, radio button
 		if (evt.getSource().equals(chkCommonGenes)){
 			if (chkCommonGenes.isSelected()){					//common genes
 				SwitchStateComponents(grpCommonGenes, true);
@@ -959,10 +1194,204 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		} else if (evt.getSource().equals(radScaleHierarchy)){
 				ActivateIfEnabled(grpScaleHierarchy);
 				SwitchStateComponents(grpLinear, false);
+		} else if (evt.getSource().equals(btnSelectAll)){
+				//check boxes
+				this.chkCommonGenes.setSelected(true);
+				this.chkGeneGaps.setSelected(true);
+				this.chkCommonMotifs.setSelected(true);
+				this.chkGeneOrder.setSelected(true);
+				this.chkStrandedness.setSelected(true);
+				
+				//components
+				SwitchStateComponents(grpCommonGenes, true);
+				SwitchStateComponents(grpCommonMotifs, true);
+				SwitchStateComponents(grpGeneOrder, true);
+				SwitchStateComponents(grpGeneGaps, true);
+				SwitchStateComponents(grpStrandedness, true);
+		} else if (evt.getSource().equals(btnDeselectAll)){
+				//check boxes
+				this.chkCommonGenes.setSelected(false);
+				this.chkGeneGaps.setSelected(false);
+				this.chkCommonMotifs.setSelected(false);
+				this.chkGeneOrder.setSelected(false);
+				this.chkStrandedness.setSelected(false);
+				
+				//components
+				SwitchStateComponents(grpCommonGenes, false);
+				SwitchStateComponents(grpCommonMotifs, false);
+				SwitchStateComponents(grpGeneOrder, false);
+				SwitchStateComponents(grpGeneGaps, false);
+				SwitchStateComponents(grpStrandedness, false);
 		}
 		
-		
-		
+		//add a dissimilarity measure
+		if (evt.getSource().equals(btnAddDM)){
+			
+			try {
+				
+				//General
+				String Name = DMName.getText();
+				String AmalgamationType;
+				if (radLinear.isSelected()){
+					AmalgamationType = "Linear";
+				} else {
+					AmalgamationType = "ScaleHierarchy";
+				}
+				LinkedList<String> Factors = new LinkedList<String>();
+				
+				//Factor 1: Presence/absence of common genes
+				String CGCompareType;
+				boolean CGDuplicatesUnique;
+				double CGWeight;
+				int CGImportance;
+				
+				if (this.chkCommonGenes.isSelected()){
+					Factors.add("CG");
+					if (radDice.isSelected()){
+						CGCompareType = "Dice";
+					} else {
+						CGCompareType = "Jaccard";
+					}
+					CGDuplicatesUnique = this.chkTreatDuplicatesAsUnique.isSelected();
+					CGWeight = Double.parseDouble(this.TxtcgWeight.getText());
+					CGImportance = Integer.parseInt(this.TxtcgScale.getText());
+				} else {
+					CGCompareType = null;
+					CGDuplicatesUnique = false;
+					CGWeight = 0;
+					CGImportance = 1;
+				}
+
+				//Factor 2: Presence/absence of common motifs
+				LinkedList<String> CMMotifNames;
+				String CMCompareType;
+				boolean CMDuplicatesUnique;
+				double CMWeight;
+				int CMImportance;
+				
+				if (this.chkCommonMotifs.isSelected()){
+					Factors.add("CM");
+					CMMotifNames = AvailableMotifsBox.getSelectedMotifs();
+					if (radDiceMotif.isSelected()){
+						CMCompareType = "Dice";
+					} else {
+						CMCompareType = "Jaccard";
+					}
+					CMDuplicatesUnique = this.chkTreatDuplicatesAsUniqueMotif.isSelected();
+					CMWeight = Double.parseDouble(this.TxtcmWeight.getText());
+					CMImportance = Integer.parseInt(this.TxtcmScale.getText());
+				} else {
+					CMMotifNames = null;
+					CMCompareType = null;
+					CMDuplicatesUnique = false;
+					CMWeight = 0;
+					CMImportance = -1;
+				}
+				
+				//Factor 3: Gene order
+				String GOCompareType;
+				double GOWeight;
+				int GOImportance;
+				
+				if (this.chkGeneOrder.isSelected()){
+					Factors.add("GO");
+					if (this.radCollinear.isSelected()){
+						GOCompareType = "Collinear";
+					} else {
+						GOCompareType = "Single";
+					}
+					GOWeight = Double.parseDouble(this.TxtgoWeight.getText());
+					GOImportance = Integer.parseInt(this.TxtgoScale.getText());
+				} else{
+					GOCompareType = null;
+					GOWeight = 0;
+					GOImportance = -1;
+				}
+
+				
+				//Factor 4: Intragenic Gap Sizes
+				LinkedList<Point> GapSizeDissMapping;
+				double GGWeight;
+				int GGImportance;
+				
+				if (this.chkGeneGaps.isSelected()){
+					Factors.add("GG");
+					GapSizeDissMapping = this.ComputeGapMapping();
+					GGWeight = Double.parseDouble(this.TxtggWeight.getText());
+					GGImportance = Integer.parseInt(this.TxtggScale.getText());
+				} else {
+					GapSizeDissMapping = null;
+					GGWeight = 0;
+					GGImportance = -1;
+				}
+				
+				//Factor 5: Changes in strandedness
+				boolean IndividualGenes;
+				boolean WholeGroup;
+				double RelWeightIndGenes;
+				double RelWeightWholeGroup;
+				double SSWeight;
+				int SSImportance;
+				
+				if (this.chkStrandedness.isSelected()){
+					if (this.chkIndStrand.isSelected()){
+						IndividualGenes = true;
+					} else {
+						IndividualGenes = false;
+					}
+					if (this.chkGrpStrand.isSelected()){
+						WholeGroup = true;
+					} else {
+						WholeGroup = false;
+					}
+					RelWeightIndGenes = Double.parseDouble(this.TxtwtInd.getText());
+					RelWeightWholeGroup = Double.parseDouble(this.TxtwtGrp.getText());
+					SSWeight = Double.parseDouble(this.TxtssWeight.getText());
+					SSImportance = Integer.parseInt(this.TxtssScale.getText());
+				} else {
+					IndividualGenes = false;
+					WholeGroup = false;
+					RelWeightIndGenes = 0;
+					RelWeightWholeGroup = 0;
+					SSWeight = 0;
+					SSImportance = -1;
+				}
+				
+				//compute a new dissimilarity.
+				CustomDissimilarity CD = new CustomDissimilarity(
+						Name,				//General
+						AmalgamationType,
+						Factors,			
+						CGCompareType,		//Factor 1: Common Genes
+						CGDuplicatesUnique,
+						CGWeight,
+						CGImportance,		
+						CMMotifNames,		//Factor 2: Common Motifs
+						CMCompareType,
+						CMDuplicatesUnique,
+						CMWeight,
+						CMImportance,
+						GOCompareType,		//Factor 3: Gene Order
+						GOWeight,
+						GOImportance,
+						GapSizeDissMapping,	//Factor 4: Gene Gaps
+						GGWeight,
+						GGImportance,
+						IndividualGenes,	//Factor 5: Strandedness
+						WholeGroup,
+						RelWeightIndGenes,
+						RelWeightWholeGroup,
+						SSWeight,
+						SSImportance
+						);
+				
+				
+			} catch (Exception ex){
+				JOptionPane.showMessageDialog(null, "One or more fields incorrectly formatted.",
+						"Format Error",JOptionPane.ERROR_MESSAGE);
+			}
+
+		}
 	}
 }
 	
