@@ -1,6 +1,9 @@
 package operonClustering;
 
+import genomeObjects.GenomicElementAndQueryMatch;
+
 import java.awt.Point;
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class CustomDissimilarity {
@@ -52,7 +55,7 @@ public class CustomDissimilarity {
 		
 		//parameters
 		//general.
-		this.Name = name2;
+		this.setName(name2);
 		this.Factors = factors2;
 		this.AmalgamationType = amalgamationType2;
 		
@@ -90,58 +93,171 @@ public class CustomDissimilarity {
 	// -------- Compute Dissimilarity -------------------------//
 	
 	//Common Genes
-	public double CGDissimilarity(){
-		return 0;
+	public double CGDissimilarity(LinkedList<GenomicElementAndQueryMatch> O1, LinkedList<GenomicElementAndQueryMatch> O2, String Type){
+		
+		double Dissimilarity = 0;
+		double NumIntersecting = 0;
+		double Op1Unique = 0;
+		double Op2Unique = 0;	
+		double Op1Size = 0;
+		double Op2Size = 0;
+		
+		if (Type.equals("Annotation")){
+			
+			//initialize lists
+			ArrayList<String> O1Values = new ArrayList<String>();
+			ArrayList<String> O2Values = new ArrayList<String>();
+			
+			//add elements
+			for (GenomicElementAndQueryMatch E: O1){
+				O1Values.add(E.getE().getAnnotation().toUpperCase());
+			}
+			
+			for (GenomicElementAndQueryMatch E: O2){
+				O2Values.add(E.getE().getAnnotation().toUpperCase());
+			}
+			
+			//Determine numbers of elements at various points
+			for (int i = 0; i <O1Values.size(); i++){
+				if (O2Values.contains(O1Values.get(i))){
+					NumIntersecting++;
+				} else {
+					Op1Unique++;
+				}
+			}
+			
+			for (int i = 0; i < O2Values.size(); i++){
+				if (O1Values.contains(O2Values.get(i)) == false){
+					Op2Unique++;
+				}
+			}
+			
+			Op1Size = O1Values.size();
+			Op2Size = O2Values.size();
+
+		} else {
+			
+			//initialize lists
+			ArrayList<Integer> O1Values = new ArrayList<Integer>();
+			ArrayList<Integer> O2Values = new ArrayList<Integer>();
+			
+			//add elements
+			for (GenomicElementAndQueryMatch E: O1){
+				O1Values.add(E.getE().getClusterID());
+			}
+			
+			for (GenomicElementAndQueryMatch E: O2){
+				O2Values.add(E.getE().getClusterID());
+			}
+			
+			for (int i = 0; i <O1Values.size(); i++){
+				if (O2Values.contains(O1Values.get(i))){
+					NumIntersecting++;
+				} else {
+					Op1Unique++;
+				}
+			}
+			
+			for (int i = 0; i < O2Values.size(); i++){
+				if (O1Values.contains(O2Values.get(i)) == false){
+					Op2Unique++;
+				}
+			}
+			
+			Op1Size = O1Values.size();
+			Op2Size = O2Values.size();
+			
+		}
+		
+		if (CGCompareType.equals("Dice")){
+			//Dice Measure
+			Dissimilarity = 1-(2*NumIntersecting)/(Op1Size+Op2Size);
+		} else if (CGCompareType.equals("Jaccard")){
+			//Jaccard Measure
+			Dissimilarity =  1-(NumIntersecting/(NumIntersecting+Op1Unique+Op2Unique));	
+		}
+	
+		return Dissimilarity;
 	}
 	
 	//Common Motifs
-	public double CMDissimilarity(){
+	public double CMDissimilarity(LinkedList<GenomicElementAndQueryMatch> G1, LinkedList<GenomicElementAndQueryMatch> G2, String Type){
 		return 0;
 	}
 	
 	//Gene Order
-	public double GODissimilarity(){
+	public double GODissimilarity(LinkedList<GenomicElementAndQueryMatch> G1, LinkedList<GenomicElementAndQueryMatch> G2, String Type){
 		return 0;
 	}
 	
 	//Gene Gaps
-	public double GGDissimilarity(){
+	public double GGDissimilarity(LinkedList<GenomicElementAndQueryMatch> G1, LinkedList<GenomicElementAndQueryMatch> G2, String Type){
 		return 0;
 	}
 	
 	//Strandedness
-	public double SSDissimilarity(){
+	public double SSDissimilarity(LinkedList<GenomicElementAndQueryMatch> G1, LinkedList<GenomicElementAndQueryMatch> G2, String Type){
 		return 0;
 	}
 	
 	//Total Dissimilarity
-	double TotalDissimilarity(){
+	public double TotalDissimilarity(LinkedList<GenomicElementAndQueryMatch> G1, LinkedList<GenomicElementAndQueryMatch> G2, String T){
+		
+		//refactor, if appropriate
 		
 		//Linear Scale
 		if (AmalgamationType.equals("Linear")){
 			
-			//determine total weight
+			//determine total weight, to scale by.
 			Double AllProvidedWeights = 0.0;
+			
+			//initialize values
+			Double CGContribution = 0.0;
+			Double CMContribution = 0.0;
+			Double GOContribution = 0.0;
+			Double GGContribution = 0.0;
+			Double SSContribution = 0.0;
+			
+			//Determine Factors
 			if (Factors.contains("CG")){
 				AllProvidedWeights = AllProvidedWeights + CGWeight;
+				CGContribution = CGDissimilarity(G1,G2,T);
 			}
 			if (Factors.contains("CM")){
 				AllProvidedWeights = AllProvidedWeights + CMWeight;
+				CMContribution = CMDissimilarity(G1,G2,T);
 			}
 			if (Factors.contains("GO")){
 				AllProvidedWeights = AllProvidedWeights + GOWeight;
+				GOContribution = GODissimilarity(G1,G2,T);
 			}
 			if (Factors.contains("GG")){
 				AllProvidedWeights = AllProvidedWeights + GGWeight;
+				GGContribution = GGDissimilarity(G1,G2,T);
 			}
 			if (Factors.contains("SS")){
 				AllProvidedWeights = AllProvidedWeights + SSWeight;
+				SSContribution = SSDissimilarity(G1,G2,T);
 			}
 			
+			//Weight accordingly.
+			return (CGWeight/AllProvidedWeights) * CGContribution +
+				   (CMWeight/AllProvidedWeights) * CMContribution +
+				   (GOWeight/AllProvidedWeights) * GOContribution +
+				   (GGWeight/AllProvidedWeights) * GGContribution +
+				   (SSWeight/AllProvidedWeights) * SSContribution;
+			
+		} else {
+			return 0;
 		}
-		
 
-		
-		return 0;
+	}
+
+	public String getName() {
+		return Name;
+	}
+
+	public void setName(String name) {
+		Name = name;
 	}
 }

@@ -35,6 +35,7 @@ public class ExtendedCRON {
 	private String DissimilarityType;
 	private String[] Queries;
 	private int[] ClusterNumbers;
+	private LinkedList<CustomDissimilarity> CustomDissimilarities;
 	
 	// this linked list relates elements returned by Keys() in this way:
 	//(0,1), (0,2) , ... , (0,n), (1,2), (1,3), ... (1,n), (2,3), (2,4), ... (n-1,n)	
@@ -58,6 +59,7 @@ public class ExtendedCRON {
 		
 		//retrieve distances method
 		//uberDistancesAnnotation distMethod = new uberDistancesAnnotation();
+		boolean UseCustomMethod = false;
 		OperonDissimilarityMeasure distMethod = null;
 		
 		//select appropriate operon dissimilarity measure
@@ -88,30 +90,69 @@ public class ExtendedCRON {
 			} else if (SearchType.equals("cluster")){
 				distMethod = new MovingDistancesbyClusterID();
 			}
+
+		} else {
+			UseCustomMethod = true;
 		}
 		
-		//initialize output list
-		LinkedList<Double> D = new LinkedList<Double>();
-		
-		//retrieve key set
-		Object[] Keys = this.Contexts.keySet().toArray();
-				
-		//iterate over keys
-		for (int i = 0; i < Keys.length; i++){
-			for (int j = i+1; j < Keys.length; j++){
-				double dist = distMethod.computeDissimilarity(this.Contexts.get(Keys[i]),this.Contexts.get(Keys[j]));
-				
-//				//print statements - also reveals the order of keys
-//				System.out.println("Distance between " + Keys[i] + " and " + Keys[j] + ": " + dist);
-//				System.out.println("(" + i + "," + j + "): " + dist);
-//				
-				//add value to linked list
-				D.add(dist);
+
+		if (!UseCustomMethod){
+			
+			//initialize output list
+			LinkedList<Double> D = new LinkedList<Double>();
+			
+			//retrieve key set
+			Object[] Keys = this.Contexts.keySet().toArray();
+					
+			//iterate over keys
+			for (int i = 0; i < Keys.length; i++){
+				for (int j = i+1; j < Keys.length; j++){
+					double dist = distMethod.computeDissimilarity(this.Contexts.get(Keys[i]),this.Contexts.get(Keys[j]));
+					
+//					//print statements - also reveals the order of keys
+//					System.out.println("Distance between " + Keys[i] + " and " + Keys[j] + ": " + dist);
+//					System.out.println("(" + i + "," + j + "): " + dist);
+//					
+					//add value to linked list
+					D.add(dist);
+				}
 			}
+
+			//set list to ECRON structure.
+			this.setDistances(D);
+			
+		} else {
+			
+			//initialize output list
+			LinkedList<Double> D = new LinkedList<Double>();
+			
+			//retrieve key set
+			Object[] Keys = this.Contexts.keySet().toArray();
+			
+			//retrieve dissimilarity measure
+			CustomDissimilarity CustomDistMethod = null;
+			for (CustomDissimilarity CD : this.CustomDissimilarities){
+				if (CD.getName().equals(DissimilarityMethod)){
+					CustomDistMethod = CD;
+					break;
+				}
+			}
+					
+			//iterate over keys
+			for (int i = 0; i < Keys.length; i++){
+				for (int j = i+1; j < Keys.length; j++){
+					double dist = CustomDistMethod.TotalDissimilarity(this.Contexts.get(Keys[i]), this.Contexts.get(Keys[j]), SearchType);
+
+					//add value to linked list
+					D.add(dist);
+				}
+			}
+
+			//set list to ECRON structure.
+			this.setDistances(D);
+			
 		}
 
-		//set list to ECRON structure.
-		this.setDistances(D);
 	}
 	
 	//Export dissimilarity set into a format MultiDendrogram readable format
@@ -309,6 +350,14 @@ public class ExtendedCRON {
 
 	public void setClusterNumbers(int[] clusterNumbers) {
 		ClusterNumbers = clusterNumbers;
+	}
+
+	public LinkedList<CustomDissimilarity> getCustomDissimilarities() {
+		return CustomDissimilarities;
+	}
+
+	public void setCustomDissimilarities(LinkedList<CustomDissimilarity> customDissimilarities) {
+		CustomDissimilarities = customDissimilarities;
 	}
 
 }

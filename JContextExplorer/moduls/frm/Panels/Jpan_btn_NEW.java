@@ -746,6 +746,7 @@ import definicions.MatriuDistancies;
 					
 					//retrieve EC, + modify
 					ExtendedCRON EC = this.WorkerQD.getCSD().getEC();
+					EC.setCustomDissimilarities(fr.getOS().getCustomDissimilarities());
 					EC.computePairwiseDistances(DissimilarityMethod);
 					EC.exportDistancesToField();
 

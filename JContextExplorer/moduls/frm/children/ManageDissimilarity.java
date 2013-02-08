@@ -1227,170 +1227,220 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		//add a dissimilarity measure
 		if (evt.getSource().equals(btnAddDM)){
 			
-			try {
-				
-				//General
-				String Name = DMName.getText();
-				String AmalgamationType;
-				if (radLinear.isSelected()){
-					AmalgamationType = "Linear";
-				} else {
-					AmalgamationType = "ScaleHierarchy";
-				}
-				LinkedList<String> Factors = new LinkedList<String>();
-				
-				//Factor 1: Presence/absence of common genes
-				String CGCompareType;
-				boolean CGDuplicatesUnique;
-				double CGWeight;
-				int CGImportance;
-				
-				if (this.chkCommonGenes.isSelected()){
-					Factors.add("CG");
-					if (radDice.isSelected()){
-						CGCompareType = "Dice";
-					} else {
-						CGCompareType = "Jaccard";
-					}
-					CGDuplicatesUnique = this.chkTreatDuplicatesAsUnique.isSelected();
-					CGWeight = Double.parseDouble(this.TxtcgWeight.getText());
-					CGImportance = Integer.parseInt(this.TxtcgScale.getText());
-				} else {
-					CGCompareType = null;
-					CGDuplicatesUnique = false;
-					CGWeight = 0;
-					CGImportance = 1;
-				}
+			//check names
+			if (!(f.getOS().getCustomDissimilarities().contains(DMName.getText()) ||
+					DMName.getText().equals("Common Genes - Dice") ||
+					DMName.getText().equals("Common Genes - Jaccard") ||
+					DMName.getText().equals("Moving Distances") ||
+					DMName.getText().equals("Total Length"))){
 
-				//Factor 2: Presence/absence of common motifs
-				LinkedList<String> CMMotifNames;
-				String CMCompareType;
-				boolean CMDuplicatesUnique;
-				double CMWeight;
-				int CMImportance;
-				
-				if (this.chkCommonMotifs.isSelected()){
-					Factors.add("CM");
-					CMMotifNames = AvailableMotifsBox.getSelectedMotifs();
-					if (radDiceMotif.isSelected()){
-						CMCompareType = "Dice";
+				try {
+					
+					//General
+					String Name = DMName.getText();
+					String AmalgamationType;
+					if (radLinear.isSelected()){
+						AmalgamationType = "Linear";
 					} else {
-						CMCompareType = "Jaccard";
+						AmalgamationType = "ScaleHierarchy";
 					}
-					CMDuplicatesUnique = this.chkTreatDuplicatesAsUniqueMotif.isSelected();
-					CMWeight = Double.parseDouble(this.TxtcmWeight.getText());
-					CMImportance = Integer.parseInt(this.TxtcmScale.getText());
-				} else {
-					CMMotifNames = null;
-					CMCompareType = null;
-					CMDuplicatesUnique = false;
-					CMWeight = 0;
-					CMImportance = -1;
-				}
-				
-				//Factor 3: Gene order
-				String GOCompareType;
-				double GOWeight;
-				int GOImportance;
-				
-				if (this.chkGeneOrder.isSelected()){
-					Factors.add("GO");
-					if (this.radCollinear.isSelected()){
-						GOCompareType = "Collinear";
+					LinkedList<String> Factors = new LinkedList<String>();
+					
+					//Factor 1: Presence/absence of common genes
+					String CGCompareType;
+					boolean CGDuplicatesUnique;
+					double CGWeight;
+					int CGImportance;
+					
+					if (this.chkCommonGenes.isSelected()){
+						Factors.add("CG");
+						if (radDice.isSelected()){
+							CGCompareType = "Dice";
+						} else {
+							CGCompareType = "Jaccard";
+						}
+						CGDuplicatesUnique = this.chkTreatDuplicatesAsUnique.isSelected();
+						CGWeight = Double.parseDouble(this.TxtcgWeight.getText());
+						CGImportance = Integer.parseInt(this.TxtcgScale.getText());
 					} else {
-						GOCompareType = "Single";
+						CGCompareType = null;
+						CGDuplicatesUnique = false;
+						CGWeight = 0;
+						CGImportance = 1;
 					}
-					GOWeight = Double.parseDouble(this.TxtgoWeight.getText());
-					GOImportance = Integer.parseInt(this.TxtgoScale.getText());
-				} else{
-					GOCompareType = null;
-					GOWeight = 0;
-					GOImportance = -1;
-				}
 
-				
-				//Factor 4: Intragenic Gap Sizes
-				LinkedList<Point> GapSizeDissMapping;
-				double GGWeight;
-				int GGImportance;
-				
-				if (this.chkGeneGaps.isSelected()){
-					Factors.add("GG");
-					GapSizeDissMapping = this.ComputeGapMapping();
-					GGWeight = Double.parseDouble(this.TxtggWeight.getText());
-					GGImportance = Integer.parseInt(this.TxtggScale.getText());
-				} else {
-					GapSizeDissMapping = null;
-					GGWeight = 0;
-					GGImportance = -1;
-				}
-				
-				//Factor 5: Changes in strandedness
-				boolean IndividualGenes;
-				boolean WholeGroup;
-				double RelWeightIndGenes;
-				double RelWeightWholeGroup;
-				double SSWeight;
-				int SSImportance;
-				
-				if (this.chkStrandedness.isSelected()){
-					if (this.chkIndStrand.isSelected()){
-						IndividualGenes = true;
+					//Factor 2: Presence/absence of common motifs
+					LinkedList<String> CMMotifNames;
+					String CMCompareType;
+					boolean CMDuplicatesUnique;
+					double CMWeight;
+					int CMImportance;
+					
+					if (this.chkCommonMotifs.isSelected()){
+						Factors.add("CM");
+						CMMotifNames = AvailableMotifsBox.getSelectedMotifs();
+						if (radDiceMotif.isSelected()){
+							CMCompareType = "Dice";
+						} else {
+							CMCompareType = "Jaccard";
+						}
+						CMDuplicatesUnique = this.chkTreatDuplicatesAsUniqueMotif.isSelected();
+						CMWeight = Double.parseDouble(this.TxtcmWeight.getText());
+						CMImportance = Integer.parseInt(this.TxtcmScale.getText());
+					} else {
+						CMMotifNames = null;
+						CMCompareType = null;
+						CMDuplicatesUnique = false;
+						CMWeight = 0;
+						CMImportance = -1;
+					}
+					
+					//Factor 3: Gene order
+					String GOCompareType;
+					double GOWeight;
+					int GOImportance;
+					
+					if (this.chkGeneOrder.isSelected()){
+						Factors.add("GO");
+						if (this.radCollinear.isSelected()){
+							GOCompareType = "Collinear";
+						} else {
+							GOCompareType = "Single";
+						}
+						GOWeight = Double.parseDouble(this.TxtgoWeight.getText());
+						GOImportance = Integer.parseInt(this.TxtgoScale.getText());
+					} else{
+						GOCompareType = null;
+						GOWeight = 0;
+						GOImportance = -1;
+					}
+
+					
+					//Factor 4: Intragenic Gap Sizes
+					LinkedList<Point> GapSizeDissMapping;
+					double GGWeight;
+					int GGImportance;
+					
+					if (this.chkGeneGaps.isSelected()){
+						Factors.add("GG");
+						GapSizeDissMapping = this.ComputeGapMapping();
+						GGWeight = Double.parseDouble(this.TxtggWeight.getText());
+						GGImportance = Integer.parseInt(this.TxtggScale.getText());
+					} else {
+						GapSizeDissMapping = null;
+						GGWeight = 0;
+						GGImportance = -1;
+					}
+					
+					//Factor 5: Changes in strandedness
+					boolean IndividualGenes;
+					boolean WholeGroup;
+					double RelWeightIndGenes;
+					double RelWeightWholeGroup;
+					double SSWeight;
+					int SSImportance;
+					
+					if (this.chkStrandedness.isSelected()){
+						if (this.chkIndStrand.isSelected()){
+							IndividualGenes = true;
+						} else {
+							IndividualGenes = false;
+						}
+						if (this.chkGrpStrand.isSelected()){
+							WholeGroup = true;
+						} else {
+							WholeGroup = false;
+						}
+						RelWeightIndGenes = Double.parseDouble(this.TxtwtInd.getText());
+						RelWeightWholeGroup = Double.parseDouble(this.TxtwtGrp.getText());
+						SSWeight = Double.parseDouble(this.TxtssWeight.getText());
+						SSImportance = Integer.parseInt(this.TxtssScale.getText());
 					} else {
 						IndividualGenes = false;
-					}
-					if (this.chkGrpStrand.isSelected()){
-						WholeGroup = true;
-					} else {
 						WholeGroup = false;
+						RelWeightIndGenes = 0;
+						RelWeightWholeGroup = 0;
+						SSWeight = 0;
+						SSImportance = -1;
 					}
-					RelWeightIndGenes = Double.parseDouble(this.TxtwtInd.getText());
-					RelWeightWholeGroup = Double.parseDouble(this.TxtwtGrp.getText());
-					SSWeight = Double.parseDouble(this.TxtssWeight.getText());
-					SSImportance = Integer.parseInt(this.TxtssScale.getText());
-				} else {
-					IndividualGenes = false;
-					WholeGroup = false;
-					RelWeightIndGenes = 0;
-					RelWeightWholeGroup = 0;
-					SSWeight = 0;
-					SSImportance = -1;
+					
+					//compute a new dissimilarity.
+					CustomDissimilarity CD = new CustomDissimilarity(
+							Name,				//General
+							AmalgamationType,
+							Factors,			
+							CGCompareType,		//Factor 1: Common Genes
+							CGDuplicatesUnique,
+							CGWeight,
+							CGImportance,		
+							CMMotifNames,		//Factor 2: Common Motifs
+							CMCompareType,
+							CMDuplicatesUnique,
+							CMWeight,
+							CMImportance,
+							GOCompareType,		//Factor 3: Gene Order
+							GOWeight,
+							GOImportance,
+							GapSizeDissMapping,	//Factor 4: Gene Gaps
+							GGWeight,
+							GGImportance,
+							IndividualGenes,	//Factor 5: Strandedness
+							WholeGroup,
+							RelWeightIndGenes,
+							RelWeightWholeGroup,
+							SSWeight,
+							SSImportance
+							);
+					
+					//Add to the list
+					f.getOS().addCustomDissimilarity(CD);
+					
+					//insert item into the menu
+					MenuDM.insertItemAt(Name, 0);
+					
+					
+				} catch (Exception ex){
+					JOptionPane.showMessageDialog(null, "One or more fields incorrectly formatted.",
+							"Format Error",JOptionPane.ERROR_MESSAGE);
 				}
-				
-				//compute a new dissimilarity.
-				CustomDissimilarity CD = new CustomDissimilarity(
-						Name,				//General
-						AmalgamationType,
-						Factors,			
-						CGCompareType,		//Factor 1: Common Genes
-						CGDuplicatesUnique,
-						CGWeight,
-						CGImportance,		
-						CMMotifNames,		//Factor 2: Common Motifs
-						CMCompareType,
-						CMDuplicatesUnique,
-						CMWeight,
-						CMImportance,
-						GOCompareType,		//Factor 3: Gene Order
-						GOWeight,
-						GOImportance,
-						GapSizeDissMapping,	//Factor 4: Gene Gaps
-						GGWeight,
-						GGImportance,
-						IndividualGenes,	//Factor 5: Strandedness
-						WholeGroup,
-						RelWeightIndGenes,
-						RelWeightWholeGroup,
-						SSWeight,
-						SSImportance
-						);
-				
-				
-			} catch (Exception ex){
-				JOptionPane.showMessageDialog(null, "One or more fields incorrectly formatted.",
-						"Format Error",JOptionPane.ERROR_MESSAGE);
+
+			} else {
+				JOptionPane.showMessageDialog(null, "There is another dissimilarity measure of that name. Please choose a different name.", "Name Exists", JOptionPane.ERROR_MESSAGE);
 			}
 
+		}
+		
+		//Remove button
+		if (evt.getSource().equals(btnRemoveDM)){
+			if (!(MenuDM.getSelectedItem().equals("Common Genes - Dice") ||
+					MenuDM.getSelectedItem().equals("Common Genes - Jaccard") ||
+					MenuDM.getSelectedItem().equals("Moving Distances") ||
+					MenuDM.getSelectedItem().equals("Total Length"))){
+				
+				//remove this item, if possible
+				MenuDM.removeItem(MenuDM.getSelectedItem());
+				f.getOS().getCustomDissimilarities().remove(MenuDM.getSelectedItem());
+
+			} else {
+				JOptionPane.showMessageDialog(null, "Unable to remove this dissimilarity type.",
+						"Unable to Remove",JOptionPane.ERROR_MESSAGE);
+			}
+				
+		}
+		
+		//Submit button
+		if (evt.getSource().equals(btnOK)){
+			this.f.getPanMenu().getCbDissimilarity().removeAllItems();
+			for (int i = 0; i < f.getOS().getCustomDissimilarities().size(); i++){
+				this.f.getPanMenu().getCbDissimilarity().addItem(f.getOS().getCustomDissimilarities().get(i).getName());
+			}
+			this.f.getPanMenu().getCbDissimilarity().addItem("Common Genes - Dice");
+			this.f.getPanMenu().getCbDissimilarity().addItem("Common Genes - Jaccard");
+			this.f.getPanMenu().getCbDissimilarity().addItem("Moving Distances");
+			this.f.getPanMenu().getCbDissimilarity().addItem("Total Length");
+			
+			//close window
+			this.dispose();
 		}
 	}
 }

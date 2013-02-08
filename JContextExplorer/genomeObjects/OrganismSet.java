@@ -16,6 +16,8 @@ import java.util.Map.Entry;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 
+import operonClustering.CustomDissimilarity;
+
 import definicions.MatriuDistancies;
 
 public class OrganismSet {
@@ -25,6 +27,7 @@ public class OrganismSet {
 	private LinkedList<String> SpeciesNames;					//-Species-Names--------------
 	private LinkedList<ContextSetDescription> CSDs;				//-Info-about-Context-Sets----
 	private LinkedList<MotifGroupDescription> MGDescriptions;
+	private LinkedList<CustomDissimilarity> CustomDissimilarities = new LinkedList<CustomDissimilarity>();
 	private boolean GeneClustersLoaded = false;					//-Gene-Clusters--------------
 	public int LargestCluster = 0;
 	private boolean ContinueImportingOperons = true;			
@@ -319,6 +322,7 @@ public class OrganismSet {
 		
 		//initialize output
 		ExtendedCRON EC = new ExtendedCRON();
+		EC.setCustomDissimilarities(CustomDissimilarities);
 		
 		//set name and type of CRON.
 		EC.setName(Name);
@@ -431,6 +435,7 @@ public class OrganismSet {
 		
 		//initialize output
 		ExtendedCRON EC = new ExtendedCRON();
+		EC.setCustomDissimilarities(CustomDissimilarities);
 		
 		//set name and type of CRON.
 		EC.setName("Clusters " + Name);
@@ -603,4 +608,21 @@ public class OrganismSet {
 		SourceDirectory = sourceDirectory;
 	}
 
+	public LinkedList<CustomDissimilarity> getCustomDissimilarities() {
+		return CustomDissimilarities;
+	}
+
+	public void setCustomDissimilarities(LinkedList<CustomDissimilarity> customDissimilarities) {
+		CustomDissimilarities = customDissimilarities;
+	}
+
+	public void addCustomDissimilarity(CustomDissimilarity D){
+		//create, if null
+		if (this.CustomDissimilarities == null){
+			this.CustomDissimilarities = new LinkedList<CustomDissimilarity>();
+		}
+		
+		//add to list
+		this.CustomDissimilarities.add(D);
+	}
 } //completes classbody
