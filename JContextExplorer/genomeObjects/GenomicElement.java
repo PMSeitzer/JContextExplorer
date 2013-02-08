@@ -2,6 +2,8 @@
 
 package genomeObjects;
 
+import java.util.LinkedList;
+
 import org.biojava3.core.sequence.Strand;
 
 public class GenomicElement {
@@ -15,7 +17,8 @@ public class GenomicElement {
     private String Annotation;		    //
 	private int ElementID;				//-Other Designations------------
     private int ClusterID;				//
-    private int GeneID;
+    private int GeneID;					//
+    private LinkedList<SequenceMotif> AssociatedMotifs = new LinkedList<SequenceMotif>();
 
     //Constructor
     // ----------------------- Constructor-----------------------------//
@@ -95,6 +98,28 @@ public class GenomicElement {
 
 	public void setGeneID(int geneID) {
 		GeneID = geneID;
+	}
+
+	public LinkedList<SequenceMotif> getAssociatedMotifs() {
+		return AssociatedMotifs;
+	}
+
+	public void setAssociatedMotifs(LinkedList<SequenceMotif> associatedMotifs) {
+		AssociatedMotifs = associatedMotifs;
+	}
+	
+	//add a motif, to be associated with this element
+	public void addAMotif(SequenceMotif SM){
+		this.AssociatedMotifs.add(SM);
+	}
+
+	public void removeAMotif(SequenceMotif SM) {
+		try {
+			AssociatedMotifs.remove(SM);
+		} catch (Exception ex) {
+			
+		}
+		
 	}
 
 }

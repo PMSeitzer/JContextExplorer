@@ -3,6 +3,7 @@ package moduls.frm.children;
 import genomeObjects.AnnotatedGenome;
 import genomeObjects.ContextSet;
 import genomeObjects.ContextSetDescription;
+import genomeObjects.GenomicElement;
 import genomeObjects.MotifGroup;
 import genomeObjects.MotifGroupDescription;
 import genomeObjects.SequenceMotif;
@@ -10,6 +11,7 @@ import genomeObjects.SequenceMotif;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -27,6 +29,7 @@ import java.util.LinkedList;
 import javax.swing.ButtonGroup;
 import javax.swing.ButtonModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -66,6 +69,27 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 	//general use
 	private JPanel jp;
 	private JProgressBar progressBar;
+	
+	//insets
+	private Insets IndentInsets = new Insets(1,20,1,1);
+	private Insets NewSectionInsets = new Insets(10,1,1,1);
+	
+	//Associate motifs with genomic elements
+	private LinkedList<Component> FindAssociationGroup;
+	private JCheckBox chkAssociate;
+	private String strAssociate = "Associate imported motifs with genomic elements";
+	private JRadioButton radNextDownstream, radWithinRange;
+	private ButtonGroup GrpAssociateMotifs;
+	private String strNextDownstream = "Associate motif with the next downstream genomic element";
+	private String strWithinRange = "Associate motif with all genomic elements located within range";
+	private LinkedList<Component> DownstreamGroup;
+	private JTextField LblUpstream, LblDownstream, TxtUpstream, TxtDownstream;
+	private String strLblUpstream = "Upstream:";
+	private String strLblDownstream = "Downstream:";
+	private String strTxtUpstream = "-1";
+	private String strTxtDownstream = "20";
+	private JCheckBox chkInternalMotifs;
+	private String strInternalMotifs = "Include Internal Motifs";
 
 	//(1) MSFimo
 	private LinkedList<Component> MSFimo_group;
@@ -114,7 +138,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			SequenceMotifsAsList.add(SequenceMotifsAsArray[i]);
 		}
 		
-		this.setSize(600,400);
+		this.setSize(600,500);
 		
 		this.setTitle("Manage Sequence Motifs");
 		this.setModalityType(ModalityType.DOCUMENT_MODAL);
@@ -127,6 +151,14 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		this.setContentPane(jp);
 		//this.pack(); //to pack or not to pack?
 
+		
+		//turn off all checkbox options
+		for (Component c : this.FindAssociationGroup){
+			c.setEnabled(false);
+		}
+		for (Component c : DownstreamGroup){
+			c.setEnabled(false);
+		}
 		this.setLocationRelativeTo(null);
 		this.setVisible(true);
 		
@@ -141,6 +173,9 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		//Fields
 		@Override
 		protected Void doInBackground() throws Exception {
+			
+			//wait cursor
+			f.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			
 			//re-initialize loading
 			FimoLoaded = false;
@@ -225,10 +260,126 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 									SM.setStrand(Strand.POSITIVE);
 								} else {
 									SM.setStrand(Strand.NEGATIVE);
+									
+									//in the case of a negative strand, flip positive and negative coordinates.
+									int TempStart = SM.getStart();
+									SM.setStart(SM.getStop());
+									SM.setStop(TempStart);
 								}
-
+								
 								//add to list
 								MG.getMotifInstances().add(SM);
+								
+								//option: associate with an annotated genome
+								if (chkAssociate.isSelected()){
+									AnnotatedGenome AG = f.getOS().getSpecies().get(SpeciesName);
+									int DistE_SM;
+									GenomicElement TempE = null;
+									
+									//Center of motif
+									double value = 0.5 * ( (double) SM.getStart() + (double) SM.getStop() );
+									long Center = Math.round(value);
+									
+									for (GenomicElement E : AG.getElements()){
+										if (radNextDownstream.isSelected()){
+											if (E.getContig().contentEquals(SM.getContig())){ // same contig
+												if (E.getStrand().equals(SM.getStrand())){ //same strand
+													
+													if (SM.getStrand().equals(Strand.POSITIVE)){
+														
+														//case: internal motif
+														if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
+															E.addAMotif(SM);
+															break;
+
+														//case: partially overlapping
+														} else if (SM.getStart() < E.getStart() && SM.getStop() > E.getStart()){
+															E.addAMotif(SM);
+															break;
+															
+														//case: distance from source
+														} else {
+															DistE_SM = E.getStart() - SM.getStop();
+															if (DistE_SM > 0){
+																E.addAMotif(SM);
+																break;
+															}
+														}
+														
+													} else {
+														
+														//case: internal motif
+														if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
+															E.addAMotif(SM);
+															break;
+
+														//case: partially overlapping
+														} else if (SM.getStart() < E.getStop() && SM.getStop() > E.getStop()){
+															E.addAMotif(SM);
+															break;
+															
+														//case: distance from source
+														} else {
+															DistE_SM =  E.getStart() - SM.getStop();
+															if (DistE_SM > 0){
+																if (TempE != null){
+																	TempE.addAMotif(SM);
+																	TempE = null;
+																	break;
+																}
+															} else {
+																//store value, in case it is needed.
+																TempE = E;
+															}
+														}
+													}
+
+												}
+											}
+											
+										//just search for nearby	
+										} else if (radWithinRange.isSelected()) {
+											if (E.getContig().contentEquals(SM.getContig())){ // same contig
+												
+												//Once passed the threshold, search no more!
+												if (E.getStart() - Center > Integer.parseInt(TxtDownstream.getText())){
+													break;
+												}
+
+												
+												if (SM.getStrand().equals(Strand.POSITIVE)){
+	
+													//downstream check
+													if (E.getStart() - Center <= Integer.parseInt(TxtDownstream.getText())
+															&& E.getStart() - Center > 0){
+														E.addAMotif(SM);
+													} else if (Center - E.getStop() < Integer.parseInt(TxtUpstream.getText())){
+														E.addAMotif(SM);
+													} 
+													
+												} else if (SM.getStrand().equals(Strand.NEGATIVE)){
+													//downstream check
+													if (E.getStart() - Center <= Integer.parseInt(TxtUpstream.getText())
+															&& E.getStart() - Center > 0){
+														E.addAMotif(SM);
+													} else if (Center - E.getStop() < Integer.parseInt(TxtDownstream.getText())){
+														E.addAMotif(SM);
+													} 
+													
+												}
+												
+												//case: internal motif
+												if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
+													if (chkInternalMotifs.isSelected()){
+														E.addAMotif(SM);
+													} else {
+														E.removeAMotif(SM);		//try to remove if already added.
+													}
+												}
+											}
+										}
+									}	
+								}
 							}
 
 						}
@@ -241,7 +392,9 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 						SpeciesNames.add(SpeciesName);
 						
 					} catch (Exception ex) {
-						System.out.println("Unable to map file: " + FimoFile + " to an organism in the genomic working set.");
+						JOptionPane.showMessageDialog(null, "One or more fields incorrectly formatted, or the input file is not correctly formatted.",
+								"Format Error",JOptionPane.ERROR_MESSAGE);
+						//System.out.println("Unable to map file: " + FimoFile + " to an organism in the genomic working set.");
 					}
 				}
 
@@ -267,6 +420,9 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 					+ "\" successfully mapped to " + this.OrganismsMapped + " organisms.");
 			btnAddMS.setEnabled(true);
 			MSName.setEditable(true);
+			
+			//wait cursor
+			f.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		}
 		
 	}
@@ -336,9 +492,133 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		MSType = new ButtonGroup(); 
 			MSType.add(MSFimo);
 			MSType.add(MSCustom);
+		
+			
+		/*
+		 * ASSOCIATION OPTION	
+		 */
+		
+		//radio button designations
+		FindAssociationGroup = new LinkedList<Component>();
+		radNextDownstream = new JRadioButton(strNextDownstream);
+		radWithinRange = new JRadioButton (strWithinRange);
+		GrpAssociateMotifs = new ButtonGroup();
+		GrpAssociateMotifs.add(radNextDownstream);
+		GrpAssociateMotifs.add(radWithinRange);
+		
+		c.ipady = 0;
+		//check box
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 5;
+		c.fill = GridBagConstraints.NONE;
+		c.insets = NewSectionInsets;
+		chkAssociate = new JCheckBox(strAssociate);
+		chkAssociate.setSelected(false);
+		chkAssociate.addActionListener(this);
+		jp.add(chkAssociate, c);
+		gridy++;
+		
+		//next upstream radio button
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 5;
+		c.fill = GridBagConstraints.NONE;
+		c.insets = this.IndentInsets;
+		radNextDownstream.setSelected(true);
+		radNextDownstream.addActionListener(this);
+		FindAssociationGroup.add(radNextDownstream);
+		jp.add(radNextDownstream, c);
+		gridy++;
+		
+		//within range radio button
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 5;
+		c.fill = GridBagConstraints.NONE;
+		c.insets = IndentInsets;
+		radWithinRange.addActionListener(this);
+		FindAssociationGroup.add(radWithinRange);
+		jp.add(radWithinRange, c);
+		gridy++;
+		
+		DownstreamGroup = new LinkedList<Component>();
+		
+		//options
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = IndentInsets;
+		LblUpstream = new JTextField(strLblUpstream);
+		LblUpstream.setEditable(false);
+		LblUpstream.setBorder(null);
+		LblUpstream.setHorizontalAlignment(JTextField.RIGHT);
+		this.FindAssociationGroup.add(LblUpstream);
+		this.DownstreamGroup.add(LblUpstream);
+		jp.add(LblUpstream, c);
+		
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(1,1,1,1);
+		TxtUpstream = new JTextField(strTxtUpstream);
+		TxtUpstream.setEditable(true);
+		this.FindAssociationGroup.add(TxtUpstream);
+		this.DownstreamGroup.add(TxtUpstream);
+		jp.add(TxtUpstream, c);
+		
+		c.gridx = 2;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(1,1,1,1);
+		LblDownstream = new JTextField(strLblDownstream);
+		LblDownstream.setEditable(false);
+		LblDownstream.setHorizontalAlignment(JTextField.RIGHT);
+		LblDownstream.setBorder(null);
+		this.FindAssociationGroup.add(LblDownstream);
+		this.DownstreamGroup.add(LblDownstream);
+		jp.add(LblDownstream, c);
+		
+		c.gridx = 3;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(1,1,1,1);
+		TxtDownstream = new JTextField(strTxtDownstream);
+		TxtDownstream.setEditable(true);
+		this.FindAssociationGroup.add(TxtDownstream);
+		this.DownstreamGroup.add(TxtDownstream);
+		jp.add(TxtDownstream, c);
+		
+		c.gridx = 4;
+		c.gridy = gridy;
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(1,1,1,1);
+		chkInternalMotifs = new JCheckBox(strInternalMotifs);
+		chkInternalMotifs.setSelected(true);
+		this.FindAssociationGroup.add(chkInternalMotifs);
+		this.DownstreamGroup.add(chkInternalMotifs);
+		jp.add(chkInternalMotifs, c);
+		gridy++;
+	
+//			private JTextField LblUpstream, LblDownstream, TxtUpstream, TxtDownstream;
+//			private String strTxtUpstream = "-1";
+//			private String strTxtDownstream = "20";	
 			
 		//(1) MSFIMO
-		
+		c.ipady = 7;
 		//grouping
 		MSFimo_group = new LinkedList<Component>();
 		
@@ -627,6 +907,38 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 
 			
 		} 
+		
+		//active/deactivate components depending on checkbox
+		if (evt.getSource().equals(this.chkAssociate)){
+			
+			for (Component c : FindAssociationGroup){
+				if (!this.chkAssociate.isSelected()){
+					c.setEnabled(false);
+				} else {
+					if (DownstreamGroup.contains(c)){
+						if (radWithinRange.isSelected()){
+							c.setEnabled(true);
+						}
+					} else {
+						c.setEnabled(true);
+					}
+						
+				}
+			}
+
+		}
+		
+		if (evt.getSource().equals(radNextDownstream)){
+			for (Component c : DownstreamGroup){
+				c.setEnabled(false);
+			}
+		}
+		
+		if (evt.getSource().equals(radWithinRange)){
+			for (Component c : DownstreamGroup){
+				c.setEnabled(true);
+			}
+		}
 		
 		if (evt.getSource().equals(btnAddMS)){
 			

@@ -86,9 +86,62 @@ public class CustomDissimilarity {
 		this.SSImportance = sSImportance2;
 		this.SSWeight = sSWeight2;
 	}
+	
+	// -------- Compute Dissimilarity -------------------------//
+	
+	//Common Genes
+	public double CGDissimilarity(){
+		return 0;
+	}
+	
+	//Common Motifs
+	public double CMDissimilarity(){
+		return 0;
+	}
+	
+	//Gene Order
+	public double GODissimilarity(){
+		return 0;
+	}
+	
+	//Gene Gaps
+	public double GGDissimilarity(){
+		return 0;
+	}
+	
+	//Strandedness
+	public double SSDissimilarity(){
+		return 0;
+	}
+	
+	//Total Dissimilarity
+	double TotalDissimilarity(){
+		
+		//Linear Scale
+		if (AmalgamationType.equals("Linear")){
+			
+			//determine total weight
+			Double AllProvidedWeights = 0.0;
+			if (Factors.contains("CG")){
+				AllProvidedWeights = AllProvidedWeights + CGWeight;
+			}
+			if (Factors.contains("CM")){
+				AllProvidedWeights = AllProvidedWeights + CMWeight;
+			}
+			if (Factors.contains("GO")){
+				AllProvidedWeights = AllProvidedWeights + GOWeight;
+			}
+			if (Factors.contains("GG")){
+				AllProvidedWeights = AllProvidedWeights + GGWeight;
+			}
+			if (Factors.contains("SS")){
+				AllProvidedWeights = AllProvidedWeights + SSWeight;
+			}
+			
+		}
+		
 
-	//Compute Dissimilarity
-	double ComputeDissimilarity(){
+		
 		return 0;
 	}
 }

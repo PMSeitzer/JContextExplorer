@@ -795,13 +795,6 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 						//Debugging: display motif
 						//System.out.println("DrawMotif: " + AG.getSpecies() + "," + SM.getContig() + " " + SM.getStart() + ":" + SM.getStop() + " " + SM.getStrand().toString());
 						
-						//in the case of a negative strand, flip positive and negative coordinates.
-						if (SM.getStrand().equals(Strand.NEGATIVE)){
-							int TempStart = SM.getStart();
-							SM.setStart(SM.getStop());
-							SM.setStop(TempStart);
-						}
-						
 						//Initialize draw motif
 						DrawMotif dm = new DrawMotif();
 						
@@ -894,24 +887,21 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 							dm.setStrRevChange(false);
 						}
 						
-						//TODO: determine membership.
-//						//determine membership
-//						//Update: compare to ECRON as opposed to range boundaries
-//						LinkedList<GenomicElementAndQueryMatch> LL = contexts.get(GS[i].getLabel());
-//						
-//						boolean MemberOfContextSet = false;
-//						for (int j = 0; j <LL.size(); j++){
-//							if (SM.getStart() == LL.get(j).getE().getStart() &&
-//									SM.getStop() == LL.get(j).getE().getStop()){
-//								MemberOfContextSet = true;
-//							}
-//						}
-//						
-//						if (MemberOfContextSet == true){
-//							SM.setMembership(0);
-//						} else {
-//							SM.setMembership(-1);
-//						}
+						//determine membership
+						LinkedList<GenomicElementAndQueryMatch> LL = contexts.get(GS[i].getLabel());
+						
+						boolean MemberOfContextSet = false;
+						for (int j = 0; j <LL.size(); j++){
+							if (LL.get(j).getE().getAssociatedMotifs().contains(SM)){
+								MemberOfContextSet = true;
+							}
+						}
+						
+						if (MemberOfContextSet == true){
+							dm.setMembership(0);
+						} else {
+							dm.setMembership(-1);
+						}
 						
 						//set color to default
 						dm.setColor(Color.LIGHT_GRAY);
