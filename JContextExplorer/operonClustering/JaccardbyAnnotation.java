@@ -3,6 +3,8 @@ package operonClustering;
 import genomeObjects.GenomicElementAndQueryMatch;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 public class JaccardbyAnnotation implements OperonDissimilarityMeasure {
@@ -23,27 +25,39 @@ public class JaccardbyAnnotation implements OperonDissimilarityMeasure {
 			O2Annotations.add(E.getE().getAnnotation().toUpperCase());
 		}
 		
-		//Determine numbers of elements at various points
+		//Initialize values
+		double Dissimilarity = 0;
 		double NumIntersecting = 0;
-		double Op1Unique = 0;
-		double Op2Unique = 0;	
+		double SizeO1;
+		double SizeO2;
+		double SizeUnion = 0;
 		
-		for (int i = 0; i <O1Annotations.size(); i++){
-			if (O2Annotations.contains(O1Annotations.get(i))){
-				NumIntersecting++;
-			} else {
-				Op1Unique++;
-			}
+		//Hash Sets
+		HashSet<Object> O1Hash = new HashSet<Object>(O1Annotations);
+		HashSet<Object> O2Hash = new HashSet<Object>(O2Annotations);
+		HashSet<Object> IntersectionHash = new HashSet<Object>(O1Annotations);
+		HashSet<Object> UnionHash = new HashSet<Object>(O1Annotations);
+		IntersectionHash.retainAll(O2Hash);
+		UnionHash.addAll(O2Hash);
+		
+		SizeO1 = O1.size();
+		SizeO2 = O2.size();
+
+		//Find all intersecting types, and find the number that intersect.
+		for (Object O : IntersectionHash){
+			NumIntersecting = NumIntersecting + Math.min(Collections.frequency(O1Annotations, O), Collections.frequency(O2Annotations, O));
 		}
 		
-		for (int i = 0; i < O2Annotations.size(); i++){
-			if (O1Annotations.contains(O2Annotations.get(i)) == false){
-				Op2Unique++;
-			}
+		//compute union
+		SizeUnion = SizeO1 + SizeO2 - NumIntersecting;
+		
+		if (SizeUnion != 0) {
+			Dissimilarity =  1-(NumIntersecting/SizeUnion);
+		} else { //divide by zero case
+			Dissimilarity = 0;
 		}
-			
-		//Jaccard Measure
-		return 1-(NumIntersecting/(NumIntersecting+Op1Unique+Op2Unique));
+		
+		return Dissimilarity;
 		
 		}
 

@@ -109,10 +109,9 @@ public class ExtendedCRON {
 				for (int j = i+1; j < Keys.length; j++){
 					double dist = distMethod.computeDissimilarity(this.Contexts.get(Keys[i]),this.Contexts.get(Keys[j]));
 					
-//					//print statements - also reveals the order of keys
-//					System.out.println("Distance between " + Keys[i] + " and " + Keys[j] + ": " + dist);
-//					System.out.println("(" + i + "," + j + "): " + dist);
-//					
+					//print statements - also reveals the order of keys
+					//System.out.println("Distance between " + Keys[i] + " and " + Keys[j] + ": " + "(" + i + "," + j + "): "+ dist);
+		
 					//add value to linked list
 					D.add(dist);
 				}
@@ -137,11 +136,14 @@ public class ExtendedCRON {
 					break;
 				}
 			}
-					
+
 			//iterate over keys
 			for (int i = 0; i < Keys.length; i++){
 				for (int j = i+1; j < Keys.length; j++){
 					double dist = CustomDistMethod.TotalDissimilarity(this.Contexts.get(Keys[i]), this.Contexts.get(Keys[j]), SearchType);
+
+					//print statements - also reveals the order of keys
+					//System.out.println("Distance between " + Keys[i] + " and " + Keys[j] + ": " + "(" + i + "," + j + "): " + dist);
 
 					//add value to linked list
 					D.add(dist);

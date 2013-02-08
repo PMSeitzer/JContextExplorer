@@ -103,6 +103,17 @@ public class GenomicElement {
 	public LinkedList<SequenceMotif> getAssociatedMotifs() {
 		return AssociatedMotifs;
 	}
+	
+	public LinkedList<Object> getAssociatedMotifsAsObjects(){
+		LinkedList<Object> MotifsAsObjects = new LinkedList<Object>();
+		if (AssociatedMotifs != null){
+			for (SequenceMotif SM : AssociatedMotifs){
+				MotifsAsObjects.add(SM);
+			}
+		}
+
+		return MotifsAsObjects;
+	}
 
 	public void setAssociatedMotifs(LinkedList<SequenceMotif> associatedMotifs) {
 		AssociatedMotifs = associatedMotifs;

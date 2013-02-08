@@ -4,6 +4,8 @@ import genomeObjects.GenomicElementAndQueryMatch;
 
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 public class CustomDissimilarity {
@@ -92,18 +94,137 @@ public class CustomDissimilarity {
 	
 	// -------- Compute Dissimilarity -------------------------//
 	
+	//Generalized Dice/Jaccard
+	public double GeneralizedDiceOrJaccard(LinkedList<Object> O1, LinkedList<Object> O2, boolean TreatDuplicatesAsUnique, String Type){
+		
+		//Initialize values
+		double Dissimilarity = 0;
+		double NumIntersecting = 0;
+		double SizeO1;
+		double SizeO2;
+		double SizeUnion = 0;
+		
+		//Hash Sets
+		HashSet<Object> O1Hash = new HashSet<Object>(O1);
+		HashSet<Object> O2Hash = new HashSet<Object>(O2);
+		HashSet<Object> IntersectionHash = new HashSet<Object>(O1);
+		HashSet<Object> UnionHash = new HashSet<Object>(O1);
+		IntersectionHash.retainAll(O2Hash);
+		UnionHash.addAll(O2Hash);
+		
+		if (TreatDuplicatesAsUnique){
+			SizeO1 = O1.size();
+			SizeO2 = O2.size();
+
+			//Find all intersecting types, and find the number that intersect.
+			for (Object O : IntersectionHash){
+				NumIntersecting = NumIntersecting + Math.min(Collections.frequency(O1, O), Collections.frequency(O2, O));
+			}
+			
+			//compute union
+			SizeUnion = SizeO1 + SizeO2 - NumIntersecting;
+			
+		} else {
+
+			SizeO1 = O1Hash.size();
+			SizeO2 = O2Hash.size();
+			NumIntersecting = IntersectionHash.size();
+			SizeUnion = UnionHash.size();
+		}
+
+		//compute dissimilarity from computed size / union / intersection values
+		if (Type.equals("Dice")){
+			if (!((SizeO1 == 0) && (SizeO2 == 0))){
+				Dissimilarity = 1-(2*NumIntersecting)/(SizeO1+SizeO2);
+			} else { //divide by zero case
+				Dissimilarity = 0;
+			}
+		} else {	//Jaccard
+			if (SizeUnion != 0) {
+				Dissimilarity =  1-(NumIntersecting/SizeUnion);
+			} else { //divide by zero case
+				Dissimilarity = 0;
+			}
+			
+		}
+
+		return Dissimilarity;
+	}
+
 	//Common Genes
 	public double CGDissimilarity(LinkedList<GenomicElementAndQueryMatch> O1, LinkedList<GenomicElementAndQueryMatch> O2, String Type){
 		
 		double Dissimilarity = 0;
-		double NumIntersecting = 0;
-		double Op1Unique = 0;
-		double Op2Unique = 0;	
-		double Op1Size = 0;
-		double Op2Size = 0;
 		
-		if (Type.equals("Annotation")){
+		LinkedList<Object> O1Values = new LinkedList<Object>();
+		LinkedList<Object> O2Values = new LinkedList<Object>();
+		
+		//determine appropriate data types
+		if (Type.equals("annotation")){
 			
+			//add elements
+			for (GenomicElementAndQueryMatch E: O1){
+				O1Values.add(E.getE().getAnnotation().toUpperCase());
+			}
+			
+			for (GenomicElementAndQueryMatch E: O2){
+				O2Values.add(E.getE().getAnnotation().toUpperCase());
+			}
+			
+		} else {
+
+			int NegativeCounter = -10;
+			
+			//add elements
+			//if clusterID = 0, this is really probably unique, treat all cluster == 0 as unique sets.
+			for (GenomicElementAndQueryMatch E: O1){
+				if (E.getE().getClusterID() == 0){
+					NegativeCounter--;
+					O1Values.add(NegativeCounter);
+				} else {
+					O1Values.add(E.getE().getClusterID());
+				}
+
+			}
+			
+			for (GenomicElementAndQueryMatch E: O2){
+				if (E.getE().getClusterID() == 0){
+					NegativeCounter--;
+					O2Values.add(NegativeCounter);
+				} else {
+					O2Values.add(E.getE().getClusterID());
+				}
+			}
+			
+		}
+		
+		//pass into method
+		Dissimilarity = GeneralizedDiceOrJaccard(O1Values,O2Values,CGDuplicatesUnique,CGCompareType);
+
+		return Dissimilarity;
+
+	}
+	
+	//Common Motifs
+	
+	//Common Motifs
+	public double CMDissimilarity(LinkedList<GenomicElementAndQueryMatch> O1, LinkedList<GenomicElementAndQueryMatch> O2, String Type){
+		
+		double Dissimilarity = 0;
+		
+		/*
+		 * Approach: Find all common gene pairs, and assess all associated motifs,
+		 * using dice or jaccard.  Take average of all individual common gene motif-related 
+		 * dissimilarities.
+		 * 
+		 * In the case of multiple duplicate common genes existing between gene groupings,
+		 * compute all possible pairwise dissimilarities between genes, and map
+		 * particular duplicate copies to the elements that have the lowest dissimilarity.
+		 */
+
+		if (Type.equals("annotation")){
+			
+			//First, isolate all common types.
 			//initialize lists
 			ArrayList<String> O1Values = new ArrayList<String>();
 			ArrayList<String> O2Values = new ArrayList<String>();
@@ -117,72 +238,58 @@ public class CustomDissimilarity {
 				O2Values.add(E.getE().getAnnotation().toUpperCase());
 			}
 			
-			//Determine numbers of elements at various points
-			for (int i = 0; i <O1Values.size(); i++){
-				if (O2Values.contains(O1Values.get(i))){
-					NumIntersecting++;
-				} else {
-					Op1Unique++;
-				}
-			}
+			//determine intersection of common genes (by annotation)
+			HashSet<String> O1Hash = new HashSet<String>(O1Values);
+			HashSet<String> O2Hash = new HashSet<String>(O2Values);
+			HashSet<String> Intersection = new HashSet<String>(O1Values);
+			Intersection.retainAll(O2Hash);
+			Intersection.retainAll(O1Hash);
 			
-			for (int i = 0; i < O2Values.size(); i++){
-				if (O1Values.contains(O2Values.get(i)) == false){
-					Op2Unique++;
-				}
-			}
+			//Sum of Dissimilarities
+			double SumDissimilarity = 0;
 			
-			Op1Size = O1Values.size();
-			Op2Size = O2Values.size();
+			//determine dissimilarity
+			for (String s : Intersection){
+			
+				//find all instances in each set
+				LinkedList<GenomicElementAndQueryMatch> InstancesIn1 = new LinkedList<GenomicElementAndQueryMatch>();
+				for (GenomicElementAndQueryMatch E: O1){
+					if (E.getE().getAnnotation().toUpperCase().equals(s)){
+						InstancesIn1.add(E);
+					}
+				}
+				
+				LinkedList<GenomicElementAndQueryMatch> InstancesIn2 = new LinkedList<GenomicElementAndQueryMatch>();
+				for (GenomicElementAndQueryMatch E: O2){
+					if (E.getE().getAnnotation().toUpperCase().equals(s)){
+						InstancesIn2.add(E);
+					}
+				}
+				
+				//compute motif dissimilarity of all pairwise
+				//TODO: Hungarian mapping type problem, prune list, set up well
+				
+				//for now, just 1 case
+				if (InstancesIn1.size() == 1 && InstancesIn2.size() == 1){
+					
+					//retrieve all motifs
+					LinkedList<Object> MotifsIn1 = InstancesIn1.get(0).getE().getAssociatedMotifsAsObjects();
+					LinkedList<Object> MotifsIn2 = InstancesIn2.get(0).getE().getAssociatedMotifsAsObjects();
 
+					//prune list with only acceptable motifs
+					
+					
+					//determine dissimilarity
+					SumDissimilarity = SumDissimilarity + this.GeneralizedDiceOrJaccard(MotifsIn1, MotifsIn2, CMDuplicatesUnique, CMCompareType);
+					
+				}
+			}
+			
 		} else {
-			
-			//initialize lists
-			ArrayList<Integer> O1Values = new ArrayList<Integer>();
-			ArrayList<Integer> O2Values = new ArrayList<Integer>();
-			
-			//add elements
-			for (GenomicElementAndQueryMatch E: O1){
-				O1Values.add(E.getE().getClusterID());
-			}
-			
-			for (GenomicElementAndQueryMatch E: O2){
-				O2Values.add(E.getE().getClusterID());
-			}
-			
-			for (int i = 0; i <O1Values.size(); i++){
-				if (O2Values.contains(O1Values.get(i))){
-					NumIntersecting++;
-				} else {
-					Op1Unique++;
-				}
-			}
-			
-			for (int i = 0; i < O2Values.size(); i++){
-				if (O1Values.contains(O2Values.get(i)) == false){
-					Op2Unique++;
-				}
-			}
-			
-			Op1Size = O1Values.size();
-			Op2Size = O2Values.size();
 			
 		}
 		
-		if (CGCompareType.equals("Dice")){
-			//Dice Measure
-			Dissimilarity = 1-(2*NumIntersecting)/(Op1Size+Op2Size);
-		} else if (CGCompareType.equals("Jaccard")){
-			//Jaccard Measure
-			Dissimilarity =  1-(NumIntersecting/(NumIntersecting+Op1Unique+Op2Unique));	
-		}
-	
 		return Dissimilarity;
-	}
-	
-	//Common Motifs
-	public double CMDissimilarity(LinkedList<GenomicElementAndQueryMatch> G1, LinkedList<GenomicElementAndQueryMatch> G2, String Type){
-		return 0;
 	}
 	
 	//Gene Order

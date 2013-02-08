@@ -455,7 +455,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		c.fill = GridBagConstraints.NONE;
 		c.insets = new Insets(1,20,1,1);
 		chkTreatDuplicatesAsUnique = new JCheckBox(strTreatDuplicatesAsUnique);
-		chkTreatDuplicatesAsUnique.setSelected(false);
+		chkTreatDuplicatesAsUnique.setSelected(true);
 		grpCommonGenes.add(chkTreatDuplicatesAsUnique);
 		jp.add(chkTreatDuplicatesAsUnique, c);
 		gridy++;
