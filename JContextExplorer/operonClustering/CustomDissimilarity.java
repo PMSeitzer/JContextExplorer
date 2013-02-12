@@ -69,6 +69,7 @@ public class CustomDissimilarity {
 		
 		//factor 2: common motifs
 		this.CMMotifNames = cMMotifNames2;
+		this.CMCompareType = cMCompareType2;
 		this.CMDuplicatesUnique = cMDuplicatesUnique2;
 		this.CMImportance = cMImportance2;
 		this.CMWeight = cMWeight2;
@@ -147,6 +148,25 @@ public class CustomDissimilarity {
 			}
 			
 		}
+		
+		//debugging
+//		if (O1.contains("BOP") && O1.contains("Promoter") &&
+//				O2.contains("BOP") && O2.contains("Promoter")){
+//			
+//			System.out.println("O1 Objects:");
+//			for (Object o : O1){
+//				System.out.println(o.toString());
+//			}
+//			System.out.println("O2 Objects:");
+//			for (Object o : O2){
+//				System.out.println(o.toString());
+//			}
+//			
+//			System.out.println("|O1|: " + SizeO1);
+//			System.out.println("|O2|: " + SizeO2);
+//			System.out.println("|O1 A O2|: " + NumIntersecting);
+//			System.out.println("Diss: " + Dissimilarity);
+//		}
 
 		return Dissimilarity;
 	}
@@ -204,9 +224,7 @@ public class CustomDissimilarity {
 		return Dissimilarity;
 
 	}
-	
-	//Common Motifs
-	
+		
 	//Common Motifs
 	public double CMDissimilarity(LinkedList<GenomicElementAndQueryMatch> O1, LinkedList<GenomicElementAndQueryMatch> O2, String Type){
 		
@@ -218,8 +236,12 @@ public class CustomDissimilarity {
 		 * dissimilarities.
 		 * 
 		 * In the case of multiple duplicate common genes existing between gene groupings,
-		 * compute all possible pairwise dissimilarities between genes, and map
-		 * particular duplicate copies to the elements that have the lowest dissimilarity.
+		 * compute all possible pairwise dissimilarities between genes, and use the
+		 * Munkres-Hungarian algorithm to determine the assignments that minimize the sum
+		 * of all dissimilarities.
+		 * 
+		 * If there is only one common element across sets (the most common case), then
+		 * the matrix is not very interesting and the Hungarian algorithm just returns the element.
 		 */
 
 		if (Type.equals("annotation")){
@@ -248,7 +270,7 @@ public class CustomDissimilarity {
 			//Sum of Dissimilarities
 			double SumDissimilarity = 0;
 			
-			//determine dissimilarity
+			//determine sum of dissimilarities
 			for (String s : Intersection){
 			
 				//find all instances in each set
@@ -266,26 +288,117 @@ public class CustomDissimilarity {
 					}
 				}
 				
-				//compute motif dissimilarity of all pairwise
-				//TODO: Hungarian mapping type problem, prune list, set up well
+				//compute motif dissimilarity of all pairwise, to determine best matching set
+				double[][] MotifComparisons = new double[InstancesIn1.size()][InstancesIn2.size()];
 				
-				//for now, just 1 case
-				if (InstancesIn1.size() == 1 && InstancesIn2.size() == 1){
-					
-					//retrieve all motifs
-					LinkedList<Object> MotifsIn1 = InstancesIn1.get(0).getE().getAssociatedMotifsAsObjects();
-					LinkedList<Object> MotifsIn2 = InstancesIn2.get(0).getE().getAssociatedMotifsAsObjects();
+				for (int i = 0; i < InstancesIn1.size(); i++){
+					for (int j = 0; j < InstancesIn2.size(); j++){
+						
+						//retrieve all motifs
+						LinkedList<Object> MotifsIn1 = InstancesIn1.get(i).getE().getAssociatedMotifsAsObjects(CMMotifNames);
+						LinkedList<Object> MotifsIn2 = InstancesIn2.get(j).getE().getAssociatedMotifsAsObjects(CMMotifNames);
+						
+						//fill in array
+						MotifComparisons[i][j] = 
+								this.GeneralizedDiceOrJaccard(MotifsIn1, MotifsIn2, CMDuplicatesUnique, CMCompareType);
+						
+//						if (MotifsIn1.contains("BOP") && MotifsIn1.contains("Promoter") &&
+//								MotifsIn2.contains("BOP") && MotifsIn2.contains("Promoter")){
+//							System.out.println("Diss: " + MotifComparisons[i][j]);
+//						}
+					}
+				}
+				
+				//Call Hungarian algorithm, sum dissimilarities, add to running total
+				SumDissimilarity = SumDissimilarity 
+						+ (HungarianAlgorithm.JCEAssignment(MotifComparisons) / (double) Math.min(InstancesIn1.size(), InstancesIn2.size()));
+				
+			}
+			
+			//Normalize
+			Dissimilarity = SumDissimilarity / Intersection.size();
+			
+		} else { //Common Cluster ID
+			
+			//initialize lists
+			ArrayList<Integer> O1Values = new ArrayList<Integer>();
+			ArrayList<Integer> O2Values = new ArrayList<Integer>();
+			
+			int NegativeCounter = -10;
+			
+			//add elements
+			//if clusterID = 0, this is really probably unique, treat all cluster == 0 as unique sets.
+			for (GenomicElementAndQueryMatch E: O1){
+				if (E.getE().getClusterID() == 0){
+					NegativeCounter--;
+					O1Values.add(NegativeCounter);
+				} else {
+					O1Values.add(E.getE().getClusterID());
+				}
 
-					//prune list with only acceptable motifs
-					
-					
-					//determine dissimilarity
-					SumDissimilarity = SumDissimilarity + this.GeneralizedDiceOrJaccard(MotifsIn1, MotifsIn2, CMDuplicatesUnique, CMCompareType);
-					
+			}
+			
+			for (GenomicElementAndQueryMatch E: O2){
+				if (E.getE().getClusterID() == 0){
+					NegativeCounter--;
+					O2Values.add(NegativeCounter);
+				} else {
+					O2Values.add(E.getE().getClusterID());
 				}
 			}
 			
-		} else {
+			//determine intersection of common genes (by cluster ID)
+			HashSet<Integer> O1Hash = new HashSet<Integer>(O1Values);
+			HashSet<Integer> O2Hash = new HashSet<Integer>(O2Values);
+			HashSet<Integer> Intersection = new HashSet<Integer>(O1Values);
+			Intersection.retainAll(O2Hash);
+			Intersection.retainAll(O1Hash);
+			
+			//Sum of Dissimilarities
+			double SumDissimilarity = 0;
+			
+			//determine sum of dissimilarities
+			for (Integer s : Intersection){
+			
+				//find all instances in each set
+				LinkedList<GenomicElementAndQueryMatch> InstancesIn1 = new LinkedList<GenomicElementAndQueryMatch>();
+				for (GenomicElementAndQueryMatch E: O1){
+					if (E.getE().getClusterID() == s){
+						InstancesIn1.add(E);
+					}
+				}
+				
+				LinkedList<GenomicElementAndQueryMatch> InstancesIn2 = new LinkedList<GenomicElementAndQueryMatch>();
+				for (GenomicElementAndQueryMatch E: O2){
+					if (E.getE().getClusterID() == s){
+						InstancesIn2.add(E);
+					}
+				}
+				
+				//compute motif dissimilarity of all pairwise, to determine best matching set
+				double[][] MotifComparisons = new double[InstancesIn1.size()][InstancesIn2.size()];
+				
+				for (int i = 0; i < InstancesIn1.size(); i++){
+					for (int j = 0; j < InstancesIn2.size(); j++){
+						
+						//retrieve all motifs
+						LinkedList<Object> MotifsIn1 = InstancesIn1.get(i).getE().getAssociatedMotifsAsObjects(CMMotifNames);
+						LinkedList<Object> MotifsIn2 = InstancesIn2.get(j).getE().getAssociatedMotifsAsObjects(CMMotifNames);
+						
+						//fill in array
+						MotifComparisons[i][j] = 
+								this.GeneralizedDiceOrJaccard(MotifsIn1, MotifsIn2, CMDuplicatesUnique, CMCompareType);
+					}
+				}
+				
+				//Call Hungarian algorithm, sum dissimilarities, add to running total
+				SumDissimilarity = SumDissimilarity 
+						+ (HungarianAlgorithm.JCEAssignment(MotifComparisons) / (double) Math.min(InstancesIn1.size(), InstancesIn2.size()));
+
+			}
+			
+			//Normalize
+			Dissimilarity = SumDissimilarity / Intersection.size();
 			
 		}
 		

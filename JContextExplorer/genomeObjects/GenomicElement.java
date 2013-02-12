@@ -2,6 +2,7 @@
 
 package genomeObjects;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 
 import org.biojava3.core.sequence.Strand;
@@ -18,7 +19,7 @@ public class GenomicElement {
 	private int ElementID;				//-Other Designations------------
     private int ClusterID;				//
     private int GeneID;					//
-    private LinkedList<SequenceMotif> AssociatedMotifs = new LinkedList<SequenceMotif>();
+    private HashSet<SequenceMotif> AssociatedMotifs = new HashSet<SequenceMotif>();
 
     //Constructor
     // ----------------------- Constructor-----------------------------//
@@ -100,22 +101,24 @@ public class GenomicElement {
 		GeneID = geneID;
 	}
 
-	public LinkedList<SequenceMotif> getAssociatedMotifs() {
+	public HashSet<SequenceMotif> getAssociatedMotifs() {
 		return AssociatedMotifs;
 	}
 	
-	public LinkedList<Object> getAssociatedMotifsAsObjects(){
+	public LinkedList<Object> getAssociatedMotifsAsObjects(LinkedList<String> MotifNames){
 		LinkedList<Object> MotifsAsObjects = new LinkedList<Object>();
 		if (AssociatedMotifs != null){
 			for (SequenceMotif SM : AssociatedMotifs){
-				MotifsAsObjects.add(SM);
+				if (MotifNames.contains(SM.getMotifName())){
+					MotifsAsObjects.add(SM.getMotifName());
+				}
 			}
 		}
 
 		return MotifsAsObjects;
 	}
 
-	public void setAssociatedMotifs(LinkedList<SequenceMotif> associatedMotifs) {
+	public void setAssociatedMotifs(HashSet<SequenceMotif> associatedMotifs) {
 		AssociatedMotifs = associatedMotifs;
 	}
 	
