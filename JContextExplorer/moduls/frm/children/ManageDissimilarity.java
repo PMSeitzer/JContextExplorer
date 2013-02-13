@@ -109,10 +109,13 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 	private JTextField LblgoWeight, TxtgoWeight, LblgoScale, TxtgoScale;
 	private String strTxtgoWeight = "0.2";
 	private String strTxtgoScale = "3";
-	private JRadioButton radCollinear, radSingle;
-	private ButtonGroup CollinearOrSingle;
-	private String strCollinear = "Collinear group gene reordering";
-	private String strSingle = "Single gene reordering";
+	private JCheckBox chkHeadPos, chkPairOrd;
+	private String strHeadPos = "Percent conserved gene position from head";
+	private String strPairOrd = "Percent conserved collinear gene pairs";
+	private JTextField LblwtHead, LblwtPair, TxtwtHead, TxtwtPair;
+	private String strLblwtOrd = " Relative Weight:";
+	private String strTxtwtHead = "0.5";
+	private String strTxtwtPair = "0.5";
 	
 	// (4) GENE GAPS
 	private JTextField LblggWeight, TxtggWeight, LblggScale, TxtggScale;
@@ -678,36 +681,79 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		gridy++;
 		
 		c.ipady = 0;
-		
-		//button group for single/collinear insertion type
-		radCollinear = new JRadioButton(strCollinear);
-		radSingle = new JRadioButton(strSingle);
-		CollinearOrSingle = new ButtonGroup();
-		CollinearOrSingle.add(radCollinear);
-		CollinearOrSingle.add(radSingle);
-
-		//add collinear group option to panel
+//		
+		//Position from Head Option
 		c.gridx = 0;
 		c.gridy = gridy;
-		c.gridwidth = 2;
 		c.gridheight = 1;
-		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 2;
 		c.insets = new Insets(1,20,1,1);
-		radCollinear.setSelected(true);
-		grpGeneOrder.add(radCollinear);
-		jp.add(radCollinear, c);
+		chkHeadPos = new JCheckBox(strHeadPos);
+		chkHeadPos.setSelected(true);
+		grpGeneOrder.add(chkHeadPos);
+		jp.add(chkHeadPos, c);
 		gridy++;
 		
-		//add single gene insertion option to panel
+		//relative weights
 		c.gridx = 0;
 		c.gridy = gridy;
-		c.gridwidth = 2;
 		c.gridheight = 1;
-		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,40,1,1);
+		LblwtHead = new JTextField(strLblwtOrd);
+		LblwtHead.setBorder(null);
+		LblwtHead.setEditable(false);
+		grpGeneOrder.add(LblwtHead);
+		jp.add(LblwtHead, c);
+		
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,1,1,1);
+		c.fill = GridBagConstraints.NONE;
+		TxtwtHead = new JTextField(strTxtwtHead);
+		TxtwtHead.setEditable(true);
+		TxtwtHead.setColumns(StrColNum);
+		grpGeneOrder.add(TxtwtHead);
+		jp.add(TxtwtHead, c);
+		gridy++;
+		
+		//Conserved collinear gene pair option
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 2;
 		c.insets = new Insets(1,20,1,1);
-		radSingle.setEnabled(true);
-		grpGeneOrder.add(radSingle);
-		jp.add(radSingle, c);
+		chkPairOrd = new JCheckBox(strPairOrd);
+		chkPairOrd.setSelected(true);
+		grpGeneOrder.add(chkPairOrd);
+		jp.add(chkPairOrd, c);
+		gridy++;
+		
+		//relative weights
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,40,1,1);
+		LblwtPair = new JTextField(strLblwtOrd);
+		LblwtPair.setBorder(null);
+		LblwtPair.setEditable(false);
+		grpGeneOrder.add(LblwtPair);
+		jp.add(LblwtPair, c);
+		
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,1,1,1);
+		c.fill = GridBagConstraints.NONE;
+		TxtwtPair = new JTextField(strTxtwtPair);
+		TxtwtPair.setEditable(true);
+		TxtwtPair.setColumns(StrColNum);
+		grpGeneOrder.add(TxtwtPair);
+		jp.add(TxtwtPair, c);
 		gridy++;
 
 		//(4) GENE GAPS
@@ -921,6 +967,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		c.gridwidth = 2;
 		c.insets = new Insets(1,20,1,1);
 		chkIndStrand = new JCheckBox(strIndStrand);
+		chkIndStrand.setSelected(true);
 		grpStrandedness.add(chkIndStrand);
 		jp.add(chkIndStrand, c);
 		gridy++;
@@ -1296,31 +1343,43 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 					}
 					
 					//Factor 3: Gene order
-					String GOCompareType;
+					boolean HeadPos;
+					boolean PairOrd;
+					double RelWeightHeadPos;
+					double RelWeightPairOrd;
 					double GOWeight;
 					int GOImportance;
-					
+
 					if (this.chkGeneOrder.isSelected()){
 						Factors.add("GO");
-						if (this.radCollinear.isSelected()){
-							GOCompareType = "Collinear";
+						if (this.chkHeadPos.isSelected()){
+							HeadPos = true;
 						} else {
-							GOCompareType = "Single";
+							HeadPos = false;
 						}
+						if (this.chkPairOrd.isSelected()){
+							PairOrd = true;
+						} else {
+							PairOrd = false;
+						}
+						RelWeightHeadPos = Double.parseDouble(this.TxtwtHead.getText());
+						RelWeightPairOrd = Double.parseDouble(this.TxtwtPair.getText());
 						GOWeight = Double.parseDouble(this.TxtgoWeight.getText());
 						GOImportance = Integer.parseInt(this.TxtgoScale.getText());
 					} else{
-						GOCompareType = null;
+						HeadPos = false;
+						PairOrd = false;
+						RelWeightHeadPos = 0;
+						RelWeightPairOrd = 0;
 						GOWeight = 0;
 						GOImportance = -1;
 					}
-
 					
 					//Factor 4: Intragenic Gap Sizes
 					LinkedList<Point> GapSizeDissMapping;
 					double GGWeight;
 					int GGImportance;
-					
+
 					if (this.chkGeneGaps.isSelected()){
 						Factors.add("GG");
 						GapSizeDissMapping = this.ComputeGapMapping();
@@ -1377,8 +1436,11 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 							CMCompareType,
 							CMDuplicatesUnique,
 							CMWeight,
-							CMImportance,
-							GOCompareType,		//Factor 3: Gene Order
+							CMImportance,		
+							HeadPos,			//Factor 3: Gene Order
+							PairOrd,
+							RelWeightHeadPos,
+							RelWeightPairOrd,
 							GOWeight,
 							GOImportance,
 							GapSizeDissMapping,	//Factor 4: Gene Gaps

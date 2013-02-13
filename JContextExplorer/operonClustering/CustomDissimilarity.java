@@ -31,6 +31,10 @@ public class CustomDissimilarity {
 	
 	//Factor 3: Gene order
 	private String GOCompareType;
+	private boolean HeadPos;
+	private boolean PairOrd;
+	private double RelWeightHeadPos;
+	private double RelWeightPairOrd;
 	private double GOWeight;
 	private int GOImportance;
 	
@@ -51,7 +55,7 @@ public class CustomDissimilarity {
 	public CustomDissimilarity(String name2,String amalgamationType2,LinkedList<String> factors2,
 			String cGCompareType2,boolean cGDuplicatesUnique2,double cGWeight2,int cGImportance2,
 			LinkedList<String> cMMotifNames2,String cMCompareType2,boolean cMDuplicatesUnique2,double cMWeight2,int cMImportance2,
-			String gOCompareType2, double gOWeight2, int gOImportance2, 
+			boolean HeadPos, boolean PairOrd, double HeadPoswt, double PairOrdwt, double gOWeight2, int gOImportance2,
 			LinkedList<Point> gapSizeDissMapping2, double gGWeight2,int gGImportance2,
 			boolean individualGenes2, boolean wholeGroup2, double relWeightIndGenes2, double relWeightWholeGroup2, double sSWeight2, int sSImportance2){
 		
@@ -75,7 +79,10 @@ public class CustomDissimilarity {
 		this.CMWeight = cMWeight2;
 		
 		//factor 3: gene order
-		this.GOCompareType = gOCompareType2;
+		this.HeadPos = HeadPos;
+		this.PairOrd = PairOrd;
+		this.RelWeightHeadPos = HeadPoswt;
+		this.RelWeightPairOrd = PairOrdwt;
 		this.GOImportance = gOImportance2;
 		this.GOWeight = gOWeight2;
 		
