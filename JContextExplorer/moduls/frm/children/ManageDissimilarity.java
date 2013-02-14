@@ -1122,8 +1122,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		
 	}
 
-	
-	
+
 	// ----- Component State Switching -------------------//
 	public void SwitchStateComponents(LinkedList<Component> list, boolean SwitchState){
 		//adjust component states
@@ -1197,8 +1196,76 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 	}
 	
 	//Determine gap mapping
-	public LinkedList<Point> ComputeGapMapping(){
-		return null;
+	public LinkedList<GapPoint> ComputeGapMapping(){
+		
+		//Initialize output
+		LinkedList<GapPoint> InitialPoints = new LinkedList<GapPoint>();
+		LinkedList<GapPoint> FinalPoints = new LinkedList<GapPoint>();
+		
+		//Retrieve from text field
+		String PointsAsString = EnterPointsTxt.getText();
+		String[] PointValues = PointsAsString.split("\\s+");
+		for (int i = 0; i < PointValues.length-1; i=i+2){
+			GapPoint p = new GapPoint();
+//			System.out.println("Gap: " + PointValues[i].trim());
+//			System.out.println("Value: " + PointValues[i+1].trim());
+			p.GapValue = Integer.parseInt(PointValues[i].trim());
+			p.Dissimilarity = Double.parseDouble(PointValues[i+1].trim());
+			InitialPoints.add(p);
+		}
+		
+		//Sort in increasing order
+		for (int i = 0; i <InitialPoints.size()-1; i++){
+			for (int j = 0; j < InitialPoints.size()-1; j++){
+				if (InitialPoints.get(j).GapValue > InitialPoints.get(j+1).GapValue){
+					GapPoint Temp = InitialPoints.get(j);
+					InitialPoints.set(j+1, InitialPoints.get(j));
+					InitialPoints.set(j, Temp);
+				}
+			}
+		}
+		
+		//threshold approach
+		if (this.radThreshold.isSelected()){
+			int GapSize = -10;
+			double Dissimilarity = 0;
+			
+			//move through sorted list
+			for (GapPoint gp : InitialPoints){
+				
+				//make points until the value is reached
+				while (GapSize < gp.GapValue){
+					GapPoint gp2 = new GapPoint();
+					gp2.Dissimilarity = Dissimilarity;
+					gp2.GapValue = GapSize;
+					GapSize++;
+					FinalPoints.add(gp2);
+				}
+				
+				//adjust values
+				GapSize = gp.GapValue;
+				Dissimilarity = gp.Dissimilarity;
+				
+			}
+			
+			//add last point
+			GapPoint gp = new GapPoint();
+			gp.GapValue = GapSize;
+			gp.Dissimilarity = Dissimilarity;
+			FinalPoints.add(gp);
+			
+		//linear interpolation	
+		} else {
+			
+			
+			
+		}
+		
+		for (GapPoint gp : FinalPoints){
+			System.out.println("Gap= " + gp.GapValue + " Value= " + gp.Dissimilarity);
+		}
+		
+		return FinalPoints;
 	}
 	
 	@Override
@@ -1376,7 +1443,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 					}
 					
 					//Factor 4: Intragenic Gap Sizes
-					LinkedList<Point> GapSizeDissMapping;
+					LinkedList<GapPoint> GapSizeDissMapping;
 					double GGWeight;
 					int GGImportance;
 

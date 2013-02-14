@@ -8,6 +8,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 
+import moduls.frm.children.GapPoint;
+
 public class CustomDissimilarity {
 
 	//Fields
@@ -39,7 +41,7 @@ public class CustomDissimilarity {
 	private int GOImportance;
 	
 	//Factor 4: Intragenic Gap Sizes
-	private LinkedList<Point> GGDissMapping;
+	private LinkedList<GapPoint> GGDissMapping;
 	private double GGWeight;
 	private int GGImportance;
 	
@@ -56,7 +58,7 @@ public class CustomDissimilarity {
 			String cGCompareType2,boolean cGDuplicatesUnique2,double cGWeight2,int cGImportance2,
 			LinkedList<String> cMMotifNames2,String cMCompareType2,boolean cMDuplicatesUnique2,double cMWeight2,int cMImportance2,
 			boolean HeadPos, boolean PairOrd, double HeadPoswt, double PairOrdwt, double gOWeight2, int gOImportance2,
-			LinkedList<Point> gapSizeDissMapping2, double gGWeight2,int gGImportance2,
+			LinkedList<GapPoint> gapSizeDissMapping2, double gGWeight2,int gGImportance2,
 			boolean individualGenes2, boolean wholeGroup2, double relWeightIndGenes2, double relWeightWholeGroup2, double sSWeight2, int sSImportance2){
 		
 		//parameters
