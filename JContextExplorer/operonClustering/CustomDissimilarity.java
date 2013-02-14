@@ -101,6 +101,7 @@ public class CustomDissimilarity {
 	}
 	
 	// -------- Compute Dissimilarity -------------------------//
+	// -------- General ----------//
 	
 	//Generalized Dice/Jaccard
 	public double GeneralizedDiceOrJaccard(LinkedList<Object> O1, LinkedList<Object> O2, boolean TreatDuplicatesAsUnique, String Type){
@@ -178,6 +179,119 @@ public class CustomDissimilarity {
 		return Dissimilarity;
 	}
 
+	//Head position based dissimilarity (GO)
+	public double HeadPosDiss(LinkedList<Object> O1Values, LinkedList<Object> O2Values){
+		double HeadPosDissimilarity = 0.0;
+		
+		/*
+		 * Algorithm:
+		 * (1) determine # common elements (dup. unique)
+		 * (2) Set first as pivot, head = start of first list
+		 * (3) count common positions from second forwards
+		 * (4) count common positions from second reversed
+		 * (5) retain higher count
+		 * (6) diss = 1 - (higher count) / (# common elements [dup unique])
+		 */
+		
+		//re-sizing - O1 Values must always be larger
+		if (O1Values.size() < O2Values.size()){
+			LinkedList<Object> Temp = O1Values;
+			O1Values = O2Values;
+			O2Values = Temp;
+		}
+
+		//(1) common elements
+		int NumIntersecting = 0;
+		HashSet<Object> O2Hash = new HashSet<Object>(O2Values);
+		HashSet<Object> IntersectionHash = new HashSet<Object>(O1Values);
+		IntersectionHash.retainAll(O2Hash);
+		
+		//Find all intersecting types, and find the number that intersect.
+		for (Object O : IntersectionHash){
+			NumIntersecting = NumIntersecting + Math.min(Collections.frequency(O1Values, O), Collections.frequency(O2Values, O));
+		}
+
+		//(2)-(5) Counts
+		int FwdCount = 0;
+		int RevCount = 0;
+		int MaxCount = 0;
+		
+		for (int i = 0; i < O2Values.size(); i++){
+			if (O2Values.get(i).equals(O1Values.get(i))){
+				FwdCount++;
+			}
+			if (O2Values.get(i).equals(O1Values.get(O1Values.size()-1-i))){
+				RevCount++;
+			}
+		}
+		MaxCount = Math.max(FwdCount, RevCount);
+		
+		//(6) Compute dissimilarity
+		if (NumIntersecting != 0){
+			HeadPosDissimilarity = 1 - ((double)MaxCount/(double)NumIntersecting);
+		} else {
+			HeadPosDissimilarity = 0;
+		}
+
+		return HeadPosDissimilarity;
+	}
+	
+	//Pair ordering based dissimilarity (GO)
+	public double PairOrdDiss(LinkedList<Object> O1Values, LinkedList<Object> O2Values){
+		double PairOrdDissimilarity = 0;
+		
+		/*
+		 * Algorithm:
+		 * (1) Build O1 Adjacencies
+		 * (2) Build O2 Adjacencies + O2 reverse adjacencies
+		 * (3) Count common, and take higher
+		 */
+		
+		//Initialize adjacencies
+		LinkedList<LinkedList<Object>> O1Adjacencies = new LinkedList<LinkedList<Object>>();
+		LinkedList<LinkedList<Object>> O2AdjacenciesFwd = new LinkedList<LinkedList<Object>>();
+		LinkedList<LinkedList<Object>> O2AdjacenciesRev = new LinkedList<LinkedList<Object>>();
+		
+		//Build adjacencies
+		for (int i = 0; i <O1Values.size()-1; i++){
+			LinkedList<Object> SingleAdjacency = new LinkedList<Object>();
+			SingleAdjacency.add(O1Values.get(i));
+			SingleAdjacency.add(O1Values.get(i+1));
+			O1Adjacencies.add(SingleAdjacency);
+		}
+		
+		for (int i = 0; i <O2Values.size()-1; i++){
+			LinkedList<Object> FwdAdjacency = new LinkedList<Object>();
+			FwdAdjacency.add(O2Values.get(i));
+			FwdAdjacency.add(O2Values.get(i+1));
+			O2AdjacenciesFwd.add(FwdAdjacency);
+		}
+		
+		for (int i = O2Values.size()-2; i >= 0; i--){
+			LinkedList<Object> RevAdjacency = new LinkedList<Object>();
+			RevAdjacency.add(O2Values.get(i+1));
+			RevAdjacency.add(O2Values.get(i));
+			O2AdjacenciesRev.add(RevAdjacency);
+		}
+		
+		//find intersection
+		O2AdjacenciesFwd.retainAll(O1Adjacencies);
+		O2AdjacenciesRev.retainAll(O1Adjacencies);
+		
+		//compute dissimilarity
+		int SmallerSize = Math.min(O1Values.size(), O2Values.size());
+		int MostAdjacencies = Math.max(O2AdjacenciesFwd.size(), O2AdjacenciesRev.size());
+		if (SmallerSize > 1){
+			PairOrdDissimilarity = 1 - ((double)MostAdjacencies/(double)(SmallerSize-1));
+		} else {
+			PairOrdDissimilarity = 0;
+		}
+
+		return PairOrdDissimilarity;
+	}
+	
+	// ------- Factors -----------//
+	
 	//Common Genes
 	public double CGDissimilarity(LinkedList<GenomicElementAndQueryMatch> O1, LinkedList<GenomicElementAndQueryMatch> O2, String Type){
 		
@@ -413,10 +527,81 @@ public class CustomDissimilarity {
 	}
 	
 	//Gene Order
-	public double GODissimilarity(LinkedList<GenomicElementAndQueryMatch> G1, LinkedList<GenomicElementAndQueryMatch> G2, String Type){
-		return 0;
+	public double GODissimilarity(LinkedList<GenomicElementAndQueryMatch> O1, LinkedList<GenomicElementAndQueryMatch> O2, String Type){
+		
+		//Initialize output
+		double Dissimilarity = 0;
+		double HeadPosDissimilarity = 0;
+		double PairOrdDissimilarity = 0;
+		
+		LinkedList<Object> O1Values = new LinkedList<Object>();
+		LinkedList<Object> O2Values = new LinkedList<Object>();
+		
+		//determine appropriate data types
+		if (Type.equals("annotation")){
+			
+			//add elements
+			for (GenomicElementAndQueryMatch E: O1){
+				O1Values.add(E.getE().getAnnotation().toUpperCase());
+			}
+			
+			for (GenomicElementAndQueryMatch E: O2){
+				O2Values.add(E.getE().getAnnotation().toUpperCase());
+			}
+			
+		} else {
+
+			int NegativeCounter = -10;
+			
+			//add elements
+			//if clusterID = 0, this is really probably unique, treat all cluster == 0 as unique sets.
+			for (GenomicElementAndQueryMatch E: O1){
+				if (E.getE().getClusterID() == 0){
+					NegativeCounter--;
+					O1Values.add(NegativeCounter);
+				} else {
+					O1Values.add(E.getE().getClusterID());
+				}
+
+			}
+			
+			for (GenomicElementAndQueryMatch E: O2){
+				if (E.getE().getClusterID() == 0){
+					NegativeCounter--;
+					O2Values.add(NegativeCounter);
+				} else {
+					O2Values.add(E.getE().getClusterID());
+				}
+			}
+			
+		}
+		
+		
+		//Determine relative weights
+		double TotalRelativeWeights = 0;
+		if (HeadPos){
+			//increment total weights contribution
+			TotalRelativeWeights = TotalRelativeWeights + RelWeightHeadPos;
+			
+			//Compute head position contribution
+			HeadPosDissimilarity = this.HeadPosDiss(O1Values, O2Values);
+			
+		}
+		if (PairOrd){
+			//increment total weights contribution
+			TotalRelativeWeights = TotalRelativeWeights + RelWeightPairOrd;
+			
+			//Compute number of common pairs contribution
+			PairOrdDissimilarity = this.PairOrdDiss(O1Values, O2Values);
+		}
+		
+		//Amalgamate into dissimilarity
+		Dissimilarity = (RelWeightHeadPos/TotalRelativeWeights) * HeadPosDissimilarity +
+						(RelWeightPairOrd/TotalRelativeWeights) * PairOrdDissimilarity;
+		
+		return Dissimilarity;
 	}
-	
+
 	//Gene Gaps
 	public double GGDissimilarity(LinkedList<GenomicElementAndQueryMatch> G1, LinkedList<GenomicElementAndQueryMatch> G2, String Type){
 		return 0;
