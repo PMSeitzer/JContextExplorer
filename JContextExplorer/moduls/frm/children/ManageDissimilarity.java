@@ -11,6 +11,10 @@ import java.awt.Point;
 import java.awt.Dialog.ModalityType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
@@ -19,6 +23,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -37,6 +42,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 	private FrmPrincipalDesk f;
 	private JPanel jp;
 	private JScrollPane jsp;
+	private File ReferenceDirectory = null;
 	
 	//GUI fields
 	//Name/intro
@@ -1122,7 +1128,6 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		
 	}
 
-
 	// ----- Component State Switching -------------------//
 	public void SwitchStateComponents(LinkedList<Component> list, boolean SwitchState){
 		//adjust component states
@@ -1196,7 +1201,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 	}
 	
 	//Determine gap mapping
-	public LinkedList<GapPoint> ComputeGapMapping(){
+	public GapPointMapping ComputeGapMapping(){
 		
 		//Initialize output
 		LinkedList<GapPoint> InitialPoints = new LinkedList<GapPoint>();
@@ -1207,8 +1212,6 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		String[] PointValues = PointsAsString.split("\\s+");
 		for (int i = 0; i < PointValues.length-1; i=i+2){
 			GapPoint p = new GapPoint();
-//			System.out.println("Gap: " + PointValues[i].trim());
-//			System.out.println("Value: " + PointValues[i+1].trim());
 			p.GapValue = Integer.parseInt(PointValues[i].trim());
 			p.Dissimilarity = Double.parseDouble(PointValues[i+1].trim());
 			InitialPoints.add(p);
@@ -1225,7 +1228,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 			}
 		}
 		
-		//threshold approach
+		//threshold
 		if (this.radThreshold.isSelected()){
 			int GapSize = -10;
 			double Dissimilarity = 0;
@@ -1244,8 +1247,12 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 				
 				//adjust values
 				GapSize = gp.GapValue;
-				Dissimilarity = gp.Dissimilarity;
-				
+				if (gp.Dissimilarity > 1){
+					Dissimilarity = 1;
+				} else {
+					Dissimilarity = gp.Dissimilarity;
+				}
+
 			}
 			
 			//add last point
@@ -1254,18 +1261,108 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 			gp.Dissimilarity = Dissimilarity;
 			FinalPoints.add(gp);
 			
-		//linear interpolation	
+		//linear interpolation
 		} else {
+			double y1;			//y-values = Dissimilarity
+			double y2;
+			double x1;			//x-values = Gap Size
+			double x2;
+			double m;			//Slope
+			double b;			//y-intercept
 			
-			
-			
+			double GapValue = 0;
+			double Dissimilarity = 0;
+
+			for (int i = 0; i < InitialPoints.size()-1; i++){
+				if (i == 0 && InitialPoints.get(i).GapValue > 0){ //extra interpolation	
+					
+					//assign points
+					x1 = 0; 
+					y1 = 0;
+					x2 = (double) InitialPoints.get(i).GapValue;
+					y2 = InitialPoints.get(i).Dissimilarity;
+					
+					//add zero point
+					GapPoint ZeroPoint = new GapPoint();
+					ZeroPoint.GapValue = (int) x1;
+					ZeroPoint.Dissimilarity = y1;
+					FinalPoints.add(ZeroPoint);
+					
+					//compute slope
+					m = (y2 - y1) / (x2 - x1);
+					
+					//compute intercept
+					b = y2 - m*x2;
+					
+					GapValue = x1;
+					while (GapValue < x2){
+						GapValue++;
+						Dissimilarity = m * GapValue + b;
+						GapPoint p = new GapPoint();
+						if (Dissimilarity <= 1){
+							p.Dissimilarity = Dissimilarity;
+						} else {
+							p.Dissimilarity = 1;
+						}
+						p.GapValue = (int) GapValue;
+						FinalPoints.add(p);
+					}
+					
+				} else {
+					
+					//assign points
+					x1 = (double) InitialPoints.get(i).GapValue;
+					y1 = InitialPoints.get(i).Dissimilarity;
+					x2 = (double) InitialPoints.get(i+1).GapValue;
+					y2 = InitialPoints.get(i+1).Dissimilarity;
+					
+					//add zero point (if appropriate)
+					if (FinalPoints.size() == 0){
+						GapPoint FirstPoint = InitialPoints.get(i);
+						if (FirstPoint.Dissimilarity > 1){
+							FirstPoint.Dissimilarity = 1;
+						}
+						FinalPoints.add(FirstPoint);
+					}
+					
+					//compute slope
+					m = (y2 - y1) / (x2 - x1);
+					
+					//compute intercept
+					b = y2 - m*x2;
+					
+					GapValue = x1;
+					while (GapValue < x2){
+						GapValue++;
+						Dissimilarity = m * GapValue + b;
+						GapPoint p = new GapPoint();
+						if (Dissimilarity <= 1){
+							p.Dissimilarity = Dissimilarity;
+						} else {
+							p.Dissimilarity = 1;
+						}
+						p.GapValue = (int) GapValue;
+						FinalPoints.add(p);
+					}
+				}
+			}			
+		}
+				
+		//create final output structure
+		GapPointMapping GPM = new GapPointMapping();
+		GPM.MaxGapLimit = FinalPoints.getLast().GapValue;
+		GPM.MaxDissimilarity = FinalPoints.getLast().Dissimilarity;
+		GPM.MinGaplimit = FinalPoints.getFirst().GapValue;
+		for (GapPoint p : FinalPoints){
+			GPM.Mapping.put(p.GapValue, p.Dissimilarity);
 		}
 		
-		for (GapPoint gp : FinalPoints){
-			System.out.println("Gap= " + gp.GapValue + " Value= " + gp.Dissimilarity);
-		}
+		//debugging
+//		for (Integer key : GPM.Mapping.keySet()){
+//			System.out.println("Gap= " + key + " Value= " + GPM.Mapping.get(key));
+//		}
 		
-		return FinalPoints;
+		return GPM;
 	}
 	
 	@Override
@@ -1336,6 +1433,11 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 				SwitchStateComponents(grpGeneOrder, false);
 				SwitchStateComponents(grpGeneGaps, false);
 				SwitchStateComponents(grpStrandedness, false);
+		}
+		
+		//load button
+		if (evt.getSource().equals(btnLoadFromFile)){
+			this.LoadGapDissimilarityMapping();
 		}
 		
 		//add a dissimilarity measure
@@ -1443,7 +1545,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 					}
 					
 					//Factor 4: Intragenic Gap Sizes
-					LinkedList<GapPoint> GapSizeDissMapping;
+					GapPointMapping GapSizeDissMapping;
 					double GGWeight;
 					int GGImportance;
 
@@ -1570,6 +1672,49 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 			
 			//close window
 			this.dispose();
+		}
+	}
+
+	//load gap dissimilarity mapping
+	private void LoadGapDissimilarityMapping() {
+		
+		//initialize output
+		JFileChooser GetGapMapping = new JFileChooser();
+
+		GetGapMapping.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		GetGapMapping.setDialogTitle("Select a gap size - dissimilarity mapping file.");
+
+		if (this.ReferenceDirectory != null){
+			GetGapMapping.setCurrentDirectory(ReferenceDirectory);
+		} else {
+			GetGapMapping.setCurrentDirectory(f.getFileChooserSource());
+		}
+		GetGapMapping.showOpenDialog(GetGapMapping);
+		
+		//retrieve directory containing fimo files
+		File MappingFile = GetGapMapping.getSelectedFile();
+
+		//check if file could be received
+		if (MappingFile != null){
+
+			try {
+				//Import file reader
+				BufferedReader br = new BufferedReader(new FileReader(MappingFile));
+				
+				String Line = null;
+				String AllText = "";
+				while ((Line = br.readLine()) != null){
+					AllText = AllText + Line;
+				}
+				
+				//set text to field
+				this.EnterPointsTxt.setText(AllText);
+				
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(null, "File not formatted correctly.",
+						"File Format Error.", JOptionPane.ERROR_MESSAGE);
+			}
+
 		}
 	}
 }

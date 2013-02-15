@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 
 import moduls.frm.children.GapPoint;
+import moduls.frm.children.GapPointMapping;
 
 public class CustomDissimilarity {
 
@@ -41,7 +42,7 @@ public class CustomDissimilarity {
 	private int GOImportance;
 	
 	//Factor 4: Intragenic Gap Sizes
-	private LinkedList<GapPoint> GGDissMapping;
+	private GapPointMapping GPM;
 	private double GGWeight;
 	private int GGImportance;
 	
@@ -58,7 +59,7 @@ public class CustomDissimilarity {
 			String cGCompareType2,boolean cGDuplicatesUnique2,double cGWeight2,int cGImportance2,
 			LinkedList<String> cMMotifNames2,String cMCompareType2,boolean cMDuplicatesUnique2,double cMWeight2,int cMImportance2,
 			boolean HeadPos, boolean PairOrd, double HeadPoswt, double PairOrdwt, double gOWeight2, int gOImportance2,
-			LinkedList<GapPoint> gapSizeDissMapping2, double gGWeight2,int gGImportance2,
+			GapPointMapping gapSizeDissMapping2, double gGWeight2,int gGImportance2,
 			boolean individualGenes2, boolean wholeGroup2, double relWeightIndGenes2, double relWeightWholeGroup2, double sSWeight2, int sSImportance2){
 		
 		//parameters
@@ -89,7 +90,7 @@ public class CustomDissimilarity {
 		this.GOWeight = gOWeight2;
 		
 		//factor 4: gene gaps
-		this.GGDissMapping = gapSizeDissMapping2;
+		this.GPM = gapSizeDissMapping2;
 		this.GGImportance = gGImportance2;
 		this.GGWeight = gGWeight2;
 		
@@ -605,8 +606,183 @@ public class CustomDissimilarity {
 	}
 
 	//Gene Gaps
-	public double GGDissimilarity(LinkedList<GenomicElementAndQueryMatch> G1, LinkedList<GenomicElementAndQueryMatch> G2, String Type){
-		return 0;
+	public double GGDissimilarity(LinkedList<GenomicElementAndQueryMatch> O1, LinkedList<GenomicElementAndQueryMatch> O2, String Type){
+		
+		//re-sizing - O1 Values must always be larger
+		if (O1.size() < O2.size()){
+			LinkedList<GenomicElementAndQueryMatch> Temp = O1;
+			O1 = O2;
+			O2 = Temp;
+		}
+		
+		//Initial Dissimilarity
+		double Dissimilarity = 0.0;
+		
+		//Initialize adjacencies
+		LinkedList<LinkedList<GenomicElementAndQueryMatch>> O1Adjacencies = 
+				new LinkedList<LinkedList<GenomicElementAndQueryMatch>>();
+		LinkedList<LinkedList<GenomicElementAndQueryMatch>> O2AdjacenciesFwd = 
+				new LinkedList<LinkedList<GenomicElementAndQueryMatch>>();
+		LinkedList<LinkedList<GenomicElementAndQueryMatch>> O2AdjacenciesRev = 
+				new LinkedList<LinkedList<GenomicElementAndQueryMatch>>();
+		
+		//Build adjacencies
+		for (int i = 0; i < O1.size()-1; i++){
+			LinkedList<GenomicElementAndQueryMatch> SingleAdjacency = 
+					new LinkedList<GenomicElementAndQueryMatch>();
+			SingleAdjacency.add(O1.get(i));
+			SingleAdjacency.add(O1.get(i+1));
+			O1Adjacencies.add(SingleAdjacency);
+		}
+		
+		for (int i = 0; i <O2.size()-1; i++){
+			LinkedList<GenomicElementAndQueryMatch> FwdAdjacency = 
+					new LinkedList<GenomicElementAndQueryMatch>();
+			FwdAdjacency.add(O2.get(i));
+			FwdAdjacency.add(O2.get(i+1));
+			O2AdjacenciesFwd.add(FwdAdjacency);
+		}
+		
+		for (int i = O2.size()-2; i >= 0; i--){
+			LinkedList<GenomicElementAndQueryMatch> RevAdjacency = 
+					new LinkedList<GenomicElementAndQueryMatch>();
+			RevAdjacency.add(O2.get(i+1));
+			RevAdjacency.add(O2.get(i));
+			O2AdjacenciesRev.add(RevAdjacency);
+		}
+		
+		//initialize dissimilarities
+		double ForwardDissimilarity = 0;
+		double ReverseDissimilarity = 0;
+		int FwdMatch = 0;
+		int RevMatch = 0;
+		
+		//Walk along adjacencies.
+		for (LinkedList<GenomicElementAndQueryMatch> Adjacency : O1Adjacencies){
+			
+			//check forward
+			for (LinkedList<GenomicElementAndQueryMatch> FwdAdj : O2AdjacenciesFwd){
+				boolean EquivalentAdjacency = false;
+				if (Type.equals("annotation")){
+					if (Adjacency.get(0).getE().getAnnotation().toUpperCase()
+							.equals(FwdAdj.get(0).getE().getAnnotation().toUpperCase()) && //annotation match
+							Adjacency.get(1).getE().getAnnotation().toUpperCase()
+							.equals(FwdAdj.get(1).getE().getAnnotation().toUpperCase()) && //annotation match
+							Adjacency.get(0).getE().getContig().equals(Adjacency.get(1).getE().getContig()) && //internal contig match
+							FwdAdj.get(0).getE().getContig().equals(FwdAdj.get(1).getE().getContig())){ //internal contig match
+						
+						EquivalentAdjacency = true;
+						FwdMatch++;
+					}
+				} else {
+					if (Adjacency.get(0).getE().getClusterID() ==
+							FwdAdj.get(0).getE().getClusterID() && //cluster ID match
+							Adjacency.get(1).getE().getClusterID() ==
+							FwdAdj.get(1).getE().getClusterID() && //cluster ID match
+							Adjacency.get(0).getE().getContig().equals(Adjacency.get(1).getE().getContig()) && //internal contig match
+							FwdAdj.get(0).getE().getContig().equals(FwdAdj.get(1).getE().getContig())){ //internal contig match
+					
+						EquivalentAdjacency = true;
+						FwdMatch++;
+					}
+				}
+				
+				//If the two adjacencies are equivalent, compute a gap penalty
+				if (EquivalentAdjacency){
+					//gap computation
+					int gap1 = Adjacency.get(1).getE().getStart() - Adjacency.get(0).getE().getStop();
+					int gap2 = FwdAdj.get(1).getE().getStart() - FwdAdj.get(0).getE().getStop();
+					int gapDiff = Math.abs(gap2-gap1);
+					double gapDissimilarity = 0;
+					
+					//determine gap dissimilarity
+					if (gapDiff > this.GPM.MaxGapLimit){
+						gapDissimilarity = this.GPM.MaxDissimilarity;
+					} else if (gapDiff > this.GPM.MinGaplimit){
+						gapDissimilarity = this.GPM.Mapping.get(gapDiff);
+					}
+					
+					//add to running total
+					ForwardDissimilarity = ForwardDissimilarity + gapDissimilarity;
+					
+					//reset adjacency
+					EquivalentAdjacency = false;
+				}
+			}
+			
+			//check reverse
+			for (LinkedList<GenomicElementAndQueryMatch> RevAdj : O2AdjacenciesRev){
+				boolean EquivalentAdjacencyRev = false;
+				
+				if (Type.equals("annotation")){
+					if (Adjacency.get(0).getE().getAnnotation().toUpperCase()
+							.equals(RevAdj.get(0).getE().getAnnotation().toUpperCase()) && //annotation match
+							Adjacency.get(1).getE().getAnnotation().toUpperCase()
+							.equals(RevAdj.get(1).getE().getAnnotation().toUpperCase()) && //annotation match
+							Adjacency.get(0).getE().getContig().equals(Adjacency.get(1).getE().getContig()) && //internal contig match
+							RevAdj.get(0).getE().getContig().equals(RevAdj.get(1).getE().getContig())){ //internal contig match
+						
+						EquivalentAdjacencyRev = true;
+						RevMatch++;
+					}
+				} else {
+					if (Adjacency.get(0).getE().getClusterID() ==
+							RevAdj.get(0).getE().getClusterID() && //cluster ID match
+							Adjacency.get(1).getE().getClusterID() ==
+							RevAdj.get(1).getE().getClusterID() && //cluster ID match
+							Adjacency.get(0).getE().getContig().equals(Adjacency.get(1).getE().getContig()) && //internal contig match
+							RevAdj.get(0).getE().getContig().equals(RevAdj.get(1).getE().getContig())){ //internal contig match
+					
+						EquivalentAdjacencyRev = true;
+						RevMatch++;
+					}
+				}
+				
+				//If the two adjacencies are equivalent, compute a gap penalty
+				if (EquivalentAdjacencyRev){
+					
+					//gap computation
+					int gap1 = Adjacency.get(1).getE().getStart() - Adjacency.get(0).getE().getStop();
+					int gap2 = RevAdj.get(0).getE().getStart() - RevAdj.get(1).getE().getStop();
+					int gapDiff = Math.abs(gap2-gap1);
+					double gapDissimilarity = 0;
+					
+					//determine gap dissimilarity
+					if (gapDiff > this.GPM.MaxGapLimit){
+						gapDissimilarity = this.GPM.MaxDissimilarity;
+					} else if (gapDiff > this.GPM.MinGaplimit){
+						gapDissimilarity = this.GPM.Mapping.get(gapDiff);
+					}
+					
+					//add to running total
+					ReverseDissimilarity = ReverseDissimilarity + gapDissimilarity;
+					
+					//reset adjacency
+					EquivalentAdjacencyRev = false;
+				}
+			}
+			
+		}
+		
+		//The proper orientation is the one with more common adjacent pairs with O1.
+		if (FwdMatch >= RevMatch){
+			Dissimilarity = ForwardDissimilarity;
+		} else {
+			Dissimilarity = ReverseDissimilarity;
+		}
+		
+		//Maximum dissimilarity is 1, minimum is 0.
+		if (Dissimilarity > 1){
+			Dissimilarity = 1;
+		} else if (Dissimilarity <= 0){
+			Dissimilarity = 0;
+		}
+		
+		//debugging
+		//System.out.println("Dissimilarity: " + Dissimilarity);
+//		System.out.println("breakpoint!");
+		
+		return Dissimilarity;
 	}
 	
 	//Strandedness
