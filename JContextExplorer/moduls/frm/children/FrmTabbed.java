@@ -132,6 +132,7 @@ public class FrmTabbed extends JTabbedPane implements ChangeListener{
 		
 		//update index
 		this.fr.setSelectedAnalysisType(getTitleAt(this.getSelectedIndex()));
+
 		//System.out.println("Currently Selected: " + fr.getSelectedAnalysisType());
 		
 	}

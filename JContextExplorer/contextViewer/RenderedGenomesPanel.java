@@ -42,6 +42,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -177,6 +178,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		this.setPreferredSize(dim);		 //key: preferredsize, not size
 		
 		//computing information for display.
+		sortContextLeaves();
 		computeNucleotideRangesOnSegments();
 		addDrawGenes();
 		addMotifs();
@@ -420,6 +422,31 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	}
 	
 	// ----- pre-drawing computations -----------------------------------//
+	
+	//sort context leaves
+	private void sortContextLeaves(){
+		
+		//retrieve CSD
+		CSDisplayData CSD = this.mf.getCSD();
+		
+		//Display order depends on last source.
+		if (CSD.getCurrentlyViewedPanel().equals("Search Results")){
+			
+			//alphabetical order.
+			Arrays.sort(CSD.getGraphicalContexts(), ContextLeaf.getAlphabeticalComparator());
+			
+		} else if (CSD.getCurrentlyViewedPanel().equals("Context Tree")){
+			
+			//based on context tree.
+			Arrays.sort(CSD.getGraphicalContexts(), ContextLeaf.getContextTreeOrderComparator());
+			
+		} else if (CSD.getCurrentlyViewedPanel().equals("Phylogenetic Tree")){
+			
+		}
+		
+		//update CSD.
+		this.mf.setCSD(CSD);
+	}
 	
 	//create genomic segments
 	private Dimension computeGenomicSegments() {
@@ -1186,6 +1213,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		this.setPreferredSize(dim);		 //key: preferredsize, not size
 
 		//computing information for display.
+		sortContextLeaves();
 		computeNucleotideRangesOnSegments();
 		addDrawGenes();
 		addMotifs();

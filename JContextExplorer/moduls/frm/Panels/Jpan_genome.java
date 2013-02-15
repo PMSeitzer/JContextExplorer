@@ -279,9 +279,29 @@ public class Jpan_genome extends JPanel implements ActionListener,
 		
 				try {
 					
-					//retrieve most current
+					//retrieve most current + sort
 					CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
-			
+					CSD.setCurrentlyViewedPanel(fr.getSelectedAnalysisType());
+					
+					//sort
+					if (CSD.getCurrentlyViewedPanel().equals("Search Results")){
+						
+						//alphabetical order.
+						Arrays.sort(CSD.getGraphicalContexts(), ContextLeaf.getAlphabeticalComparator());
+						
+					} else if (CSD.getCurrentlyViewedPanel().equals("Context Tree")){
+						
+						//based on context tree.
+						Arrays.sort(CSD.getGraphicalContexts(), ContextLeaf.getContextTreeOrderComparator());
+						
+					} else if (CSD.getCurrentlyViewedPanel().equals("Phylogenetic Tree")) {
+						
+						//based on phylogenetic tree.
+						Arrays.sort(CSD.getGraphicalContexts(), ContextLeaf.getPhylogeneticTreeOrderComparator());
+					}
+					
+					//System.out.println("Currently Viewed: " + CSD.getCurrentlyViewedPanel());
+					
 					//count number selected
 					int NumSelected = 0;
 					for (ContextLeaf CL : CSD.getGraphicalContexts()){

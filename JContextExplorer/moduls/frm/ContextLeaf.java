@@ -1,6 +1,7 @@
 package moduls.frm;
 
 import java.awt.geom.Rectangle2D;
+import java.util.Comparator;
 import java.util.LinkedList;
 
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -15,6 +16,8 @@ public class ContextLeaf {
 	private LinkedList<Rectangle2D> ContextGraphCoordinates;
 	private Rectangle2D PhyloTreeCoordinates;					//Source organism node (not actual context leaf)
 
+	private int ContextTreeNodeNameNumber;
+	private int PhyloTreeNodeNameNumber = -1;
 	private boolean Selected;
 	
 	//constructor
@@ -22,6 +25,45 @@ public class ContextLeaf {
 		
 	}
 
+	//--------- Comparators ------------------------------------//
+	
+	public static Comparator<ContextLeaf> getAlphabeticalComparator(){
+		return new Comparator<ContextLeaf>(){
+
+			@Override
+			public int compare(ContextLeaf CL1, ContextLeaf CL2) {
+				
+				if (CL1.Name != null && CL2.Name != null){
+					return CL1.Name.compareToIgnoreCase(CL2.Name);
+				}
+				return 0;
+			}
+			
+		};
+	}
+	
+	public static Comparator<ContextLeaf> getContextTreeOrderComparator(){
+		return new Comparator<ContextLeaf>(){
+
+			@Override
+			public int compare(ContextLeaf CL1, ContextLeaf CL2) {
+				
+				return CL1.ContextTreeNodeNameNumber - CL2.ContextTreeNodeNameNumber;
+			}
+			
+		};
+	}
+	
+	public static Comparator<ContextLeaf> getPhylogeneticTreeOrderComparator(){
+		return new Comparator<ContextLeaf>(){
+			
+			public int compare(ContextLeaf CL1, ContextLeaf CL2){
+				
+				return CL1.PhyloTreeNodeNameNumber - CL2.PhyloTreeNodeNameNumber;
+			}
+		};
+	}
+	
 	//---------------- GETTERS AND SETTERS--------------------- //
 	
 	public String getName() {
@@ -73,6 +115,23 @@ public class ContextLeaf {
 
 	public void setSourceSpecies(String sourceSpecies) {
 		SourceSpecies = sourceSpecies;
+	}
+
+
+	public int getContextTreeNodeNameNumber() {
+		return ContextTreeNodeNameNumber;
+	}
+
+	public void setContextTreeNodeNameNumber(int contextTreeNodeNameNumber) {
+		ContextTreeNodeNameNumber = contextTreeNodeNameNumber;
+	}
+
+	public int getPhyloTreeNodeNameNumber() {
+		return PhyloTreeNodeNameNumber;
+	}
+
+	public void setPhyloTreeNodeNameNumber(int phyloTreeNodeNameNumber) {
+		PhyloTreeNodeNameNumber = phyloTreeNodeNameNumber;
 	}
 
 

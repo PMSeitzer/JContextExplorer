@@ -429,6 +429,7 @@ public class FrmPhylo extends JPanel implements MouseListener{
 				for (int i = 0; i < CSD.getPhyloNodeNames().length; i++){
 					if (CL.getSourceSpecies().equals(CSD.getPhyloNodeNames()[i])){
 						CL.setPhyloTreeCoordinates(CSD.getPhyloCoordinates()[i]);
+						CL.setPhyloTreeNodeNameNumber(i);
 						break;
 					}
 				}

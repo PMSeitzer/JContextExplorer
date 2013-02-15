@@ -14,6 +14,7 @@ public class CSDisplayData {
 	private Rectangle2D[] Coordinates;		//
 	private boolean[] SelectedNodes;		//
 	private LinkedHashMap<String,Boolean> CurrentlySelectedNodes; 
+	private String CurrentlyViewedPanel = "";
 	
 	private Rectangle2D[] PhyloCoordinates;
 	private String[] PhyloNodeNames;
@@ -124,6 +125,14 @@ public class CSDisplayData {
 
 	public void setPhyloNodeNames(String[] phyloNodeNames) {
 		PhyloNodeNames = phyloNodeNames;
+	}
+
+	public String getCurrentlyViewedPanel() {
+		return CurrentlyViewedPanel;
+	}
+
+	public void setCurrentlyViewedPanel(String currentlyViewedPanel) {
+		CurrentlyViewedPanel = currentlyViewedPanel;
 	}
 	
 }
