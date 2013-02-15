@@ -127,6 +127,14 @@ public class GenomicElement {
 		this.AssociatedMotifs.add(SM);
 	}
 
+	public void removeAMotifByName(String Name){
+		for (SequenceMotif SM : this.AssociatedMotifs){
+			if (SM.getMotifName().equals(Name)){
+				AssociatedMotifs.remove(SM);
+			}
+		}
+	}
+	
 	public void removeAMotif(SequenceMotif SM) {
 		try {
 			AssociatedMotifs.remove(SM);

@@ -1,5 +1,6 @@
 package operonClustering;
 
+import genomeObjects.GenomicElement;
 import genomeObjects.GenomicElementAndQueryMatch;
 
 import java.awt.Point;
@@ -7,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
+
+import org.biojava3.core.sequence.Strand;
 
 import moduls.frm.children.GapPoint;
 import moduls.frm.children.GapPointMapping;
@@ -537,6 +540,9 @@ public class CustomDissimilarity {
 		double HeadPosDissimilarity = 0;
 		double PairOrdDissimilarity = 0;
 		
+		//Strand counts
+		int StrandMatches = 0;
+		
 		LinkedList<Object> O1Values = new LinkedList<Object>();
 		LinkedList<Object> O2Values = new LinkedList<Object>();
 		
@@ -579,6 +585,16 @@ public class CustomDissimilarity {
 			
 		}
 		
+		//(1) common elements
+		int NumIntersecting = 0;
+		HashSet<Object> O2Hash = new HashSet<Object>(O2Values);
+		HashSet<Object> IntersectionHash = new HashSet<Object>(O1Values);
+		IntersectionHash.retainAll(O2Hash);
+		
+		//Find all intersecting types, and find the number that intersect.
+		for (Object O : IntersectionHash){
+			NumIntersecting = NumIntersecting + Math.min(Collections.frequency(O1Values, O), Collections.frequency(O2Values, O));
+		}
 		
 		//Determine relative weights
 		double TotalRelativeWeights = 0;
@@ -786,8 +802,115 @@ public class CustomDissimilarity {
 	}
 	
 	//Strandedness
-	public double SSDissimilarity(LinkedList<GenomicElementAndQueryMatch> G1, LinkedList<GenomicElementAndQueryMatch> G2, String Type){
-		return 0;
+	public double SSDissimilarity(LinkedList<GenomicElementAndQueryMatch> O1, LinkedList<GenomicElementAndQueryMatch> O2, String Type){
+		
+		//Initialize output
+		double Dissimilarity = 0;
+		double IndividualDissimilarity = 0;
+		double WholeGroupDissimilarity = 0;
+		double TotalRelativeWeights = 0;
+		
+		LinkedList<HashSet<GenomicElement>> MatchGroups = new LinkedList<HashSet<GenomicElement>>();
+		
+		for (GenomicElementAndQueryMatch GandE : O1){
+			HashSet<GenomicElement> Match = new HashSet<GenomicElement>();
+			Match.add(GandE.getE());
+			boolean RetainMatchSet = false;
+			for (GenomicElementAndQueryMatch GandE2 : O2){
+				if (Type.equals("annotation")){
+					if (GandE.getE().getAnnotation().toUpperCase().equals(GandE2.getE().getAnnotation().toUpperCase())){
+						Match.add(GandE2.getE());
+						RetainMatchSet = true;
+					}
+				} else {
+					if (GandE.getE().getClusterID() == GandE2.getE().getClusterID()){
+						Match.add(GandE2.getE());
+						RetainMatchSet = true;
+					}
+				}
+			}
+			
+			if (RetainMatchSet){
+				
+				//add duplicate matches
+				for (GenomicElementAndQueryMatch GandE_dup : O1){
+					
+					//pre-requisites: not an exact duplicate, not already in a group
+					if (!GandE.equals(GandE_dup)){
+						boolean UniqueElement = true;
+						for (HashSet<GenomicElement> Set : MatchGroups){
+							if (Set.contains(GandE_dup.getE())){
+								UniqueElement = false;
+							}
+						}
+						
+						if (UniqueElement){
+							if (Type.equals("annotation")){
+								if (GandE.getE().getAnnotation().toUpperCase().equals(GandE_dup.getE().getAnnotation().toUpperCase())){
+									Match.add(GandE_dup.getE());
+								}
+							} else {
+								if (GandE.getE().getClusterID() == GandE_dup.getE().getClusterID()){
+									Match.add(GandE_dup.getE());
+								}
+							}
+						}
+
+					}
+				}
+				
+				MatchGroups.add(Match);
+			}
+		}
+		
+		int GroupCounter = 0;
+		
+		for (HashSet<GenomicElement> HS : MatchGroups){
+			boolean FoundForward = false;
+			boolean FoundReverse = false;
+			for (GenomicElement E : HS){
+				if (E.getStrand().equals(Strand.POSITIVE)){
+					FoundForward = true;
+				}
+				if (E.getStrand().equals(Strand.NEGATIVE)){
+					FoundReverse = true;
+				}
+			}
+			if (FoundForward && FoundReverse){
+				GroupCounter++;
+			}
+		}
+		
+		if (SSIndividualGenes){
+			
+			IndividualDissimilarity = (GroupCounter/MatchGroups.size());
+			
+			//increment total weights contribution
+			TotalRelativeWeights = TotalRelativeWeights + SSRelWeightIndGenes;
+		}
+		
+		if (SSWholeGroup) {
+			
+			//whole group is switched
+			if (GroupCounter >= MatchGroups.size()){
+				WholeGroupDissimilarity = 1;
+			}
+
+			//increment total weights contribution
+			TotalRelativeWeights = TotalRelativeWeights + SSRelWeightWholeGroup;
+		}
+		
+		Dissimilarity = (SSRelWeightIndGenes/TotalRelativeWeights) * IndividualDissimilarity +
+						(SSRelWeightWholeGroup/TotalRelativeWeights) * WholeGroupDissimilarity;
+		
+		//adjust dissimilarity
+		if (Dissimilarity > 1){
+			Dissimilarity = 1;
+		} else if (Dissimilarity < 0){
+			Dissimilarity = 0;
+		}
+		
+		return Dissimilarity;
 	}
 	
 	//Total Dissimilarity

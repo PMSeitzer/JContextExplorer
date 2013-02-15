@@ -1112,28 +1112,31 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		if (evt.getSource().equals(btnRemoveCS)){
 			if (fr.getOS().getCSDs().size() > 1){
 				
-				//update available context sets
-				
-				//OS level
-				for (int i = 0; i < fr.getOS().getCSDs().size(); i++){
-					if (fr.getOS().getCSDs().get(i).getName().equals(contextSetMenu.getSelectedItem())){
-						
-						//remove from all annotated genomes, if necessary
-						if (fr.getOS().getCSDs().get(i).isPreprocessed()){
-							for (AnnotatedGenome AG : fr.getOS().getSpecies().values()){
-								for (ContextSet CS : AG.getGroupings()){
-									if (CS.getName().equals(fr.getOS().getCSDs().get(i).getName())){
-										AG.getGroupings().remove(CS);
+				try {
+					
+					//update available context sets
+					//OS level
+					for (int i = 0; i < fr.getOS().getCSDs().size(); i++){
+						if (fr.getOS().getCSDs().get(i).getName().equals(contextSetMenu.getSelectedItem())){
+							
+							//remove from all annotated genomes, if necessary
+							if (fr.getOS().getCSDs().get(i).isPreprocessed()){
+								for (AnnotatedGenome AG : fr.getOS().getSpecies().values()){
+									for (ContextSet CS : AG.getGroupings()){
+										if (CS.getName().equals(fr.getOS().getCSDs().get(i).getName())){
+											AG.getGroupings().remove(CS);
+										}
 									}
 								}
 							}
+							
+							//remove the organism set-wide context set description
+							fr.getOS().getCSDs().remove(i);
 						}
-						
-						//remove the organism set-wide context set description
-						fr.getOS().getCSDs().remove(i);
 					}
-				}
-				
+					
+				} catch (Exception ex) {}
+
 				//remove from JComboBoxes
 				//add/remove menu
 				Object Item = contextSetMenu.getSelectedItem();

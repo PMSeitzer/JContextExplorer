@@ -1569,6 +1569,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 					int SSImportance;
 					
 					if (this.chkStrandedness.isSelected()){
+						Factors.add("SS");
 						if (this.chkIndStrand.isSelected()){
 							IndividualGenes = true;
 						} else {

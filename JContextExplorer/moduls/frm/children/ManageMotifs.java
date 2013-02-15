@@ -865,7 +865,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		}
 
 	}
-	
+
 	
 	public String[] convertSequenceMotifs(LinkedList<ContextSetDescription> ListOfContextSets){
 		
@@ -996,6 +996,9 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 							if (MG.getName().equals(f.getOS().getCSDs().get(i).getName())){
 								AG.getGroupings().remove(MG);
 							}
+						}
+						for (GenomicElement E : AG.getElements()){
+							E.removeAMotifByName(f.getOS().getMGDescriptions().get(i).getName());
 						}
 					}
 
