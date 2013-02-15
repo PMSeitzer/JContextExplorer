@@ -786,6 +786,7 @@ import definicions.MatriuDistancies;
 						if ((b < minBase) && (b != 0)) {
 							minBase = b;
 						}
+						
 						progress = 50 + 50
 								* (nbElements - multiDendro.getCardinalitat())
 								/ (nbElements - 1);

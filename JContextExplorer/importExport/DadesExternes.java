@@ -98,7 +98,7 @@ public class DadesExternes {
 		Ultrametric um = new Ultrametric();
 		um.setLlistaOrig(lst);
 
-		FesLog.LOG.config("Creo una matriu per a " + numClusters + " elements");
+		//FesLog.LOG.config("Creo una matriu per a " + numClusters + " elements");
 
 		Cluster.resetId();
 		md = new MatriuDistancies(numClusters);

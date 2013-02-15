@@ -48,7 +48,7 @@ public class MiMath {
 
 		numArrodonit = Math.round(b.doubleValue()) / factor;
 
-		FesLog.LOG.finest("NumArrodonit: " + numArrodonit);
+		//FesLog.LOG.finest("NumArrodonit: " + numArrodonit);
 		return numArrodonit;
 	}
 

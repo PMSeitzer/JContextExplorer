@@ -120,7 +120,7 @@ public class Reagrupa {
 		
 		// Enter each cluster in a group, if two clusters should
 		// fuse, introduced in the same group with the same
-		// other clusters that may have success in the group.
+		// other clusters that are also in that group.
 		for (int i = 0; i < numElements; i++) {
 			// grup del cluster, si en te, si no null.
 			// cluster group, if any, otherwise null.
@@ -189,7 +189,7 @@ public class Reagrupa {
 		
 //		System.out.println("lhm: " + lhm.toString());
 		Newmd = this.NovaMatriu(lhm);
-
+		
 //		System.out.println("Through Newmd! " + "Newmd: " + Newmd.toString());
 		
 		return Newmd;
