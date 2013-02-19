@@ -5,6 +5,7 @@ import genomeObjects.GenomicElementAndQueryMatch;
 
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -416,7 +417,16 @@ public class CustomDissimilarity {
 				}
 				
 				//compute motif dissimilarity of all pairwise, to determine best matching set
-				double[][] MotifComparisons = new double[InstancesIn1.size()][InstancesIn2.size()];
+				//double[][] MotifComparisons = new double[InstancesIn1.size()][InstancesIn2.size()];
+				
+				//make the matrix square, if it needs to be.
+				int MatrixSize = Math.max(InstancesIn1.size(), InstancesIn2.size());
+				double[][] MotifComparisons = new double[MatrixSize][MatrixSize];
+				for (int i = 0; i < MatrixSize; i++){
+					for (int j = 0; j < MatrixSize; j++){
+						MotifComparisons[i][j] = 0;
+					}
+				}
 				
 				for (int i = 0; i < InstancesIn1.size(); i++){
 					for (int j = 0; j < InstancesIn2.size(); j++){
@@ -428,6 +438,7 @@ public class CustomDissimilarity {
 						//fill in array
 						MotifComparisons[i][j] = 
 								this.GeneralizedDiceOrJaccard(MotifsIn1, MotifsIn2, CMDuplicatesUnique, CMCompareType);
+
 						
 //						if (MotifsIn1.contains("BOP") && MotifsIn1.contains("Promoter") &&
 //								MotifsIn2.contains("BOP") && MotifsIn2.contains("Promoter")){
@@ -439,11 +450,14 @@ public class CustomDissimilarity {
 				//Call Hungarian algorithm, sum dissimilarities, add to running total
 				SumDissimilarity = SumDissimilarity 
 						+ (HungarianAlgorithm.JCEAssignment(MotifComparisons) / (double) Math.min(InstancesIn1.size(), InstancesIn2.size()));
-				
+
 			}
 			
-			//Normalize
-			Dissimilarity = SumDissimilarity / Intersection.size();
+			if (Intersection.size() > 0){
+				//Normalize
+				Dissimilarity = SumDissimilarity / Intersection.size();
+			}
+
 			
 		} else { //Common Cluster ID
 			
@@ -502,9 +516,19 @@ public class CustomDissimilarity {
 					}
 				}
 				
+
 				//compute motif dissimilarity of all pairwise, to determine best matching set
-				double[][] MotifComparisons = new double[InstancesIn1.size()][InstancesIn2.size()];
+				//double[][] MotifComparisons = new double[InstancesIn1.size()][InstancesIn2.size()];
 				
+				//make the matrix square, if it needs to be.
+				int MatrixSize = Math.max(InstancesIn1.size(), InstancesIn2.size());
+				double[][] MotifComparisons = new double[MatrixSize][MatrixSize];
+				for (int i = 0; i < MatrixSize; i++){
+					for (int j = 0; j < MatrixSize; j++){
+						MotifComparisons[i][j] = 0;
+					}
+				}
+
 				for (int i = 0; i < InstancesIn1.size(); i++){
 					for (int j = 0; j < InstancesIn2.size(); j++){
 						
@@ -515,18 +539,43 @@ public class CustomDissimilarity {
 						//fill in array
 						MotifComparisons[i][j] = 
 								this.GeneralizedDiceOrJaccard(MotifsIn1, MotifsIn2, CMDuplicatesUnique, CMCompareType);
+
 					}
 				}
 				
+				
+//				//debugging
+//				for (int i = 0; i < MatrixSize; i++){
+//					String Line = "";
+//					for (int j =0; j <MatrixSize; j++){
+//						Line = Line + " " + MotifComparisons[i][j];
+//					}
+//					Line = Line + ";";
+//					System.out.println(Line);
+//				}
+
 				//Call Hungarian algorithm, sum dissimilarities, add to running total
 				SumDissimilarity = SumDissimilarity 
 						+ (HungarianAlgorithm.JCEAssignment(MotifComparisons) / (double) Math.min(InstancesIn1.size(), InstancesIn2.size()));
 
+
 			}
 			
-			//Normalize
-			Dissimilarity = SumDissimilarity / Intersection.size();
+			if (Intersection.size() > 0){
+				//Normalize
+				Dissimilarity = SumDissimilarity / Intersection.size();
+			}
 			
+			
+
+			
+		}
+		
+		//adjust dissimilarity before returning
+		if (Dissimilarity > 1){
+			Dissimilarity = 1;
+		} else if (Dissimilarity < 0){
+			Dissimilarity = 0;
 		}
 		
 		return Dissimilarity;

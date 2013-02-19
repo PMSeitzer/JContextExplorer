@@ -90,7 +90,10 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 	private String strTxtDownstream = "20";
 	private JCheckBox chkInternalMotifs;
 	private String strInternalMotifs = "Include Internal Motifs";
-
+	private JTextField LblFromEdge, TxtFromEdge;
+	private String strLblFromEdge = "From Edge:";
+	private String strTxtFromEdge = "20";
+	
 	//(1) MSFimo
 	private LinkedList<Component> MSFimo_group;
 	private JRadioButton MSFimo;
@@ -138,7 +141,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			SequenceMotifsAsList.add(SequenceMotifsAsArray[i]);
 		}
 		
-		this.setSize(600,500);
+		this.setSize(600,550);
 		
 		this.setTitle("Manage Sequence Motifs");
 		this.setModalityType(ModalityType.DOCUMENT_MODAL);
@@ -194,6 +197,17 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			int ComputeProgress = 0;
 			int TotalFilesForProcess = FimoFiles.length;
 			
+			//determine the internal distance threshold
+			int FromEdgeThreshold;
+			try {
+				FromEdgeThreshold = Integer.parseInt(TxtFromEdge.getText());
+			} catch (Exception ex){
+				FromEdgeThreshold = 0;
+			}
+			if (FromEdgeThreshold < 0){
+				FromEdgeThreshold = 0;
+			}
+			
 			// retrieve all files
 			for (File fi : FimoFiles) {
 				
@@ -212,7 +226,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 					SpeciesName = fi.getName().replaceFirst("[.][^.]+$", "");
 				}
 				
-				//map this to an orgnanism
+				//map this to an organism
 				boolean FoundOrganism = false;
 				for (String s : f.getOS().getSpeciesNames()){
 					if (s.equals(SpeciesName)){
@@ -368,14 +382,43 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 													
 												}
 												
-												//case: internal motif
-												if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
+												//updated internal motif scenario
+												if (E.getStrand().equals(Strand.POSITIVE) &&
+														SM.getStrand().equals(Strand.POSITIVE) &&
+														E.getStart() < SM.getStart() - FromEdgeThreshold){
 													if (chkInternalMotifs.isSelected()){
 														E.addAMotif(SM);
 													} else {
-														E.removeAMotif(SM);		//try to remove if already added.
+														E.removeAMotif(SM);
+													}
+												} else if (E.getStrand().equals(Strand.NEGATIVE) &&
+														SM.getStrand().equals(Strand.NEGATIVE) &&
+														E.getStop() > SM.getStop() + FromEdgeThreshold){
+													if (chkInternalMotifs.isSelected()){
+														E.addAMotif(SM);
+													} else {
+														E.removeAMotif(SM);
+													}
+												} else if (!E.getStrand().equals(SM.getStrand())){
+													if (E.getStart() < SM.getStart()- FromEdgeThreshold && 
+															E.getStop() > SM.getStop() + FromEdgeThreshold){
+														if (chkInternalMotifs.isSelected()){
+															E.addAMotif(SM);
+														} else {
+															E.removeAMotif(SM);		//try to remove if already added.
+														}
 													}
 												}
+
+//												//case: internal motif
+//												if (E.getStart() < SM.getStart()- FromEdgeThreshold && 
+//														E.getStop() > SM.getStop() + FromEdgeThreshold){
+//													if (chkInternalMotifs.isSelected()){
+//														E.addAMotif(SM);
+//													} else {
+//														E.removeAMotif(SM);		//try to remove if already added.
+//													}
+//												}
 											}
 										}
 									}	
@@ -449,7 +492,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		c.gridheight = 1;
 		c.insets = new Insets(3,3,3,3);
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 5;
+		c.gridwidth = 6;
 		Add = new JLabel(" ADD A SEQUENCE MOTIF");
 		Add.setBackground(Color.GRAY);
 		Add.setOpaque(true);
@@ -472,7 +515,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		c.ipady = 7;
 		c.gridx = 1;
 		c.gridy = gridy;
-		c.gridwidth = 4;
+		c.gridwidth = 5;
 		c.gridheight = 1;
 		c.insets = new Insets(3,2,3,3);
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -511,7 +554,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		c.gridx = 0;
 		c.gridy = gridy;
 		c.gridheight = 1;
-		c.gridwidth = 5;
+		c.gridwidth = 6;
 		c.fill = GridBagConstraints.NONE;
 		c.insets = NewSectionInsets;
 		chkAssociate = new JCheckBox(strAssociate);
@@ -524,7 +567,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		c.gridx = 0;
 		c.gridy = gridy;
 		c.gridheight = 1;
-		c.gridwidth = 5;
+		c.gridwidth = 6;
 		c.fill = GridBagConstraints.NONE;
 		c.insets = this.IndentInsets;
 		radNextDownstream.setSelected(true);
@@ -537,7 +580,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		c.gridx = 0;
 		c.gridy = gridy;
 		c.gridheight = 1;
-		c.gridwidth = 5;
+		c.gridwidth = 6;
 		c.fill = GridBagConstraints.NONE;
 		c.insets = IndentInsets;
 		radWithinRange.addActionListener(this);
@@ -602,7 +645,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		
 		c.gridx = 4;
 		c.gridy = gridy;
-		c.gridwidth = 1;
+		c.gridwidth = 2;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1,1,1,1);
@@ -611,6 +654,29 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		this.FindAssociationGroup.add(chkInternalMotifs);
 		this.DownstreamGroup.add(chkInternalMotifs);
 		jp.add(chkInternalMotifs, c);
+		gridy++;
+		
+		c.gridx = 4;
+		c.gridy = gridy;
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		LblFromEdge = new JTextField(strLblFromEdge);
+		LblFromEdge.setEditable(false);
+		this.FindAssociationGroup.add(LblFromEdge);
+		this.DownstreamGroup.add(LblFromEdge);
+		jp.add(LblFromEdge, c);
+		
+		c.gridx = 5;
+		c.gridy = gridy;
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		TxtFromEdge = new JTextField(strTxtFromEdge);
+		TxtFromEdge.setEditable(true);
+		this.FindAssociationGroup.add(TxtFromEdge);
+		this.DownstreamGroup.add(TxtFromEdge);
+		jp.add(TxtFromEdge, c);
 		gridy++;
 	
 //			private JTextField LblUpstream, LblDownstream, TxtUpstream, TxtDownstream;
@@ -627,7 +693,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 5;
+		c.gridwidth = 6;
 		c.insets = new Insets(10,1,1,1);
 		jp.add(MSFimo, c);
 		MSFimo.addActionListener(this);
@@ -661,7 +727,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 5;
+		c.gridwidth = 6;
 		c.insets = new Insets(10,1,1,1);
 		jp.add(MSCustom, c);
 		MSCustom.addActionListener(this);
@@ -717,14 +783,14 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		//add context set 
 		c.gridx = 4;
 		c.gridy = gridy;
-		c.gridwidth = 1;
+		c.gridwidth = 2;
 		c.gridheight = 1;
 		c.ipady = 0;
 		c.insets = new Insets(10,1,1,1);
 		c.fill = GridBagConstraints.HORIZONTAL;
 		btnAddMS = new JButton(strAddMS);
 		btnAddMS.addActionListener(this);
-		btnAddMS.setEnabled(true);
+		btnAddMS.setEnabled(false);
 		jp.add(btnAddMS, c);
 		gridy++;
 		
@@ -737,7 +803,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 5;
+		c.gridwidth = 6;
 		c.insets = new Insets(3,3,3,3);
 		Remove = new JLabel(" REMOVE A SEQUENCE MOTIF");
 		Remove.setBackground(Color.GRAY);
@@ -764,7 +830,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		c.ipady = 0;
 		c.gridx = 1;
 		c.gridy = gridy;
-		c.gridwidth = 2;
+		c.gridwidth = 3;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		SequenceMotifsMenu = new JComboBox<String>(SequenceMotifsAsArray);
@@ -773,7 +839,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		jp.add(SequenceMotifsMenu, c);
 		
 		//remove button
-		c.gridx = 3;
+		c.gridx = 4;
 		c.gridy = gridy;
 		c.gridwidth = 2;
 		c.gridheight = 1;
@@ -788,7 +854,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		//submit button
 		c.gridx = 1;
 		c.gridy = gridy;
-		c.gridwidth = 2;
+		c.gridwidth = 3;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(10,1,1,1);
@@ -907,6 +973,10 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 
 			
 		} 
+		
+		if (evt.getSource().equals(this.MSFimo) || evt.getSource().equals(this.MSCustom)){
+			this.btnAddMS.setEnabled(true);
+		}
 		
 		//active/deactivate components depending on checkbox
 		if (evt.getSource().equals(this.chkAssociate)){

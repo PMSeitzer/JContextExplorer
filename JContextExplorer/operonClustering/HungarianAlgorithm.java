@@ -159,6 +159,7 @@ public class HungarianAlgorithm {
 				}
 			}
 		}
+		
 		double maxCost = findLargest(cost);		//Find largest cost matrix element (needed for step 6).
 		
 		int[][] mask = new int[cost.length][cost[0].length];	//The mask array.
@@ -553,74 +554,75 @@ public class HungarianAlgorithm {
 	//*****************//
 	public static double JCEAssignment(double[][] array){
 		double MinSum = hgAlgorithm(array, "min");	//Call Hungarian algorithm, with minimum cost
+		//double MinSum = hgAlgorithm(array, "max");	//Call Hungarian algorithm, with minimum cost
 		return MinSum;
 	}
 	
 	//***********//
 	//MAIN METHOD//
 	//***********//
-	
-	public static void main(String[] args) 
-	{
-		//Below enter "max" or "min" to find maximum sum or minimum sum assignment.
-		String sumType = "max";		
-				
-		//Hard-coded example.
-		//double[][] array =
-		//{
-		//		{1, 2, 3},
-		//		{2, 4, 6},
-		//		{3, 6, 9}
-		//};
-		
-		//<UNCOMMENT> BELOW AND COMMENT BLOCK ABOVE TO USE A RANDOMLY GENERATED MATRIX
-		int numOfRows = readInput("How many rows for the matrix? ");
-		int numOfCols = readInput("How many columns for the matrix? ");
-		double[][] array = new double[numOfRows][numOfCols];
-		generateRandomArray(array, "random");	//All elements within [0,1].
-		//</UNCOMMENT>
-		
-		if (array.length > array[0].length)
-		{
-			System.out.println("Array transposed (because rows>columns).\n");	//Cols must be >= Rows.
-			array = transpose(array);
-		}
-				
-		//<COMMENT> TO AVOID PRINTING THE MATRIX FOR WHICH THE ASSIGNMENT IS CALCULATED
-		System.out.println("\n(Printing out only 2 decimals)\n");
-		System.out.println("The matrix is:");
-		for (int i=0; i<array.length; i++)
-		{
-			for (int j=0; j<array[i].length; j++)
-				{System.out.printf("%.2f\t", array[i][j]);}
-			System.out.println();
-		}
-		System.out.println();
-		//</COMMENT>*/
-		
-		double startTime = System.nanoTime();	
-		int[][] assignment = new int[array.length][2];
-		
-		//TODO:
-		//WARNING: added comment, changed hgAlgorithm to output sum
-		
-		//assignment = hgAlgorithm(array, sumType);	//Call Hungarian algorithm.
-		double endTime = System.nanoTime();
-						
-		System.out.println("The winning assignment (" + sumType + " sum) is:\n");	
-		double sum = 0;
-		for (int i=0; i<assignment.length; i++)
-		{
-			//<COMMENT> to avoid printing the elements that make up the assignment
-			System.out.printf("array(%d,%d) = %.2f\n", (assignment[i][0]+1), (assignment[i][1]+1),
-					array[assignment[i][0]][assignment[i][1]]);
-			sum = sum + array[assignment[i][0]][assignment[i][1]];
-			//</COMMENT>
-		}
-		
-		System.out.printf("\nThe %s is: %.2f\n", sumType, sum);
-		printTime((endTime - startTime)/1000000000.0);
-		
-	}
+//	
+//	public static void main(String[] args) 
+//	{
+//		//Below enter "max" or "min" to find maximum sum or minimum sum assignment.
+//		String sumType = "max";		
+//				
+//		//Hard-coded example.
+//		//double[][] array =
+//		//{
+//		//		{1, 2, 3},
+//		//		{2, 4, 6},
+//		//		{3, 6, 9}
+//		//};
+//		
+//		//<UNCOMMENT> BELOW AND COMMENT BLOCK ABOVE TO USE A RANDOMLY GENERATED MATRIX
+//		int numOfRows = readInput("How many rows for the matrix? ");
+//		int numOfCols = readInput("How many columns for the matrix? ");
+//		double[][] array = new double[numOfRows][numOfCols];
+//		generateRandomArray(array, "random");	//All elements within [0,1].
+//		//</UNCOMMENT>
+//		
+//		if (array.length > array[0].length)
+//		{
+//			System.out.println("Array transposed (because rows>columns).\n");	//Cols must be >= Rows.
+//			array = transpose(array);
+//		}
+//				
+//		//<COMMENT> TO AVOID PRINTING THE MATRIX FOR WHICH THE ASSIGNMENT IS CALCULATED
+//		System.out.println("\n(Printing out only 2 decimals)\n");
+//		System.out.println("The matrix is:");
+//		for (int i=0; i<array.length; i++)
+//		{
+//			for (int j=0; j<array[i].length; j++)
+//				{System.out.printf("%.2f\t", array[i][j]);}
+//			System.out.println();
+//		}
+//		System.out.println();
+//		//</COMMENT>*/
+//		
+//		double startTime = System.nanoTime();	
+//		int[][] assignment = new int[array.length][2];
+//		
+//		//TODO:
+//		//WARNING: added comment, changed hgAlgorithm to output sum
+//		
+//		//assignment = hgAlgorithm(array, sumType);	//Call Hungarian algorithm.
+//		double endTime = System.nanoTime();
+//						
+//		System.out.println("The winning assignment (" + sumType + " sum) is:\n");	
+//		double sum = 0;
+//		for (int i=0; i<assignment.length; i++)
+//		{
+//			//<COMMENT> to avoid printing the elements that make up the assignment
+//			System.out.printf("array(%d,%d) = %.2f\n", (assignment[i][0]+1), (assignment[i][1]+1),
+//					array[assignment[i][0]][assignment[i][1]]);
+//			sum = sum + array[assignment[i][0]][assignment[i][1]];
+//			//</COMMENT>
+//		}
+//		
+//		System.out.printf("\nThe %s is: %.2f\n", sumType, sum);
+//		printTime((endTime - startTime)/1000000000.0);
+//		
+//	}
 }
 

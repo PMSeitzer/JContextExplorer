@@ -128,11 +128,14 @@ public class GenomicElement {
 	}
 
 	public void removeAMotifByName(String Name){
-		for (SequenceMotif SM : this.AssociatedMotifs){
-			if (SM.getMotifName().equals(Name)){
-				AssociatedMotifs.remove(SM);
+		HashSet<SequenceMotif> UpdatedSet = new HashSet<SequenceMotif>();
+			for (SequenceMotif SM : this.AssociatedMotifs){
+				if (!SM.getMotifName().equals(Name)){
+					UpdatedSet.add(SM);
+				}
 			}
-		}
+		this.AssociatedMotifs = UpdatedSet;
+
 	}
 	
 	public void removeAMotif(SequenceMotif SM) {

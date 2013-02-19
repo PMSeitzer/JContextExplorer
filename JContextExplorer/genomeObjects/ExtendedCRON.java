@@ -140,6 +140,25 @@ public class ExtendedCRON {
 			//iterate over keys
 			for (int i = 0; i < Keys.length; i++){
 				for (int j = i+1; j < Keys.length; j++){
+					
+//					//breakpoint (16,17)
+//					if (Keys[i].equals("Haloferax_alexandrinus-1") 
+//							&& Keys[j].equals("Haloferax_denitrificans-1")){
+//						System.out.println("Breakpoint!");
+//					}
+					
+//					//breakpoint (25,26)
+//					if (Keys[i].equals("Haloferax_sp_GUBF-1-1") 
+//							&& Keys[j].equals("Haloferax_sp_GUBF-2-1")){
+//						System.out.println("Breakpoint!");
+//					}
+					
+//					//breakpoint (48, 49)
+//					if (Keys[i].equals("Natrinema_pallidum-1") 
+//							&& Keys[j].equals("Natrinema_versiforme-1")){
+//						System.out.println("Breakpoint!");
+//					}
+
 					double dist = CustomDistMethod.TotalDissimilarity(this.Contexts.get(Keys[i]), this.Contexts.get(Keys[j]), SearchType);
 
 					//print statements - also reveals the order of keys
