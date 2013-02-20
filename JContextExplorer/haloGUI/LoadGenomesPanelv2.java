@@ -1557,6 +1557,7 @@ public class LoadGenomesPanelv2 extends JLayeredPane implements ActionListener,
 
 		// System.out.println("Breakpoint!");
 		OS.setSourceDirectory(ReferenceDirectory);
+		//OS.ExportExtendedGFFFile();
 		new Dendrograma(OS);
 
 		// //optional print statements (working)

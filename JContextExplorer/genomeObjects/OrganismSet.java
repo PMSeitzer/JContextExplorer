@@ -530,6 +530,20 @@ public class OrganismSet {
 		return de;
 	}
 
+	//------------------------- Export --------------------------------//
+	
+	public void ExportExtendedGFFFile(){
+		
+		String DirName = "/Users/phillipseitzer/Documents/Halophiles_2012/EightyHalophiles/ExtendedAnnotations";
+		
+		for (String s : this.Species.keySet()){
+			String FileName = DirName + "/" + s + ".gff";
+			AnnotatedGenome AG = Species.get(s);
+			AG.ExportExtendedGFFFile(FileName);
+		}
+		
+	}
+	
 	// ----- Getters and Setters --------------------------------------------------//
 	
 	public LinkedHashMap<String, AnnotatedGenome> getSpecies() {

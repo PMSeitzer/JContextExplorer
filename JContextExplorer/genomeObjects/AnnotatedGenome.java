@@ -111,9 +111,10 @@ public void importElements(String filename){
 						
 							//add gene IDs + homology clusters, if available
 							if (ImportedLine.length > 9){
-								E.setGeneID(Integer.parseInt(ImportedLine[9]));
+								E.setClusterID(Integer.parseInt(ImportedLine[9]));
+								//System.out.println("Set!");
 								if (ImportedLine.length > 10){
-									E.setClusterID(Integer.parseInt(ImportedLine[10]));
+									E.setGeneID(Integer.parseInt(ImportedLine[10]));
 								}
 							}
 							
@@ -427,7 +428,7 @@ public class GenomicElementComparator implements Comparator<GenomicElement> {
 	  }
 	}
 
-// ----------------------- Sequence Export ------------------------//
+// ----------------------- Export ----------------------------------//
 
 // this function simply returns a DNA sequence from a particular genome file.
 public String retrieveSequence(String contig, int start, int stop, Strand strand){
@@ -454,6 +455,35 @@ public String retrieveSequence(String contig, int start, int stop, Strand strand
 		e.printStackTrace();
 	}
 	return seq;
+}
+
+public void ExportExtendedGFFFile(String FileName){
+	
+	try {
+		//filewriter
+		BufferedWriter bw = new BufferedWriter(new FileWriter(FileName));
+		String Line;
+		String TheStrand;
+		for (GenomicElement E : this.Elements){
+			if (E.getStrand().equals(Strand.POSITIVE)){
+				TheStrand = "1";
+			} else {
+				TheStrand = "-1";
+			}
+				
+			Line = E.getContig() + "\tGenBank\t" + E.getType() 
+					+ "\t" + E.getStart() + "\t" + E.getStop() + "\t+\t"
+					+ TheStrand + "\t.\t" + E.getAnnotation() + "\t" + E.getClusterID() + "\n";
+			
+			bw.write(Line);
+			bw.flush();
+		}
+		bw.close();
+		
+	} catch (Exception e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
 }
 
 //----------------------- Search/Retrieval ------------------------//
