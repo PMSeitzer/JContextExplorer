@@ -84,13 +84,26 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 	private String strWithinRange = "Associate motif with all genomic elements located within range";
 	private LinkedList<Component> DownstreamGroup;
 	private JTextField LblUpstream, LblDownstream, TxtUpstream, TxtDownstream;
-	private String strLblUpstream = "Upstream:";
-	private String strLblDownstream = "Downstream:";
-	private String strTxtUpstream = "-1";
-	private String strTxtDownstream = "20";
+	private JCheckBox chkStrandMatching;
+	private String strchkStrandMatching = "Require same strand";
+	private String strLblUpstream = "Upstream of start:";
+	private String strLblDownstream = "Downstream of stop:";
+	private String strTxtUpstream = "50";
+	private String strTxtDownstream = "0";
 	private JCheckBox chkInternalMotifs;
+	private JRadioButton radAllInternal, radRangeInternal;
+	private String strAllInternal = "Include all internal motifs";
+	private String strRangeInternal = "Include internal motifs within range";
+	private ButtonGroup grpInternalMotifs;
+	private LinkedList<Component> ConditionalInternalGroup;
+	private JTextField IntLblDownstream, IntLblUpstream, IntTxtDownstream, IntTxtUpstream;
+	private String strIntLblDownstream = "Downstream of start:";
+	private String strIntTxtDownstream = "50";
+	private String strIntTxtUpstream = "50";
+	private String strIntLblUpstream = "Upstream of stop:";
+	
 	private String strInternalMotifs = "Include Internal Motifs";
-	private JTextField LblFromEdge, TxtFromEdge;
+	private JLabel LblFromEdge, TxtFromEdge;
 	private String strLblFromEdge = "From Edge:";
 	private String strTxtFromEdge = "20";
 	
@@ -172,6 +185,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 	class btnLoadFimo extends SwingWorker<Void,Void>{
 
 		private int OrganismsMapped;
+		private int SearchBubbleRange = 10000;		//Start looking for motifs only at 10K
 
 		//Fields
 		@Override
@@ -354,52 +368,52 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 										//just search for nearby	
 										} else if (radWithinRange.isSelected()) {
 											if (E.getContig().contentEquals(SM.getContig())){ // same contig
-												
+
 												//Once passed the threshold, search no more!
 												if (E.getStart() - Center > Integer.parseInt(TxtDownstream.getText())){
 													break;
-												}
-
+												} 
 												
-												if (SM.getStrand().equals(Strand.POSITIVE)){
-	
-													//downstream check
-													if (E.getStart() - Center <= Integer.parseInt(TxtDownstream.getText())
-															&& E.getStart() - Center > 0){
-														E.addAMotif(SM);
-													} else if (Center - E.getStop() < Integer.parseInt(TxtUpstream.getText())){
-														E.addAMotif(SM);
-													} 
-													
-												} else if (SM.getStrand().equals(Strand.NEGATIVE)){
-													//downstream check
-													if (E.getStart() - Center <= Integer.parseInt(TxtUpstream.getText())
-															&& E.getStart() - Center > 0){
-														E.addAMotif(SM);
-													} else if (Center - E.getStop() < Integer.parseInt(TxtDownstream.getText())){
-														E.addAMotif(SM);
-													} 
-													
-												}
-												
-												//updated internal motif scenario
-												if (E.getStrand().equals(Strand.POSITIVE) &&
-														SM.getStrand().equals(Strand.POSITIVE) &&
-														E.getStart() < SM.getStart() - FromEdgeThreshold){
-													if (chkInternalMotifs.isSelected()){
-														E.addAMotif(SM);
-													} else {
-														E.removeAMotif(SM);
+												//don't even consider the motif if it's out of the search bubble range
+												if (Center - E.getStart() < SearchBubbleRange){
+												     
+													//(+) - stranded gene
+													if (SM.getStrand().equals(Strand.POSITIVE)){
+														
+//														// (+) - stranded motif
+//														if (E.getStrand().equals(Strand.POSITIVE)){
+//															
+//															//upstream / downstream check
+//															if (E.getStart() - Center <= Integer.parseInt(TxtDownstream.getText())
+//																	&& E.getStart() - Center > 0){
+//																E.addAMotif(SM);
+//															} else if (Center - E.getStop() < Integer.parseInt(TxtUpstream.getText())){
+//																E.addAMotif(SM);
+//															} 
+//														}
+														
+														//upstream / downstream check
+														if (E.getStart() - Center <= Integer.parseInt(TxtDownstream.getText())
+																&& E.getStart() - Center > 0){
+															E.addAMotif(SM);
+														} else if (Center - E.getStop() < Integer.parseInt(TxtUpstream.getText())){
+															E.addAMotif(SM);
+														} 
+														
+													} else if (SM.getStrand().equals(Strand.NEGATIVE)){
+														
+														
+														//upstream / downstream check
+														if (E.getStart() - Center <= Integer.parseInt(TxtUpstream.getText())
+																&& E.getStart() - Center > 0){
+															E.addAMotif(SM);
+														} else if (Center - E.getStop() < Integer.parseInt(TxtDownstream.getText())){
+															E.addAMotif(SM);
+														} 
+														
 													}
-												} else if (E.getStrand().equals(Strand.NEGATIVE) &&
-														SM.getStrand().equals(Strand.NEGATIVE) &&
-														E.getStop() > SM.getStop() + FromEdgeThreshold){
-													if (chkInternalMotifs.isSelected()){
-														E.addAMotif(SM);
-													} else {
-														E.removeAMotif(SM);
-													}
-												} else if (!E.getStrand().equals(SM.getStrand())){
+													
+													//case: internal motif
 													if (E.getStart() < SM.getStart()- FromEdgeThreshold && 
 															E.getStop() > SM.getStop() + FromEdgeThreshold){
 														if (chkInternalMotifs.isSelected()){
@@ -408,7 +422,45 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 															E.removeAMotif(SM);		//try to remove if already added.
 														}
 													}
+													
 												}
+												
+
+												
+//												//updated internal motif scenario
+//												if (E.getStrand().equals(Strand.POSITIVE) &&
+//														SM.getStrand().equals(Strand.POSITIVE) &&
+//														E.getStart() < SM.getStart() - FromEdgeThreshold &&	//front edge
+//														E.getStop() > SM.getStop()){ //internal
+//													if (chkInternalMotifs.isSelected()){
+//														E.addAMotif(SM);
+//													} else {
+//														E.removeAMotif(SM);
+//													}
+//												} else if (E.getStrand().equals(Strand.NEGATIVE) &&
+//														SM.getStrand().equals(Strand.NEGATIVE) &&
+//														E.getStop() > SM.getStop() + FromEdgeThreshold && //back edge
+//														E.getStart() < SM.getStart()){ //internal
+//													if (chkInternalMotifs.isSelected()){
+//														E.addAMotif(SM);
+//													} else {
+//														E.removeAMotif(SM);
+//													}
+//												} else if (!E.getStrand().equals(SM.getStrand())){
+//													if (E.getStart() < SM.getStart()- FromEdgeThreshold && 
+//															E.getStop() > SM.getStop() + FromEdgeThreshold){
+//														if (chkInternalMotifs.isSelected()){
+//															E.addAMotif(SM);
+//														} else {
+//															E.removeAMotif(SM);		//try to remove if already added.
+//														}
+//													}
+//												}
+												
+//												//print statement.
+//												System.out.println(
+//														Runtime.getRuntime().freeMemory() + ": SM: " + SM.getStart() + ":" +  SM.getStop() 
+//														+ "E: " + E.getStart() + ":" + E.getStop());
 
 //												//case: internal motif
 //												if (E.getStart() < SM.getStart()- FromEdgeThreshold && 
@@ -590,8 +642,21 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		
 		DownstreamGroup = new LinkedList<Component>();
 		
-		//options
+		//Require strand matching
 		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = IndentInsets;
+		chkStrandMatching = new JCheckBox(strchkStrandMatching);
+		chkStrandMatching.setEnabled(true);
+		this.FindAssociationGroup.add(chkStrandMatching);
+		this.DownstreamGroup.add(chkStrandMatching);
+		jp.add(chkStrandMatching, c);
+		
+		//options
+		c.gridx = 1;
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.gridwidth = 1;
@@ -599,13 +664,13 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		c.insets = IndentInsets;
 		LblUpstream = new JTextField(strLblUpstream);
 		LblUpstream.setEditable(false);
-		LblUpstream.setBorder(null);
 		LblUpstream.setHorizontalAlignment(JTextField.RIGHT);
+		LblUpstream.setBorder(null);
 		this.FindAssociationGroup.add(LblUpstream);
 		this.DownstreamGroup.add(LblUpstream);
 		jp.add(LblUpstream, c);
 		
-		c.gridx = 1;
+		c.gridx = 2;
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.gridwidth = 1;
@@ -617,7 +682,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		this.DownstreamGroup.add(TxtUpstream);
 		jp.add(TxtUpstream, c);
 		
-		c.gridx = 2;
+		c.gridx = 3;
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.gridwidth = 1;
@@ -625,13 +690,13 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		c.insets = new Insets(1,1,1,1);
 		LblDownstream = new JTextField(strLblDownstream);
 		LblDownstream.setEditable(false);
-		LblDownstream.setHorizontalAlignment(JTextField.RIGHT);
 		LblDownstream.setBorder(null);
+		LblDownstream.setHorizontalAlignment(JTextField.RIGHT);
 		this.FindAssociationGroup.add(LblDownstream);
 		this.DownstreamGroup.add(LblDownstream);
 		jp.add(LblDownstream, c);
 		
-		c.gridx = 3;
+		c.gridx = 4;
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.gridwidth = 1;
@@ -642,42 +707,137 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		this.FindAssociationGroup.add(TxtDownstream);
 		this.DownstreamGroup.add(TxtDownstream);
 		jp.add(TxtDownstream, c);
+		gridy++;
 		
-		c.gridx = 4;
+		//Create button group
+		radAllInternal = new JRadioButton(strAllInternal);
+		radRangeInternal = new JRadioButton(strRangeInternal);
+		grpInternalMotifs = new ButtonGroup();
+		grpInternalMotifs.add(radAllInternal);
+		grpInternalMotifs.add(radRangeInternal);
+		
+		//add radio buttons
+		c.gridx = 0;
 		c.gridy = gridy;
-		c.gridwidth = 2;
 		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = IndentInsets;
+		radAllInternal.setSelected(true);
+		radAllInternal.addActionListener(this);
+		this.FindAssociationGroup.add(radAllInternal);
+		this.DownstreamGroup.add(radAllInternal);
+		jp.add(radAllInternal, c);
+		
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 3;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1,1,1,1);
-		chkInternalMotifs = new JCheckBox(strInternalMotifs);
-		chkInternalMotifs.setSelected(true);
-		this.FindAssociationGroup.add(chkInternalMotifs);
-		this.DownstreamGroup.add(chkInternalMotifs);
-		jp.add(chkInternalMotifs, c);
+		radRangeInternal.addActionListener(this);
+		this.FindAssociationGroup.add(radRangeInternal);
+		this.DownstreamGroup.add(radRangeInternal);
+		jp.add(radRangeInternal, c);
 		gridy++;
+		
+		ConditionalInternalGroup = new LinkedList<Component>();
+		
+		//internal options
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = IndentInsets;
+		IntLblDownstream = new JTextField(strIntLblDownstream);
+		IntLblDownstream.setEditable(false);
+		IntLblDownstream.setHorizontalAlignment(JTextField.RIGHT);
+		IntLblDownstream.setBorder(null);
+		this.FindAssociationGroup.add(IntLblDownstream);
+		this.DownstreamGroup.add(IntLblDownstream);
+		ConditionalInternalGroup.add(IntLblDownstream);
+		jp.add(IntLblDownstream, c);
+		
+		c.gridx = 2;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(1,1,1,1);
+		IntTxtDownstream = new JTextField(strIntTxtDownstream);
+		IntTxtDownstream.setEditable(true);
+		this.FindAssociationGroup.add(IntTxtDownstream);
+		this.DownstreamGroup.add(IntTxtDownstream);
+		ConditionalInternalGroup.add(IntTxtDownstream);
+		jp.add(IntTxtDownstream, c);
+		
+		c.gridx = 3;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(1,1,1,1);
+		IntLblUpstream = new JTextField(strIntLblUpstream);
+		IntLblUpstream.setEditable(false);
+		IntLblUpstream.setBorder(null);
+		IntLblUpstream.setHorizontalAlignment(JTextField.RIGHT);
+		this.FindAssociationGroup.add(IntLblUpstream);
+		this.DownstreamGroup.add(IntLblUpstream);
+		ConditionalInternalGroup.add(IntLblUpstream);
+		jp.add(IntLblUpstream, c);
 		
 		c.gridx = 4;
 		c.gridy = gridy;
-		c.gridwidth = 1;
 		c.gridheight = 1;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		LblFromEdge = new JTextField(strLblFromEdge);
-		LblFromEdge.setEditable(false);
-		this.FindAssociationGroup.add(LblFromEdge);
-		this.DownstreamGroup.add(LblFromEdge);
-		jp.add(LblFromEdge, c);
-		
-		c.gridx = 5;
-		c.gridy = gridy;
 		c.gridwidth = 1;
-		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		TxtFromEdge = new JTextField(strTxtFromEdge);
-		TxtFromEdge.setEditable(true);
-		this.FindAssociationGroup.add(TxtFromEdge);
-		this.DownstreamGroup.add(TxtFromEdge);
-		jp.add(TxtFromEdge, c);
+		c.insets = new Insets(1,1,1,1);
+		IntTxtUpstream = new JTextField(strIntTxtUpstream);
+		IntTxtUpstream.setEditable(true);
+		this.FindAssociationGroup.add(IntTxtUpstream);
+		this.DownstreamGroup.add(IntTxtUpstream);
+		ConditionalInternalGroup.add(IntTxtUpstream);
+		jp.add(IntTxtUpstream, c);
 		gridy++;
+		
+//		c.gridx = 4;
+//		c.gridy = gridy;
+//		c.gridwidth = 2;
+//		c.gridheight = 1;
+//		c.fill = GridBagConstraints.HORIZONTAL;
+//		c.insets = new Insets(1,1,1,1);
+//		chkInternalMotifs = new JCheckBox(strInternalMotifs);
+//		chkInternalMotifs.setSelected(true);
+//		this.FindAssociationGroup.add(chkInternalMotifs);
+//		this.DownstreamGroup.add(chkInternalMotifs);
+//		jp.add(chkInternalMotifs, c);
+//		gridy++;
+
+		
+		
+//		c.gridx = 4;
+//		c.gridy = gridy;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.fill = GridBagConstraints.HORIZONTAL;
+//		LblFromEdge = new JTextField(strLblFromEdge);
+//		LblFromEdge.setEditable(false);
+//		this.FindAssociationGroup.add(LblFromEdge);
+//		this.DownstreamGroup.add(LblFromEdge);
+//		jp.add(LblFromEdge, c);
+//		
+//		c.gridx = 5;
+//		c.gridy = gridy;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.fill = GridBagConstraints.HORIZONTAL;
+//		TxtFromEdge = new JTextField(strTxtFromEdge);
+//		TxtFromEdge.setEditable(true);
+//		this.FindAssociationGroup.add(TxtFromEdge);
+//		this.DownstreamGroup.add(TxtFromEdge);
+//		jp.add(TxtFromEdge, c);
+//		gridy++;
 	
 //			private JTextField LblUpstream, LblDownstream, TxtUpstream, TxtDownstream;
 //			private String strTxtUpstream = "-1";
@@ -987,7 +1147,13 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 				} else {
 					if (DownstreamGroup.contains(c)){
 						if (radWithinRange.isSelected()){
-							c.setEnabled(true);
+							if (radAllInternal.isSelected()){
+								if (!this.ConditionalInternalGroup.contains(c)){
+									c.setEnabled(true);
+								}
+							} else {
+								c.setEnabled(true);
+							}
 						}
 					} else {
 						c.setEnabled(true);
@@ -1006,7 +1172,26 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		
 		if (evt.getSource().equals(radWithinRange)){
 			for (Component c : DownstreamGroup){
+				if (radAllInternal.isSelected()){
+					if (!this.ConditionalInternalGroup.contains(c)){
+						c.setEnabled(true);
+					}
+				} else {
+					c.setEnabled(true);
+				}
+
+			}
+		}
+		
+		if (evt.getSource().equals(radRangeInternal)){
+			for (Component c : this.ConditionalInternalGroup){
 				c.setEnabled(true);
+			}
+		}
+		
+		if (evt.getSource().equals(this.radAllInternal)){
+			for (Component c : this.ConditionalInternalGroup){
+				c.setEnabled(false);
 			}
 		}
 		

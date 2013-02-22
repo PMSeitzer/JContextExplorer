@@ -563,7 +563,7 @@ import definicions.MatriuDistancies;
 				int SpeciesCounter = 0;
 				
 				//Initialize a hash map to use for the case of cassette contexts.
-				HashSet<String> GenesForCassettes = new HashSet<String>();
+				HashSet<Integer> GenesForCassettes = new HashSet<Integer>();
 				
 				//iterate through species.
 				for (Entry<String, AnnotatedGenome> entry : OS.getSpecies().entrySet()) {
@@ -617,13 +617,17 @@ import definicions.MatriuDistancies;
 					if (isCassette){
 						for (LinkedList<GenomicElementAndQueryMatch> MatchList : Matches){
 							for (GenomicElementAndQueryMatch GandE : MatchList){
-								GenesForCassettes.add(GandE.getE().getAnnotation());
+								GenesForCassettes.add(GandE.getE().getClusterID());
 							}
 						}
 					}
 					
+					//remove clusterID = 0 case
+					GenesForCassettes.remove(0);
+					
 					SpeciesCounter++;
 					progress = (int) (50*((double)SpeciesCounter/(double)OS.getSpecies().size()));
+					
 					//update progress
 					setProgress(progress);
 					
@@ -659,7 +663,7 @@ import definicions.MatriuDistancies;
 						HashSet<String> Contigs = new HashSet<String>();
 						
 						for (GenomicElement E : AG.getElements()){
-							if (GenesForCassettes.contains(E.getAnnotation())){
+							if (GenesForCassettes.contains(E.getClusterID())){
 								
 								//create appropriate GenomicElementAndQueryMatch
 								GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();

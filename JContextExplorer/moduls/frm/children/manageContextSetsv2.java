@@ -1237,7 +1237,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 			LoadedFileName.setText("Create a cassette associated with an existing Context Set.");
 			if (CSName.getText().contentEquals("") || CSName.getText().contentEquals("MultipleQuery") ||
 					CSName.getText().contentEquals("Between")){
-				String DefaultCassetteName = contextSetMenuforCassette.getSelectedItem().toString() + " - Cassette";
+				String DefaultCassetteName = "Cas-";
 				CSName.setText(DefaultCassetteName);
 			}
 		}
