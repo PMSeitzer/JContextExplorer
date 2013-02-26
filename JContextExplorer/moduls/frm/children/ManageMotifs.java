@@ -89,8 +89,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 	private String strLblUpstream = "Upstream of start:";
 	private String strLblDownstream = "Downstream of stop:";
 	private String strTxtUpstream = "50";
-	private String strTxtDownstream = "0";
-	private JCheckBox chkInternalMotifs;
+	private String strTxtDownstream = "-1";
 	private JRadioButton radAllInternal, radRangeInternal;
 	private String strAllInternal = "Include all internal motifs";
 	private String strRangeInternal = "Include internal motifs within range";
@@ -99,13 +98,8 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 	private JTextField IntLblDownstream, IntLblUpstream, IntTxtDownstream, IntTxtUpstream;
 	private String strIntLblDownstream = "Downstream of start:";
 	private String strIntTxtDownstream = "50";
-	private String strIntTxtUpstream = "50";
+	private String strIntTxtUpstream = "-1";
 	private String strIntLblUpstream = "Upstream of stop:";
-	
-	private String strInternalMotifs = "Include Internal Motifs";
-	private JLabel LblFromEdge, TxtFromEdge;
-	private String strLblFromEdge = "From Edge:";
-	private String strTxtFromEdge = "20";
 	
 	//(1) MSFimo
 	private LinkedList<Component> MSFimo_group;
@@ -154,7 +148,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			SequenceMotifsAsList.add(SequenceMotifsAsArray[i]);
 		}
 		
-		this.setSize(600,550);
+		this.setSize(800,600);
 		
 		this.setTitle("Manage Sequence Motifs");
 		this.setModalityType(ModalityType.DOCUMENT_MODAL);
@@ -211,16 +205,16 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			int ComputeProgress = 0;
 			int TotalFilesForProcess = FimoFiles.length;
 			
-			//determine the internal distance threshold
-			int FromEdgeThreshold;
-			try {
-				FromEdgeThreshold = Integer.parseInt(TxtFromEdge.getText());
-			} catch (Exception ex){
-				FromEdgeThreshold = 0;
-			}
-			if (FromEdgeThreshold < 0){
-				FromEdgeThreshold = 0;
-			}
+//			//determine the internal distance threshold
+//			int FromEdgeThreshold;
+//			try {
+//				FromEdgeThreshold = Integer.parseInt(TxtFromEdge.getText());
+//			} catch (Exception ex){
+//				FromEdgeThreshold = 0;
+//			}
+//			if (FromEdgeThreshold < 0){
+//				FromEdgeThreshold = 0;
+//			}
 			
 			// retrieve all files
 			for (File fi : FimoFiles) {
@@ -369,108 +363,102 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 										} else if (radWithinRange.isSelected()) {
 											if (E.getContig().contentEquals(SM.getContig())){ // same contig
 
-												//Once passed the threshold, search no more!
-												if (E.getStart() - Center > Integer.parseInt(TxtDownstream.getText())){
-													break;
-												} 
+												//Center of motif
+												double valueofE = 0.5 * ( (double) E.getStart() + (double) E.getStop() );
+												long CenterofE = Math.round(valueofE);
 												
-												//don't even consider the motif if it's out of the search bubble range
-												if (Center - E.getStart() < SearchBubbleRange){
-												     
-													//(+) - stranded gene
-													if (SM.getStrand().equals(Strand.POSITIVE)){
-														
-//														// (+) - stranded motif
-//														if (E.getStrand().equals(Strand.POSITIVE)){
-//															
-//															//upstream / downstream check
-//															if (E.getStart() - Center <= Integer.parseInt(TxtDownstream.getText())
-//																	&& E.getStart() - Center > 0){
-//																E.addAMotif(SM);
-//															} else if (Center - E.getStop() < Integer.parseInt(TxtUpstream.getText())){
-//																E.addAMotif(SM);
-//															} 
-//														}
-														
-														//upstream / downstream check
-														if (E.getStart() - Center <= Integer.parseInt(TxtDownstream.getText())
-																&& E.getStart() - Center > 0){
-															E.addAMotif(SM);
-														} else if (Center - E.getStop() < Integer.parseInt(TxtUpstream.getText())){
-															E.addAMotif(SM);
-														} 
-														
-													} else if (SM.getStrand().equals(Strand.NEGATIVE)){
-														
-														
-														//upstream / downstream check
-														if (E.getStart() - Center <= Integer.parseInt(TxtUpstream.getText())
-																&& E.getStart() - Center > 0){
-															E.addAMotif(SM);
-														} else if (Center - E.getStop() < Integer.parseInt(TxtDownstream.getText())){
-															E.addAMotif(SM);
-														} 
-														
-													}
-													
-													//case: internal motif
-													if (E.getStart() < SM.getStart()- FromEdgeThreshold && 
-															E.getStop() > SM.getStop() + FromEdgeThreshold){
-														if (chkInternalMotifs.isSelected()){
-															E.addAMotif(SM);
-														} else {
-															E.removeAMotif(SM);		//try to remove if already added.
-														}
-													}
-													
+												//Once passed through the search bubble, stop searching - E will only get larger.
+												if (CenterofE - Center > SearchBubbleRange){
+													break;
 												}
 												
+												//don't even consider the motif if it's out of the search bubble range
+												if (Math.abs(Center - CenterofE) < SearchBubbleRange){
+												     
+													//don't look if a strand-agreement condition is violated.
+													if ((chkStrandMatching.isSelected() && SM.getStrand().equals(E.getStrand())) ||
+															chkStrandMatching.isSelected() == false){
+														
+														//positive stranded case
+														if (E.getStrand().equals(Strand.POSITIVE)){
+															
+															//upstream case
+															if (Integer.parseInt(TxtUpstream.getText()) >= 0){
+																if (E.getStart() - Center <= Integer.parseInt(TxtUpstream.getText()) &&
+																		E.getStart() - Center >= 0){
+																	E.addAMotif(SM);
+																}
+															}
+															
+															//downstream case
+															if (Integer.parseInt(TxtDownstream.getText()) >= 0){
+																if (Center - E.getStop() <= Integer.parseInt(TxtDownstream.getText()) &&
+																		Center - E.getStop() >= 0){
+																	E.addAMotif(SM);
+																}
+															}
+															
+															//internal motif case
+															if (radAllInternal.isSelected()){
+																if (E.getStop() > Center && Center > E.getStart()){
+																	E.addAMotif(SM);
+																}
+															} else {
+																if (Integer.parseInt(IntTxtDownstream.getText()) >= 0){
+																	if (Center - E.getStart() <= Integer.parseInt(IntTxtDownstream.getText()) &&
+																			Center - E.getStart() >= 0){
+																		E.addAMotif(SM);
+																	}
+																}
+																if (Integer.parseInt(IntTxtUpstream.getText()) >= 0){
+																	if (E.getStop() - Center <= Integer.parseInt(IntTxtUpstream.getText()) &&
+																			E.getStop() - Center >= 0){
+																		E.addAMotif(SM);
+																	}
+																}
+															}
 
-												
-//												//updated internal motif scenario
-//												if (E.getStrand().equals(Strand.POSITIVE) &&
-//														SM.getStrand().equals(Strand.POSITIVE) &&
-//														E.getStart() < SM.getStart() - FromEdgeThreshold &&	//front edge
-//														E.getStop() > SM.getStop()){ //internal
-//													if (chkInternalMotifs.isSelected()){
-//														E.addAMotif(SM);
-//													} else {
-//														E.removeAMotif(SM);
-//													}
-//												} else if (E.getStrand().equals(Strand.NEGATIVE) &&
-//														SM.getStrand().equals(Strand.NEGATIVE) &&
-//														E.getStop() > SM.getStop() + FromEdgeThreshold && //back edge
-//														E.getStart() < SM.getStart()){ //internal
-//													if (chkInternalMotifs.isSelected()){
-//														E.addAMotif(SM);
-//													} else {
-//														E.removeAMotif(SM);
-//													}
-//												} else if (!E.getStrand().equals(SM.getStrand())){
-//													if (E.getStart() < SM.getStart()- FromEdgeThreshold && 
-//															E.getStop() > SM.getStop() + FromEdgeThreshold){
-//														if (chkInternalMotifs.isSelected()){
-//															E.addAMotif(SM);
-//														} else {
-//															E.removeAMotif(SM);		//try to remove if already added.
-//														}
-//													}
-//												}
-												
-//												//print statement.
-//												System.out.println(
-//														Runtime.getRuntime().freeMemory() + ": SM: " + SM.getStart() + ":" +  SM.getStop() 
-//														+ "E: " + E.getStart() + ":" + E.getStop());
-
-//												//case: internal motif
-//												if (E.getStart() < SM.getStart()- FromEdgeThreshold && 
-//														E.getStop() > SM.getStop() + FromEdgeThreshold){
-//													if (chkInternalMotifs.isSelected()){
-//														E.addAMotif(SM);
-//													} else {
-//														E.removeAMotif(SM);		//try to remove if already added.
-//													}
-//												}
+															
+														} else {
+															
+															//upstream case
+															if (Integer.parseInt(TxtUpstream.getText()) >= 0){
+																if (Center - E.getStop() <= Integer.parseInt(TxtUpstream.getText()) &&
+																		Center - E.getStop() >= 0){
+																	E.addAMotif(SM);
+																}
+															}
+															
+															//downstream case
+															if (Integer.parseInt(TxtDownstream.getText()) >= 0){
+																if (E.getStart() - Center <= Integer.parseInt(TxtDownstream.getText()) &&
+																		E.getStart() - Center >= 0){
+																	E.addAMotif(SM);
+																}
+															}
+															
+															//internal motif case
+															if (radAllInternal.isSelected()){
+																if (E.getStop() > Center && Center > E.getStart()){
+																	E.addAMotif(SM);
+																}
+															} else {
+																if (Integer.parseInt(IntTxtDownstream.getText()) >= 0){
+																	if (E.getStop() - Center <= Integer.parseInt(IntTxtDownstream.getText()) &&
+																			E.getStop() - Center >= 0){
+																		E.addAMotif(SM);
+																	}
+																}
+																if (Integer.parseInt(IntTxtUpstream.getText()) >= 0){
+																	if (Center - E.getStart() <= Integer.parseInt(IntTxtUpstream.getText()) &&
+																			Center - E.getStart() >= 0){
+																		E.addAMotif(SM);
+																	}
+																}
+															}
+														}
+													}
+												}
 											}
 										}
 									}	
