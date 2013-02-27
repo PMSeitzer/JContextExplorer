@@ -175,7 +175,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		super();
 		this.f = f;
 		
-		this.setSize(700,400);
+		this.setSize(1000,700);
 		this.setTitle("Manage Dissimilarity Measures");
 		this.setModalityType(ModalityType.DOCUMENT_MODAL);
 		this.setModal(true);

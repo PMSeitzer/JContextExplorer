@@ -42,6 +42,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 
 import org.biojava3.core.sequence.Strand;
+import org.biojava3.core.sequence.*;
 
 import moduls.frm.FrmPrincipalDesk;
 import moduls.frm.children.manageContextSetsv2.btnLoadCS;
@@ -275,7 +276,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 								SM.setScore(Double.parseDouble(ImportedLine[4]));
 								SM.setPvalue(Double.parseDouble(ImportedLine[5]));
 								SM.setQvalue(Double.parseDouble(ImportedLine[6]));
-								SM.setSequence(ImportedLine[7]);
+								SM.setSequence(ImportedLine[7].toUpperCase());
 								
 								//set strand based on order of elements.
 								if (SM.getStart() < SM.getStop()){
@@ -287,6 +288,10 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 									int TempStart = SM.getStart();
 									SM.setStart(SM.getStop());
 									SM.setStop(TempStart);
+									
+									//also, adjust the string to reverse complement, if appropriate.
+									DNASequence d = new DNASequence(SM.getSequence());
+									SM.setSequence(d.getReverseComplement().getSequenceAsString().toUpperCase());
 								}
 								
 								//add to list
