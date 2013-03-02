@@ -76,7 +76,7 @@ import definicions.Config;
  *
  * @since JDK 6.0
  */
-public class FrmPrincipalDesk extends JFrame{
+public class FrmPrincipalDesk extends JFrame implements InternalFrameListener{
 	
 	// ----- Fields ---------------------------------------------------//
 	
@@ -123,8 +123,19 @@ public class FrmPrincipalDesk extends JFrame{
 	private boolean DisplayMotifs = false;
 	private String SelectedAnalysisType = "Search Results";
 	private File FileChooserSource;
+	private int InternalFrameID = 0;	//for debugging
 	
 	// ----- Methods ---------------------------------------------------//		
+
+	public int getInternalFrameID() {
+		return InternalFrameID;
+	}
+
+
+	public void setInternalFrameID(int internalFrameID) {
+		InternalFrameID = internalFrameID;
+	}
+
 
 	//This is the main GUI window.
 	public FrmPrincipalDesk(final String title, OrganismSet theOrganismSet) {
@@ -194,6 +205,7 @@ public class FrmPrincipalDesk extends JFrame{
 		
 	}
 
+
 	public Jpan_MotifOptions getPanMotifOptions() {
 		return panMotifOptions;
 	}
@@ -225,6 +237,7 @@ public class FrmPrincipalDesk extends JFrame{
 	public FrmInternalFrame createInternalFrame(boolean isUpdate,
 			String methodName) {
 		int x, y, width, height;
+		this.InternalFrameID = InternalFrameID + 1;
 		FrmInternalFrame pizarra;
 		
 //		if (isUpdate) {
@@ -250,7 +263,7 @@ public class FrmPrincipalDesk extends JFrame{
 		height = Parametres_Inicials.getHeight_frmDesk();
 		
 		//pizarra translates to "slate" - internal tree frame
-		pizarra = new FrmInternalFrame(methodName, isUpdate, x, y);
+		pizarra = new FrmInternalFrame(methodName, isUpdate, x, y, this);
 		pizarra.setSize(width, height);
 		pizarra.setBackground(Color.BLUE);
 		pizarra.setLayout(new BorderLayout());
@@ -262,6 +275,9 @@ public class FrmPrincipalDesk extends JFrame{
 		DefaultDesktopManager ddm = new DefaultDesktopManager();
 		ddm.maximizeFrame(pizarra);
 		
+		//add to listener
+		//pizarra.addInternalFrameListener(this);
+
 		return pizarra;
 	}
 
@@ -567,5 +583,50 @@ public class FrmPrincipalDesk extends JFrame{
 
 	public void setFileChooserSource(File fileChooserSource) {
 		FileChooserSource = fileChooserSource;
+	}
+
+	@Override
+	public void internalFrameActivated(InternalFrameEvent e) {
+	
+		FrmInternalFrame CurrentFrame = (FrmInternalFrame) e.getSource();
+		this.setCurrentFrame(CurrentFrame);
+		System.out.println(CurrentFrame.getInternalFrameData().getQD().getName());
+		
+	}
+
+	@Override
+	public void internalFrameClosed(InternalFrameEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void internalFrameClosing(InternalFrameEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void internalFrameDeactivated(InternalFrameEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void internalFrameDeiconified(InternalFrameEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void internalFrameIconified(InternalFrameEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void internalFrameOpened(InternalFrameEvent arg0) {
+		// TODO Auto-generated method stub
+		
 	}
 }

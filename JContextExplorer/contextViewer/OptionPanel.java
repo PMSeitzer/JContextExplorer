@@ -269,6 +269,7 @@ public class OptionPanel extends JPanel implements ActionListener{
 		c.fill = GridBagConstraints.NONE;
 		beforeRange = new JTextField(strbeforeRange);
 		beforeRange.setEditable(false);
+		beforeRange.setHorizontalAlignment(JTextField.RIGHT);
 		beforeRange.setFont(fontStandard);
 		add(beforeRange, c);
 		
@@ -278,7 +279,7 @@ public class OptionPanel extends JPanel implements ActionListener{
 		c.gridy = 1;
 		c.gridwidth = 1;
 		c.gridheight = 1;
-		c.fill = GridBagConstraints.NONE;
+		c.fill = GridBagConstraints.HORIZONTAL;
 		beforeRangeValue = new JTextField(strbeforeRangeValue);
 		beforeRangeValue.setEditable(true);
 		beforeRangeValue.setFont(fontStandard);
@@ -301,7 +302,7 @@ public class OptionPanel extends JPanel implements ActionListener{
 		c.gridy = 1;
 		c.gridwidth = 1;
 		c.gridheight = 3;
-		c.fill = GridBagConstraints.HORIZONTAL;
+		c.fill = GridBagConstraints.NONE;
 		c.insets = new Insets(1, 1, 1, 1);
 		JLabel textspacer = new JLabel("");
 		textspacer.setFont(fontStandard);
@@ -316,6 +317,7 @@ public class OptionPanel extends JPanel implements ActionListener{
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.NONE;
 		afterRange = new JTextField(strafterRange);
+		afterRange.setHorizontalAlignment(JTextField.RIGHT);
 		afterRange.setEditable(false);
 		afterRange.setFont(fontStandard);
 		add(afterRange, c);
@@ -326,7 +328,7 @@ public class OptionPanel extends JPanel implements ActionListener{
 		c.gridy = 1;
 		c.gridwidth = 1;
 		c.gridheight = 1;
-		c.fill = GridBagConstraints.NONE;
+		c.fill = GridBagConstraints.HORIZONTAL;
 		afterRangeValue = new JTextField(strafterRangeValue);
 		afterRangeValue.setEditable(true);
 		afterRangeValue.setFont(fontStandard);

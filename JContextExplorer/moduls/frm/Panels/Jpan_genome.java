@@ -463,7 +463,12 @@ public class Jpan_genome extends JPanel implements ActionListener,
 		
 		//select a subset of nodes
 		if (e.getSource() == btnSelectNodes || e.getSource() == searchForNodes){
+			
 			try {
+				
+				//retrieve most current
+				CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
+				
 				if (searchForNodes.getText().equals("")){
 					String MessageString;
 					MessageString = "Please enter either one or more genera or species, separated by commas." + "\n" 

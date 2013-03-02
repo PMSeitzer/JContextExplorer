@@ -55,8 +55,11 @@ public class mainFrame extends JFrame implements ComponentListener{
 		//RETRIEVE SYSTEM INFO
 		Dimension pantalla = Toolkit.getDefaultToolkit().getScreenSize();
 		dim = new Dimension();
-		double Scale = 0.75;
+		double Scale = 0.80;
 		dim.setSize(pantalla.getWidth()*(Scale-0.15),pantalla.getHeight()*Scale);
+		if (dim.getWidth() < 800){
+			dim.setSize(800.0,dim.getHeight());
+		}
 		
 		//CONTENT PANELS
 		op = new OptionPanel(this);

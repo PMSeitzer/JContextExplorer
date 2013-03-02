@@ -26,6 +26,8 @@ import javax.swing.JInternalFrame;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
+import javax.swing.event.InternalFrameEvent;
+import javax.swing.event.InternalFrameListener;
 
 import moduls.frm.children.FrmPiz;
 
@@ -40,7 +42,7 @@ import moduls.frm.children.FrmPiz;
  *
  * @since JDK 6.0
  */
-public class FrmInternalFrame extends JInternalFrame {
+public class FrmInternalFrame extends JInternalFrame implements InternalFrameListener{
 	
 	//details of the frame's parameters
 	private static final long serialVersionUID = 1L;
@@ -53,10 +55,14 @@ public class FrmInternalFrame extends JInternalFrame {
 	//frame data
 	private FrmPiz InternalPanel;
 	
+	//parent frame data
+	private FrmPrincipalDesk fr;
+	
 	//data necessary to render contexts
 	private boolean[] SelectedNodeNumbers;
+	private final int FrameID;
 	
-	public FrmInternalFrame(String title, boolean isUpdate, int oldx, int oldy) {
+	public FrmInternalFrame(String title, boolean isUpdate, int oldx, int oldy, FrmPrincipalDesk fr) {
 
 		//Change: set every option to false, originally all true
 //		super(title, false, // resizable
@@ -71,6 +77,10 @@ public class FrmInternalFrame extends JInternalFrame {
 
 		//turn off default look and feel for internal frame [not working]
 		//JFrame.setDefaultLookAndFeelDecorated(false);
+		
+		//connect to parent
+		this.fr = fr;
+		this.FrameID = fr.getInternalFrameID();
 		
 		String tit;
 
@@ -109,6 +119,8 @@ public class FrmInternalFrame extends JInternalFrame {
 //		this.add(scrollPane3); 
 		
 //		this.add(new JScrollBar());
+		
+		this.addInternalFrameListener(this);
 
 	}
 
@@ -138,6 +150,52 @@ public class FrmInternalFrame extends JInternalFrame {
 
 	public void setInternalPanel(FrmPiz internalPanel) {
 		InternalPanel = internalPanel;
+	}
+
+	@Override
+	public void internalFrameActivated(InternalFrameEvent e) {
+		
+		//update current internal frame
+		if (e.getSource().equals(this)){
+			this.fr.setCurrentFrame(this);
+			//System.out.println("Selected Frame: " + this.FrameID);
+		}
+	}
+
+	@Override
+	public void internalFrameClosed(InternalFrameEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void internalFrameClosing(InternalFrameEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void internalFrameDeactivated(InternalFrameEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void internalFrameDeiconified(InternalFrameEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void internalFrameIconified(InternalFrameEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void internalFrameOpened(InternalFrameEvent e) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 

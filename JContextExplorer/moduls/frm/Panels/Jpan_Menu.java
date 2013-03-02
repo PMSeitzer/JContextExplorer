@@ -76,8 +76,7 @@ import definicions.Formats;
  *
  * @since JDK 6.0
  */
-public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
-		InternalFrameListener {
+public class Jpan_Menu extends JPanel implements ActionListener, FocusListener{
 
 	/*
 	 * -------------------------------------------------------------------------
@@ -1452,36 +1451,6 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener,
 	private static void showError(String message) {
 		JOptionPane.showMessageDialog(null, message, Language.getLabel(7),
 				JOptionPane.ERROR_MESSAGE);
-	}
-
-	// INTERNAL FRAME EVENTS
-
-	@Override
-	public void internalFrameActivated(InternalFrameEvent e) {
-	}
-
-	@Override
-	public void internalFrameClosing(InternalFrameEvent e) {
-	}
-
-	@Override
-	public void internalFrameClosed(InternalFrameEvent e) {
-	}
-
-	@Override
-	public void internalFrameOpened(InternalFrameEvent e) {
-	}
-
-	@Override
-	public void internalFrameIconified(InternalFrameEvent e) {
-	}
-
-	@Override
-	public void internalFrameDeiconified(InternalFrameEvent e) {
-	}
-
-	@Override
-	public void internalFrameDeactivated(InternalFrameEvent e) {
 	}
 
 	//exploratory method - change font of all components to a standard?
