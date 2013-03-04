@@ -431,14 +431,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		
 		ExceededRangeLimit = new LinkedList<String>();
 		
-//		//determine number of segments
-//		int SegmentstoDraw = 0;
-//		for (int i =0; i<this.mf.getCSD().getSelectedNodes().length; i++){
-//			if (this.mf.getCSD().getSelectedNodes()[i] == true){
-//				SegmentstoDraw++;
-//			}
-//		}
-		
+		//determine number of segments
 		int SegmentstoDraw = 0;
 		for (ContextLeaf CL : this.mf.getCSD().getGraphicalContexts()){
 			if (CL.isSelected()){
@@ -471,8 +464,6 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		int CoordinateNumber = -1;
 		for (ContextLeaf CL : this.mf.getCSD().getGraphicalContexts()){
 			if (CL.isSelected()){
-//		for (int i =0; i<this.mf.getCSD().getSelectedNodes().length; i++){
-//			if (this.mf.getCSD().getSelectedNodes()[i] == true){
 				
 				//initialize a new genomic segment
 				GenomicSegment GSelement = new GenomicSegment();
@@ -481,7 +472,6 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 				int QueryStrandPlus = 0; int QueryStrandMinus = 0;
 				
 				//add node name
-				//GSelement.setLabel(this.mf.getCSD().getNodeNames()[i]);
 				GSelement.setLabel(CL.getName());
 				
 				//determine the longest range
@@ -490,7 +480,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 				//reset start and stop variables for every genomic element processed
 				int Start = 99999999; int Stop = -1;
 
-				//determine range information
+				//determine range information + query match information.
 				for (GenomicElementAndQueryMatch e : LL){
 					
 					//determine range information
@@ -503,6 +493,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 
 					//query-match orientation information
 					if (e.isQueryMatch()){
+						//System.out.println("Query Match: " + e.getE().getClusterID());
 						if (e.getE().getStrand().equals(Strand.POSITIVE)){
 							QueryStrandPlus++;
 						} else {
@@ -510,6 +501,12 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 						}
 					}
 					
+				}
+				
+				//query match-related
+				//setting to flip all genes in the event of strand-normalized display
+				if (QueryStrandMinus > QueryStrandPlus){
+					GSelement.setStrRevFlipGenes(true);
 				}
 				
 				//only add this element to the list if the range is acceptable.
@@ -535,11 +532,6 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 					//compare to current longest range
 					if ((Stop-Start) > LongestRange){
 						LongestRange = Stop-Start;
-					}
-					
-					//setting to flip all genes in the event of strand-normalized display
-					if (QueryStrandMinus > QueryStrandPlus){
-						GSelement.setStrRevFlipGenes(true);
 					}
 					
 					//segment is acceptable

@@ -589,17 +589,19 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> ClusterMatches(int[] Clu
 			GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
 			GandE.setE(LL.get(i));
 			
+			//defaults: do not take
+			GandE.setQueryMatch(false);
+			AddtheSet = false;
+			
+			//check every cluster number, for query match
 			for (int j = 0; j < ClusterNumber.length; j++){
 			
 				if (LL.get(i).getClusterID()==ClusterNumber[j]){
 					AddtheSet = true;
-					GandE.setQueryMatch(true);
-					//Hits.add(LL);
-				} else {
-					GandE.setQueryMatch(false);
+					GandE.setQueryMatch(true);	
 				}
-			
 			}
+			
 			//add this element to the list
 			TheList.add(GandE);
 			
@@ -609,6 +611,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> ClusterMatches(int[] Clu
 		if (AddtheSet == true){
 			Hits.add(TheList);
 			//System.out.println("added a new set with " + TheList.size() + " genes, from " + LL.size());
+			
 		}
 	}
 
