@@ -208,6 +208,12 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 			//retrieve updated CSD
 			this.CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
 			
+//			//debugging.
+//			System.out.println("Debugging, tree nodes:");
+//			for (ContextLeaf CL : CSD.getGraphicalContexts()){
+//				System.out.println(CL.getName());
+//			}
+			
 			//Update selected/deselected
 			TreePath[] SelectionChanges = e.getPaths();
 			

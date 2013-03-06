@@ -336,7 +336,25 @@ public class Jpan_genome extends JPanel implements ActionListener,
 						//open context viewer frame
 						//String Title =  "Context Viewer: " + fr.getCurrentFrame().getInternalPanel().getCSD().getEC().getName();
 						String Title =  "Context Viewer: " + fr.getCurrentFrame().getInternalFrameData().getQD().getName();
-						new mainFrame(CSD, OS, Title, fr);
+						
+						//Attempt: try an instance that will be forever disconnected.
+						CSDisplayData CSDToContexts = new CSDisplayData();
+						
+						//map variables.
+						CSDToContexts.setEC(CSD.getEC());
+						CSDToContexts.setGraphicalContexts(CSD.getGraphicalContexts());
+						
+						//CSDTemp.setNodeNames(CSD.getNodeNames());
+						//CSDTemp.setCoordinates(coordinates)
+						
+						//debugging
+//						System.out.println("Before passing into main frame");
+//						for (ContextLeaf CL : CSD.getGraphicalContexts()){
+//							System.out.println(CL.getName() + " " + CSD.getEC().getContexts().get(CL.getName()));
+//						}
+						
+						
+						new mainFrame(CSDToContexts, OS, Title, fr);
 						
 					}
 					

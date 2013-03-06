@@ -19,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 
+import moduls.frm.ContextLeaf;
 import moduls.frm.FrmPrincipalDesk;
 
 public class mainFrame extends JFrame implements ComponentListener{
@@ -39,6 +40,11 @@ public class mainFrame extends JFrame implements ComponentListener{
 	
 	//information
 	private CSDisplayData CSD;
+	//private final CSDisplayData OriginalCSD;
+//	public CSDisplayData getOriginalCSD() {
+//		return OriginalCSD;
+//	}
+
 	private OrganismSet OS;
 	private FrmPrincipalDesk fr;
 	
@@ -48,6 +54,7 @@ public class mainFrame extends JFrame implements ComponentListener{
 		//INITIALIZATIONS
 		super(title);
 		this.CSD = csd;
+		//this.OriginalCSD = csd;
 		this.OS = os;
 		this.setFr(fr);
 		this.addComponentListener(this);
@@ -106,6 +113,25 @@ public class mainFrame extends JFrame implements ComponentListener{
 		};
 		
 		this.addWindowListener(closeSubFrames);
+		
+		//The main frame CSD should not be altered.
+		//this.fr.getCurrentFrame().getInternalFrameData().getQD().setCSD(OriginalCSD);
+		
+		//update with removed information, if necessary
+		if (rgp.getSplitContexts().size() > 0){
+			for (String s : rgp.getSplitContexts().keySet()){
+				fr.getCurrentFrame().getInternalFrameData().getQD().getCSD().getEC().getContexts().put(s, rgp.getSplitContexts().get(s));
+				fr.getCurrentFrame().getInternalFrameData().getQD().getCSD().getEC().getSourceSpeciesNames().put(s, rgp.getSplitSpeciesNames().get(s));
+				fr.getCurrentFrame().getInternalFrameData().getQD().getCSD().getEC().getSourceContigNames().put(s, rgp.getSplitContigNames().get(s));
+			}
+		}
+		
+//		//debugging
+//		System.out.println("Main frame, before viewing");
+//		for (ContextLeaf CL : fr.getCurrentFrame().getInternalFrameData().getQD().getCSD().getGraphicalContexts()){
+//			System.out.println(CL.getName() + " " +fr.getCurrentFrame().getInternalFrameData().getQD().getCSD().getEC().getContexts().get(CL.getName()));
+//		}
+	
 		this.setVisible(true);
 	}
 

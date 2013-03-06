@@ -8,14 +8,18 @@ import javax.swing.tree.DefaultMutableTreeNode;
 
 public class ContextLeaf {
 
-	//fields
+	//information
 	private String Name;
 	private String SourceSpecies;
+	private int ContigsFeatured = 1;	//default: one leaf, one context.
+	
+	//various display sources
 	private DefaultMutableTreeNode SearchResultsTreeNode;
 	private Rectangle2D ContextTreeCoordinates;
 	private LinkedList<Rectangle2D> ContextGraphCoordinates;
 	private Rectangle2D PhyloTreeCoordinates;					//Source organism node (not actual context leaf)
 
+	//ID numbers
 	private int ContextTreeNodeNameNumber;
 	private int PhyloTreeNodeNameNumber = -1;
 	private boolean Selected;
@@ -132,6 +136,14 @@ public class ContextLeaf {
 
 	public void setPhyloTreeNodeNameNumber(int phyloTreeNodeNameNumber) {
 		PhyloTreeNodeNameNumber = phyloTreeNodeNameNumber;
+	}
+
+	public int getContigsFeatured() {
+		return ContigsFeatured;
+	}
+
+	public void setContigsFeatured(int contigsFeatured) {
+		ContigsFeatured = contigsFeatured;
 	}
 
 

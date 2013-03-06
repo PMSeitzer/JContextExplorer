@@ -591,7 +591,6 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> ClusterMatches(int[] Clu
 			
 			//defaults: do not take
 			GandE.setQueryMatch(false);
-			AddtheSet = false;
 			
 			//check every cluster number, for query match
 			for (int j = 0; j < ClusterNumber.length; j++){
@@ -1067,6 +1066,50 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 	
 	} else if (CSD.getType().contentEquals("MultipleQuery")) {
 	
+//		//all genomic element matches
+//		LinkedList<GenomicElementAndQueryMatch> MQMatches = new LinkedList<GenomicElementAndQueryMatch>();
+//		
+//		//iterate through all elements, find all matches
+//		for (GenomicElement E : Elements){
+//			
+//			//determine if the element is a query match.
+//			if (IsCluster){
+//				for (int j = 0; j <ClusterNumbers.length; j++){
+//					if (E.getClusterID() == ClusterNumbers[j]){
+//						GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+//						GandE.setE(E); 
+//						GandE.setQueryMatch(true);
+//						MQMatches.add(GandE);
+//						break;
+//					}
+//				}
+//
+//			} else {
+//				for (int j = 0; j < Queries.length; j++){
+//					if (E.getAnnotation().toUpperCase().contains(Queries[j].trim().toUpperCase())){
+//						GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+//						GandE.setE(E); 
+//						GandE.setQueryMatch(true);
+//						MQMatches.add(GandE);
+//						break;
+//					}
+//				}
+//			}
+//		}
+//		
+//		//add to hashset
+//		if (MQMatches != null){
+//			Hits.add(MQMatches);
+//			
+//			//print
+//			for (GenomicElementAndQueryMatch GandE : MQMatches){
+//				System.out.println(GandE.getE().getClusterID() + "\t" + GandE.getE().getAnnotation());
+//			}
+//		}
+//		
+
+		
+		//old way - split by contig
 		//all genomic element matches
 		LinkedList<GenomicElement> ElementMatches = new LinkedList<GenomicElement>();
 		
