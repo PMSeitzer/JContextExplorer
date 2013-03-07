@@ -39,9 +39,9 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 
-import org.biojava3.core.sequence.Strand;
 import org.biojava3.core.sequence.*;
 
 import moduls.frm.FrmPrincipalDesk;
@@ -112,9 +112,10 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 	//(2) MSCustom
 	private LinkedList<Component> MSCustom_group;
 	private JRadioButton MSCustom;
-	private String strMSCustom = "Load sequence motif(s) from a customized file (or files)";
-	private JButton btnMSCustom;
+	private String strMSCustom = "Load sequence motif(s) from a set of tab-delimited files";
+	private JButton btnMSCustom, btnMSCustomInfo;
 	private String strbtnMSCustom = "Load";
+	private String strbtnMSCustomInfo = "???";
 	
 	//Add Motifs
 	private JLabel Add;
@@ -205,17 +206,6 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			this.OrganismsMapped = 0;
 			int ComputeProgress = 0;
 			int TotalFilesForProcess = FimoFiles.length;
-			
-//			//determine the internal distance threshold
-//			int FromEdgeThreshold;
-//			try {
-//				FromEdgeThreshold = Integer.parseInt(TxtFromEdge.getText());
-//			} catch (Exception ex){
-//				FromEdgeThreshold = 0;
-//			}
-//			if (FromEdgeThreshold < 0){
-//				FromEdgeThreshold = 0;
-//			}
 			
 			// retrieve all files
 			for (File fi : FimoFiles) {
@@ -880,10 +870,22 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 6;
+		c.gridwidth = 1;
 		c.insets = new Insets(10,1,1,1);
 		jp.add(MSCustom, c);
 		MSCustom.addActionListener(this);
+		
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.NONE;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,1,1,1);
+		btnMSCustomInfo = new JButton(strbtnMSCustomInfo);
+		btnMSCustomInfo.addActionListener(this);
+		btnMSCustomInfo.setHorizontalAlignment(SwingConstants.LEFT);
+		//jp.add(btnMSCustomInfo, c);
+		MSCustom_group.add(btnMSCustomInfo);
 		gridy++;
 		
 		// load motif sequences from custom files
@@ -910,8 +912,9 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		c.gridy = gridy;
 		c.gridx = 0;
 		c.gridwidth = 4;
-		c.ipady = 7;
+		c.ipady = 12;
 		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(3,1,1,1);
 		progressBar = new JProgressBar(0, 100);
 		progressBar.setStringPainted(false);
 		progressBar.setBorderPainted(false);
@@ -1085,7 +1088,6 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 
 	}
 
-	
 	public String[] convertSequenceMotifs(LinkedList<ContextSetDescription> ListOfContextSets){
 		
 		//initialize output array
@@ -1291,6 +1293,11 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			//close this window.
 			this.dispose();
 
+		}
+		
+		//information about formatting.
+		if (evt.getSource().equals(this.btnMSCustomInfo)){
+			//new InfoFrame();
 		}
 	}
 

@@ -225,10 +225,10 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener{
 		cbNodesSize = Formats.AttributCBFont(strNodesSize);
 		
 		//original
-//		cbNodesSize.setSelectedItem("0");
+		cbNodesSize.setSelectedItem("2");
 
 		//modify
-		cbNodesSize.setSelectedItem("6");
+		//cbNodesSize.setSelectedItem("6");
 				
 		chkNodesLabels = Formats.AtributCHKFont(Language.getLabel(31));// Show labels (nodes)
 		chkNodesLabels.setSelected(true);
@@ -645,7 +645,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener{
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
 		chkAxis.setFont(fontStandard);
-		chkAxis.setSelected(false);
+		chkAxis.setSelected(true);
 		add(chkAxis, c);
 		
 		// btn color axis
@@ -736,7 +736,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener{
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
-		chkAxisLabels.setSelected(false);
+		chkAxisLabels.setSelected(true);
 		chkAxisLabels.setFont(fontStandard);
 		add(chkAxisLabels, c);
 		
@@ -1223,6 +1223,8 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener{
 		setTicksSeparation(separation);
 		setLabelsEvery(1);
 		setLabelsDecimals(cfg.getPrecision());
+		
+
 	}
 	
 	public static void adjustValuesPhylo(final Config cfg){
@@ -1470,6 +1472,22 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener{
 
 	public void setCbDissimilarity(JComboBox cbDissimilarity) {
 		this.cbDissimilarity = cbDissimilarity;
+	}
+
+	public static JCheckBox getChkAxis() {
+		return chkAxis;
+	}
+
+	public static void setChkAxis(JCheckBox chkAxis) {
+		Jpan_Menu.chkAxis = chkAxis;
+	}
+
+	public static JCheckBox getChkAxisLabels() {
+		return chkAxisLabels;
+	}
+
+	public static void setChkAxisLabels(JCheckBox chkAxisLabels) {
+		Jpan_Menu.chkAxisLabels = chkAxisLabels;
 	}
 	
 }

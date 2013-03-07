@@ -1607,7 +1607,9 @@ import definicions.MatriuDistancies;
 						//update config panel
 						fr.setCfgPhylo(cfgp);
 						
-					} 
+					} else {
+						qD.getAnalysesList().setOptionRenderPhylogeny(false);
+					}
 
 				}
 				

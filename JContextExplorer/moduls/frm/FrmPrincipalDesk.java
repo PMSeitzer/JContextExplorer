@@ -202,7 +202,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener{
 		//ADD ORIENTATION FRAMES TO DESKTOP FRAME
 		this.add(pan_West, BorderLayout.WEST);
 		this.add(pan_Center, BorderLayout.CENTER);
-		
+
 	}
 
 

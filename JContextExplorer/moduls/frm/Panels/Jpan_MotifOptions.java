@@ -86,7 +86,7 @@ public class Jpan_MotifOptions extends JPanel implements ActionListener{
 		IncludeMotifsComp.setSelected(false);
 		IncludeMotifsComp.setFont(fontStandard);
 		IncludeMotifsComp.addActionListener(this);
-		add(IncludeMotifsComp,c);
+		//add(IncludeMotifsComp,c);
 		gridy++;
 		
 		//Include Motifs for display check box
@@ -165,7 +165,7 @@ public class Jpan_MotifOptions extends JPanel implements ActionListener{
 		btnGetInfo = new JButton("View Profile");
 		btnGetInfo.setFont(fontStandard);
 		btnGetInfo.addActionListener(this);
-		add(btnGetInfo,c);
+		//add(btnGetInfo,c);
 		gridy++;
 
 	}

@@ -196,7 +196,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		//frame settings
 		//this.setSize(new Dimension(400, 350));
 		//this.setSize(700,650);
-		this.setSize(700,700);
+		this.setSize(700,650);
 					//width, height
 		
 		this.setTitle("Add or Remove Context Sets");
@@ -810,7 +810,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 5;
 		c.insets = new Insets(10,1,1,1);
-		jp.add(CSCombination, c);
+		//jp.add(CSCombination, c);
 		CSCombination.addActionListener(this);
 		gridy++;
 
@@ -822,7 +822,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		c.insets = new Insets(1,20,1,1);
 		btnLaunchCombiner = new JButton(strLaunchCombiner);
 		btnLaunchCombiner.addActionListener(this);
-		jp.add(btnLaunchCombiner, c);
+		//jp.add(btnLaunchCombiner, c);
 		CSCombination_group.add(btnLaunchCombiner);
 		gridy++;
 
