@@ -421,7 +421,6 @@ public class OrganismSet {
 			//attempt to standardize
 			if (CurrentCSD.isRelativeBeforeAfter()){
 			
-				//TODO: not even reaching this print statement.
 				System.out.println("Relative!");
 				
 				//first, retrieve an alternative list
