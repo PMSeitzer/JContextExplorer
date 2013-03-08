@@ -6,12 +6,16 @@ import java.util.LinkedList;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
+/**
+ * @author Phil
+ *
+ */
 public class ContextLeaf {
 
 	//information
 	private String Name;
 	private String SourceSpecies;
-	private int ContigsFeatured = 1;	//default: one leaf, one context.
+	private boolean SearchReturnedContext = true;
 	
 	//various display sources
 	private DefaultMutableTreeNode SearchResultsTreeNode;
@@ -138,12 +142,12 @@ public class ContextLeaf {
 		PhyloTreeNodeNameNumber = phyloTreeNodeNameNumber;
 	}
 
-	public int getContigsFeatured() {
-		return ContigsFeatured;
+	public boolean isSearchReturnedContext() {
+		return SearchReturnedContext;
 	}
 
-	public void setContigsFeatured(int contigsFeatured) {
-		ContigsFeatured = contigsFeatured;
+	public void setSearchReturnedContext(boolean searchReturnedContext) {
+		SearchReturnedContext = searchReturnedContext;
 	}
 
 

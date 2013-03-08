@@ -664,17 +664,6 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 			//if it is, extract the appropriate range
 			if (QueryMatch){
 				
-//				//debugging: display species name
-//				System.out.println("Organism: " + this.Species + ", Coordinates: "
-//						+ this.Elements.get(i).getStart() + " " + this.Elements.get(i).getStop());
-//				
-//				//zero in on trouble case
-//				if (this.Elements.get(i).getStart() == 78350 &&
-//						this.Elements.get(i).getStop() == 78910 &&
-//						this.Species.contentEquals("Natronococcus_jeotagli")){
-//					System.out.println("Breakpoint!");
-//				}
-				
 				//define a new GenomicElementAndQueryMatch
 				LinkedList<GenomicElementAndQueryMatch> LL = new LinkedList<GenomicElementAndQueryMatch>();
 				GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
@@ -706,11 +695,6 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 							break;
 						}
 					}
-					
-					//only add elements of the appropriate type - otherwise, skip
-//					if (GandE.getE().getType().equals("CDS") ||
-//							GandE.getE().getType().equals("tRNA") ||
-//							GandE.getE().getType().equals("rRNA")){
 						
 					if (ElementIsValid){
 						
@@ -755,11 +739,6 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 						}
 					}
 					
-//					//only add elements of the appropriate type - otherwise, skip
-//					if (GandE.getE().getType().equals("CDS") ||
-//							GandE.getE().getType().equals("tRNA") ||
-//							GandE.getE().getType().equals("rRNA")){
-					
 					if (ElementIsValid){	
 						
 						//check for end of contig
@@ -777,12 +756,6 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 						EndOfContig = true;
 					}
 				}
-						
-//				if (this.Elements.get(i).getStart() == 78350 &&
-//						this.Elements.get(i).getStop() == 78910 &&
-//						this.Species.contentEquals("Natronococcus_jeotagli")){
-//					System.out.println("Past while loop.");
-//				}
 
 				//finally, add this to the hit list
 				Hits.add(LL);
@@ -1066,124 +1039,140 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 	
 	} else if (CSD.getType().contentEquals("MultipleQuery")) {
 	
-//		//all genomic element matches
-//		LinkedList<GenomicElementAndQueryMatch> MQMatches = new LinkedList<GenomicElementAndQueryMatch>();
-//		
-//		//iterate through all elements, find all matches
-//		for (GenomicElement E : Elements){
-//			
-//			//determine if the element is a query match.
-//			if (IsCluster){
-//				for (int j = 0; j <ClusterNumbers.length; j++){
-//					if (E.getClusterID() == ClusterNumbers[j]){
-//						GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
-//						GandE.setE(E); 
-//						GandE.setQueryMatch(true);
-//						MQMatches.add(GandE);
-//						break;
-//					}
-//				}
-//
-//			} else {
-//				for (int j = 0; j < Queries.length; j++){
-//					if (E.getAnnotation().toUpperCase().contains(Queries[j].trim().toUpperCase())){
-//						GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
-//						GandE.setE(E); 
-//						GandE.setQueryMatch(true);
-//						MQMatches.add(GandE);
-//						break;
-//					}
-//				}
-//			}
-//		}
-//		
-//		//add to hashset
-//		if (MQMatches != null){
-//			Hits.add(MQMatches);
-//			
-//			//print
-//			for (GenomicElementAndQueryMatch GandE : MQMatches){
-//				System.out.println(GandE.getE().getClusterID() + "\t" + GandE.getE().getAnnotation());
-//			}
-//		}
-//		
-
-		
-		//old way - split by contig
 		//all genomic element matches
-		LinkedList<GenomicElement> ElementMatches = new LinkedList<GenomicElement>();
-		
-		//all contigs featured in all matches
-		HashSet<String> ContigNames = new HashSet<String>();
+		LinkedList<GenomicElementAndQueryMatch> MQMatches = new LinkedList<GenomicElementAndQueryMatch>();
 		
 		//iterate through all elements, find all matches
 		for (GenomicElement E : Elements){
 			
 			//determine if the element is a query match.
-			QueryMatch = false;
 			if (IsCluster){
 				for (int j = 0; j <ClusterNumbers.length; j++){
 					if (E.getClusterID() == ClusterNumbers[j]){
-						ElementMatches.add(E);
-						ContigNames.add(E.getContig());
+						GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+						GandE.setE(E); 
+						GandE.setQueryMatch(true);
+						
+						
+						//check against user-defined set of valid types
+						boolean ElementIsValid = false;
+						for (String s : this.IncludeTypes){
+							if (GandE.getE().getType().contentEquals(s)){
+								ElementIsValid = true;
+								break;
+							}
+						}
+						
+						if (ElementIsValid){
+							MQMatches.add(GandE);
+						}
 					}
 				}
 
 			} else {
 				for (int j = 0; j < Queries.length; j++){
 					if (E.getAnnotation().toUpperCase().contains(Queries[j].trim().toUpperCase())){
-						ElementMatches.add(E);
-						ContigNames.add(E.getContig());
-					}
-				}
-			}
-		}
-		
-		//create an iterator for the HashSet
-		Iterator<String> it = ContigNames.iterator();
-		
-		//each contig receives it's own linked list
-		while(it.hasNext()){
-			
-			//retrieve the contig
-			String Contig = it.next();
-			
-			//find all genomic elements with this contig
-			LinkedList<GenomicElementAndQueryMatch> LL = new LinkedList<GenomicElementAndQueryMatch>();
-			
-			for (GenomicElement E : ElementMatches){
-				if (E.getContig().contentEquals(Contig)){
-					GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
-					GandE.setE(E); GandE.setQueryMatch(true);
-					
-					//check against user-defined set of valid types
-					boolean ElementIsValid = false;
-					for (String s : this.IncludeTypes){
-						if (GandE.getE().getType().contentEquals(s)){
-							ElementIsValid = true;
-							break;
+						GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+						GandE.setE(E); 
+						GandE.setQueryMatch(true);
+						
+						//check against user-defined set of valid types
+						boolean ElementIsValid = false;
+						for (String s : this.IncludeTypes){
+							if (GandE.getE().getType().contentEquals(s)){
+								ElementIsValid = true;
+								break;
+							}
+						}
+						
+						if (ElementIsValid){
+							MQMatches.add(GandE);
 						}
 					}
-					
-					//only add elements of the appropriate type - otherwise, skip
-					if (ElementIsValid){
-		
-						LL.add(GandE);
-					}
-					
 				}
 			}
-			
-			//add all non-null linked lists
-			if (LL != null){
-				Hits.add(LL);
-			}
-			
 		}
+		
+		//add all non-null linked lists
+		if (MQMatches != null){
+			Hits.add(MQMatches);
+		}
+	
+//		//old way - split by contig
+//		//all genomic element matches
+//		LinkedList<GenomicElement> ElementMatches = new LinkedList<GenomicElement>();
+//		
+//		//all contigs featured in all matches
+//		HashSet<String> ContigNames = new HashSet<String>();
+//		
+//		//iterate through all elements, find all matches
+//		for (GenomicElement E : Elements){
+//			
+//			//determine if the element is a query match.
+//			QueryMatch = false;
+//			if (IsCluster){
+//				for (int j = 0; j <ClusterNumbers.length; j++){
+//					if (E.getClusterID() == ClusterNumbers[j]){
+//						ElementMatches.add(E);
+//						ContigNames.add(E.getContig());
+//					}
+//				}
+//
+//			} else {
+//				for (int j = 0; j < Queries.length; j++){
+//					if (E.getAnnotation().toUpperCase().contains(Queries[j].trim().toUpperCase())){
+//						ElementMatches.add(E);
+//						ContigNames.add(E.getContig());
+//					}
+//				}
+//			}
+//		}
+//		
+//		//create an iterator for the HashSet
+//		Iterator<String> it = ContigNames.iterator();
+//		
+//		//each contig receives it's own linked list
+//		while(it.hasNext()){
+//			
+//			//retrieve the contig
+//			String Contig = it.next();
+//			
+//			//find all genomic elements with this contig
+//			LinkedList<GenomicElementAndQueryMatch> LL = new LinkedList<GenomicElementAndQueryMatch>();
+//			
+//			for (GenomicElement E : ElementMatches){
+//				if (E.getContig().contentEquals(Contig)){
+//					GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+//					GandE.setE(E); GandE.setQueryMatch(true);
+//					
+//					//check against user-defined set of valid types
+//					boolean ElementIsValid = false;
+//					for (String s : this.IncludeTypes){
+//						if (GandE.getE().getType().contentEquals(s)){
+//							ElementIsValid = true;
+//							break;
+//						}
+//					}
+//					
+//					//only add elements of the appropriate type - otherwise, skip
+//					if (ElementIsValid){
+//		
+//						LL.add(GandE);
+//					}
+//					
+//				}
+//			}
+//			
+//			//add all non-null linked lists
+//			if (LL != null){
+//				Hits.add(LL);
+//			}
+//			
+//		}
 		
 	} else if (CSD.getType().contentEquals("Combination")) {
 		
-		//TODO: implement Combination method (depending on most biological relevance)
+
 		
 	} // various gene grouping strategies
 

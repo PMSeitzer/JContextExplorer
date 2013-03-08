@@ -9,11 +9,18 @@ public class ContextSetDescription {
 	private boolean isCassette = false;
 	
 	//optional fields
+	//Range
 	private int NtRangeBefore;
 	private int NtRangeAfter;
+	
+	//genes before/after
 	private int GenesBefore;
 	private int GenesAfter;
+	private boolean RelativeBeforeAfter;
+	
+	//cassette
 	private String CassetteOf; 		//Name of another ContextSetDescription
+
 	
 	//constructor
 	public ContextSetDescription(){
@@ -90,5 +97,13 @@ public class ContextSetDescription {
 
 	public void setCassetteOf(String cassetteOf) {
 		CassetteOf = cassetteOf;
+	}
+
+	public boolean isRelativeBeforeAfter() {
+		return RelativeBeforeAfter;
+	}
+
+	public void setRelativeBeforeAfter(boolean relativeBeforeAfter) {
+		RelativeBeforeAfter = relativeBeforeAfter;
 	}
 }

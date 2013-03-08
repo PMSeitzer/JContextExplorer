@@ -16,6 +16,8 @@ import java.util.Map.Entry;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 
+import org.biojava3.core.sequence.Strand;
+
 import operonClustering.CustomDissimilarity;
 
 import definicions.MatriuDistancies;
@@ -224,8 +226,8 @@ public class OrganismSet {
 					new LinkedHashMap<String, String>();
 			
 			//contig names
-			LinkedHashMap<String, String> ContigNames = 
-					new LinkedHashMap<String, String>();
+			LinkedHashMap<String, HashSet<String>> ContigNames = 
+					new LinkedHashMap<String, HashSet<String>>();
 			
 			//initialize a counter variable
 			int Counter = 0;
@@ -277,7 +279,14 @@ public class OrganismSet {
 					
 					//record other info
 					SourceNames.put(Key, entry.getValue().getSpecies());
-					ContigNames.put(Key, ContextSegment.getFirst().getE().getContig());
+					
+					HashSet<String> HSContigNames = new HashSet<String>();
+					
+					for (GenomicElementAndQueryMatch GandE : ContextSegment){
+						HSContigNames.add(GandE.getE().getContig());
+					}
+					
+					ContigNames.put(Key, HSContigNames);
 				}
 				
 			}
@@ -340,13 +349,11 @@ public class OrganismSet {
 				new LinkedHashMap<String, String>();
 		
 		//contig names
-		LinkedHashMap<String, String> ContigNames = 
-				new LinkedHashMap<String, String>();
+		LinkedHashMap<String, HashSet<String>> ContigNames = 
+				new LinkedHashMap<String, HashSet<String>>();
 		
 		//initialize a counter variable
 		int Counter = 0;
-		
-		//System.out.println("before iteration");
 		
 		//iterate through species.
 		for (Entry<String, AnnotatedGenome> entry : Species.entrySet()) {
@@ -393,7 +400,13 @@ public class OrganismSet {
 				
 				//record other info
 				SourceNames.put(Key, entry.getValue().getSpecies());
-				ContigNames.put(Key, ContextSegment.getFirst().getE().getContig());
+				
+				HashSet<String> HSContigNames = new HashSet<String>();
+				for (GenomicElementAndQueryMatch GandE : ContextSegment){
+					HSContigNames.add(GandE.getE().getContig());
+				}
+				
+				ContigNames.put(Key, HSContigNames);
 			}
 			
 		}
@@ -402,6 +415,110 @@ public class OrganismSet {
 		EC.setContexts(ContextSetList);
 		EC.setNumberOfEntries(Counter);
 		
+		//re-computation
+		if (CurrentCSD.getType().equals("GenesAround")){
+			
+			//attempt to standardize
+			if (CurrentCSD.isRelativeBeforeAfter()){
+			
+				//TODO: not even reaching this print statement.
+				System.out.println("Relative!");
+				
+				//first, retrieve an alternative list
+				LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> AlternativeContextSetList = 
+						new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
+				
+				//adjust values for alternative list
+				int GenesBefore = CurrentCSD.getGenesBefore();
+				int GenesAfter = CurrentCSD.getGenesAfter();
+				
+				CurrentCSD.setGenesBefore(GenesAfter);
+				CurrentCSD.setGenesAfter(GenesBefore);
+				
+				System.out.println("Before: " + CurrentCSD.getGenesBefore() + ", After: " + CurrentCSD.getGenesAfter());
+				
+				//retrieve alternative set of hits
+				for (Entry<String, AnnotatedGenome> entry : Species.entrySet()) {
+					
+					//Retrieve matches
+					HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = 
+							entry.getValue().MatchesOnTheFly(Queries, null, CurrentCSD);
+					
+					//create an iterator for the HashSet
+					Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
+					
+					int AlternativeOperonCounter = 0; //reset operon counter
+					while(it.hasNext()){
+						
+						//context unit object
+						LinkedList<GenomicElementAndQueryMatch> ContextSegment = it.next();
+						
+						//increment counters
+						AlternativeOperonCounter++;	
+						
+						//define key
+						String Key = entry.getKey() + "-" + Integer.toString(AlternativeOperonCounter);
+						
+						//put elements into hashmap
+						AlternativeContextSetList.put(Key, ContextSegment);
+					}
+					
+				}
+				
+				LinkedHashMap<String, Strand> QueryHash = new LinkedHashMap<String, Strand>();
+				
+				//determine 'proper' orientation, based on number
+				int StrandForward = 0; 
+				int StrandReverse = 0;
+				for (String s : ContextSetList.keySet()){
+					
+					LinkedList<GenomicElementAndQueryMatch> LL = ContextSetList.get(s);
+					for (GenomicElementAndQueryMatch GandE : LL){
+						if (GandE.isQueryMatch()){
+							if (GandE.getE().getStrand().equals(Strand.POSITIVE)){
+								StrandForward++;
+								QueryHash.put(s, Strand.POSITIVE);
+							} else {
+								StrandReverse++;
+								QueryHash.put(s, Strand.NEGATIVE);
+							}
+						}
+					}
+				}
+				
+				//initialize a final list
+				LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> FinalContextSetList = 
+						new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
+				
+				
+				//write entries to the final list, if appropriate
+				for (String s : ContextSetList.keySet()){
+					LinkedList<GenomicElementAndQueryMatch> FwdLL = ContextSetList.get(s);
+					LinkedList<GenomicElementAndQueryMatch> RevLL = AlternativeContextSetList.get(s);
+					
+					//don't flip Fwd
+					if (StrandForward >= StrandReverse){
+						if (QueryHash.get(s).equals(Strand.POSITIVE)){
+							FinalContextSetList.put(s, FwdLL);
+						} else {
+							FinalContextSetList.put(s, RevLL);
+						}
+					//don't flip reverse	
+					} else {
+						if (QueryHash.get(s).equals(Strand.POSITIVE)){
+							FinalContextSetList.put(s, RevLL);
+						} else {
+							FinalContextSetList.put(s, FwdLL);
+						}
+					}
+				}
+				
+				//update extended cron
+				EC.setContexts(FinalContextSetList);
+				
+			}
+		}
+
 		//add source info
 		EC.setSourceSpeciesNames(SourceNames);
 		EC.setSourceContigNames(ContigNames);
@@ -453,8 +570,8 @@ public class OrganismSet {
 				new LinkedHashMap<String, String>();
 		
 		//contig names
-		LinkedHashMap<String, String> ContigNames = 
-				new LinkedHashMap<String, String>();
+		LinkedHashMap<String, HashSet<String>> ContigNames = 
+				new LinkedHashMap<String, HashSet<String>>();
 		
 		//initialize a counter variable
 		int Counter = 0;
@@ -503,7 +620,13 @@ public class OrganismSet {
 				
 				//record other info
 				SourceNames.put(Key, entry.getValue().getSpecies());
-				ContigNames.put(Key, ContextSegment.getFirst().getE().getContig());
+				
+				HashSet<String> HSContigNames = new HashSet<String>();
+				for (GenomicElementAndQueryMatch GandE : ContextSegment){
+					HSContigNames.add(GandE.getE().getContig());
+				}
+				
+				ContigNames.put(Key, HSContigNames);
 			}
 			
 		}

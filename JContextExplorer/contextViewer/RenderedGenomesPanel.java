@@ -87,7 +87,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	private RenderedGenomesPanel rgp;	//this;
 	private HashMap<String, LinkedList<GenomicElementAndQueryMatch>> contexts;			//Contexts
 	private HashMap<String, String> SourceSpecies;	//Species Names
-	private HashMap<String, String> SourceContigs;	//Contig Names
+	private HashMap<String, HashSet<String>> SourceContigs;	//Contig Names
 	private String ECRONType; 			//Either "annotation" or "cluster"
 	
 	//Range-limited related
@@ -99,7 +99,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	//holding of split values
 	private LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> SplitContexts;
 	private LinkedHashMap<String, String> SplitSpeciesNames;
-	private LinkedHashMap<String, String> SplitContigNames;
+	private LinkedHashMap<String, HashSet<String>> SplitContigNames;
 	
 	//display - related
 	private int GenomicDisplayRange;	//nt range to display on each GS
@@ -180,9 +180,18 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		this.BeforeBuffer = Integer.parseInt(this.mf.getOp().getStrbeforeRangeValue());
 		this.AfterBuffer = Integer.parseInt(this.mf.getOp().getStrafterRangeValue());
 		
+		//Splitting/editing
+		
+		//Initialize holding places
+		SplitContexts = new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
+		SplitSpeciesNames = new LinkedHashMap<String, String>();
+		SplitContigNames = new LinkedHashMap<String, HashSet<String>>();
+		
+		splitCrossContigGroupings();	//Adjust contexts
+		splitLargeGapGroupings();		//Adjust for large gaps within groupings		
+
+		
 		//computing segment info
-		//splitCrossContigGroupings();	//Adjust contexts
-		splitLargeGapGroupings();		//Adjust for large gaps within groupings
 		this.dim = computeGenomicSegments();
 		this.setPreferredSize(dim);		 //key: preferredsize, not size
 		
@@ -451,40 +460,80 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 				LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>
 					SequenceElementMapping = new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
 				
-				for (GenomicElementAndQueryMatch GandE : LL){
-					if (SequenceElementMapping.get(GandE.getE().getContig()) != null){
-						SequenceElementMapping.get(GandE.getE().getContig()).add(GandE);
-					} else {
-						LinkedList<GenomicElementAndQueryMatch> SL = new LinkedList<GenomicElementAndQueryMatch>();
-						SL.add(GandE);
-						SequenceElementMapping.put(GandE.getE().getContig(), SL);
+				//iterate through all contig names
+				Iterator<String> it = CSD.getEC().getSourceContigNames().get(LeafName).iterator();
+				while (it.hasNext()){
+					
+					//current contig
+					String Contig = it.next();
+					
+					//create output
+					LinkedList<GenomicElementAndQueryMatch> SL = new LinkedList<GenomicElementAndQueryMatch>();
+					
+					//pull out subset
+					for (GenomicElementAndQueryMatch GandE : LL){
+						if (GandE.getE().getContig().equals(Contig)){
+							SL.add(GandE);
+						}
 					}
+					
+					//map
+					SequenceElementMapping.put(Contig, SL);
+
 				}
 				
 				//remake set, if appropriate
 				if (SequenceElementMapping.size() > 1){
+
+					//retrieve information
+					HashSet<String> ContigName = CSD.getEC().getSourceContigNames().get(LeafName);
+					String SourceName= CSD.getEC().getSourceSpeciesNames().get(LeafName);
 					
-					//remove old set
+					//store information, prior to removal, if it is basic
+					if (CL.isSearchReturnedContext()){
+						SplitContexts.put(LeafName, LL);
+						SplitContigNames.put(LeafName, ContigName);
+						SplitSpeciesNames.put(LeafName, SourceName);
+					}
+					
+					//remove old sets
 					CSD.getEC().getContexts().remove(LeafName);
+					CSD.getEC().getSourceContigNames().remove(LeafName);
+					CSD.getEC().getSourceSpeciesNames().remove(LeafName);
 					
 					//initialize counter
 					int ContigCounter = 0;
 					
-					for (LinkedList<GenomicElementAndQueryMatch> SL : SequenceElementMapping.values()){
+					for (String CN : SequenceElementMapping.keySet()){
 						
 						//increment counter
 						ContigCounter++;
+						
+						//retrieve output
+						LinkedList<GenomicElementAndQueryMatch> SL = SequenceElementMapping.get(CN);
 						
 						//Updated leaf name
 						String UpdatedLeafName = LeafName + ", Sequence " + String.valueOf(ContigCounter);
 						
 						//all other information is the same, except for name
-						ContextLeaf NewLeaf = CL;
+						ContextLeaf NewLeaf = new ContextLeaf();
+						NewLeaf.setSelected(true);
 						NewLeaf.setName(UpdatedLeafName);
-						
-						//update contexts
+						NewLeaf.setSearchReturnedContext(false);
+
+						//update contexts, species, and sequence names
 						CSD.getEC().getContexts().put(UpdatedLeafName, SL);
+						CSD.getEC().getSourceSpeciesNames().put(UpdatedLeafName, SourceName);
 						
+						//map to a new set of contigs
+						HashSet<String> UpdatedContigNames = new HashSet<String>();
+						UpdatedContigNames.add(CN);
+						
+						CSD.getEC().getSourceContigNames().put(UpdatedLeafName, UpdatedContigNames);
+						
+						//add to list
+						UpdatedCL.add(NewLeaf);
+
 					}
 					
 				} else {
@@ -518,17 +567,6 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		
 		//Initialize updated list
 		LinkedList<ContextLeaf> UpdatedCL = new LinkedList<ContextLeaf>();
-		
-		//Initialize holding places
-		SplitContexts = new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
-		SplitSpeciesNames = new LinkedHashMap<String, String>();
-		SplitContigNames = new LinkedHashMap<String, String>();
-
-//		//debugging
-//		System.out.println("Pre-Split:");
-//		for (ContextLeaf CL : CSD.getGraphicalContexts()){
-//			System.out.println(CL.getName() + CSD.getEC().getContexts().get(CL.getName()));
-//		}
 		
 		for (ContextLeaf CL : CSD.getGraphicalContexts()){
 			
@@ -595,9 +633,8 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 				if (SequenceElementMapping.size() > 1){
 					
 					//retrieve information
-					String ContigName = CSD.getEC().getSourceContigNames().get(LeafName);
+					HashSet<String> ContigName = CSD.getEC().getSourceContigNames().get(LeafName);
 					String SourceName= CSD.getEC().getSourceSpeciesNames().get(LeafName);
-					//LinkedList<GenomicElementAndQueryMatch> LL = CSD.getEC().getContexts().get(LeafName);
 					
 					//store information, prior to removal
 					SplitContexts.put(LeafName, LL);
@@ -618,18 +655,13 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 						ContigCounter++;
 						
 						//Updated leaf name
-						String UpdatedLeafName = LeafName + ", Sequence " + String.valueOf(ContigCounter);
+						String UpdatedLeafName = LeafName + ", Segment " + String.valueOf(ContigCounter);
 						
 						//all other information is the same, except for name
 						ContextLeaf NewLeaf = new ContextLeaf();
 						NewLeaf.setSelected(true);
 						NewLeaf.setName(UpdatedLeafName);
-						//NewLeaf.setSourceSpecies(CL.getSourceSpecies());
-						
-//						NewLeaf.setContextGraphCoordinates(CL.getContextGraphCoordinates());
-//						NewLeaf.setContextTreeCoordinates(CL.getContextTreeCoordinates());
-//						NewLeaf.setContextTreeNodeNameNumber(CL.getContextTreeNodeNameNumber());
-//						NewLeaf.setSearchResultsTreeNode(CL.getSearchResultsTreeNode());
+						NewLeaf.setSearchReturnedContext(false);
 
 						//update contexts, species, and sequence names
 						CSD.getEC().getContexts().put(UpdatedLeafName, SL);
@@ -658,11 +690,6 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		
 		//update data structure
 		CSD.setGraphicalContexts(UpdatedContexts);
-		
-//		System.out.println("Post-Splitting");
-//		for (ContextLeaf CL : CSD.getGraphicalContexts()){
-//			System.out.println(CL.getName());
-//		}
 		
 		//return data
 		this.mf.setCSD(CSD);
@@ -830,14 +857,6 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 			//set values
 			GS[i].setStartBeforeBuffer(GSStart);
 			GS[i].setEndRange(GSEnd);
-			
-//			//optional print statements
-//			System.out.println(GS[i].getLabel() + ": ");
-//			System.out.println(GS[i].getStartBeforeBuffer());
-//			System.out.println(GS[i].getStartCS());
-//			System.out.println(GS[i].getCenterofCS());
-//			System.out.println(GS[i].getStartAfterBuffer());
-//			System.out.println(GS[i].getEndRange());
 		}
 	}
 	
@@ -851,8 +870,11 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 			
 			//retrieve species + contig name
 			String SpeciesName = SourceSpecies.get(GS[i].getLabel());
-			String ContigName = SourceContigs.get(GS[i].getLabel());
+			String ContigName = SourceContigs.get(GS[i].getLabel()).iterator().next();
 
+			//debugging: print statements
+			//System.out.println(i + ": " + SpeciesName + "-" + ContigName);
+			
 			//retrieve genome
 			AnnotatedGenome AG = mf.getOS().getSpecies().get(SpeciesName);
 			
@@ -1010,7 +1032,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 			
 			//retrieve species + contig name
 			String SpeciesName = SourceSpecies.get(GS[i].getLabel());
-			String ContigName = SourceContigs.get(GS[i].getLabel());
+			String ContigName = SourceContigs.get(GS[i].getLabel()).iterator().next();
 
 			//retrieve genome
 			AnnotatedGenome AG = mf.getOS().getSpecies().get(SpeciesName);
@@ -1418,9 +1440,11 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		}
 		this.GeneInformationIsBeingDisplayed = false;
 
-		//computing segment info
-		//splitCrossContigGroupings();	//Adjust contexts
+		//adjust inputs
+		splitCrossContigGroupings();	//Adjust contexts
 		splitLargeGapGroupings();		//Adjust for large gaps within groupings
+		
+		//computing segment info
 		this.dim = computeGenomicSegments();
 		this.setPreferredSize(dim);		 //key: preferredsize, not size
 
@@ -2703,11 +2727,11 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		SplitSpeciesNames = splitSpeciesNames;
 	}
 
-	public LinkedHashMap<String, String> getSplitContigNames() {
+	public LinkedHashMap<String, HashSet<String>> getSplitContigNames() {
 		return SplitContigNames;
 	}
 
-	public void setSplitContigNames(LinkedHashMap<String, String> splitContigNames) {
+	public void setSplitContigNames(LinkedHashMap<String, HashSet<String>> splitContigNames) {
 		SplitContigNames = splitContigNames;
 	}
 	

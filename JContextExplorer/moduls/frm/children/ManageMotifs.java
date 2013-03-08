@@ -58,13 +58,12 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 	private LinkedHashMap<ButtonModel, LinkedList<Component>> RadioButtonComponents
 		= new LinkedHashMap<ButtonModel, LinkedList<Component>>();
 	private boolean AcceptableName = true;
-	private boolean FimoLoaded = false;
-	private boolean CustomLoaded = false;
+	private boolean MotifFilesLoaded = false;
 	private MotifGroupDescription ToAdd;
 	
 	//File import
 	private File ReferenceDirectory = null;
-	private File[] FimoFiles;
+	private File[] MotifFiles;
 	
 	//GUI
 	//general use
@@ -178,11 +177,17 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 	
 	//SwingWorkers
 	//load from fimo file
-	class btnLoadFimo extends SwingWorker<Void,Void>{
+	class btnLoadFiles extends SwingWorker<Void,Void>{
 
 		private int OrganismsMapped;
 		private int SearchBubbleRange = 10000;		//Start looking for motifs only at 10K
-
+		private boolean isFimo;
+		
+		//constructor
+		public btnLoadFiles(boolean isFimo){
+			this.isFimo = isFimo;
+		}
+		
 		//Fields
 		@Override
 		protected Void doInBackground() throws Exception {
@@ -191,7 +196,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			f.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			
 			//re-initialize loading
-			FimoLoaded = false;
+			MotifFilesLoaded = false;
 			
 			//initialize context set description
 			ToAdd = new MotifGroupDescription();
@@ -205,10 +210,10 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			int OrganismsCompleted = 0;
 			this.OrganismsMapped = 0;
 			int ComputeProgress = 0;
-			int TotalFilesForProcess = FimoFiles.length;
+			int TotalFilesForProcess = MotifFiles.length;
 			
 			// retrieve all files
-			for (File fi : FimoFiles) {
+			for (File fi : MotifFiles) {
 				
 				//increment counter
 				OrganismsCompleted++;
@@ -258,6 +263,9 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 								
 								//build sequence motif
 								SequenceMotif SM = new SequenceMotif();
+								
+								if (isFimo){
+								
 								SM.setSource("FIMO");
 								SM.setMotifName(MSName.getText());
 								SM.setContig(ImportedLine[1]);
@@ -267,6 +275,26 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 								SM.setPvalue(Double.parseDouble(ImportedLine[5]));
 								SM.setQvalue(Double.parseDouble(ImportedLine[6]));
 								SM.setSequence(ImportedLine[7].toUpperCase());
+								
+								} else {
+									
+								SM.setSource("Custom");
+								SM.setMotifName(MSName.getText());
+								SM.setContig(ImportedLine[0]);
+								SM.setStart(Integer.parseInt(ImportedLine[1]));
+								SM.setStop(Integer.parseInt(ImportedLine[2]));
+								
+								//optional: sequence
+								if (ImportedLine.length > 3){
+									SM.setSequence(ImportedLine[3]);
+									
+									//optional: annotation
+									if (ImportedLine.length > 4){
+										SM.setNotes(ImportedLine[4]);
+									}
+								}
+								
+								}
 								
 								//set strand based on order of elements.
 								if (SM.getStart() < SM.getStop()){
@@ -280,8 +308,11 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 									SM.setStop(TempStart);
 									
 									//also, adjust the string to reverse complement, if appropriate.
-									DNASequence d = new DNASequence(SM.getSequence());
-									SM.setSequence(d.getReverseComplement().getSequenceAsString().toUpperCase());
+									if (isFimo){
+										DNASequence d = new DNASequence(SM.getSequence());
+										SM.setSequence(d.getReverseComplement().getSequenceAsString().toUpperCase());
+									}
+
 								}
 								
 								//add to list
@@ -470,6 +501,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 						SpeciesNames.add(SpeciesName);
 						
 					} catch (Exception ex) {
+						//ex.printStackTrace();
 						JOptionPane.showMessageDialog(null, "One or more fields incorrectly formatted, or the input file is not correctly formatted.",
 								"Format Error",JOptionPane.ERROR_MESSAGE);
 						//System.out.println("Unable to map file: " + FimoFile + " to an organism in the genomic working set.");
@@ -483,7 +515,12 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			
 			//Update final info
 			ToAdd.setSpecies(SpeciesNames);
-			ToAdd.setSource("FIMO");
+			if (isFimo){
+				ToAdd.setSource("FIMO");
+			} else {
+				ToAdd.setSource("Custom");
+			}
+
 			
 			return null;
 		}
@@ -492,7 +529,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		protected void done(){
 			//add this list to the set, for update.
 			//SequenceMotifsAsList.add(MSName.getText());
-			FimoLoaded = true;
+			MotifFilesLoaded = true;
 			progressBar.setVisible(false);
 			LoadedFileName.setText("Sequence motif \"" + MSName.getText() 
 					+ "\" successfully mapped to " + this.OrganismsMapped + " organisms.");
@@ -504,6 +541,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		}
 		
 	}
+
 	
 	private void getPanel(){
 		
@@ -1051,39 +1089,39 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 	}
 	
 	//retrieve either directory or data file
-	private void getFimoFiles(){
+	private void getMotifFiles(){
 		
 		//initialize output
-		JFileChooser GetFimoFiles = new JFileChooser();
+		JFileChooser GetMotifFiles = new JFileChooser();
 		try {
 			//GetGenomes.setLUIManager.getLookAndFeel()
 		} catch (Exception ex){
 			
 		}
-		GetFimoFiles.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		GetFimoFiles.setDialogTitle("Select directory containing FIMO output files (or directories)");
+		GetMotifFiles.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		GetMotifFiles.setDialogTitle("Select directory containing FIMO output files (or directories)");
 
 		if (this.ReferenceDirectory != null){
-			GetFimoFiles.setCurrentDirectory(ReferenceDirectory);
+			GetMotifFiles.setCurrentDirectory(ReferenceDirectory);
 		} else {
-			GetFimoFiles.setCurrentDirectory(new File("."));
+			GetMotifFiles.setCurrentDirectory(new File("."));
 		}
-		GetFimoFiles.showOpenDialog(GetFimoFiles);
+		GetMotifFiles.showOpenDialog(GetMotifFiles);
 		
 		//retrieve directory containing fimo files
-		File ParentDirectory = GetFimoFiles.getSelectedFile();
-		this.ReferenceDirectory = GetFimoFiles.getCurrentDirectory();
+		File ParentDirectory = GetMotifFiles.getSelectedFile();
+		this.ReferenceDirectory = GetMotifFiles.getCurrentDirectory();
 		
 		//check if file could be received
 		if (ParentDirectory != null){
 		
 			//retrieve directory
-			this.FimoFiles = ParentDirectory.listFiles();
+			this.MotifFiles = ParentDirectory.listFiles();
 
 		} else {
 			
 			//no files are currently loaded.
-			this.FimoFiles = null;
+			this.MotifFiles = null;
 		}
 
 	}
@@ -1109,7 +1147,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		//update appropriate message box
 		UpdateMessageBox();
 		
-		//CSType (1) - Intergenic Distance
+		//Load motifs from FIMO files
 		if (evt.getSource().equals(btnMSFimo)){
 			
 			//check if name is acceptable
@@ -1118,16 +1156,33 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			if (AcceptableName == true){
 				
 				//retrieve directory
-				getFimoFiles();
+				getMotifFiles();
 				
 				//create a new swing worker
-				btnLoadFimo LF = new btnLoadFimo();
+				btnLoadFiles LF = new btnLoadFiles(true);
 				LF.addPropertyChangeListener(this);
 				LF.execute();
 			} 
 
 			
 		} 
+		
+		if (evt.getSource().equals(btnMSCustom)){
+			
+			//check if name is acceptable
+			CheckName();
+			
+			if (AcceptableName == true){
+				
+				//retrieve directory
+				getMotifFiles();
+				
+				//create a new swing worker
+				btnLoadFiles LF = new btnLoadFiles(false);
+				LF.addPropertyChangeListener(this);
+				LF.execute();
+			}
+		}
 		
 		if (evt.getSource().equals(this.MSFimo) || evt.getSource().equals(this.MSCustom)){
 			this.btnAddMS.setEnabled(true);
@@ -1197,11 +1252,11 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			if (AcceptableName == true){
 				
 				//check cases that are not working
-				if (!FimoLoaded && MSType.isSelected(MSFimo.getModel())) {
+				if (!MotifFilesLoaded && MSType.isSelected(MSFimo.getModel())) {
 					JOptionPane.showMessageDialog(null, 
 							"Select the load button to load fimo-output motif files", "Fimo files not loaded",
 							JOptionPane.ERROR_MESSAGE);
-				} else if (MSType.isSelected(MSCustom.getModel()) && !CustomLoaded){
+				} else if (!MotifFilesLoaded && MSType.isSelected(MSCustom.getModel())){
 					JOptionPane.showMessageDialog(null, 
 							"Select the load button to load custom-determined motif files", "Custom files not loaded",
 							JOptionPane.ERROR_MESSAGE);
@@ -1221,8 +1276,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 					}
 					
 					//pre-processed sets are reset
-					FimoLoaded = false;
-					CustomLoaded = false;
+					MotifFilesLoaded = false;
 					LoadedFileName.setText("Motif sequence \"" + ToAdd.getName() + "\" successfully added to the genomic working set!");
 					
 				}

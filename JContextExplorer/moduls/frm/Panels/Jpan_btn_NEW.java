@@ -334,8 +334,8 @@ import definicions.MatriuDistancies;
 						new LinkedHashMap<String, String>();
 				
 				//contig names
-				LinkedHashMap<String, String> ContigNames = 
-						new LinkedHashMap<String, String>();
+				LinkedHashMap<String, HashSet<String>> ContigNames = 
+						new LinkedHashMap<String, HashSet<String>>();
 				
 				//initialize a counter variable
 				int Counter = 0;
@@ -389,7 +389,14 @@ import definicions.MatriuDistancies;
 						
 						//record other info
 						SourceNames.put(Key, entry.getValue().getSpecies());
-						ContigNames.put(Key, ContextSegment.getFirst().getE().getContig());
+						
+						HashSet<String> HSContigNames = new HashSet<String>();
+						
+						for (GenomicElementAndQueryMatch GandE : ContextSegment){
+							HSContigNames.add(GandE.getE().getContig());
+						}
+						
+						ContigNames.put(Key, HSContigNames);
 					}
 					
 					//Cassette cases: add genes
@@ -420,8 +427,8 @@ import definicions.MatriuDistancies;
 							new LinkedHashMap<String, String>();
 					
 					//contig names
-					LinkedHashMap<String, String> CassetteContigNames = 
-							new LinkedHashMap<String, String>();
+					LinkedHashMap<String, HashSet<String>> CassetteContigNames = 
+							new LinkedHashMap<String, HashSet<String>>();
 					
 					//parameters for each
 					String SpeciesKey;
@@ -456,20 +463,7 @@ import definicions.MatriuDistancies;
 							//update information
 							CassetteContextSetList.put(SpeciesKey,SpeciesGenes);
 							CassetteSourceNames.put(SpeciesKey, AG.getSpecies());
-							
-							//compress contigs to a single string
-							String AllContigs = "";
-							int ContigCounter = 0;
-							for (String s : Contigs){
-								ContigCounter++;
-								AllContigs = AllContigs + "[Contig_" + ContigCounter + "]=" + s + ";";
-								
-								//displayable case (single contig)
-								if (Contigs.size() == 1){
-									AllContigs = s;
-								}
-							}
-							CassetteContigNames.put(SpeciesKey, AllContigs);
+							CassetteContigNames.put(SpeciesKey, Contigs);
 							
 							CassetteCounter++;
 						}
@@ -494,6 +488,16 @@ import definicions.MatriuDistancies;
 					EC.setSourceContigNames(ContigNames);
 				}
 
+//				//debugging
+//				System.out.println("Jpanbtn");
+//				for (String s : EC.getContexts().keySet()){
+//					HashSet<String> HSContigNames = EC.getSourceContigNames().get(s);
+//					Iterator<String> it = HSContigNames.iterator();
+//					while (it.hasNext()){
+//						System.out.println(s + "-" + it.next());
+//					}
+//				}
+				
 				//Update the query data with all changes.
 				CSDisplayData CSD = new CSDisplayData();
 				CSD.setECandInitializeTreeLeaves(EC);
@@ -555,8 +559,8 @@ import definicions.MatriuDistancies;
 						new LinkedHashMap<String, String>();
 				
 				//contig names
-				LinkedHashMap<String, String> ContigNames = 
-						new LinkedHashMap<String, String>();
+				LinkedHashMap<String, HashSet<String>> ContigNames = 
+						new LinkedHashMap<String, HashSet<String>>();
 				
 				//initialize a counter variable
 				int Counter = 0;
@@ -609,7 +613,15 @@ import definicions.MatriuDistancies;
 						
 						//record other info
 						SourceNames.put(Key, entry.getValue().getSpecies());
-						ContigNames.put(Key, ContextSegment.getFirst().getE().getContig());
+						
+						HashSet<String> HSContigNames = new HashSet<String>();
+						
+						for (GenomicElementAndQueryMatch GandE : ContextSegment){
+							HSContigNames.add(GandE.getE().getContig());
+						}
+						
+						ContigNames.put(Key, HSContigNames);
+
 					}
 					
 					
@@ -646,8 +658,8 @@ import definicions.MatriuDistancies;
 							new LinkedHashMap<String, String>();
 					
 					//contig names
-					LinkedHashMap<String, String> CassetteContigNames = 
-							new LinkedHashMap<String, String>();
+					LinkedHashMap<String, HashSet<String>> CassetteContigNames = 
+							new LinkedHashMap<String, HashSet<String>>();
 					
 					//parameters for each
 					String SpeciesKey;
@@ -682,20 +694,7 @@ import definicions.MatriuDistancies;
 							//update information
 							CassetteContextSetList.put(SpeciesKey,SpeciesGenes);
 							CassetteSourceNames.put(SpeciesKey, AG.getSpecies());
-							
-							//compress contigs to a single string
-							String AllContigs = "";
-							int ContigCounter = 0;
-							for (String s : Contigs){
-								ContigCounter++;
-								AllContigs = AllContigs + "[Contig_" + ContigCounter + "]=" + s + ";";
-								
-								//displayable case (single contig)
-								if (Contigs.size() == 1){
-									AllContigs = s;
-								}
-							}
-							CassetteContigNames.put(SpeciesKey, AllContigs);
+							CassetteContigNames.put(SpeciesKey, Contigs);
 							
 							CassetteCounter++;
 						}

@@ -27,7 +27,7 @@ public class ExtendedCRON {
 	private String SearchType;
 	private String ContextType;
 	private LinkedHashMap<String, String> SourceSpeciesNames;
-	private LinkedHashMap<String, String> SourceContigNames;
+	private LinkedHashMap<String, HashSet<String>> SourceContigNames;
 	private LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> Contexts; //<species-num, list of genomic elements
 	private LinkedList<Double> Distances; 
 	private int NumberOfEntries = 0;
@@ -333,11 +333,11 @@ public class ExtendedCRON {
 		SourceSpeciesNames = sourceSpeciesNames;
 	}
 
-	public LinkedHashMap<String, String> getSourceContigNames() {
+	public LinkedHashMap<String, HashSet<String>> getSourceContigNames() {
 		return SourceContigNames;
 	}
 
-	public void setSourceContigNames(LinkedHashMap<String, String> sourceContigNames) {
+	public void setSourceContigNames(LinkedHashMap<String, HashSet<String>> sourceContigNames) {
 		SourceContigNames = sourceContigNames;
 	}
 

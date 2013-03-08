@@ -125,6 +125,8 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 	private JTextField GenesAfter;
 	private JTextField GenesAfterLabel;
 	private String strGenesAfterLabel = "Genes After:";
+	private JCheckBox chkAttemptToStrandCorrect;
+	private String strAttempt = "Attempt to use relative before and after";
 	
 	//CSType (4) - CSGenesBetween
 	private LinkedList<Component> CSGenesBetween_group;
@@ -632,6 +634,18 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		c.gridheight = 1;
 		c.insets = new Insets(1,20,1,1);
 		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 2;
+		chkAttemptToStrandCorrect = new JCheckBox(strAttempt);
+		chkAttemptToStrandCorrect.setSelected(true);
+		CSGenesAround_group.add(chkAttemptToStrandCorrect);
+		jp.add(chkAttemptToStrandCorrect, c);
+		gridy++;
+		
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.insets = new Insets(1,20,1,1);
+		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 1;
 		GenesBeforeLabel = new JTextField(strGenesBeforeLabel);
 		GenesBeforeLabel.setEditable(false);
@@ -1071,6 +1085,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 						ToAdd.setType("GenesAround");	ToAdd.setPreprocessed(false);
 						ToAdd.setGenesBefore(Integer.parseInt(GenesBefore.getText()));
 						ToAdd.setGenesAfter(Integer.parseInt(GenesAfter.getText()));
+						ToAdd.setRelativeBeforeAfter(this.chkAttemptToStrandCorrect.isSelected());
 						
 					} else if (CSType.isSelected(CSGenesBetween.getModel())) {  //CSType (4) - CSGenesBetween
 						ToAdd.setType("GenesBetween");	ToAdd.setPreprocessed(false);
