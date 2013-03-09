@@ -37,6 +37,7 @@ import javax.swing.DefaultDesktopManager;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
+import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -179,7 +180,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener{
 		panMenuTab = new Jpan_TabbedMenu(panDisplayOptions, panMenu, panGraphMenu,
 				panMotifOptions,panPhyTreeMenu);
 		pan_West.add(panMenuTab, BorderLayout.CENTER);
-
+		
 		//SOUTH: Genome context viewing
 		pan_South = new JPanel();
 		pan_South.setLayout(new BorderLayout());
