@@ -20,7 +20,9 @@ package parser.figures;
 
 import inicial.FesLog;
 
+import java.awt.BasicStroke;
 import java.awt.Graphics2D;
+import java.awt.Stroke;
 import java.awt.geom.Line2D;
 
 import tipus.Orientation;
@@ -40,6 +42,9 @@ import definicions.Coordenada;
  */
 public class Linia extends Figura {
 	private double alcada;
+	private boolean ExtendsToLeaf = false;
+	private boolean FromPhyloTree = false;
+	private double PhyloFraction = 1;
 
 	public Linia(final Coordenada<Double> pos, final double alcada,
 			final int prec) {
@@ -62,17 +67,17 @@ public class Linia extends Figura {
 		double v_max, v_min;
 		int prec = getPrecisio();
 
-		FesLog.LOG.finest("Orientacio: " + or.toString());
-		FesLog.LOG.finest("Precisio: " + prec);
+//		FesLog.LOG.finest("Orientacio: " + or.toString());
+//		FesLog.LOG.finest("Precisio: " + prec);
 
 		// Ajustem la posicio a la precisio dels calculs.
 		xx1 = this.getPosReal().getX();
 		yy1 = MiMath.Arodoneix(this.getPosReal().getY(), prec);
 		xx2 = this.getPosReal().getX();
 		yy2 = MiMath.Arodoneix(this.getAlcada(), prec);
-		FesLog.LOG.finest("Coord. Real: x1=" + xx1 + "    y1=("
-				+ getPosReal().getY() + ") " + yy1 + "   x2= " + xx2
-				+ "    y2= (" + getAlcada() + ")" + yy2);
+//		FesLog.LOG.finest("Coord. Real: x1=" + xx1 + "    y1=("
+//				+ getPosReal().getY() + ") " + yy1 + "   x2= " + xx2
+//				+ "    y2= (" + getAlcada() + ")" + yy2);
 
 		v_max = this.getEscala().get_Max_Y();
 		v_min = this.getEscala().get_Min_Y();
@@ -102,19 +107,78 @@ public class Linia extends Figura {
 			yy2 = v_min + (v_max - yy2);
 		}
 
+		//parser.Escalado()
 		x1 = this.getEscala().parserX(xx1);
 		y1 = this.getEscala().parserY(yy1);
 		x2 = this.getEscala().parserX(xx2);
 		y2 = this.getEscala().parserY(yy2);
 
 		g.setColor(this.getColor());
-		g.draw(new Line2D.Double(x1, y1, x2, y2));
+		
+		//debugging: display
+		//System.out.println("(x1,y1) = (" + x1 + "," + y1 + "); (x2,y2) = (" + x2 + "," + y2 + ")");
 
-		FesLog.LOG.finer("draw Line2D: (" + x1 + ", " + y1 + ", " + x2 + ", "
-				+ y2 + ")");
+		//ordinary context tree case
+		if (!this.FromPhyloTree){
+			g.draw(new Line2D.Double(x1, y1, x2, y2));
+		} else {
+			//phylo tree, but not leaf node
+			if (!this.ExtendsToLeaf){
+				g.draw(new Line2D.Double(x1, y1, x2, y2));
+				
+			//critical case: phylo tree, leaf node	
+			} else{
+				
+				//critical case!
+				//check display options
+				
+//				//This code will draw dashed lines, instead of solid lines.
+//				float[] dash = {5F,5F};
+//				Stroke dashedStroke = new BasicStroke( 2F, BasicStroke.CAP_SQUARE,  
+//						BasicStroke.JOIN_MITER, 3F, dash, 0F );  
+//				
+//				g.draw(dashedStroke.createStrokedShape(new Line2D.Double(x1, y1, x2, y2)));
+				
+				//Original: solid lines
+										//start at (x2, y2), extend rightwards to (x1, y1)
+										//need to modify x2!
+				
+				
+				//method to shorten by phylogenetic distance = works!
+				double dist = x1-x2;
+				
+				x1 = x1 - PhyloFraction*dist;
+				
+			}
+		}
+
 	}
 
 	@Override
 	public void dibuixa(Orientation or) {
+	}
+
+	public boolean isExtendsToLeaf() {
+		return ExtendsToLeaf;
+	}
+
+	public void setExtendsToLeaf(boolean extendsToLeaf) {
+		ExtendsToLeaf = extendsToLeaf;
+	}
+
+	public boolean isFromPhyloTree() {
+		return FromPhyloTree;
+	}
+
+	public void setFromPhyloTree(boolean fromPhyloTree) {
+		FromPhyloTree = fromPhyloTree;
+	}
+
+	public double getPhyloFraction() {
+		return PhyloFraction;
+	}
+
+	public void setPhyloFraction(double phyloFraction) {
+		PhyloFraction = phyloFraction;
 	}
 }

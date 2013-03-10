@@ -92,7 +92,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	
 	//Range-limited related
 	private int RangeLimit = 100000;				//Do not display a genomic region of this or more
-	private int SplitLimit = 50000;					//segment contexts when they are further away from this value.
+	private int SplitLimit = 100000;				//segment contexts when they are further away from this value.
 	private LinkedList<String> ExceededRangeLimit;	//nodes that are excluded
 	private boolean ContextsExcluded = false; 		//initially, none are excluded
 	

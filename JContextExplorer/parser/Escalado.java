@@ -116,6 +116,11 @@ public class Escalado {
 		return (desplacament_x + this.parserX_ABS(x));
 	}
 
+	//custom method to return only half of the length.
+	public double halfparserX(final double x){
+		return 0.5* (desplacament_x + this.parserX_ABS(x));
+	}
+	
 	public double parserY(final double y) {
 		return (desplacament_y + (this.parserY_ABS(y)));
 	}

@@ -14,6 +14,7 @@ import java.io.FileReader;
 import java.util.LinkedList;
 
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -21,6 +22,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
 import newickTreeParsing.Tree;
@@ -46,6 +48,15 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 	private JComboBox<String> menuLoadedPhyTrees;
 	private JButton btnRemoveSelectedPhyTree;
 	private String strRemoveSelectedPhyTree = "Remove Selected";
+	
+	private JLabel DisplayOptionsBanner;
+	private String strDisplayOptions = " AVAILABLE PHYLOGENETIC TREES";
+	private ButtonGroup PhyloDisplayOptions;
+	private JRadioButton radCladogram, radPhylogram;
+	private JCheckBox chkDashed;
+	private String strCladogram = "Cladogram";
+	private String strPhylogram = "Phylogram";
+	private String strchkDashed = "Dashed line to label";
 
 	//Data components
 	private File FilePath = null;
@@ -140,7 +151,7 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 		add(menuLoadedPhyTrees, c);
 		gridy++;
 		
-		//Load Motifs button
+		//Remove phylogenetic tree button
 		c.gridx = 0;
 		c.gridy = gridy;
 		c.gridheight = 1;
@@ -150,6 +161,61 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 		btnRemoveSelectedPhyTree.setFont(fontStandard);
 		btnRemoveSelectedPhyTree.addActionListener(this);
 		add(btnRemoveSelectedPhyTree,c);
+		gridy++;
+		
+		//Display Options banner
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 4;
+		DisplayOptionsBanner = new JLabel(strDisplayOptions);
+		DisplayOptionsBanner.setBackground(Color.GRAY);
+		DisplayOptionsBanner.setOpaque(true);
+		DisplayOptionsBanner.setFont(fontStandard);
+		add(DisplayOptionsBanner,c);
+		gridy++;
+		
+
+		//define button group
+		PhyloDisplayOptions = new ButtonGroup();
+		radCladogram = new JRadioButton(strCladogram);
+		radPhylogram = new JRadioButton(strPhylogram);
+		PhyloDisplayOptions.add(radCladogram);
+		PhyloDisplayOptions.add(radPhylogram);
+		
+		//Display option 1: cladogram
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 4;
+		radCladogram.setSelected(true);
+		radCladogram.addActionListener(this);
+		add(radCladogram, c);
+		gridy++;
+		
+		//Display option 2: phylogram
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 4;
+		radPhylogram.setSelected(false);
+		radPhylogram.addActionListener(this);
+		add(radPhylogram, c);
+		gridy++;
+		
+		//option: draw dashed line to label
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 4;
+		chkDashed = new JCheckBox(strchkDashed);
+		chkDashed.setSelected(true);
+		chkDashed.setEnabled(false);
+		this.add(chkDashed, c);
 		gridy++;
 		
 	}
@@ -273,6 +339,15 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 			for (String s : PhyTrees){
 				menuLoadedPhyTrees.addItem(s);
 			}
+		}
+		
+		//display options
+		if (evt.getSource().equals(radPhylogram)){
+			this.chkDashed.setEnabled(true);
+		}
+		
+		if (evt.getSource().equals(radCladogram)){
+			this.chkDashed.setEnabled(false);
 		}
 	}
 

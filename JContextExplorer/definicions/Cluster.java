@@ -57,6 +57,12 @@ public class Cluster {
 	private double cim = 0;				//top
 	private double base;
 
+	
+	//new fields
+	private boolean isPhyloSource = false;
+	private double PhyloWeight;
+	private double PhyloLength;
+	
 	public Cluster() {
 		Inicialitza();
 		nom = Integer.toString(id);
@@ -222,5 +228,29 @@ public class Cluster {
 
 	public void setNado(boolean nado) {
 		this.nado = nado;
+	}
+
+	public boolean isPhyloSource() {
+		return isPhyloSource;
+	}
+
+	public void setPhyloSource(boolean isPhyloSource) {
+		this.isPhyloSource = isPhyloSource;
+	}
+
+	public double getPhyloWeight() {
+		return PhyloWeight;
+	}
+
+	public void setPhyloWeight(double phyloWeight) {
+		PhyloWeight = phyloWeight;
+	}
+
+	public double getPhyloLength() {
+		return PhyloLength;
+	}
+
+	public void setPhyloLength(double phyloLength) {
+		PhyloLength = phyloLength;
 	}
 }

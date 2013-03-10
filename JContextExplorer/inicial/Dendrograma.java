@@ -69,7 +69,7 @@ public class Dendrograma {
 		f.setResizable(true);
 		
 		//add menu bar
-		CreateAndAddMenuBar();
+		//CreateAndAddMenuBar();
 		
 		//set visible
 		f.setVisible(true);

@@ -377,13 +377,21 @@ public class FrmPhylo extends JPanel implements MouseListener{
 			m.dibuixa(g2d, orientacioClusters); //draw
 		}
 
+
 		Linia lin;
 		final Iterator<Linia> it = ef.ParserLinies(getFigura()[LINIA])
 				.iterator();
 		while (it.hasNext()) {
 			lin = it.next();
 			lin.setEscala(parserDendograma);
+			
+			//manually adjust
+			//lin.setAlcada(0.5*lin.getAlcada());
+			
 			lin.dibuixa(g2d, orientacioClusters);
+			
+			//draw lines!
+			//System.out.println("line: " + lin.getAlcada());
 		}
 
 		final Iterator<Marge> itm2 = ef.ParserMarge(getFigura()[MARGE])
