@@ -50,14 +50,15 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 	private String strRemoveSelectedPhyTree = "Remove Selected";
 	
 	private JLabel DisplayOptionsBanner;
-	private String strDisplayOptions = " AVAILABLE PHYLOGENETIC TREES";
+	private String strDisplayOptions = " PHYLOGENETIC TREE DISPLAY OPTIONS";
 	private ButtonGroup PhyloDisplayOptions;
 	private JRadioButton radCladogram, radPhylogram;
-	private JCheckBox chkDashed;
+	private JCheckBox chkDashed, chkWeights;
 	private String strCladogram = "Cladogram";
 	private String strPhylogram = "Phylogram";
-	private String strchkDashed = "Dashed line to label";
-
+	private String strchkDashed = "Draw dashed line to label";
+	private String strchkWeights = "Display support values";
+			
 	//Data components
 	private File FilePath = null;
 	private LinkedList<File> LoadedPhyTrees = new LinkedList<File>();
@@ -189,33 +190,43 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 4;
+		c.gridwidth = 1;
 		radCladogram.setSelected(true);
 		radCladogram.addActionListener(this);
 		add(radCladogram, c);
-		gridy++;
 		
 		//Display option 2: phylogram
-		c.gridx = 0;
+		c.gridx = 1;
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 4;
+		c.gridwidth = 3;
 		radPhylogram.setSelected(false);
 		radPhylogram.addActionListener(this);
 		add(radPhylogram, c);
 		gridy++;
 		
 		//option: draw dashed line to label
-		c.gridx = 0;
+		c.gridx = 1;
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 4;
+		c.gridwidth = 3;
 		chkDashed = new JCheckBox(strchkDashed);
+		chkDashed.addActionListener(this);
 		chkDashed.setSelected(true);
 		chkDashed.setEnabled(false);
 		this.add(chkDashed, c);
+		gridy++;
+		
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 4;
+		chkWeights = new JCheckBox(strchkWeights);
+		chkWeights.setSelected(false);
+		chkWeights.addActionListener(this);
+		this.add(chkWeights, c);
 		gridy++;
 		
 	}
@@ -344,11 +355,32 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 		//display options
 		if (evt.getSource().equals(radPhylogram)){
 			this.chkDashed.setEnabled(true);
+			
 		}
 		
 		if (evt.getSource().equals(radCladogram)){
 			this.chkDashed.setEnabled(false);
 		}
+		
+		//redraw phylogenetic tree
+		if (evt.getSource().equals(radPhylogram) || 
+				evt.getSource().equals(radCladogram) ||
+				evt.getSource().equals(chkDashed) ||
+				evt.getSource().equals(chkWeights)){
+			
+			//update phylogenetic tree, if appropriate.
+			if (f.getCurrentFrame() != null){	//frame exists
+				
+				//phylogenetic tree exists
+				if (f.getCurrentFrame().getInternalFrameData().getQD().getAnalysesList().isOptionRenderPhylogeny()){
+					
+					//repaint!
+					f.getCurrentFrame().getInternalFrameData().getPhyloTreePanel().repaint();
+					
+				}
+			}
+		}
+
 	}
 
 	//retrieve the current parsed phylogenetic tree
@@ -358,6 +390,22 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 
 	public void setCurrentParsedTree(Tree currentParsedTree) {
 		CurrentParsedTree = currentParsedTree;
+	}
+
+	public JRadioButton getRadCladogram() {
+		return radCladogram;
+	}
+
+	public JRadioButton getRadPhylogram() {
+		return radPhylogram;
+	}
+
+	public JCheckBox getChkDashed() {
+		return chkDashed;
+	}
+
+	public JCheckBox getChkWeights() {
+		return chkWeights;
 	}
 
 }

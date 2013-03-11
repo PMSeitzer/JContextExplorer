@@ -20,9 +20,18 @@ package parser.figures;
 
 import inicial.FesLog;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.Stroke;
+import java.awt.font.FontRenderContext;
+import java.awt.font.TextLayout;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
+
+import moduls.frm.FrmPrincipalDesk;
 
 import tipus.Orientation;
 import utils.MiMath;
@@ -42,6 +51,12 @@ public class Marge extends Figura {
 
 	private double alcada, ample;
 	private boolean filled;
+	
+	//phylogeny drawing related
+	private boolean FromPhyloTree = false;
+	private double PhyloWeight = -1;
+	private FrmPrincipalDesk fr;
+	private Font font;
 
 	public Marge(final double x, final double y, final double alcada,
 			final double ample, final int prec) {
@@ -165,15 +180,50 @@ public class Marge extends Figura {
 		w = this.getEscala().parserX(ww);
 		h = this.getEscala().parserY(hh);
 
+		//debugging: display
+		//System.out.println("x: " + x1 + " y: " + y1 + " w:" + w + " h: " + h);
+		
 		// dibuixem
 		if (filled) {
 			g.setPaint(this.getColor());
 			g.setColor(getColor());
-			g.fill(new Rectangle2D.Double(x1, y1, w - x1, h - y1));
 		} else {
 			g.setColor(Color.BLACK);
-			g.draw(new Rectangle2D.Double(x1, y1, w - x1, h - y1));
 		}
+		
+		g.draw(new Rectangle2D.Double(x1, y1, w - x1, h - y1));
+		
+		//add label, if appropriate
+		if (FromPhyloTree){
+			
+			//draw weights
+			if (fr.getPanPhyTreeMenu().getChkWeights().isSelected()){
+				
+				if (PhyloWeight != -1){
+					
+					//create graphical text layout
+					FontRenderContext renderFont = new FontRenderContext(null,
+							true, true);
+					Font font = this.getFont();
+					String txt = String.valueOf(PhyloWeight);
+					TextLayout tl = new TextLayout(txt, font, renderFont);
+					
+					//draw layout
+					AffineTransform defaultAT = g.getTransform();
+					g.scale(1, -1);
+					tl.draw(g, (float)(x1+1), (float)-(y1+1));
+					g.setTransform(defaultAT);
+				}
+			}
+		}
+		
+		
+//		//This code will draw dashed lines, instead of solid lines.
+//		float[] dash = {5F,5F};
+//		Stroke dashedStroke = new BasicStroke( 2F, BasicStroke.CAP_SQUARE,  
+//				BasicStroke.JOIN_MITER, 3F, dash, 0F );  
+//		
+//		g.draw(dashedStroke.createStrokedShape(new Rectangle2D.Double(x1, y1, w - x1, h - y1)));
 
 //		FesLog.LOG.finest("draw Rectangle2D(" + x1 + ", " + y1 + ", "
 //				+ (w - x1) + ", " + (h - y1) + ")");
@@ -183,5 +233,37 @@ public class Marge extends Figura {
 
 	@Override
 	public void dibuixa(Orientation or) {
+	}
+
+	public boolean isFromPhyloTree() {
+		return FromPhyloTree;
+	}
+
+	public void setFromPhyloTree(boolean fromPhyloTree) {
+		FromPhyloTree = fromPhyloTree;
+	}
+
+	public double getPhyloWeight() {
+		return PhyloWeight;
+	}
+
+	public void setPhyloWeight(double phyloWeight) {
+		PhyloWeight = phyloWeight;
+	}
+
+	public FrmPrincipalDesk getFr() {
+		return fr;
+	}
+
+	public void setFr(FrmPrincipalDesk fr) {
+		this.fr = fr;
+	}
+
+	public Font getFont() {
+		return font;
+	}
+
+	public void setFont(Font font) {
+		this.font = font;
 	}
 }

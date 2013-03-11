@@ -25,6 +25,8 @@ import java.awt.Graphics2D;
 import java.awt.Stroke;
 import java.awt.geom.Line2D;
 
+import moduls.frm.FrmPrincipalDesk;
+
 import tipus.Orientation;
 import utils.MiMath;
 import definicions.Coordenada;
@@ -42,9 +44,12 @@ import definicions.Coordenada;
  */
 public class Linia extends Figura {
 	private double alcada;
-	private boolean ExtendsToLeaf = false;
+	
+	//phylogeny-drawing related
+	private boolean ExtendsToLeaf = true;
 	private boolean FromPhyloTree = false;
-	private double PhyloFraction = 1;
+	private double PhyloFraction = 0.5;
+	private FrmPrincipalDesk fr;
 
 	public Linia(final Coordenada<Double> pos, final double alcada,
 			final int prec) {
@@ -122,6 +127,7 @@ public class Linia extends Figura {
 		if (!this.FromPhyloTree){
 			g.draw(new Line2D.Double(x1, y1, x2, y2));
 		} else {
+			
 			//phylo tree, but not leaf node
 			if (!this.ExtendsToLeaf){
 				g.draw(new Line2D.Double(x1, y1, x2, y2));
@@ -132,23 +138,30 @@ public class Linia extends Figura {
 				//critical case!
 				//check display options
 				
-//				//This code will draw dashed lines, instead of solid lines.
-//				float[] dash = {5F,5F};
-//				Stroke dashedStroke = new BasicStroke( 2F, BasicStroke.CAP_SQUARE,  
-//						BasicStroke.JOIN_MITER, 3F, dash, 0F );  
-//				
-//				g.draw(dashedStroke.createStrokedShape(new Line2D.Double(x1, y1, x2, y2)));
+				//draw phylogram
+				if (fr.getPanPhyTreeMenu().getRadPhylogram().isSelected()){
 				
-				//Original: solid lines
-										//start at (x2, y2), extend rightwards to (x1, y1)
-										//need to modify x2!
-				
-				
-				//method to shorten by phylogenetic distance = works!
-				double dist = x1-x2;
-				
-				x1 = x1 - PhyloFraction*dist;
-				
+					//draw branch length according to phylogeny
+					double Absx1 = x1 - PhyloFraction*(x1-x2);
+					g.draw(new Line2D.Double(Absx1, y1, x2, y2));
+					
+					//extend line from weight to node names, with dashed line
+					if (fr.getPanPhyTreeMenu().getChkDashed().isSelected()){
+						
+						//This code will draw dashed lines, instead of solid lines.
+						float[] dash = {5F,5F};
+						Stroke dashedStroke = new BasicStroke( 2F, BasicStroke.CAP_SQUARE,  
+								BasicStroke.JOIN_MITER, 3F, dash, 0F );  
+						
+						g.draw(dashedStroke.createStrokedShape(new Line2D.Double(x1, y1, Absx1, y2)));
+
+					}
+					
+				//draw cladogram
+				} else {
+					g.draw(new Line2D.Double(x1, y1, x2, y2));
+				}
+
 			}
 		}
 
@@ -180,5 +193,13 @@ public class Linia extends Figura {
 
 	public void setPhyloFraction(double phyloFraction) {
 		PhyloFraction = phyloFraction;
+	}
+
+	public FrmPrincipalDesk getFr() {
+		return fr;
+	}
+
+	public void setFr(FrmPrincipalDesk fr) {
+		this.fr = fr;
 	}
 }

@@ -361,23 +361,26 @@ public class FrmPhylo extends JPanel implements MouseListener{
 //		
 		// range and  data type to represent
 		//EDIT!!!!!!!!!
+
+		// --- show things ------------------------------------------------//
 		
 		final EscalaFigures ef = new EscalaFigures(val_Max_show, 
 				val_Min_show,
 				cfg.getTipusMatriu(), cfg.getPrecision());
 
-		Marge m; //margin
-		final Iterator<Marge> itm = ef.ParserMarge(getFigura()[MARGE])
-				.iterator();
-		while (itm.hasNext()) {
-			m = itm.next();
-			m.setEscala(parserDendograma);
-			m.setColor(cfg.getConfigMenu().getColorMarge());
-			m.setFilled(true);
-			m.dibuixa(g2d, orientacioClusters); //draw
-		}
 
+//		Marge m; //margin
+//		final Iterator<Marge> itm = ef.ParserMarge(getFigura()[MARGE])
+//				.iterator();
+//		while (itm.hasNext()) {
+//			m = itm.next();
+//			m.setEscala(parserDendograma);
+//			m.setColor(cfg.getConfigMenu().getColorMarge());
+//			m.setFilled(true);
+//			m.dibuixa(g2d, orientacioClusters); //draw
+//		}
 
+		//horizontal lines
 		Linia lin;
 		final Iterator<Linia> it = ef.ParserLinies(getFigura()[LINIA])
 				.iterator();
@@ -385,15 +388,19 @@ public class FrmPhylo extends JPanel implements MouseListener{
 			lin = it.next();
 			lin.setEscala(parserDendograma);
 			
-			//manually adjust
-			//lin.setAlcada(0.5*lin.getAlcada());
+			//adjustlines with appropriate information
+			lin.setFromPhyloTree(true);
+			lin.setFr(fr);
 			
+			//draw lines
 			lin.dibuixa(g2d, orientacioClusters);
 			
 			//draw lines!
 			//System.out.println("line: " + lin.getAlcada());
 		}
 
+		//vertical lines / boxes
+		Marge m;
 		final Iterator<Marge> itm2 = ef.ParserMarge(getFigura()[MARGE])
 				.iterator();
 		while (itm2.hasNext()) {
@@ -401,10 +408,13 @@ public class FrmPhylo extends JPanel implements MouseListener{
 			m.setEscala(parserDendograma);
 			m.setColor(cfg.getConfigMenu().getColorMarge());
 			m.setFilled(false);
+			
+			m.setFont(cfg.getConfigMenu().getFontNoms());
+			m.setFromPhyloTree(true);
+			m.setFr(fr);
 			m.dibuixa(g2d, orientacioClusters);
 		}
 
-		// --- show things ------------------------------------------------//
 		
 		//show nodes (bullets)
 		if (cfg.getConfigMenu().getRadiBullets() > 0) { 
