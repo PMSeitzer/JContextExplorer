@@ -270,6 +270,13 @@ public class FrmPhylo extends JPanel implements MouseListener{
 	}
 	
 	private void draftDendo(Graphics2D g2d) {
+		
+		
+//		LinkedList<Marge> Marges = getFigura()[2];
+//		for (Marge m : Marges){
+//			System.out.println("m, Early_Draftdendo: " + m.getPhyloWeight());
+//		}
+		
 		//boxes (on the screen) defining coordinates for rendering
 		BoxContainer boxDendograma, boxBulles, boxEscala, boxEscalalbl, boxNoms;
 
@@ -412,6 +419,7 @@ public class FrmPhylo extends JPanel implements MouseListener{
 			m.setFont(cfg.getConfigMenu().getFontNoms());
 			m.setFromPhyloTree(true);
 			m.setFr(fr);
+			
 			m.dibuixa(g2d, orientacioClusters);
 		}
 

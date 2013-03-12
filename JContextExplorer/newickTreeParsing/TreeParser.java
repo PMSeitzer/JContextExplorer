@@ -379,6 +379,7 @@ public class TreeParser
         boolean EOT = false;
         boolean nameNext = true;
         boolean ReadSupport = false;
+        double SupportValue = 0.0;
 
 	try {
             while (EOT == false &&
@@ -399,20 +400,20 @@ public class TreeParser
             		break;
             	case StreamTokenizer.TT_NUMBER:
             		if (ReadSupport){
-//            			System.out.println(tokenizer.nval);
-            			if (lastNamed != null){
-                   	     	lastNamed.setSupport(tokenizer.nval);
-            			}
-
+            			//System.out.println("Support: " + tokenizer.nval);
+            			SupportValue = tokenizer.nval;
+            			break;
             		} else {
                     	if (nameNext)
                     	    lastNamed = popAndName(tokenizer.sval, nodeStack);
                     	else
                     	{
-                    	    if (lastNamed != null)
+                    	    if (lastNamed != null){
                     	        lastNamed.setWeight(tokenizer.nval);
-                    	    else
+                    	    	lastNamed.setSupport(SupportValue);
+                    	    } else{
                     	        System.err.println("Error: can't set value " + tokenizer.nval + " to a null node");
+                    	    }
                     	    lastNamed = null;
                     	}
                     	progress += (new Double(tokenizer.nval).toString()).length();
@@ -464,7 +465,9 @@ public class TreeParser
         }
         if (!nodeStack.isEmpty())
             System.err.println("Node stack still has " + nodeStack.size() + " things");
+        
         t.postProcess();
+        
         return t;
     }
     /**

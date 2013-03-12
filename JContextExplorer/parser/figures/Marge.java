@@ -200,7 +200,7 @@ public class Marge extends Figura {
 			if (fr.getPanPhyTreeMenu().getChkWeights().isSelected()){
 				
 				if (PhyloWeight != -1){
-					
+
 					//create graphical text layout
 					FontRenderContext renderFont = new FontRenderContext(null,
 							true, true);

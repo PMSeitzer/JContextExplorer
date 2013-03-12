@@ -380,6 +380,8 @@ public class Fig_Pizarra {
 //						+ 0 + ", " + (max - min));
 			}
 
+//			System.out.println("Fig_Pizarra m: " + m.getPhyloWeight());
+
 			//add Marge
 			figura[Fig_Pizarra.MARGE].add(m);
 			

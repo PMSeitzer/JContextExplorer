@@ -65,7 +65,9 @@ import moduls.frm.children.FrmPhylo;
 import moduls.frm.children.FrmSearchResults;
 import moduls.frm.children.FrmTabbed;
 import moduls.frm.children.manageContextSetsv2;
+import parser.EscalaFigures;
 	import parser.Fig_Pizarra;
+import parser.figures.Marge;
 	import tipus.Orientation;
 	import tipus.metodo;
 	import tipus.tipusDades;
@@ -1770,7 +1772,14 @@ import definicions.MatriuDistancies;
 						
 						// Convert tree into figures
 						figPhylo = new Fig_Pizarra(fr.getPanPhyTreeMenu().getCurrentParsedTree(), cfgp);
-
+						
+						//debugging
+//						LinkedList[] FigList = figPhylo.getFigures();
+//						LinkedList<Marge> Marges = FigList[2];
+//						for (Marge m : Marges){
+//							System.out.println("m, Jpan_btn_NEW: " + m.getPhyloWeight());
+//						}
+						
 						//Update configuration information
 						CfgPanelMenu PhyloCfgPanel = cfgp.getConfigMenu();
 						PhyloCfgPanel.setTipusDades(tipusDades.DISTANCIA);
@@ -1795,7 +1804,7 @@ import definicions.MatriuDistancies;
 						if (!qD.getAnalysesList().isOptionComputeDendrogram()) {
 							Jpan_Menu.adjustValuesPhylo(cfgp);
 						}
-						
+
 						//add figures + configuration information to frame
 						fPhylo.setFigures(figPhylo.getFigures());
 						fPhylo.setConfig(cfgp);

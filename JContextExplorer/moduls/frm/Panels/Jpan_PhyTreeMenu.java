@@ -191,7 +191,7 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 1;
-		radCladogram.setSelected(true);
+		radCladogram.setSelected(false);
 		radCladogram.addActionListener(this);
 		add(radCladogram, c);
 		
@@ -201,7 +201,7 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 3;
-		radPhylogram.setSelected(false);
+		radPhylogram.setSelected(true);
 		radPhylogram.addActionListener(this);
 		add(radPhylogram, c);
 		gridy++;
@@ -224,7 +224,7 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 4;
 		chkWeights = new JCheckBox(strchkWeights);
-		chkWeights.setSelected(false);
+		chkWeights.setSelected(true);
 		chkWeights.addActionListener(this);
 		this.add(chkWeights, c);
 		gridy++;

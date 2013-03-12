@@ -86,12 +86,21 @@ public class EscalaFigures {
 				}
 				y = posYinf;
 				alcada = (posYsup - posYinf);
-				lst.add(new Marge(x, y, alcada, ample, prec, c));
+				Marge MM;
+				MM = new Marge(x, y, alcada, ample, prec, c);
+				MM.setPhyloWeight(rect.getPhyloWeight());
+				lst.add(MM);
+				//lst.add(new Marge(x, y, alcada, ample, prec, c));
 
 			} else if ((posYinf <= val_min) && (posYsup >= val_max)) {
 				y = val_min;
 				alcada = (val_max - val_min);
-				lst.add(new Marge(x, y, alcada, ample, prec, c));
+				//lst.add(new Marge(x, y, alcada, ample, prec, c));
+				
+				Marge MM;
+				MM =  new Marge(x, y, alcada, ample, prec, c);
+				MM.setPhyloWeight(rect.getPhyloWeight());
+				lst.add(MM);
 			}
 
 		}

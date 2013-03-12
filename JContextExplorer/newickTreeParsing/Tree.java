@@ -210,6 +210,10 @@ public class Tree {
 		height = 1;
 		for(TreeNode n = root; n != null; n = n.preorderNext)
 		{
+			
+			//debugging
+			//System.out.println("support: " + n.getSupport());
+			
 			n.label = n.name;
 			n.key = index++;
 			nodes.add(n);
