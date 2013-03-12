@@ -46,7 +46,7 @@ public class Linia extends Figura {
 	private double alcada;
 	
 	//phylogeny-drawing related
-	private boolean ExtendsToLeaf = true;
+	private boolean ExtendsToLeaf = false;
 	private boolean FromPhyloTree = false;
 	private double PhyloFraction = 0.5;
 	private FrmPrincipalDesk fr;

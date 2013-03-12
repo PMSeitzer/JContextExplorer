@@ -224,6 +224,7 @@ public class Fig_Pizarra {
 				c.setAlcada(TN.Alcada);
 				c.setNom(TN.label);
 				c.setNado(false);
+				c.setPhyloSupport(TN.getSupport());
 				CreatedClusters.put(TN.getKey(), c);
 				if (TN.isRoot()){
 					RootKey = i;
@@ -253,6 +254,7 @@ public class Fig_Pizarra {
 				//Initialize cluster info for the parent
 				Cluster c = new Cluster();
 				c.setAlcada(TN.Alcada);
+				c.setPhyloSupport(TN.getSupport());
 				if (TN.isLeaf()){
 					c.setNom(TN.label);
 					c.setNado(false);
@@ -331,9 +333,21 @@ public class Fig_Pizarra {
 					throw new Exception(msg_err);
 				}
 
-				// change of level, line store
-				figura[Fig_Pizarra.LINIA].add(new Linia(pos, c.getAlcada(),
-						prec));
+				// create line
+				Linia Lin = new Linia(pos, c.getAlcada(), prec);
+
+				//note if line extends to leaf, and determine factor
+				if (c.getFill(n).getFills() == 1){
+					
+					//write phylo fraction
+					Lin.setExtendsToLeaf(true);
+					double PhyFrac = 1.0 - ((c.getAlcada() - c.getFill(n).getAlcada())/LongestBranch);
+
+					Lin.setPhyloFraction(PhyFrac);
+				}
+				
+				figura[Fig_Pizarra.LINIA].add(Lin);
+				
 //				FesLog.LOG
 //						.finer("new Linia: (" + pos.getX() + ", " + pos.getY()
 //								+ ", " + c.getAlcada() + ", " + prec + ")");
@@ -342,19 +356,33 @@ public class Fig_Pizarra {
 				max = max < pos.getX() ? pos.getX() : max;
 			}
 
+			//innitialize group
+			Marge m;
+			
 			// store the group
 			if (franja) { 		//strip
-				figura[Fig_Pizarra.MARGE].add(new Marge(min, c.getAlcada(),
-						aglo, (max - min), prec));
+				
+				m = new Marge(min, c.getAlcada(), aglo, (max-min), prec);
+				m.setPhyloWeight(c.getPhyloSupport());
+				
+//				figura[Fig_Pizarra.MARGE].add(new Marge(min, c.getAlcada(),
+//						aglo, (max - min), prec));
 //				FesLog.LOG.finer("Marge: (" + min + ", " + c.getAlcada() + ", "
 //						+ aglo + ", " + (max - min));
 			} else {
-				figura[Fig_Pizarra.MARGE].add(new Marge(min, c.getAlcada(), 0,
-						(max - min), prec));
+				
+				m = new Marge(min, c.getAlcada(), 0, (max-min), prec);
+				m.setPhyloWeight(c.getPhyloSupport());
+				
+//				figura[Fig_Pizarra.MARGE].add(new Marge(min, c.getAlcada(), 0,
+//						(max - min), prec));
 //				FesLog.LOG.finer("Marge: (" + min + ", " + c.getAlcada() + ", "
 //						+ 0 + ", " + (max - min));
 			}
 
+			//add Marge
+			figura[Fig_Pizarra.MARGE].add(m);
+			
 			pos.setX((min + max) / 2);
 
 			// weights the agglomeration group downwards

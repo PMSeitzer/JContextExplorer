@@ -33,6 +33,10 @@ import javax.swing.JProgressBar;
  * */
 public class TreeParser
 {
+	
+	//fields
+	public double support = -1.0;
+	
 	/** Nexus file identifier.  We look for this as the first token to identify a tree file as Nexus, or other. */
 	private static final String nexusFileID = "#NEXUS";
 	/** Begin tag. */
@@ -342,6 +346,10 @@ public class TreeParser
 	    topNode.setNumberLeaves(); // sets number of leaves, non-recursive
 	    topNode.linkNodesInPreorder();
 	    topNode.linkNodesInPostorder();
+	    
+	    if (support != -1){
+	    	topNode.setSupport(support);
+	    }
 	    return topNode;
     }
     
@@ -370,7 +378,8 @@ public class TreeParser
         TreeNode lastNamed = null;
         boolean EOT = false;
         boolean nameNext = true;
-        int percentage = 0;
+        boolean ReadSupport = false;
+
 	try {
             while (EOT == false &&
                     (thisToken = tokenizer.nextToken()) != StreamTokenizer.TT_EOF)
@@ -389,24 +398,34 @@ public class TreeParser
             		nameNext = false;
             		break;
             	case StreamTokenizer.TT_NUMBER:
-            		if (nameNext)
-            		    lastNamed = popAndName(tokenizer.sval, nodeStack);
-            		else
-            		{
-            		    if (lastNamed != null)
-            		        lastNamed.setWeight(tokenizer.nval);
-            		    else
-            		        System.err.println("Error: can't set value " + tokenizer.nval + " to a null node");
-            		    lastNamed = null;
+            		if (ReadSupport){
+//            			System.out.println(tokenizer.nval);
+            			if (lastNamed != null){
+                   	     	lastNamed.setSupport(tokenizer.nval);
+            			}
+
+            		} else {
+                    	if (nameNext)
+                    	    lastNamed = popAndName(tokenizer.sval, nodeStack);
+                    	else
+                    	{
+                    	    if (lastNamed != null)
+                    	        lastNamed.setWeight(tokenizer.nval);
+                    	    else
+                    	        System.err.println("Error: can't set value " + tokenizer.nval + " to a null node");
+                    	    lastNamed = null;
+                    	}
+                    	progress += (new Double(tokenizer.nval).toString()).length();
+                    	nameNext = false;
+                    	break;
             		}
-            		progress += (new Double(tokenizer.nval).toString()).length();
-            		nameNext = false;
-            		break;
+
             	case infoSeparator:
             	    if (nameNext)
             	        lastNamed = popAndName(null, nodeStack);
             	    progress += 1;
             	    nameNext = false;
+            	    ReadSupport = false;
             	    break;
             	case treeTerminator:
             	case StreamTokenizer.TT_EOF:
@@ -426,6 +445,7 @@ public class TreeParser
             	        lastNamed = popAndName(null, nodeStack);
             	    progress += 1;
             	    nameNext = true;
+            	    ReadSupport = true;
             	    break;
             	case childSeparator:
             	    if (nameNext)

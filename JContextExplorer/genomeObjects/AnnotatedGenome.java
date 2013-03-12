@@ -359,7 +359,8 @@ public void ImportContextSet(String CSName, String fileName) {
 		//initialize a new context set
 		ContextSet CS = new ContextSet(CSName, "Loaded");
 		CS.setPreProcessed(true);
-		LinkedHashMap<Integer, LinkedList<GenomicElement>> CSMap = new LinkedHashMap<Integer, LinkedList<GenomicElement>>();
+		LinkedHashMap<Integer, LinkedList<GenomicElement>> CSMap 
+			= new LinkedHashMap<Integer, LinkedList<GenomicElement>>();
 		
 		int ContextSetID = -1;
 		LinkedList<GenomicElement> LL = new LinkedList<GenomicElement>();

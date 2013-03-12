@@ -138,13 +138,13 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 	private JRadioButton CSMultipleQuery;
 	private String strCSMultipleQuery = "Group multiple independent queries together";
 	
-	//CSType (6) CSLoaded
+	//CSType (6)  - CSLoaded
 	private LinkedList<Component> CSLoaded_group;
 	private JRadioButton CSLoaded;
 	private String strCSLoaded = "Load gene groupings from file";
 	private JButton btnLoadCS;
 	
-	//CSType (7) Cassette
+	//CSType (7)  - Cassette
 	private LinkedList<Component> CSCassette_group;
 	private JRadioButton CSCassette;
 	private String strCSCassette = "Construct a cassette based on an existing context set";

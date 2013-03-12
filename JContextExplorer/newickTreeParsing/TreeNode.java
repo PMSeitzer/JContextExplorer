@@ -18,6 +18,8 @@ import java.util.*;
  */
 public class TreeNode {
 
+	private double Support;
+	
 	/** Array of child nodes that are attached below this internal node.  Null if this is a leaf. */
 	protected ArrayList children; // eventually turn this into an array (need
 									// to change parser)
@@ -367,6 +369,14 @@ public class TreeNode {
 	 */
 	public Double getBcnScore() {
 		return bcnScore;
+	}
+
+	public double getSupport() {
+		return Support;
+	}
+
+	public void setSupport(double support) {
+		Support = support;
 	}
 
 	//NEW FIELDS!!

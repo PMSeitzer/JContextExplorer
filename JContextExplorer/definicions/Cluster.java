@@ -62,6 +62,7 @@ public class Cluster {
 	private boolean isPhyloSource = false;
 	private double PhyloWeight;
 	private double PhyloLength;
+	private double PhyloSupport;
 	
 	public Cluster() {
 		Inicialitza();
@@ -253,4 +254,14 @@ public class Cluster {
 	public void setPhyloLength(double phyloLength) {
 		PhyloLength = phyloLength;
 	}
+
+	public double getPhyloSupport() {
+		return PhyloSupport;
+	}
+
+	public void setPhyloSupport(double phyloSupport) {
+		PhyloSupport = phyloSupport;
+	}
+
+
 }
