@@ -215,7 +215,7 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 		chkDashed = new JCheckBox(strchkDashed);
 		chkDashed.addActionListener(this);
 		chkDashed.setSelected(true);
-		chkDashed.setEnabled(false);
+		chkDashed.setEnabled(true);
 		this.add(chkDashed, c);
 		gridy++;
 		
@@ -265,6 +265,24 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
       
       //return tree file
       return t;
+	}
+	
+	public Tree ParseNexusTree(File NexusTreeFile){
+		
+		//Initialize output
+		Tree t;
+		
+		  //attempt to import file
+	      try {
+	          BufferedReader r = new BufferedReader(new FileReader(NexusTreeFile));
+	          TreeParser tp = new TreeParser(r);
+	          t = tp.tokenize(NexusTreeFile.length(), NexusTreeFile.getName(), null);
+	      } catch (FileNotFoundException e) {
+	          JOptionPane.showMessageDialog(null, "The selected file is not appropriately formatted.");
+	          t = null;
+	      }
+		
+		return t;
 	}
 	@Override
 	public void actionPerformed(ActionEvent evt) {

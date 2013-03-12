@@ -7,6 +7,7 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 
@@ -22,6 +23,7 @@ public class CustomDissimilarity {
 	private String Name;
 	private String AmalgamationType;
 	private LinkedList<String> Factors;
+	private Double ImportanceFraction;
 	
 	//Factor 1: Presence/absence of common genes
 	private String CGCompareType;
@@ -59,7 +61,7 @@ public class CustomDissimilarity {
 	private int SSImportance;
 	
 	//Constructor
-	public CustomDissimilarity(String name2,String amalgamationType2,LinkedList<String> factors2,
+	public CustomDissimilarity(String name2,String amalgamationType2,LinkedList<String> factors2, double ImpFactor,
 			String cGCompareType2,boolean cGDuplicatesUnique2,double cGWeight2,int cGImportance2,
 			LinkedList<String> cMMotifNames2,String cMCompareType2,boolean cMDuplicatesUnique2,double cMWeight2,int cMImportance2,
 			boolean HeadPos, boolean PairOrd, double HeadPoswt, double PairOrdwt, double gOWeight2, int gOImportance2,
@@ -71,6 +73,7 @@ public class CustomDissimilarity {
 		this.setName(name2);
 		this.Factors = factors2;
 		this.AmalgamationType = amalgamationType2;
+		this.ImportanceFraction = ImpFactor;
 		
 		//factor 1: common genes
 		this.CGCompareType = cGCompareType2;
@@ -349,6 +352,13 @@ public class CustomDissimilarity {
 		//pass into method
 		Dissimilarity = GeneralizedDiceOrJaccard(O1Values,O2Values,CGDuplicatesUnique,CGCompareType);
 
+		//Maximum dissimilarity is 1, minimum is 0.
+		if (Dissimilarity > 1){
+			Dissimilarity = 1;
+		} else if (Dissimilarity <= 0){
+			Dissimilarity = 0;
+		}
+		
 		return Dissimilarity;
 
 	}
@@ -566,9 +576,6 @@ public class CustomDissimilarity {
 				Dissimilarity = SumDissimilarity / Intersection.size();
 			}
 			
-			
-
-			
 		}
 		
 		//adjust dissimilarity before returning
@@ -666,6 +673,13 @@ public class CustomDissimilarity {
 		//Amalgamate into dissimilarity
 		Dissimilarity = (RelWeightHeadPos/TotalRelativeWeights) * HeadPosDissimilarity +
 						(RelWeightPairOrd/TotalRelativeWeights) * PairOrdDissimilarity;
+		
+		//Maximum dissimilarity is 1, minimum is 0.
+		if (Dissimilarity > 1){
+			Dissimilarity = 1;
+		} else if (Dissimilarity <= 0){
+			Dissimilarity = 0;
+		}
 		
 		return Dissimilarity;
 	}
@@ -1010,7 +1024,98 @@ public class CustomDissimilarity {
 				   (SSWeight/AllProvidedWeights) * SSContribution;
 			
 		} else {
-			return 0;
+			/*
+			 * Scale-hierarchy ensures that a dissimilarity contribution of lower importance
+			 * never overtakes a contribution of higher importance.
+			 * 
+			 * Individual dissimilarities are computed, and factors are truncated at their maximum
+			 * allowed fraction of the next ranking:
+			 * 
+			 * Dissimilarity From Lower Importance 
+			 * 		<= (Dissimilarity from Higher Importance * Importance Fraction)
+			 */
+			//initialize values
+			Double TotalContribution = 0.0;
+			
+			Double CGContribution = 0.0;
+			Double CMContribution = 0.0;
+			Double GOContribution = 0.0;
+			Double GGContribution = 0.0;
+			Double SSContribution = 0.0;
+			
+			
+			LinkedList<ImportanceMapping> ImpMapping = new LinkedList<ImportanceMapping>();
+			
+			//Determine Factors
+			if (Factors.contains("CG")){
+				CGContribution = CGDissimilarity(G1,G2,T);
+				ImportanceMapping IM = new ImportanceMapping();
+				IM.FactorType = "CG";
+				IM.Dissimilarity = CGContribution;
+				IM.Importance = CGImportance;
+				ImpMapping.add(IM);
+			}
+			if (Factors.contains("CM")){
+				CMContribution = CMDissimilarity(G1,G2,T);
+				ImportanceMapping IM = new ImportanceMapping();
+				IM.FactorType = "CM";
+				IM.Dissimilarity = CMContribution;
+				IM.Importance = CMImportance;
+				ImpMapping.add(IM);
+			}
+			if (Factors.contains("GO")){
+				GOContribution = GODissimilarity(G1,G2,T);
+				ImportanceMapping IM = new ImportanceMapping();
+				IM.FactorType = "GO";
+				IM.Dissimilarity = GOContribution;
+				IM.Importance = GOImportance;
+				ImpMapping.add(IM);
+			}
+			if (Factors.contains("GG")){
+				GGContribution = GGDissimilarity(G1,G2,T);
+				ImportanceMapping IM = new ImportanceMapping();
+				IM.FactorType = "GG";
+				IM.Dissimilarity = GGContribution;
+				IM.Importance = GGImportance;
+				ImpMapping.add(IM);
+			}
+			if (Factors.contains("SS")){
+				SSContribution = SSDissimilarity(G1,G2,T);
+				ImportanceMapping IM = new ImportanceMapping();
+				IM.FactorType = "SS";
+				IM.Dissimilarity = SSContribution;
+				IM.Importance = SSImportance;
+				ImpMapping.add(IM);
+			}
+			
+			//sort importance mapping
+			Collections.sort(ImpMapping, new IMComparator());
+			
+			if (ImpMapping.size() > 1){
+				
+				TotalContribution = ImpMapping.get(0).Dissimilarity;
+				
+				for (int i = 0; i < ImpMapping.size()-1; i++){
+					
+					//check for different levels
+					if (ImpMapping.get(i).Importance != ImpMapping.get(i+1).Importance){
+						if (ImpMapping.get(i).Dissimilarity * ImportanceFraction
+								< ImpMapping.get(i+1).Dissimilarity){
+							ImpMapping.get(i+1).Dissimilarity = ImpMapping.get(i).Dissimilarity * ImportanceFraction;
+						}
+						TotalContribution = TotalContribution + ImpMapping.get(i+1).Dissimilarity;
+					}	
+					
+				}
+
+				//adjust contribution by size
+				TotalContribution = TotalContribution / (double)ImpMapping.size();
+				
+			} else {
+				TotalContribution = ImpMapping.getFirst().Dissimilarity;
+			}
+
+			return TotalContribution;
 		}
 
 	}
@@ -1021,5 +1126,31 @@ public class CustomDissimilarity {
 
 	public void setName(String name) {
 		Name = name;
+	}
+
+	public Double getImportanceFraction() {
+		return ImportanceFraction;
+	}
+
+	public void setImportanceFraction(Double importanceFraction) {
+		ImportanceFraction = importanceFraction;
+	}
+	
+	
+	//new class
+	public class ImportanceMapping {
+		
+		public String FactorType;
+		public double Dissimilarity;
+		public int Importance;
+	}
+	
+	public class IMComparator implements Comparator<ImportanceMapping>{
+
+		@Override
+		public int compare(ImportanceMapping IM1, ImportanceMapping IM2) {
+
+			return IM1.Importance - IM2.Importance;
+		}
 	}
 }

@@ -86,6 +86,11 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 	private String TxtLinear = "Weight:"; 
 	private String TxtScale = "Importance:";
 	
+	//Importance factor
+	private JTextField LblImpFactor, TxtImpFactor;
+	private String strLblImpFactor = "Importance Factor:";
+	private String strTxtImpFactor = "0.8";
+	
 	//(1) COMMON GENES
 	private JTextField LblcgWeight, TxtcgWeight, LblcgScale, TxtcgScale;
 	private String strTxtcgWeight = "0.3";
@@ -358,6 +363,29 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		btnDeselectAll = new JButton(strDeselectAll);
 		btnDeselectAll.addActionListener(this);
 		jp.add(btnDeselectAll, c);
+		
+		c.gridx = 4;
+		c.gridy = gridy;
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.insets = new Insets(3,3,3,3);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		LblImpFactor = new JTextField(strLblImpFactor);
+		LblImpFactor.setEditable(false);
+		LblImpFactor.setEnabled(false);
+		grpScaleHierarchy.add(LblImpFactor);
+		jp.add(LblImpFactor, c);
+		
+		c.gridx = 5;
+		c.gridy = gridy;
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.insets = new Insets(3,3,3,3);
+		TxtImpFactor = new JTextField(strTxtImpFactor);
+		TxtImpFactor.setEditable(true);
+		TxtImpFactor.setEnabled(false);
+		grpScaleHierarchy.add(TxtImpFactor);
+		jp.add(TxtImpFactor, c);
 		gridy++;
 		
 		//(1) COMMON GENES
@@ -1402,9 +1430,13 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		} else if (evt.getSource().equals(radLinear)){
 				ActivateIfEnabled(grpLinear);
 				SwitchStateComponents(grpScaleHierarchy, false);
+				this.LblImpFactor.setEnabled(false);
+				this.TxtImpFactor.setEnabled(false);
 		} else if (evt.getSource().equals(radScaleHierarchy)){
 				ActivateIfEnabled(grpScaleHierarchy);
 				SwitchStateComponents(grpLinear, false);
+				this.LblImpFactor.setEnabled(true);
+				this.TxtImpFactor.setEnabled(true);
 		} else if (evt.getSource().equals(btnSelectAll)){
 				//check boxes
 				this.chkCommonGenes.setSelected(true);
@@ -1452,6 +1484,8 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 
 				try {
 					
+					Double ImpFactor = 0.0;
+					
 					//General
 					String Name = DMName.getText();
 					String AmalgamationType;
@@ -1459,6 +1493,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 						AmalgamationType = "Linear";
 					} else {
 						AmalgamationType = "ScaleHierarchy";
+						ImpFactor = Double.parseDouble(this.TxtImpFactor.getText());
 					}
 					LinkedList<String> Factors = new LinkedList<String>();
 					
@@ -1598,6 +1633,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 							Name,				//General
 							AmalgamationType,
 							Factors,			
+							ImpFactor,
 							CGCompareType,		//Factor 1: Common Genes
 							CGDuplicatesUnique,
 							CGWeight,
