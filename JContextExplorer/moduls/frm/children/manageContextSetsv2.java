@@ -3,6 +3,7 @@ package moduls.frm.children;
 import genomeObjects.AnnotatedGenome;
 import genomeObjects.ContextSet;
 import genomeObjects.ContextSetDescription;
+import genomeObjects.GenomicElement;
 import genomeObjects.OrganismSet;
 import haloGUI.StartFrame;
 import inicial.Language;
@@ -22,8 +23,11 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
@@ -37,6 +41,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -73,6 +78,12 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 	private boolean LoadedGrouping = false;
 	private String ComputedString;
 	private String LoadedString;
+	
+	//File loading related
+	private File[] GenomeGroupingFiles;
+	private File ReferenceDirectory;
+	private String GenomeWorkingSetFile_NoPath;
+	private boolean GenomicGroupingsAsSingleFile = false;
 	
 	//components
 	//panels
@@ -193,11 +204,12 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		//imported information
 		this.fr = f;
 		this.jb = jbn;
+		this.ReferenceDirectory = fr.getFileChooserSource();
+		
 		//this.ContextList = currentList;
 		
 		//frame settings
 		//this.setSize(new Dimension(400, 350));
-		//this.setSize(700,650);
 		this.setSize(700,650);
 					//width, height
 		
@@ -293,40 +305,114 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 				progressBar.setStringPainted(true);
 
 				try {
-					//initialize a context set
-					ContextSet CS = new ContextSet();
 					
-					//import buffered reader
-					BufferedReader br_count = new BufferedReader(new FileReader(OperonStringToDisplay));
-					BufferedReader br = new BufferedReader(new FileReader(OperonStringToDisplay));
-					String Line = null;
-					int TotalLines = 0;
-					
-					//count lines
-					while (br_count.readLine() != null){
-						TotalLines++;
-					}
-					
-					int LineCounter = 0;
-					while ((Line = br.readLine()) != null){
-						
-						//import each line
-						String[] ImportedLine = Line.split("\t");
-					
-						//retrieve species
-						AnnotatedGenome AG = fr.getOS().getSpecies().get(ImportedLine[0]);
-						
-						//import from file
-						AG.ImportContextSet(CSName.getText(), ImportedLine[1]);
+					if (GenomicGroupingsAsSingleFile) {
 
-						//report to SwingWorker
-						LineCounter++;
+						//import buffered reader
+						BufferedReader br_count = new BufferedReader(new FileReader(OperonStringToDisplay));
+						BufferedReader br = new BufferedReader(new FileReader(OperonStringToDisplay));
+						String Line = null;
+						int TotalLines = 0;
 						
-						operonLoadProgress= (int) Math.round(100*((double)LineCounter/(double)TotalLines));
-						setProgress(operonLoadProgress);
+						//count lines
+						while (br_count.readLine() != null){
+							TotalLines++;
+						}
 						
+						int LineCounter = 0;
+						while ((Line = br.readLine()) != null){
+							
+							//import each line
+							String[] ImportedLine = Line.split("\t");
+						
+							//retrieve species
+							AnnotatedGenome AG = fr.getOS().getSpecies().get(ImportedLine[0]);
+							
+							//import from file
+							AG.ImportContextSet(CSName.getText(), ImportedLine[1]);
+
+							//report to SwingWorker
+							LineCounter++;
+							
+							operonLoadProgress= (int) Math.round(100*((double)LineCounter/(double)TotalLines));
+							setProgress(operonLoadProgress);
+							
+						}
+						
+						
+					//from a set of files	
+					} else {
+						
+						// determine number of total organisms
+						int TotalOrganisms = 0;
+						for (File f : GenomeGroupingFiles) {
+							if (f.getName().contains(".txt")) {	//only take plain text files
+								TotalOrganisms++;
+							}
+						}
+						
+						int LineCounter = 0;
+						// retrieve all files
+						for (File f : GenomeGroupingFiles) {
+							if (f.getName().contains(".txt")) {
+								LineCounter++;
+								
+								String[] SpeciesName = f.getName().split(".txt");
+								String TheName = SpeciesName[0];
+								
+								//retrieve species
+								AnnotatedGenome AG = fr.getOS().getSpecies().get(TheName);
+								
+								//import from file
+								AG.ImportContextSet(CSName.getText(), f.getAbsolutePath());
+								
+								//break out of the loop.
+								if (!AG.isTryToComputeOperons()){
+									setProgress(0);
+									break;
+								}
+								
+								// update progress bar
+								operonLoadProgress= (int) Math.round(100*((double)LineCounter/(double)TotalOrganisms));
+								setProgress(operonLoadProgress);
+
+							}
+						}
+
 					}
 
+					
+					//check
+					int NewCSCounter = 0;
+					for (AnnotatedGenome AG : fr.getOS().getSpecies().values()){
+						boolean NewCS = true;
+						for (ContextSet CS : AG.getGroupings()){
+							if (CS.getName().equals(CSName.getText())){
+								NewCS = false;
+								break;
+							}
+						}
+
+						//create a new CS
+						if (NewCS){
+							NewCSCounter++;
+							ContextSet CS = new ContextSet();
+							CS.setName(CSName.getText());
+							CS.setType("Loaded");
+							CS.setPreProcessed(true);
+							CS.setContextMapping(new HashMap<Integer, LinkedList<GenomicElement>>());
+							AG.getGroupings().add(CS);
+						}
+					}
+						if (NewCSCounter == fr.getOS().getSpeciesNames().size()){
+							progressBar.setVisible(false);
+							progressBar.setValue(0);
+							LoadedFileName.setText("No genomic groupings were discovered.");
+							LoadedFileName.setVisible(true);
+							throw new IOException();
+						}
+
+					//information regarding context set upload.
 					ToAdd = new ContextSetDescription();
 					ToAdd.setName(CSName.getText());
 					ToAdd.setPreprocessed(true);
@@ -336,20 +422,25 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 					LoadedFileName.setVisible(true);
 					LoadedFileName.setText("File Loaded: " + OperonStringToDisplay);
 					LoadedString = OperonStringToDisplay;
-					//System.out.println("operons loaded successfully.");
 					
 					ReadyToAdd = true;
+				
+				} catch (IOException ex){
+					JOptionPane.showMessageDialog(null, "No genomic groupings could be mapped to the genomic working set.",
+							"No Groupings Discovered",JOptionPane.ERROR_MESSAGE);
 					
 				} catch(Exception ex) {
 					
 					progressBar.setStringPainted(false);
-					
-					JOptionPane.showMessageDialog(null, "The file could not be loaded or was improperly formatted.",
+					progressBar.setVisible(false);
+					LoadedFileName.setText("Unable to load files.");
+					LoadedFileName.setVisible(true);
+					JOptionPane.showMessageDialog(null, "One or more of the files could not be loaded or was improperly formatted.",
 							"Improper File Format",JOptionPane.ERROR_MESSAGE);
 
 					LoadedFileName.setText(strNoOperons);
 					LoadedString = strNoOperons;
-					//System.out.println("operons not loaded successfully.");
+
 				}
 			}
 			
@@ -1011,8 +1102,9 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 			//only try to read in file if the name is acceptable.
 			if (AcceptableName == true){
 			
-				String fileName = getMappingFile();
-			
+				//String fileName = getMappingFile();
+				String fileName = getGenomicGroupings();
+				
 				if (fileName != null){
 				
 					if (!fileName.equals(OperonStringToDisplay)){
@@ -1319,6 +1411,57 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		return MappingFile; //file name
 	}
 
+	// retrieve either directory or data file of pre-computed genomic groupings
+	private String getGenomicGroupings(){
+
+		// initialize output
+		JFileChooser GetGenomicGroupings = new JFileChooser();
+		
+		GetGenomicGroupings.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+		GetGenomicGroupings
+				.setDialogTitle("Select directory or a single file of custom genomic groupings");
+
+		if (this.ReferenceDirectory != null) {
+			GetGenomicGroupings.setCurrentDirectory(ReferenceDirectory);
+		} else {
+			GetGenomicGroupings.setCurrentDirectory(new File("."));
+		}
+		GetGenomicGroupings.showOpenDialog(GetGenomicGroupings);
+
+		// retrieve a directory
+		// File[] AllFiles = GetGenomes.getSelectedFiles();
+		File DirectoryOrGWSFile = GetGenomicGroupings.getSelectedFile();
+		this.GenomeWorkingSetFile_NoPath = DirectoryOrGWSFile.getName();
+
+		// note current directory for next time
+		if (GetGenomicGroupings.getCurrentDirectory() != null) {
+			this.ReferenceDirectory = GetGenomicGroupings.getCurrentDirectory();
+		}
+
+		// check if file could be received
+		if (DirectoryOrGWSFile != null) {
+
+			// determine if file or directory loaded
+			if (DirectoryOrGWSFile.isDirectory()) {
+
+				// retrieving info as a directory.
+				this.GenomicGroupingsAsSingleFile = false;
+
+				// retrieve directory
+				this.GenomeGroupingFiles = DirectoryOrGWSFile.listFiles();
+
+			} else {
+
+				// all information stored in a single genome working set file.
+				this.GenomicGroupingsAsSingleFile = true;
+
+			}
+		}
+
+		// return the information.
+		return DirectoryOrGWSFile.getAbsolutePath();
+	}
+	
 	//update progress bar
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {

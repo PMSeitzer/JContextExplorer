@@ -274,6 +274,7 @@ import definicions.MatriuDistancies;
 				}
 				
 			} catch (Exception ex) {
+				
 				showError("There were no matches to the query (or queries).");
 				//ex.printStackTrace();
 			}
@@ -301,6 +302,8 @@ import definicions.MatriuDistancies;
 						break;
 					}
 				}
+				
+				//System.out.println("CSD: " + CurrentCSD.getName());
 				
 				//set context set name
 				String ContextSetName = this.ContextSetName;
@@ -941,7 +944,6 @@ import definicions.MatriuDistancies;
 				//update search results frame
 				SearchResultsFrame = new FrmSearchResults(fr,WorkerQD.getCSD());
 				WorkerQD.setCSD(SearchResultsFrame.getCSD());
-
 				return null;
 			}
 			

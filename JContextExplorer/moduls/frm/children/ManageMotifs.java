@@ -149,7 +149,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			SequenceMotifsAsList.add(SequenceMotifsAsArray[i]);
 		}
 		
-		this.setSize(800,600);
+		this.setSize(830,600);
 		
 		this.setTitle("Manage Sequence Motifs");
 		this.setModalityType(ModalityType.DOCUMENT_MODAL);
@@ -542,7 +542,6 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		
 	}
 
-	
 	private void getPanel(){
 		
 		//initial GridBagLayout parameters

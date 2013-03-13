@@ -19,7 +19,7 @@ public class AnnotatedGenome {
     private LinkedList<GenomicElement> Elements;		 		//-Genes, SigSeqs, and groups of genes--
     private LinkedList<MotifGroup> Motifs 						//
     	= new LinkedList<MotifGroup>();						    //
-    private LinkedList<ContextSet> Groupings;					//-Predicted Groupings-----------------
+    private LinkedList<ContextSet> Groupings = new LinkedList<ContextSet>();					//-Predicted Groupings-----------------
     private File GenomeFile; 									//-Associated genome file --------------
     private boolean TryToComputeOperons;
 	private LinkedList<String> IncludeTypes;					//-Types of data worth importing/processing
@@ -362,31 +362,26 @@ public void ImportContextSet(String CSName, String fileName) {
 		LinkedHashMap<Integer, LinkedList<GenomicElement>> CSMap 
 			= new LinkedHashMap<Integer, LinkedList<GenomicElement>>();
 		
-		int ContextSetID = -1;
-		LinkedList<GenomicElement> LL = new LinkedList<GenomicElement>();
 		while((Line = br.readLine()) != null){
 			
 			//import line
 			String ImportedLine[] = Line.split("\t");
 			
 			//if the ID is 0, then skip this entry entirely and move on the next one.
-			if (Integer.parseInt(ImportedLine[3]) != 0){
+			int Key = Integer.parseInt(ImportedLine[3]);
+			if (Key != 0){
 			
-				//either start a new list, or add this element to the last list
-				if (Integer.parseInt(ImportedLine[3]) != ContextSetID){
-					if (ContextSetID != -1){
-						CSMap.put(ContextSetID,LL);
-						LL = new LinkedList<GenomicElement>();
-					}
-					ContextSetID = Integer.parseInt(ImportedLine[3]);
-				} 
+				//create new list, if it doesn't already exist
+				if (CSMap.get(Key) == null){
+					CSMap.put(Key, new LinkedList<GenomicElement>());
+				}
 				
-				//search through genomes to find the correct element
+				//search through genomes to find the correct element, add to list
 				for (GenomicElement e : this.Elements){
 					if (e.getContig().equals(ImportedLine[0]) &&
 							e.getStart() == Integer.parseInt(ImportedLine[1]) &&
 							e.getStop() == Integer.parseInt(ImportedLine[2])){
-						LL.add(e);
+						CSMap.get(Key).add(e);
 						break;
 					}
 				}
@@ -395,7 +390,6 @@ public void ImportContextSet(String CSName, String fileName) {
 		}
 		
 		//add completed mapping to context set
-		CSMap.put(ContextSetID, LL);
 		CS.setContextMapping(CSMap);
 		
 		//add this context set to existing context sets.
@@ -503,6 +497,8 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> AnnotationMatches(String
 			break;
 		}
 	}
+	
+	//System.out.println(this.Species + " " + CS.getName());
 	
 	//create a tree set to contain individual element matches
 	HashSet<LinkedList<GenomicElementAndQueryMatch>> Hits = 
@@ -1213,6 +1209,9 @@ public void setGenomeFile(File genomeFile) {
 }
 
 public LinkedList<ContextSet> getGroupings() {
+	if (Groupings == null){
+		Groupings = new LinkedList<ContextSet>();
+	}
 	return Groupings;
 }
 
