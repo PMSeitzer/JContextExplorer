@@ -24,6 +24,7 @@ public class AnnotatedGenome {
     private boolean TryToComputeOperons;
 	private LinkedList<String> IncludeTypes;					//-Types of data worth importing/processing
 	private LinkedList<String> DisplayOnlyTypes;
+	private boolean AGClustersLoaded = false;
 	
 // ----------------------- Construction ------------------------//
       
@@ -112,9 +113,11 @@ public void importElements(String filename){
 							//add gene IDs + homology clusters, if available
 							if (ImportedLine.length > 9){
 								E.setClusterID(Integer.parseInt(ImportedLine[9]));
+								this.AGClustersLoaded = true;
+								
 								//System.out.println("Set!");
 								if (ImportedLine.length > 10){
-									E.setGeneID(Integer.parseInt(ImportedLine[10]));
+									E.setGeneID(ImportedLine[10]);
 								}
 							}
 							
@@ -525,10 +528,18 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> AnnotationMatches(String
 			//check each query
 			for (int j = 0; j < query.length; j++){
 			
+				//check annotation first
 				if (LL.get(i).getAnnotation().toUpperCase().contains(query[j].trim().toUpperCase())){
 					AddtheSet = true;
 					GandE.setQueryMatch(true);
-					//Hits.add(LL);
+					
+				//next, check gene IDs
+				} else if (LL.get(i).getGeneID().toUpperCase().equals(query[j].trim().toUpperCase())){
+
+					AddtheSet = true;
+					GandE.setQueryMatch(true);
+					
+				// no match!
 				} else {
 					GandE.setQueryMatch(false);
 				}
@@ -637,6 +648,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 	//group genes together according to the specificed gene grouping protocol.
 	if (CSD.getType().contentEquals("Range")) {
 		
+
 		//iterate through all elements
 		for (int i = 0; i <this.Elements.size(); i++){
 				
@@ -652,6 +664,9 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 			} else {
 				for (int j = 0; j < Queries.length; j++){
 					if (this.Elements.get(i).getAnnotation().toUpperCase().contains(Queries[j].trim().toUpperCase())){
+						QueryMatch = true;
+						break;
+					} else if (this.Elements.get(i).getGeneID().toUpperCase().equals(Queries[j].trim().toUpperCase())){
 						QueryMatch = true;
 						break;
 					}
@@ -777,6 +792,9 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 			} else {
 				for (int j = 0; j < Queries.length; j++){
 					if (this.Elements.get(i).getAnnotation().toUpperCase().contains(Queries[j].trim().toUpperCase())){
+						QueryMatch = true;
+						break;
+					} else if (this.Elements.get(i).getGeneID().toUpperCase().equals(Queries[j].trim().toUpperCase())){
 						QueryMatch = true;
 						break;
 					}
@@ -905,11 +923,17 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 			} else {
 				for (int j = 0; j < Queries.length; j++){
 					if (this.Elements.get(i).getAnnotation().toUpperCase().contains(Queries[j].trim().toUpperCase())){
-						if (j ==0 ){
+						if (j == 0){
 							FirstQueries.add(Elements.get(i));
 						} else {
 							SecondQueries.add(Elements.get(i));
 						}
+					} else if (this.Elements.get(i).getGeneID().toUpperCase().equals(Queries[j].trim().toUpperCase())){
+						if (j == 0){
+							FirstQueries.add(Elements.get(i));
+						} else {
+							SecondQueries.add(Elements.get(i));
+						};
 					}
 				}
 			}
@@ -1068,7 +1092,27 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 
 			} else {
 				for (int j = 0; j < Queries.length; j++){
+					//check annotation
 					if (E.getAnnotation().toUpperCase().contains(Queries[j].trim().toUpperCase())){
+						GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+						GandE.setE(E); 
+						GandE.setQueryMatch(true);
+						
+						//check against user-defined set of valid types
+						boolean ElementIsValid = false;
+						for (String s : this.IncludeTypes){
+							if (GandE.getE().getType().contentEquals(s)){
+								ElementIsValid = true;
+								break;
+							}
+						}
+						
+						if (ElementIsValid){
+							MQMatches.add(GandE);
+						}
+						
+					//check gene ID
+					} else if (E.getGeneID().toUpperCase().equals(Queries[j].trim().toUpperCase())){
 						GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
 						GandE.setE(E); 
 						GandE.setQueryMatch(true);
@@ -1249,6 +1293,14 @@ public LinkedList<MotifGroup> getMotifs() {
 
 public void setMotifs(LinkedList<MotifGroup> motifs) {
 	Motifs = motifs;
+}
+
+public boolean isAGClustersLoaded() {
+	return AGClustersLoaded;
+}
+
+public void setAGClustersLoaded(boolean aGClustersLoaded) {
+	AGClustersLoaded = aGClustersLoaded;
 }
 
 //-----------------------Deprecated ----------------------//

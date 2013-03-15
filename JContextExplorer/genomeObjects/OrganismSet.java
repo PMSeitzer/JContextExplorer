@@ -761,4 +761,5 @@ public class OrganismSet {
 		//add to list
 		this.CustomDissimilarities.add(D);
 	}
+
 } //completes classbody

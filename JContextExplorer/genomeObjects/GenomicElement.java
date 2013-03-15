@@ -18,7 +18,7 @@ public class GenomicElement {
     private String Annotation;		    //
 	private int ElementID;				//-Other Designations------------
     private int ClusterID;				//
-    private int GeneID;					//
+    private String GeneID;					//
     private HashSet<SequenceMotif> AssociatedMotifs = new HashSet<SequenceMotif>();
 
     //Constructor
@@ -30,7 +30,7 @@ public class GenomicElement {
     	Start = 0;
     	Stop = 0;
     	ClusterID = 0;
-    	GeneID = 0;
+    	GeneID = "";
     	Annotation = null;
     }
 
@@ -93,11 +93,11 @@ public class GenomicElement {
 		ElementID = elementID;
 	}
 
-	public int getGeneID() {
+	public String getGeneID() {
 		return GeneID;
 	}
 
-	public void setGeneID(int geneID) {
+	public void setGeneID(String geneID) {
 		GeneID = geneID;
 	}
 

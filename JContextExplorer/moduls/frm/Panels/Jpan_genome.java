@@ -6,6 +6,7 @@ import genomeObjects.GenomicElement;
 import genomeObjects.GenomicElementAndQueryMatch;
 import genomeObjects.OrganismSet;
 
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -302,6 +303,13 @@ public class Jpan_genome extends JPanel implements ActionListener,
 					
 					//System.out.println("Currently Viewed: " + CSD.getCurrentlyViewedPanel());
 					
+					//remove empties from selection
+					for (ContextLeaf CL : CSD.getGraphicalContexts()){
+						if (CSD.getEC().getContexts().get(CL.getName()).isEmpty()){
+							CL.setSelected(false);
+						}
+					}
+					
 					//count number selected
 					int NumSelected = 0;
 					for (ContextLeaf CL : CSD.getGraphicalContexts()){
@@ -309,7 +317,7 @@ public class Jpan_genome extends JPanel implements ActionListener,
 							NumSelected++;
 						}
 					}
-
+					
 					//issue warning if the number is very high
 					if (NumSelected >= ViewingThreshold ) {
 						String SureYouWantToView = "You are attempting to view a large number (" + NumSelected +
@@ -353,9 +361,13 @@ public class Jpan_genome extends JPanel implements ActionListener,
 //							System.out.println(CL.getName() + " " + CSD.getEC().getContexts().get(CL.getName()));
 //						}
 						
+						//set wait cursor
+						fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 						
 						new mainFrame(CSDToContexts, OS, Title, fr);
 						
+						// return cursor to default
+						fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 					}
 					
 				} catch (Exception e1){
@@ -526,12 +538,13 @@ public class Jpan_genome extends JPanel implements ActionListener,
 							if (Queries[j].toUpperCase().contains("GENEID:")){
 								try {
 									
-									//retrieve Id number
-									int GeneIDNumber = Integer.parseInt(Queries[j].substring(7));
+									//retrieve Gene ID
+									//int GeneIDNumber = Integer.parseInt(Queries[j].substring(7));
+									String GeneID = Queries[j].substring(7);
 									
 									//if a gene matches, select this context
 									for (GenomicElementAndQueryMatch GandE : Genes){
-										if (GandE.getE().getGeneID() == GeneIDNumber){
+										if (GandE.getE().getGeneID().toUpperCase().equals(GeneID.toUpperCase())){
 											SelectNode = true;
 										}
 									}

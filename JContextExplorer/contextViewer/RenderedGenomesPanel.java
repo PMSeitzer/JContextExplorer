@@ -726,7 +726,13 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		contexts = mf.getCSD().getEC().getContexts();
 		SourceSpecies = mf.getCSD().getEC().getSourceSpeciesNames();
 		SourceContigs = mf.getCSD().getEC().getSourceContigNames();
-		ECRONType = mf.getCSD().getEC().getSearchType();
+		//ECRONType = mf.getCSD().getEC().getSearchType();
+		
+		if (mf.getOS().isGeneClustersLoaded()){
+			ECRONType = "cluster";
+		} else {
+			ECRONType = "annotation";
+		}
 		
 		int LongestRange = 0; 
 		

@@ -1249,6 +1249,20 @@ public class LoadGenomesPanelv2 extends JLayeredPane implements ActionListener,
 
 		public void done() {
 
+			//determine if clusters / annotations loaded.
+			double NumWithClusters = 0.0;
+			for (AnnotatedGenome AG : OS.getSpecies().values()){
+				if (AG.isAGClustersLoaded()){
+					NumWithClusters++;
+				}
+			}
+			
+			if (NumWithClusters >= 0.8*(double)OS.getSpecies().values().size()){
+				OS.setGeneClustersLoaded(true);
+			} else {
+				OS.setGeneClustersLoaded(false);
+			}
+			
 			// adjust switches
 			LoadingGenomeFiles = false;
 			GenomeWorkingSetLoaded = true;

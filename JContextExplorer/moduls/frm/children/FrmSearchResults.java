@@ -125,10 +125,10 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 			for (GenomicElementAndQueryMatch GandE : Genes){
 
 				//Retrieve Gene ID number
-				if (GandE.getE().getGeneID() == 0){
+				if (GandE.getE().getGeneID() == ""){
 					GeneIDNum = "none";
 				} else {
-					GeneIDNum = Integer.toString(GandE.getE().getGeneID());
+					GeneIDNum = GandE.getE().getGeneID();
 				}
 
 				//Retrieve Cluster ID number
