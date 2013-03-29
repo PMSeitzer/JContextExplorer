@@ -495,7 +495,6 @@ public class Jpan_genome extends JPanel implements ActionListener,
 									//if a gene matches, select this context
 									for (GenomicElementAndQueryMatch GandE : Genes){
 										if (GandE.getE().getAssociatedMotifNames().contains(MotifName)){
-											System.out.println("Motif Found!");
 											SelectNode = true;
 										}
 									}
