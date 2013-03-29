@@ -380,117 +380,6 @@ public class Jpan_genome extends JPanel implements ActionListener,
 			
 		}
 		
-		//invoke view annotations frame
-		if (e.getSource() == btnViewAnnotations){
-
-			try {
-			
-			//set CSD to appropriate value
-			this.setCSD(fr.getCurrentFrame().getInternalPanel().getCSD());
-				
-			//retrieve hash map of entries
-			HashMap<String, LinkedList<GenomicElementAndQueryMatch>> ContextEntries = fr.getCurrentFrame().getInternalPanel().getCSD().getEC().getContexts();
-			
-			//initialize strings
-			String[] Headers = new String[CSD.getSelectedNodes().length];
-			String[] Annotations = new String[CSD.getSelectedNodes().length];
-
-			JTextArea textArea = new JTextArea(20, 80);
-		    textArea.setEditable(false);	
- 
-		    int NodeCounter = 0;
-		    boolean NodeSelected = false;
-			//determine EC from selected
-			for (int i = 0; i < CSD.getSelectedNodes().length; i++){
-				if (CSD.getSelectedNodes()[i] == true){
-					
-					//increment counter
-					NodeCounter++;
-					
-					//determine if node already selected
-					NodeSelected = false;
-					
-					//isolate node name
-					String NodeName = CSD.getNodeNames()[i];
-
-					//retrieve list of genomic elements
-					List<GenomicElementAndQueryMatch> LL = ContextEntries.get(NodeName);
-					
-					//check for cluster number or annotation query
-					for (int j = 0; j < LL.size(); j++){
-						if (CSD.getEC().getSearchType().equals("annotation")){
-							if (NodeSelected == false){
-								for (int k = 0; k < CSD.getEC().getQueries().length; k++){
-									if (LL.get(j).getE().getAnnotation().toUpperCase().contains(CSD.getEC().getQueries()[k].toUpperCase().trim())){
-										
-										//write to array
-										Headers[i] = NodeName + ": ";
-										Annotations[i] = LL.get(j).getE().getAnnotation() + "\n";
-										NodeSelected = true;
-									}
-								}
-							}
-						} else if (CSD.getEC().getSearchType().equals("cluster")){
-							if (NodeSelected == false){
-								for (int k = 0; k < CSD.getEC().getClusterNumbers().length; k++){
-									if (LL.get(j).getE().getClusterID() == CSD.getEC().getClusterNumbers()[k]){
-										
-										//write to array
-										Headers[i] = NodeName + ": ";
-										Annotations[i] = LL.get(j).getE().getAnnotation() + "\n";
-										NodeSelected = true;
-									}
-								}
-							}
-						}
-						
-					}
-					
-				}
-			}
-
-			// create a JTextPane + add settings
-			JTextPane jtp = new JTextPane();
-			jtp.setEditable(false);
-			
-			//retrieve document, and add styles
-	        StyledDocument doc = jtp.getStyledDocument();
-	        
-	        Style def = StyleContext.getDefaultStyleContext().
-                    getStyle(StyleContext.DEFAULT_STYLE);
-
-	        Style regular = doc.addStyle("regular", def);
-	        StyleConstants.setFontFamily(def, "SansSerif");
-	        
-	        Style s = doc.addStyle("bold", regular);
-	        StyleConstants.setBold(s, true);
-	        if (Headers.length > 1){
-		        String MatchHits = "Annotations for " + NodeCounter + " selected nodes:\n";
-		        doc.insertString(doc.getLength(), MatchHits, doc.getStyle("regular"));
-		        doc.insertString(doc.getLength(), "-------------------------------\n", doc.getStyle("regular"));
-	        }
-
-            for (int i=0; i <Headers.length; i++) {
-                try {
-					doc.insertString(doc.getLength(), Headers[i], doc.getStyle("bold"));
-					doc.insertString(doc.getLength(), Annotations[i], doc.getStyle("regular"));
-				} catch (BadLocationException e1) {
-					System.out.println("bad location exception");
-				}
-           
-            }
-            
-            //open new frame with results
-		    new AnnotationFrame(jtp, "Annotation Results", fr);
-		    
-			} catch (Exception e1){
-				String exceptionString = "Select nodes of interest by clicking on the node name in the dendrogram." + "\n" +
-						"ctrl+click and shift+click can be used to select several nodes simultaneously." + "\n" + 
-						"You may select all or deselect all nodes by pushing the 'select all' and 'deselect all' buttons.";
-				JOptionPane.showMessageDialog(null,exceptionString);
-			}
-		}
-		
 		//select a subset of nodes
 		if (e.getSource() == btnSelectNodes || e.getSource() == searchForNodes){
 			
@@ -591,8 +480,29 @@ public class Jpan_genome extends JPanel implements ActionListener,
 									}
 									
 								} catch (Exception ex) {
-									JOptionPane.showMessageDialog(null,"CLUSTERID values must be integers.",
-											"CLUSTERID value unreadable",JOptionPane.ERROR_MESSAGE);
+//									JOptionPane.showMessageDialog(null,"CLUSTERID values must be integers.",
+//											"CLUSTERID value unreadable",JOptionPane.ERROR_MESSAGE);
+								}
+							}
+							
+							//search motif
+							if (Queries[j].toUpperCase().contains("MOTIF:")){
+								try {
+									
+									//retrieve motif name
+									String MotifName = Queries[j].substring(6).toUpperCase();
+									
+									//if a gene matches, select this context
+									for (GenomicElementAndQueryMatch GandE : Genes){
+										if (GandE.getE().getAssociatedMotifNames().contains(MotifName)){
+											System.out.println("Motif Found!");
+											SelectNode = true;
+										}
+									}
+									
+								} catch (Exception ex) {
+//									JOptionPane.showMessageDialog(null,"There are no motifs of that na.",
+//											"CLUSTERID value unreadable",JOptionPane.ERROR_MESSAGE);
 								}
 							}
 							

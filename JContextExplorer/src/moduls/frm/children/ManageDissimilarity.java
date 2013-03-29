@@ -1666,6 +1666,9 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 					//insert item into the menu
 					MenuDM.insertItemAt(Name, 0);
 					
+					//insert item into parent panel
+					f.getPanMenu().getCbDissimilarity().insertItemAt(Name, 0);
+					
 					
 				} catch (Exception ex){
 					JOptionPane.showMessageDialog(null, "One or more fields incorrectly formatted.",
@@ -1686,8 +1689,18 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 					MenuDM.getSelectedItem().equals("Total Length"))){
 				
 				//remove this item, if possible
-				MenuDM.removeItem(MenuDM.getSelectedItem());
-				f.getOS().getCustomDissimilarities().remove(MenuDM.getSelectedItem());
+				Object Item = MenuDM.getSelectedItem();
+				MenuDM.removeItem(Item);
+				f.getOS().getCustomDissimilarities().remove(Item);
+				
+				//remove from parent panel
+				for (int i = 0; i < f.getPan_Menu().getCbDissimilarity().getItemCount(); i++){
+					if (f.getPan_Menu().getCbDissimilarity().getItemAt(i).equals(Item)){
+						f.getPan_Menu().getCbDissimilarity().removeItem(Item);
+						System.out.println("I tried to remove it!");
+						break;
+					}
+				}
 
 			} else {
 				JOptionPane.showMessageDialog(null, "Unable to remove this dissimilarity type.",
@@ -1698,14 +1711,14 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		
 		//Submit button
 		if (evt.getSource().equals(btnOK)){
-			this.f.getPanMenu().getCbDissimilarity().removeAllItems();
-			for (int i = 0; i < f.getOS().getCustomDissimilarities().size(); i++){
-				this.f.getPanMenu().getCbDissimilarity().addItem(f.getOS().getCustomDissimilarities().get(i).getName());
-			}
-			this.f.getPanMenu().getCbDissimilarity().addItem("Common Genes - Dice");
-			this.f.getPanMenu().getCbDissimilarity().addItem("Common Genes - Jaccard");
-			this.f.getPanMenu().getCbDissimilarity().addItem("Moving Distances");
-			this.f.getPanMenu().getCbDissimilarity().addItem("Total Length");
+//			this.f.getPanMenu().getCbDissimilarity().removeAllItems();
+//			for (int i = 0; i < f.getOS().getCustomDissimilarities().size(); i++){
+//				this.f.getPanMenu().getCbDissimilarity().addItem(f.getOS().getCustomDissimilarities().get(i).getName());
+//			}
+//			this.f.getPanMenu().getCbDissimilarity().addItem("Common Genes - Dice");
+//			this.f.getPanMenu().getCbDissimilarity().addItem("Common Genes - Jaccard");
+//			this.f.getPanMenu().getCbDissimilarity().addItem("Moving Distances");
+//			this.f.getPanMenu().getCbDissimilarity().addItem("Total Length");
 			
 			//close window
 			this.dispose();

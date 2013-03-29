@@ -101,7 +101,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener{
 	private static JRadioButton rbDistances, rbWeights;
 
 	// Dissimilarity Metric
-	private static JComboBox cbDissimilarity;
+	private JComboBox cbDissimilarity;
 	
 	// Clustering algorithm
 	private static JComboBox cbMethod;
@@ -279,7 +279,7 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener{
 
 	}
 
-	public static JComboBox getCbDissimilarity() {
+	public JComboBox getCbDissimilarity() {
 		return cbDissimilarity;
 	}
 

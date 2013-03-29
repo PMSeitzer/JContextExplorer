@@ -820,48 +820,6 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		ConditionalInternalGroup.add(IntTxtUpstream);
 		jp.add(IntTxtUpstream, c);
 		gridy++;
-		
-//		c.gridx = 4;
-//		c.gridy = gridy;
-//		c.gridwidth = 2;
-//		c.gridheight = 1;
-//		c.fill = GridBagConstraints.HORIZONTAL;
-//		c.insets = new Insets(1,1,1,1);
-//		chkInternalMotifs = new JCheckBox(strInternalMotifs);
-//		chkInternalMotifs.setSelected(true);
-//		this.FindAssociationGroup.add(chkInternalMotifs);
-//		this.DownstreamGroup.add(chkInternalMotifs);
-//		jp.add(chkInternalMotifs, c);
-//		gridy++;
-
-		
-		
-//		c.gridx = 4;
-//		c.gridy = gridy;
-//		c.gridwidth = 1;
-//		c.gridheight = 1;
-//		c.fill = GridBagConstraints.HORIZONTAL;
-//		LblFromEdge = new JTextField(strLblFromEdge);
-//		LblFromEdge.setEditable(false);
-//		this.FindAssociationGroup.add(LblFromEdge);
-//		this.DownstreamGroup.add(LblFromEdge);
-//		jp.add(LblFromEdge, c);
-//		
-//		c.gridx = 5;
-//		c.gridy = gridy;
-//		c.gridwidth = 1;
-//		c.gridheight = 1;
-//		c.fill = GridBagConstraints.HORIZONTAL;
-//		TxtFromEdge = new JTextField(strTxtFromEdge);
-//		TxtFromEdge.setEditable(true);
-//		this.FindAssociationGroup.add(TxtFromEdge);
-//		this.DownstreamGroup.add(TxtFromEdge);
-//		jp.add(TxtFromEdge, c);
-//		gridy++;
-	
-//			private JTextField LblUpstream, LblDownstream, TxtUpstream, TxtDownstream;
-//			private String strTxtUpstream = "-1";
-//			private String strTxtDownstream = "20";	
 			
 		//(1) MSFIMO
 		c.ipady = 7;
@@ -951,7 +909,6 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		c.gridwidth = 4;
 		c.ipady = 12;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.insets = new Insets(3,1,1,1);
 		progressBar = new JProgressBar(0, 100);
 		progressBar.setStringPainted(false);
 		progressBar.setBorderPainted(false);
@@ -1264,6 +1221,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 					//add description to the OS
 					f.getOS().getMGDescriptions().add(ToAdd);
 					SequenceMotifsAsList.add(ToAdd.getName());
+					//SequenceMotifsAsArray.add(ToAdd.getName());
 					
 					//rebuild appropriately
 					SequenceMotifsMenu.removeAllItems();
@@ -1271,8 +1229,10 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 					for (String s : SequenceMotifsAsList){
 						if (!s.equals("<none>")){
 							SequenceMotifsMenu.addItem(s);
+							
 						}
 					}
+
 					
 					//pre-processed sets are reset
 					MotifFilesLoaded = false;
@@ -1287,6 +1247,11 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		
 		//REMOVE BUTTON
 		if (evt.getSource().equals(btnRemoveMotif)){
+			
+			//set wait cursor
+			this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			
+			Object Item = SequenceMotifsMenu.getSelectedItem();
 			
 			//update motifs
 			//OS level
@@ -1311,16 +1276,22 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			}
 			
 			//remove from list
-			SequenceMotifsAsList.remove(SequenceMotifsMenu.getSelectedItem());
+			SequenceMotifsAsList.remove(Item);
 			
 			//remove from JComboBoxes
 			//add/remove menu
-			SequenceMotifsMenu.removeItem(SequenceMotifsMenu.getSelectedItem());
+			SequenceMotifsMenu.removeItem(Item);
 			
 			//add a new tag, if there are none
 			if (SequenceMotifsMenu.getItemCount() == 0){
 				SequenceMotifsMenu.addItem("<none>");
 			}
+			
+			//remove from parent frame
+			f.getPanMotifOptions().getMenuOfMotifs().removeItem(Item);
+			
+			//set default cursor
+			this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		}
 
 		//close panel, after updating list.
@@ -1366,7 +1337,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		this.AcceptableName = true;
 		
 		//name is unacceptable if non-unique
-		for (String s : SequenceMotifsAsArray){
+		for (String s : SequenceMotifsAsList){
 			if (s.equals(MSName.getText())){
 				AcceptableName = false;
 			}

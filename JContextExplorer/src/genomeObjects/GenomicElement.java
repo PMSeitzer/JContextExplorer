@@ -118,6 +118,14 @@ public class GenomicElement {
 		return MotifsAsObjects;
 	}
 
+	public HashSet<String> getAssociatedMotifNames(){
+		HashSet<String> MotifNames = new HashSet<String>();
+		for (SequenceMotif SM : AssociatedMotifs){
+			MotifNames.add(SM.getMotifName().toUpperCase());
+		}
+		return MotifNames;
+	}
+	
 	public void setAssociatedMotifs(HashSet<SequenceMotif> associatedMotifs) {
 		AssociatedMotifs = associatedMotifs;
 	}

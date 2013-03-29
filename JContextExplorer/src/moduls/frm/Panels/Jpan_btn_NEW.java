@@ -1362,7 +1362,7 @@ import definicions.MatriuDistancies;
 					QD.setAnnotationSearch(false);
 				}
 				QD.setContextSetName(contextSetMenu.getSelectedItem().toString());
-				QD.setDissimilarityType(Jpan_Menu.getCbDissimilarity().getSelectedItem().toString());
+				QD.setDissimilarityType(fr.getPanMenu().getCbDissimilarity().getSelectedItem().toString());
 				QD.setAnalysesList(new PostSearchAnalyses(
 						fr.getPanMenuTab().getJpo().getDrawSearchResults().isSelected(), //search results
 						fr.getPanMenuTab().getJpo().getDrawContextTree().isSelected(), //draw context tree

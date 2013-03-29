@@ -1256,6 +1256,15 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 						break;
 					}
 				}
+				
+				//remove from parent panel
+				for (int i = 0; i < fr.getPanBtn().getContextSetMenu().getItemCount(); i++){
+					if (fr.getPanBtn().getContextSetMenu().getItemAt(i).equals(Item)){
+						fr.getPanBtn().getContextSetMenu().removeItem(Item);
+						break;
+					}
+				}
+
 
 			} else {
 				
