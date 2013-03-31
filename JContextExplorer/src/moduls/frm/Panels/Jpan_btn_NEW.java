@@ -1095,11 +1095,12 @@ import definicions.MatriuDistancies;
 			searchType.add(clusterSearch);
 			
 			//set default state
-			if (fr.getOS().isGeneClustersLoaded() == true){
-				searchType.setSelected(clusterSearch.getModel(), true);
-			} else {
-				searchType.setSelected(annotationSearch.getModel(), true);
-			}
+			searchType.setSelected(annotationSearch.getModel(), true);
+//			if (fr.getOS().isGeneClustersLoaded() == true){
+//				searchType.setSelected(clusterSearch.getModel(), true);
+//			} else {
+//				searchType.setSelected(annotationSearch.getModel(), true);
+//			}
 			
 			// display on panel
 			c.gridx = 0;
@@ -1213,7 +1214,16 @@ import definicions.MatriuDistancies;
 			c.fill = GridBagConstraints.HORIZONTAL;
 			c.insets = new Insets(1, 1, 1, 1);
 			strUpdate = Language.getLabel(110); // Update
-			String[] ContextArray = convertContextSets(fr.getOS().getCSDs());
+			String[] ContextArray;
+			
+			//String[] 
+			if (fr.getOS() == null){
+				ContextArray = new String[1];
+				ContextArray[0] = "<none>";
+			} else {
+				ContextArray = convertContextSets(fr.getOS().getCSDs());
+			}
+
 			contextSetMenu = new JComboBox<String>(ContextArray);
 			contextSetMenu.addActionListener(this);
 			contextSetMenu.setEnabled(true);

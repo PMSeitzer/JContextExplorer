@@ -20,6 +20,8 @@ package moduls.frm;
 
 import genomeObjects.CSDisplayData;
 import genomeObjects.OrganismSet;
+import haloGUI.GBKChecker;
+import haloGUI.GFFChecker;
 import inicial.FesLog;
 import inicial.Language;
 import inicial.Parametres_Inicials;
@@ -27,9 +29,13 @@ import inicial.Parametres_Inicials;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FileDialog;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.LinkedList;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -37,7 +43,9 @@ import javax.swing.DefaultDesktopManager;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
+import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -56,6 +64,9 @@ import moduls.frm.Panels.Jpan_btn_NEW;
 import moduls.frm.Panels.Jpan_genome;
 import moduls.frm.children.DeviationMeasuresBox;
 import moduls.frm.children.FrmPiz;
+import moduls.frm.children.ManageDissimilarity;
+import moduls.frm.children.ManageMotifs;
+import moduls.frm.children.manageContextSetsv2;
 import parser.ToNewick;
 import parser.ToNewick2;
 import parser.ToTXT;
@@ -77,7 +88,7 @@ import definicions.Config;
  *
  * @since JDK 6.0
  */
-public class FrmPrincipalDesk extends JFrame implements InternalFrameListener{
+public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, ActionListener{
 	
 	// ----- Fields ---------------------------------------------------//
 	
@@ -118,7 +129,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener{
 	private boolean[] SelectedNodeNumbers;
 	private CSDisplayData CSD;
 
-	// ----- New Fields (2.0) ------------------------------------------//
+	// ----- New Fields (1.1) ------------------------------------------//
 	
 	private boolean IncludeMotifs = false;
 	private boolean DisplayMotifs = false;
@@ -126,17 +137,55 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener{
 	private File FileChooserSource;
 	private int InternalFrameID = 0;	//for debugging
 	
+
+	// ----- New Fields (1.2) ------------------------------------------//
+	
+	//Import related
+	private LinkedList<String> GFFIncludeTypes;
+	private LinkedList<String> GFFDisplayTypes;
+	private LinkedList<String> GBKIncludeTypes;
+	private LinkedList<String> GBKDisplayTypes;
+	
+	//Menu bar related
+	private JMenuBar MB;
+	
+	//Top-level
+	private JMenu M_Genomes;
+	private JMenu M_Load;
+	private JMenu M_Export;
+	private JMenu M_Help;
+	
+	//Genomes components
+	private JMenuItem MG_CurrentSet;
+	private JMenuItem MG_Info;
+	private JMenuItem MG_Switch;
+	private JMenu MG_AddGenomes;
+	private JMenuItem MG_Files;
+	private JMenuItem MG_AccessionID;
+	private JMenuItem MG_Ncbi;
+	private JMenu MG_ImportSettings;
+	private JMenuItem MG_GFF;
+	private JMenuItem MG_Genbank;
+	private JMenu MG_PopularSets;
+	private JMenuItem MG_Halos;
+	private JMenuItem MG_Myxo;
+	private JMenuItem MG_Chloroviruses;
+	
+	//Load components
+	private JMenuItem ML_ContextSet;
+	private JMenuItem ML_DissMeas;
+	private JMenuItem ML_Phylo;
+	private JMenuItem ML_Motifs;
+	
 	// ----- Methods ---------------------------------------------------//		
 
 	public int getInternalFrameID() {
 		return InternalFrameID;
 	}
 
-
 	public void setInternalFrameID(int internalFrameID) {
 		InternalFrameID = internalFrameID;
 	}
-
 
 	//This is the main GUI window.
 	public FrmPrincipalDesk(final String title, OrganismSet theOrganismSet) {
@@ -144,7 +193,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener{
 		//INITIALIZATIONS
 		super(title);
 		this.OS = theOrganismSet;
-		this.FileChooserSource = OS.getSourceDirectory();
+//		if (OS.getSourceDirectory() != null){
+//			this.FileChooserSource = OS.getSourceDirectory();
+//		}
 		
 		//DESKTOP FRAME INFORMATION
 		pan_Desk = new JDesktopPane();
@@ -203,10 +254,39 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener{
 		//ADD ORIENTATION FRAMES TO DESKTOP FRAME
 		this.add(pan_West, BorderLayout.WEST);
 		this.add(pan_Center, BorderLayout.CENTER);
+		
+		//finally, create menu bar
+		CreateAndAddMenuBar();
+		
+		//Initialize various data import for default settings.
+		InitializeData();
+		
+		//disable components, if appropriate
+		if (OS == null){
+			M_Load.setEnabled(false);
+			M_Export.setEnabled(false);
+		}
 
 	}
 
-
+	public void InitializeData(){
+		//GFF files
+		GFFIncludeTypes = new LinkedList<String>();
+		GFFIncludeTypes.add("CDS");
+		GFFIncludeTypes.add("tRNA");
+		GFFIncludeTypes.add("rRNA");
+		
+		GFFDisplayTypes = new LinkedList<String>();
+		GFFDisplayTypes.add("mobile_element");
+		GFFDisplayTypes.add("IS_element");
+		
+		//Genbank files
+		GBKIncludeTypes = new LinkedList<String>();
+		GBKIncludeTypes.add("Test!");
+		
+		GBKDisplayTypes = new LinkedList<String>();
+	}
+	
 	public Jpan_MotifOptions getPanMotifOptions() {
 		return panMotifOptions;
 	}
@@ -456,15 +536,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener{
 		SelectedNodeNumbers = selectedNodeNumbers;
 	}
 
-//	//internal frame methods - added, + highly experimental
-//	public FrmPiz getCurrentFpizpanel() {
-//		return currentFpizpanel;
-//	}
-//
-//	public void setCurrentFpizpanel(FrmPiz currentFpizpanel) {
-//		this.currentFpizpanel = currentFpizpanel;
-//	}
-
 	//centralized select node update source
 	public void UpdateSelectedNodes() {
 		
@@ -630,4 +701,206 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener{
 		// TODO Auto-generated method stub
 		
 	}
+	
+	//create menu bar method
+	public void CreateAndAddMenuBar(){
+		
+		//Menu bar
+		this.MB = new JMenuBar();
+
+		/*
+		 * GENOMES MENU
+		 */
+		M_Genomes = new JMenu("Genomes");
+			
+		MG_CurrentSet = new JMenuItem("No Genomes Loaded");
+		MG_CurrentSet.setEnabled(false);
+		MG_Info = new JMenuItem("View Genomes in Current Working Set");
+		MG_Switch = new JMenuItem("Switch Genomic Working Sets");
+	
+		//Import genomes options
+		MG_AddGenomes = new JMenu("Import Genomes");
+		MG_Files = new JMenuItem("From Genbank or .GFF files");
+		MG_AccessionID = new JMenuItem ("From a list of Genbank IDs");
+		MG_Ncbi = new JMenuItem("Browse publically available NCBI genomes");
+		MG_AddGenomes.add(MG_Files);
+		MG_AddGenomes.add(MG_AccessionID);
+		MG_AddGenomes.add(MG_Ncbi);
+	
+		MG_Files.addActionListener(this);
+		
+		//Import settings
+		MG_ImportSettings = new JMenu("Import Settings");
+		MG_GFF = new JMenuItem(".GFF Files ");
+		MG_Genbank = new JMenuItem("Genbank Files");
+		MG_ImportSettings.add(MG_GFF);
+		MG_ImportSettings.add(MG_Genbank);
+	
+		MG_GFF.addActionListener(this);
+		MG_Genbank.addActionListener(this);
+		
+		//Popular sets
+		MG_PopularSets = new JMenu("Retrieve Popular Genome Set");
+		MG_Halos = new JMenuItem("Halophilic Archaea");
+		MG_Chloroviruses = new JMenuItem("Chloroviruses");
+		MG_Myxo = new JMenuItem("Myxococcux Xanthus");
+		MG_PopularSets.add(MG_Halos);
+		MG_PopularSets.add(MG_Chloroviruses);
+		MG_PopularSets.add(MG_Myxo);
+			
+		//Genomes menu - add to menu
+		M_Genomes.add(MG_CurrentSet);
+		M_Genomes.addSeparator();
+		M_Genomes.add(MG_Info);
+		M_Genomes.add(MG_Switch);
+		M_Genomes.add(MG_AddGenomes);
+		M_Genomes.addSeparator();
+		M_Genomes.add(MG_ImportSettings);
+		M_Genomes.addSeparator();
+		M_Genomes.add(MG_PopularSets);
+			
+		//load non-genomes things
+		M_Load = new JMenu("Load");
+			
+		//Components
+		JMenuItem HomologyClusterMenu = new JMenuItem("Homology Clusters");
+		JMenuItem GeneIDs = new JMenuItem("Gene IDs");
+		ML_ContextSet = new JMenuItem("Context Set");
+		ML_DissMeas = new JMenuItem("Dissimilarity Measure");
+		ML_Phylo = new JMenuItem("Phylogenetic Tree");
+		ML_Motifs = new JMenuItem("Sequence Motifs");
+			
+		//add to menu
+		M_Load.add(HomologyClusterMenu);
+		M_Load.add(GeneIDs);
+		M_Load.add(ML_ContextSet);
+		M_Load.add(ML_DissMeas);
+		M_Load.add(ML_Phylo);
+		M_Load.add(ML_Motifs);
+			
+		ML_ContextSet.addActionListener(this);
+		ML_DissMeas.addActionListener(this);
+		ML_Phylo.addActionListener(this);
+		ML_Motifs.addActionListener(this);
+		
+		//Export menu
+		M_Export = new JMenu("Export");
+		JMenuItem GWS = new JMenuItem("Genomic Working Set");
+		JMenuItem GFFs = new JMenuItem("Genomes as GFF files");
+		JMenuItem Genbanks = new JMenuItem("Genomes as Genbank files");
+		JMenuItem Clusters = new JMenuItem("Homology Clusters");
+			
+		M_Export.add(GWS);
+		M_Export.add(GFFs);
+		M_Export.add(Genbanks);
+		M_Export.add(Clusters);
+			
+		//Help menu
+		M_Help = new JMenu("Help");
+		JMenuItem About = new JMenuItem("About JContextExplorer");
+		JMenuItem Manual = new JMenuItem("User's Manual");
+		JMenuItem Video = new JMenuItem("Video Tutorials");
+		JMenuItem DataSets = new JMenuItem("Existing Datasets");
+			
+		M_Help.add(About);
+		M_Help.addSeparator();
+		M_Help.add(Manual);
+		M_Help.add(Video);
+		M_Help.add(DataSets);
+			
+		//Add sub-menus to top-level
+		MB.add(M_Genomes);
+		MB.add(M_Load);
+		MB.add(M_Export);
+		MB.add(M_Help);
+			
+		this.setJMenuBar(MB);
+	}
+
+
+		
+	//Action Listener - just for JMenuBar stuff
+	@Override
+	public void actionPerformed(ActionEvent evt) {
+		
+		/*
+		 * GENOMES
+		 */
+
+		//Edit GFF file type processing settings
+		if (evt.getSource().equals(MG_GFF)){
+			new GFFChecker(this);
+		}
+		
+		//Edit Genbank file type processing settings
+		if (evt.getSource().equals(MG_Genbank)){
+			new GBKChecker(this);
+		}
+		
+		//Add one or more files to an existing genomic working set
+		if (evt.getSource().equals(MG_Files)){
+			System.out.println("Import from some files.");
+		}
+		
+		/*
+		 * LOAD
+		 */
+		
+		//load context set
+		if (evt.getSource().equals(ML_ContextSet)){
+			new manageContextSetsv2(this, this.getPanBtn());
+		}
+		
+		//Add a new dissimilarity measure
+		if (evt.getSource().equals(ML_DissMeas)){
+			new ManageDissimilarity(this);
+		}
+		
+		//Add a phylogenetic tree
+		if (evt.getSource().equals(ML_Phylo)){
+			panPhyTreeMenu.ImportPhyTree();
+		}
+		
+		//Add motifs
+		if (evt.getSource().equals(ML_Motifs)){
+			new ManageMotifs(this);
+		}
+	}
+
+
+	public LinkedList<String> getGFFIncludeTypes() {
+		return GFFIncludeTypes;
+	}
+
+
+	public void setGFFIncludeTypes(LinkedList<String> gFFIncludeTypes) {
+		GFFIncludeTypes = gFFIncludeTypes;
+	}
+
+
+	public LinkedList<String> getGFFDisplayTypes() {
+		return GFFDisplayTypes;
+	}
+
+
+	public void setGFFDisplayTypes(LinkedList<String> gFFDisplayTypes) {
+		GFFDisplayTypes = gFFDisplayTypes;
+	}
+
+	public LinkedList<String> getGBKIncludeTypes() {
+		return GBKIncludeTypes;
+	}
+
+	public void setGBKIncludeTypes(LinkedList<String> gBKIncludeTypes) {
+		GBKIncludeTypes = gBKIncludeTypes;
+	}
+
+	public LinkedList<String> getGBKDisplayTypes() {
+		return GBKDisplayTypes;
+	}
+
+	public void setGBKDisplayTypes(LinkedList<String> gBKDisplayTypes) {
+		GBKDisplayTypes = gBKDisplayTypes;
+	}
+	
 }

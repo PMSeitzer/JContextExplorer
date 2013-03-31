@@ -289,44 +289,7 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 		
 		//load button
 		if (evt.getSource().equals(btnPhyTree)){
-
-			//create filechooser
-			JFileChooser getPhyTree = new JFileChooser();
-			getPhyTree.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			getPhyTree.setDialogTitle("Select Phylogenetic tree file (Newick format required)");
-			
-			//open at last open point.
-			if (FilePath != null){
-				getPhyTree.setCurrentDirectory(FilePath);
-			}
-			
-			getPhyTree.showOpenDialog(getPhyTree);
-			
-			//retrieve file
-			File TreeFile = getPhyTree.getSelectedFile();
-			
-			//if the file is not null (cancel operation), try to parse
-			if (TreeFile != null){
-				Tree t = ParseNewickTree(TreeFile);
-				setCurrentParsedTree(t);
-
-				//add + update, if the tree is new.
-				if (!LoadedPhyTrees.contains(TreeFile) && t != null){
-					
-					//update catalog
-					CurrentParsedTree = t;				//Tree
-					ParsedPhyTrees.add(t);				//LinkedList<Tree>
-					LoadedPhyTrees.add(0,TreeFile);		//LinkedList<File>
-					FilePath = TreeFile;				//Path
-							
-					//update GUI
-					menuLoadedPhyTrees.removeAllItems();
-					String[] PhyTrees = getLoadedPhyTrees();
-					for (String s : PhyTrees){
-						menuLoadedPhyTrees.addItem(s);
-					}
-				}
-			}
+			ImportPhyTree();
 		}
 		
 		//switch menu to active tree
@@ -401,6 +364,47 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 
 	}
 
+	public void ImportPhyTree(){
+		
+		//create filechooser
+		JFileChooser getPhyTree = new JFileChooser();
+		getPhyTree.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		getPhyTree.setDialogTitle("Select Phylogenetic tree file (Newick format required)");
+		
+		//open at last open point.
+		if (FilePath != null){
+			getPhyTree.setCurrentDirectory(FilePath);
+		}
+		
+		getPhyTree.showOpenDialog(getPhyTree);
+		
+		//retrieve file
+		File TreeFile = getPhyTree.getSelectedFile();
+		
+		//if the file is not null (cancel operation), try to parse
+		if (TreeFile != null){
+			Tree t = ParseNewickTree(TreeFile);
+			setCurrentParsedTree(t);
+
+			//add + update, if the tree is new.
+			if (!LoadedPhyTrees.contains(TreeFile) && t != null){
+				
+				//update catalog
+				CurrentParsedTree = t;				//Tree
+				ParsedPhyTrees.add(t);				//LinkedList<Tree>
+				LoadedPhyTrees.add(0,TreeFile);		//LinkedList<File>
+				FilePath = TreeFile;				//Path
+						
+				//update GUI
+				menuLoadedPhyTrees.removeAllItems();
+				String[] PhyTrees = getLoadedPhyTrees();
+				for (String s : PhyTrees){
+					menuLoadedPhyTrees.addItem(s);
+				}
+			}
+		}
+	}
+	
 	//retrieve the current parsed phylogenetic tree
 	public Tree getCurrentParsedTree() {
 		return CurrentParsedTree;

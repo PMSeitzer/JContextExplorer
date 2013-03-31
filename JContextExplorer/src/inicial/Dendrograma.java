@@ -68,72 +68,11 @@ public class Dendrograma {
 		f.setLocationRelativeTo(null);
 		f.setResizable(true);
 		
-		//add menu bar
-		//CreateAndAddMenuBar();
-		
 		//set visible
 		f.setVisible(true);
 
 	}
 
-	//create menu bar method
-	public void CreateAndAddMenuBar(){
-		this.MB = new JMenuBar();
-		
-		//load stuff menu
-		JMenu LoadMenu = new JMenu("Load");
-
-		//Genomic Working Set sub-menu
-		JMenu GenomicWorkingSetMenu = new JMenu("Genomic Working Set");
-		
-		JMenuItem GFF = new JMenuItem("From a set of .GFF files");
-		JMenuItem Genbank = new JMenuItem("From a set of genbank files");
-		JMenuItem AccessionID = new JMenuItem ("From a set of genbank IDs");
-		JMenuItem Preexisting = new JMenuItem("Retrieve pre-existing GWS");
-		JMenuItem Ncbi = new JMenuItem("Connect to NCBI server");
-		
-		GenomicWorkingSetMenu.add(GFF);
-		GenomicWorkingSetMenu.add(Genbank);
-		GenomicWorkingSetMenu.add(AccessionID);
-		GenomicWorkingSetMenu.addSeparator();
-		GenomicWorkingSetMenu.add(Preexisting);
-		GenomicWorkingSetMenu.add(Ncbi);
-		
-		//other menu items
-		JMenuItem HomologyClusterMenu = new JMenuItem("Homology Clusters");
-		JMenuItem GeneIDs = new JMenuItem("Gene IDs");
-		JMenuItem ContextSet = new JMenuItem("Context Set");
-		JMenuItem DissMeas = new JMenuItem("Dissimilarity Measure");
-		JMenuItem Phylo = new JMenuItem("Phylogenetic Tree");
-		JMenuItem Motifs = new JMenuItem("Sequence Motifs");
-		
-		//add items to menu.
-		LoadMenu.add(GenomicWorkingSetMenu);
-		LoadMenu.add(HomologyClusterMenu);
-		LoadMenu.add(GeneIDs);
-		LoadMenu.add(ContextSet);
-		LoadMenu.add(DissMeas);
-		LoadMenu.add(Phylo);
-		LoadMenu.add(Motifs);
-		
-		JMenu HelpMenu = new JMenu("Help");
-		
-		JMenuItem About = new JMenuItem("About JContextExplorer");
-		JMenuItem Manual = new JMenuItem("User's Manual");
-		JMenuItem Video = new JMenuItem("Video Tutorials");
-		JMenuItem DataSets = new JMenuItem("Existing Datasets");
-		
-		HelpMenu.add(About);
-		HelpMenu.addSeparator();
-		HelpMenu.add(Manual);
-		HelpMenu.add(Video);
-		HelpMenu.add(DataSets);
-		
-		MB.add(LoadMenu);
-		MB.add(HelpMenu);
-		
-		f.setJMenuBar(MB);
-	}
 	
 // ------ Setters + Getters ------------------------------ //
 
@@ -146,12 +85,12 @@ public class Dendrograma {
 	}
 	
 	// main method
-//	public static void main(String args[]){
-//		javax.swing.SwingUtilities.invokeLater(new Runnable() {
-//			public void run() {
-//					new Dendrograma(null);
-//			}
-//		});
-//	}
+	public static void main(String args[]){
+		javax.swing.SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				new Dendrograma(null);
+			}
+		});
+	}
 }
 

@@ -36,13 +36,16 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 
+import moduls.frm.FrmPrincipalDesk;
+
 public class GFFChecker extends JFrame implements ActionListener{
 
 	//Fields
 	//universal
 	private static final long serialVersionUID = 1L;
 	private JPanel jp;
-	private LoadGenomesPanelv2 lgp; 
+	private LoadGenomesPanelv2 lgp;
+	private FrmPrincipalDesk f;
 	private TransferHandler lh;
 	private String strTextField = "";
 	private int SrchCol = 12;
@@ -77,12 +80,31 @@ public class GFFChecker extends JFrame implements ActionListener{
 	
 	//submit / return
 	private JButton btnSubmit;
-	private String strbtnSubmit = "Proceed to GFF import with these type-processing settings.";
+	//private String strbtnSubmit = "Proceed to GFF import with these type-processing settings.";
+	private String strbtnSubmit = "Ok";
 	
 	//Constructor
 	public GFFChecker(LoadGenomesPanelv2 lgp){
 		//parent bioinfo
 		this.lgp = lgp;
+		
+		//initializations
+		lh = new ListTransferHandler();
+		
+		//create GUI object
+		this.getInstructions();
+		this.getFrame();
+		this.getPanel();
+		this.pack();
+		
+		//make frame visible
+		this.setVisible(true);
+	}
+	
+	//alternative constructor
+	public GFFChecker(FrmPrincipalDesk f){
+		
+		this.f = f;
 		
 		//initializations
 		lh = new ListTransferHandler();
@@ -172,9 +194,16 @@ public class GFFChecker extends JFrame implements ActionListener{
          */
 		//Initialize list + list elements
 		IncludeListModel = new DefaultListModel<String>();
-		IncludeListModel.addElement("CDS");
-		IncludeListModel.addElement("tRNA");
-		IncludeListModel.addElement("rRNA");
+		
+		if (f != null){
+			for (String s : f.getGFFIncludeTypes()){
+				IncludeListModel.addElement(s);
+			}
+		} else {
+			IncludeListModel.addElement("CDS");
+			IncludeListModel.addElement("tRNA");
+			IncludeListModel.addElement("rRNA");
+		}
 
 		//GUI list settings
 		IncludeList = new JList<String>(IncludeListModel);
@@ -252,8 +281,16 @@ public class GFFChecker extends JFrame implements ActionListener{
         
         //Initialize list + list elements
         DisplayOnlyListModel = new DefaultListModel<String>();
-        DisplayOnlyListModel.addElement("mobile_element");
-        DisplayOnlyListModel.addElement("IS_element");
+        
+        if (f != null){
+			for (String s : f.getGFFDisplayTypes()){
+				DisplayOnlyListModel.addElement(s);
+			}
+        } else {
+            DisplayOnlyListModel.addElement("mobile_element");
+            DisplayOnlyListModel.addElement("IS_element");
+        }
+
      
         //GUI list settings
         DisplayOnlyList = new JList<String>(DisplayOnlyListModel);
@@ -482,9 +519,22 @@ public class GFFChecker extends JFrame implements ActionListener{
 				DisplayOnlyTypes.add(DisplayOnlyListModel.get(i).toString());
 			}
 			
-			//write these types to the output structure.
-			lgp.setIncludeTypes(IncludeTypes);
-			lgp.setDisplayOnlyTypes(DisplayOnlyTypes);
+			//when lgp exists, remember type settings
+			if (lgp != null) {
+				
+				//write these types to the output structure.
+				lgp.setIncludeTypes(IncludeTypes);
+				lgp.setDisplayOnlyTypes(DisplayOnlyTypes);
+			}
+
+			//when frm principal desk exists, remember type settings.
+			if (f != null){
+				
+				//write these types to output structure.
+				f.setGFFIncludeTypes(IncludeTypes);
+				f.setGFFDisplayTypes(DisplayOnlyTypes);
+			}
+			
 			
 			//dispose the window.
 			this.dispose();
