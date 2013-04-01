@@ -29,8 +29,10 @@ import inicial.Parametres_Inicials;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FileDialog;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -49,8 +51,11 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.KeyStroke;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
+
+import GenomicSetHandling.NewGS;
 
 import moduls.frm.Panels.Jpan_DisplayOptions;
 import moduls.frm.Panels.Jpan_GraphMenu;
@@ -140,6 +145,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	// ----- New Fields (1.2) ------------------------------------------//
 	
+	//Multiple OS
+	private HashSet<String> AvailableOrganismSets = new HashSet<String>();
+	
 	//Import related
 	private LinkedList<String> GFFIncludeTypes;
 	private LinkedList<String> GFFDisplayTypes;
@@ -156,14 +164,18 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenu M_Help;
 	
 	//Genomes components
-	private JMenuItem MG_CurrentSet;
-	private JMenuItem MG_Info;
-	private JMenuItem MG_Switch;
+	private JMenuItem MG_NewGS;
+	private JMenu MG_CurrentGS;
+	private JMenuItem MG_ManageGS;
+	private JMenuItem MG_NoGS;
+	private JMenuItem MG_ManageCurrentGS;
+	private JMenuItem MG_ImportGS;
 	private JMenu MG_AddGenomes;
 	private JMenuItem MG_Files;
 	private JMenuItem MG_AccessionID;
 	private JMenuItem MG_Ncbi;
 	private JMenu MG_ImportSettings;
+	private JMenuItem MG_GS;
 	private JMenuItem MG_GFF;
 	private JMenuItem MG_Genbank;
 	private JMenu MG_PopularSets;
@@ -712,27 +724,55 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		 * GENOMES MENU
 		 */
 		M_Genomes = new JMenu("Genomes");
-			
-		MG_CurrentSet = new JMenuItem("No Genomes Loaded");
-		MG_CurrentSet.setEnabled(false);
-		MG_Info = new JMenuItem("View Genomes in Current Working Set");
-		MG_Switch = new JMenuItem("Switch Genomic Working Sets");
 	
 		//Import genomes options
-		MG_AddGenomes = new JMenu("Import Genomes");
-		MG_Files = new JMenuItem("From Genbank or .GFF files");
+		MG_NewGS = new JMenuItem("New Genome Set");
+		MG_CurrentGS = new JMenu("Genome Sets");
+		MG_NoGS = new JMenuItem("None Available");
+		MG_NoGS.setEnabled(false);
+		MG_ManageGS = new JMenuItem("Manage Genome Sets");
+		MG_CurrentGS.add(MG_NoGS);
+		MG_ManageCurrentGS = new JMenuItem("Current Genome Set");
+		
+		//Key stroke shortcuts
+		KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_N, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		MG_NewGS.setAccelerator(stroke);
+		MG_NewGS.addActionListener(this);
+		
+		//Manage sets
+		KeyStroke Mstroke = KeyStroke.getKeyStroke(KeyEvent.VK_M, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		MG_ManageGS.setAccelerator(Mstroke);
+		MG_ManageGS.addActionListener(this);
+		
+		//Current genome set
+		KeyStroke Cstroke = KeyStroke.getKeyStroke(KeyEvent.VK_C, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		MG_ManageCurrentGS.setAccelerator(Cstroke);
+		MG_ManageCurrentGS.addActionListener(this);
+		
+		MG_ImportGS = new JMenuItem("Import Genome Set from .GS File");
+		MG_AddGenomes = new JMenu("Import Genomes into current Genome Set");
+		MG_Files = new JMenuItem("From Genbank or .GFF Files");
 		MG_AccessionID = new JMenuItem ("From a list of Genbank IDs");
 		MG_Ncbi = new JMenuItem("Browse publically available NCBI genomes");
 		MG_AddGenomes.add(MG_Files);
 		MG_AddGenomes.add(MG_AccessionID);
 		MG_AddGenomes.add(MG_Ncbi);
-	
-		MG_Files.addActionListener(this);
+
+		//Current genome set
+		KeyStroke Istroke = KeyStroke.getKeyStroke(KeyEvent.VK_I, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		MG_ImportGS.setAccelerator(Istroke);
+		MG_ImportGS.addActionListener(this);
 		
 		//Import settings
 		MG_ImportSettings = new JMenu("Import Settings");
 		MG_GFF = new JMenuItem(".GFF Files ");
 		MG_Genbank = new JMenuItem("Genbank Files");
+		MG_GS = new JMenuItem(".GS Files");
+		MG_ImportSettings.add(MG_GS);
 		MG_ImportSettings.add(MG_GFF);
 		MG_ImportSettings.add(MG_Genbank);
 	
@@ -747,14 +787,15 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_PopularSets.add(MG_Halos);
 		MG_PopularSets.add(MG_Chloroviruses);
 		MG_PopularSets.add(MG_Myxo);
-			
+		
 		//Genomes menu - add to menu
-		M_Genomes.add(MG_CurrentSet);
+		M_Genomes.add(MG_NewGS);
+		M_Genomes.add(MG_CurrentGS);
+		M_Genomes.add(MG_ManageGS);
 		M_Genomes.addSeparator();
-		M_Genomes.add(MG_Info);
-		M_Genomes.add(MG_Switch);
+		M_Genomes.add(MG_ManageCurrentGS);
+		M_Genomes.add(MG_ImportGS);
 		M_Genomes.add(MG_AddGenomes);
-		M_Genomes.addSeparator();
 		M_Genomes.add(MG_ImportSettings);
 		M_Genomes.addSeparator();
 		M_Genomes.add(MG_PopularSets);
@@ -785,7 +826,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Export menu
 		M_Export = new JMenu("Export");
-		JMenuItem GWS = new JMenuItem("Genomic Working Set");
+		JMenuItem GWS = new JMenuItem("Genome Set");
 		JMenuItem GFFs = new JMenuItem("Genomes as GFF files");
 		JMenuItem Genbanks = new JMenuItem("Genomes as Genbank files");
 		JMenuItem Clusters = new JMenuItem("Homology Clusters");
@@ -797,12 +838,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			
 		//Help menu
 		M_Help = new JMenu("Help");
-		JMenuItem About = new JMenuItem("About JContextExplorer");
 		JMenuItem Manual = new JMenuItem("User's Manual");
 		JMenuItem Video = new JMenuItem("Video Tutorials");
 		JMenuItem DataSets = new JMenuItem("Existing Datasets");
 			
-		M_Help.add(About);
 		M_Help.addSeparator();
 		M_Help.add(Manual);
 		M_Help.add(Video);
@@ -816,8 +855,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			
 		this.setJMenuBar(MB);
 	}
-
-
 		
 	//Action Listener - just for JMenuBar stuff
 	@Override
@@ -827,6 +864,26 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		 * GENOMES
 		 */
 
+		//Create a new Genome Set
+		if (evt.getSource().equals(MG_NewGS)){
+			new NewGS(this);
+		}
+		
+		//Manage Genome sets
+		if (evt.getSource().equals(MG_ManageGS)){
+			System.out.println("TODO: Manage Genome Sets");
+		}
+		
+		//Current genome set
+		if (evt.getSource().equals(MG_ManageCurrentGS)){
+			System.out.println("TODO: Current Genome Set");
+		}
+		
+		//Import from .GS file
+		if (evt.getSource().equals(MG_ImportGS)){
+			System.out.println("TODO: Import Genome Set from .GS File");
+		}
+		
 		//Edit GFF file type processing settings
 		if (evt.getSource().equals(MG_GFF)){
 			new GFFChecker(this);
@@ -837,9 +894,11 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			new GBKChecker(this);
 		}
 		
+		
+		
 		//Add one or more files to an existing genomic working set
 		if (evt.getSource().equals(MG_Files)){
-			System.out.println("Import from some files.");
+			
 		}
 		
 		/*
@@ -901,6 +960,30 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	public void setGBKDisplayTypes(LinkedList<String> gBKDisplayTypes) {
 		GBKDisplayTypes = gBKDisplayTypes;
+	}
+
+	public HashSet<String> getAvailableOrganismSets() {
+		return AvailableOrganismSets;
+	}
+
+	public void setAvailableOrganismSets(HashSet<String> availableOrganismSets) {
+		AvailableOrganismSets = availableOrganismSets;
+	}
+
+	public JMenu getMG_CurrentGS() {
+		return MG_CurrentGS;
+	}
+
+	public void setMG_CurrentGS(JMenu mG_CurrentGS) {
+		MG_CurrentGS = mG_CurrentGS;
+	}
+
+	public JMenuItem getMG_NoGS() {
+		return MG_NoGS;
+	}
+
+	public void setMG_NoGS(JMenuItem mG_NoGS) {
+		MG_NoGS = mG_NoGS;
 	}
 	
 }

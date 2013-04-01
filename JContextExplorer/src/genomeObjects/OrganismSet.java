@@ -36,6 +36,8 @@ public class OrganismSet {
 	private LinkedList<String> IncludeTypes;					//-Types of data worth importing/processing
 	private LinkedList<String> DisplayOnlyTypes;
 	private File SourceDirectory;								//-Source information
+	private String Notes;
+	private String Name;
 	
 	// ----------------------- Construction ------------------------//
 	 	
@@ -760,6 +762,22 @@ public class OrganismSet {
 		
 		//add to list
 		this.CustomDissimilarities.add(D);
+	}
+
+	public String getNotes() {
+		return Notes;
+	}
+
+	public void setNotes(String notes) {
+		Notes = notes;
+	}
+
+	public String getName() {
+		return Name;
+	}
+
+	public void setName(String name) {
+		Name = name;
 	}
 
 } //completes classbody

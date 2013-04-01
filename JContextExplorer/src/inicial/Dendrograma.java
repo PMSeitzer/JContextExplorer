@@ -54,6 +54,14 @@ public class Dendrograma {
 	
 	public Dendrograma(OrganismSet theOrganismSet) {
 
+		//Determine operating system
+		String os = System.getProperty("os.name").toLowerCase();
+		boolean isMac = os.startsWith("mac os x");    
+
+		if(isMac){
+			 System.setProperty("apple.laf.useScreenMenuBar", "true");		    	 
+		}
+
 		//carry along OS, create Frm
 		this.OS = theOrganismSet;
 		this.f = new FrmPrincipalDesk("JContextExplorer (1.1): Main Window", theOrganismSet);
