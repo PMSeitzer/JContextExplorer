@@ -22,8 +22,8 @@ public class AnnotatedGenome {
     private LinkedList<ContextSet> Groupings = new LinkedList<ContextSet>();					//-Predicted Groupings-----------------
     private File GenomeFile; 									//-Associated genome file --------------
     private boolean TryToComputeOperons;
-	private LinkedList<String> IncludeTypes;					//-Types of data worth importing/processing
-	private LinkedList<String> DisplayOnlyTypes;
+	private LinkedList<String> GFFIncludeTypes;					//-Types of data worth importing/processing
+	private LinkedList<String> GFFDisplayTypes;
 	private boolean AGClustersLoaded = false;
 	
 // ----------------------- Construction ------------------------//
@@ -61,7 +61,7 @@ public void importElements(String filename){
 					//check and see if this element should be retained at all
 					//check include types
 					boolean RetainElement = false;
-					for (String s : this.IncludeTypes){
+					for (String s : this.GFFIncludeTypes){
 						if (ImportedLine[2].trim().contentEquals(s)){
 							RetainElement = true;
 							break;
@@ -69,7 +69,7 @@ public void importElements(String filename){
 					}
 					//if this fails, check for display types
 					if (!RetainElement){
-						for (String s : this.DisplayOnlyTypes){
+						for (String s : this.GFFDisplayTypes){
 							if (ImportedLine[2].trim().contentEquals(s)){
 								RetainElement = true;
 								break;
@@ -226,7 +226,7 @@ public void ComputeContextSet(String CSName, int tolerance, boolean RequireSameS
 
 		//check against user-defined set of valid types
 		boolean ElementIsValid = false;
-		for (String s : this.IncludeTypes){
+		for (String s : this.GFFIncludeTypes){
 			if (Elements.get(i).getType().contentEquals(s)){
 				ElementIsValid = true;
 				break;
@@ -253,7 +253,7 @@ public void ComputeContextSet(String CSName, int tolerance, boolean RequireSameS
 				
 				//determine if next element is valid (should be included)
 				boolean NextElementIsValid = false;
-				for (String s : this.IncludeTypes){
+				for (String s : this.GFFIncludeTypes){
 					if (Elements.get(NextValid).getType().contentEquals(s)){
 						NextElementIsValid = true;
 						break;
@@ -701,7 +701,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 					
 					//check against user-defined set of valid types
 					boolean ElementIsValid = false;
-					for (String s : this.IncludeTypes){
+					for (String s : this.GFFIncludeTypes){
 						if (GandE.getE().getType().contentEquals(s)){
 							ElementIsValid = true;
 							break;
@@ -744,7 +744,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 					
 					//check against user-defined set of valid types
 					boolean ElementIsValid = false;
-					for (String s : this.IncludeTypes){
+					for (String s : this.GFFIncludeTypes){
 						if (GandE.getE().getType().contentEquals(s)){
 							ElementIsValid = true;
 							break;
@@ -826,7 +826,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 				
 				//check against user-defined set of valid types
 				boolean ElementIsValid = false;
-				for (String s : this.IncludeTypes){
+				for (String s : this.GFFIncludeTypes){
 					if (GandE.getE().getType().contentEquals(s)){
 						ElementIsValid = true;
 						break;
@@ -867,7 +867,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 						
 				//check against user-defined set of valid types
 				boolean ElementIsValid = false;
-				for (String s : this.IncludeTypes){
+				for (String s : this.GFFIncludeTypes){
 					if (GandE.getE().getType().contentEquals(s)){
 						ElementIsValid = true;
 						break;
@@ -1035,7 +1035,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 				
 				//check against user-defined set of valid types
 				boolean ElementIsValid = false;
-				for (String s : this.IncludeTypes){
+				for (String s : this.GFFIncludeTypes){
 					if (GandE.getE().getType().contentEquals(s)){
 						ElementIsValid = true;
 						break;
@@ -1077,7 +1077,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 						
 						//check against user-defined set of valid types
 						boolean ElementIsValid = false;
-						for (String s : this.IncludeTypes){
+						for (String s : this.GFFIncludeTypes){
 							if (GandE.getE().getType().contentEquals(s)){
 								ElementIsValid = true;
 								break;
@@ -1100,7 +1100,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 						
 						//check against user-defined set of valid types
 						boolean ElementIsValid = false;
-						for (String s : this.IncludeTypes){
+						for (String s : this.GFFIncludeTypes){
 							if (GandE.getE().getType().contentEquals(s)){
 								ElementIsValid = true;
 								break;
@@ -1119,7 +1119,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 						
 						//check against user-defined set of valid types
 						boolean ElementIsValid = false;
-						for (String s : this.IncludeTypes){
+						for (String s : this.GFFIncludeTypes){
 							if (GandE.getE().getType().contentEquals(s)){
 								ElementIsValid = true;
 								break;
@@ -1272,19 +1272,19 @@ public void setTryToComputeOperons(boolean tryToComputeOperons) {
 }
 
 public LinkedList<String> getIncludeTypes() {
-	return IncludeTypes;
+	return GFFIncludeTypes;
 }
 
 public void setIncludeTypes(LinkedList<String> includeTypes) {
-	IncludeTypes = includeTypes;
+	GFFIncludeTypes = includeTypes;
 }
 
 public LinkedList<String> getDisplayOnlyTypes() {
-	return DisplayOnlyTypes;
+	return GFFDisplayTypes;
 }
 
 public void setDisplayOnlyTypes(LinkedList<String> displayOnlyTypes) {
-	DisplayOnlyTypes = displayOnlyTypes;
+	GFFDisplayTypes = displayOnlyTypes;
 }
 
 public LinkedList<MotifGroup> getMotifs() {

@@ -9,10 +9,14 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -148,18 +152,28 @@ public class NewGS extends JFrame implements ActionListener{
 					OS.setNotes(OrganismSetNotes.getText());
 					
 					//update profiles
-					//Think about it - how to store stuff???
 					f.getAvailableOrganismSets().add(OS.getName());
 					f.setOS(OS);
 					
-					Component[] OSinMenu= f.getMG_CurrentGS().getMenuComponents();
-					for (Component c : OSinMenu){
-						if (c.equals(f.getMG_NoGS())){
-							f.getMG_CurrentGS().remove(c);
+					//update check box menu
+					for (JCheckBoxMenuItem b : f.getCurrentItems()){
+						if (b.equals(f.getMG_NoGS())){
+							f.getMG_CurrentGS().remove(b);
+						} else {
+							b.setSelected(false);
 						}
 					}
 					
-					f.getMG_CurrentGS().add(new JMenuItem(OS.getName()));
+					//Add new check box menu item
+					JCheckBoxMenuItem NewOS = new JCheckBoxMenuItem(OS.getName());
+					NewOS.setSelected(true);	
+					NewOS.addActionListener(f);
+					
+					//update menu + corresponding list
+					f.getCurrentItems().add(NewOS);
+					f.getMG_CurrentGS().add(NewOS);
+
+					//close window
 					this.dispose();
 				}
 				

@@ -83,8 +83,9 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 	private String strNextDownstream = "Associate motif with the next downstream genomic element";
 	private String strWithinRange = "Associate motif with all genomic elements located within range";
 	private LinkedList<Component> DownstreamGroup;
+	private LinkedList<Component> DownstreamGroupNext;
 	private JTextField LblUpstream, LblDownstream, TxtUpstream, TxtDownstream;
-	private JCheckBox chkStrandMatching;
+	private JCheckBox chkStrandMatching, chkStrandMatchingDownStream;
 	private String strchkStrandMatching = "Require same strand";
 	private String strLblUpstream = "Upstream of start:";
 	private String strLblDownstream = "Downstream of stop:";
@@ -331,58 +332,86 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 									for (GenomicElement E : AG.getElements()){
 										if (radNextDownstream.isSelected()){
 											if (E.getContig().contentEquals(SM.getContig())){ // same contig
-												if (E.getStrand().equals(SM.getStrand())){ //same strand
-													
-													if (SM.getStrand().equals(Strand.POSITIVE)){
-														
-														//case: internal motif
-														if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
-															E.addAMotif(SM);
-															break;
 
-														//case: partially overlapping
-														} else if (SM.getStart() < E.getStart() && SM.getStop() > E.getStart()){
-															E.addAMotif(SM);
-															break;
+												//same strand check
+												if (chkStrandMatchingDownStream.isSelected()){
+													
+													if (E.getStrand().equals(SM.getStrand())){ //same strand
+														
+														if (SM.getStrand().equals(Strand.POSITIVE)){
 															
-														//case: distance from source
-														} else {
-															DistE_SM = E.getStart() - SM.getStop();
-															if (DistE_SM > 0){
+															//case: internal motif
+															if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
 																E.addAMotif(SM);
 																break;
-															}
-														}
-														
-													} else {
-														
-														//case: internal motif
-														if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
-															E.addAMotif(SM);
-															break;
 
-														//case: partially overlapping
-														} else if (SM.getStart() < E.getStop() && SM.getStop() > E.getStop()){
-															E.addAMotif(SM);
-															break;
-															
-														//case: distance from source
-														} else {
-															DistE_SM =  E.getStart() - SM.getStop();
-															if (DistE_SM > 0){
-																if (TempE != null){
-																	TempE.addAMotif(SM);
-																	TempE = null;
+															//case: partially overlapping
+															} else if (SM.getStart() < E.getStart() && SM.getStop() > E.getStart()){
+																E.addAMotif(SM);
+																break;
+																
+															//case: distance from source
+															} else {
+																DistE_SM = E.getStart() - SM.getStop();
+																if (DistE_SM > 0){
+																	E.addAMotif(SM);
 																	break;
 																}
+															}
+															
+														} else {
+															
+															//case: internal motif
+															if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
+																E.addAMotif(SM);
+																break;
+
+															//case: partially overlapping
+															} else if (SM.getStart() < E.getStop() && SM.getStop() > E.getStop()){
+																E.addAMotif(SM);
+																break;
+																
+															//case: distance from source
 															} else {
-																//store value, in case it is needed.
-																TempE = E;
+																DistE_SM =  E.getStart() - SM.getStop();
+																if (DistE_SM > 0){
+																	if (TempE != null){
+																		TempE.addAMotif(SM);
+																		TempE = null;
+																		break;
+																	}
+																} else {
+																	//store value, in case it is needed.
+																	TempE = E;
+																}
 															}
 														}
-													}
 
+													}
+													
+												} else {
+													
+													//case: internal motif
+													if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
+														E.addAMotif(SM);
+														break;
+
+													//case: partially overlapping
+													} else if (SM.getStart() < E.getStart() && SM.getStop() > E.getStart()){
+														E.addAMotif(SM);
+														break;
+														
+													//case: distance from source
+													} else {
+														DistE_SM = E.getStart() - SM.getStop();
+														if (DistE_SM > 0){
+															E.addAMotif(SM);
+															break;
+														}
+													}
+													
 												}
+												
 											}
 											
 										//just search for nearby	
@@ -615,6 +644,8 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		
 		//radio button designations
 		FindAssociationGroup = new LinkedList<Component>();
+		DownstreamGroupNext = new LinkedList<Component>();
+		DownstreamGroup = new LinkedList<Component>();
 		radNextDownstream = new JRadioButton(strNextDownstream);
 		radWithinRange = new JRadioButton (strWithinRange);
 		GrpAssociateMotifs = new ButtonGroup();
@@ -648,6 +679,20 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		jp.add(radNextDownstream, c);
 		gridy++;
 		
+		//Strand matching for downstream
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = IndentInsets;
+		chkStrandMatchingDownStream = new JCheckBox(strchkStrandMatching);
+		chkStrandMatchingDownStream.setSelected(false);
+		DownstreamGroupNext.add(chkStrandMatchingDownStream);
+		FindAssociationGroup.add(chkStrandMatchingDownStream);
+		jp.add(chkStrandMatchingDownStream, c);
+		gridy++;
+		
 		//within range radio button
 		c.gridx = 0;
 		c.gridy = gridy;
@@ -659,8 +704,6 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		FindAssociationGroup.add(radWithinRange);
 		jp.add(radWithinRange, c);
 		gridy++;
-		
-		DownstreamGroup = new LinkedList<Component>();
 		
 		//Require strand matching
 		c.gridx = 0;
@@ -1170,9 +1213,13 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 
 		}
 		
+		
 		if (evt.getSource().equals(radNextDownstream)){
 			for (Component c : DownstreamGroup){
 				c.setEnabled(false);
+			}
+			for (Component c : DownstreamGroupNext){
+				c.setEnabled(true);
 			}
 		}
 		
@@ -1186,6 +1233,9 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 					c.setEnabled(true);
 				}
 
+			}
+			for (Component c : DownstreamGroupNext){
+				c.setEnabled(false);
 			}
 		}
 		

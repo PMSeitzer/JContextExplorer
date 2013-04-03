@@ -18,7 +18,10 @@
 
 package moduls.frm;
 
+import genomeObjects.AnnotatedGenome;
 import genomeObjects.CSDisplayData;
+import genomeObjects.ContextSetDescription;
+import genomeObjects.OSRetrieval;
 import genomeObjects.OrganismSet;
 import haloGUI.GBKChecker;
 import haloGUI.GFFChecker;
@@ -28,21 +31,32 @@ import inicial.Parametres_Inicials;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.FileDialog;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultDesktopManager;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JDesktopPane;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
 import javax.swing.JMenu;
@@ -52,6 +66,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
+import javax.swing.SwingWorker;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 
@@ -93,7 +108,7 @@ import definicions.Config;
  *
  * @since JDK 6.0
  */
-public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, ActionListener{
+public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, ActionListener, ItemListener{
 	
 	// ----- Fields ---------------------------------------------------//
 	
@@ -147,7 +162,13 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	
 	//Multiple OS
 	private HashSet<String> AvailableOrganismSets = new HashSet<String>();
+	private LinkedHashMap<String, OSRetrieval> OSSeeds 
+		= new LinkedHashMap<String, OSRetrieval>();
+	private LinkedList<JCheckBoxMenuItem> AvailableOSCheckBoxMenuItems 
+		= new LinkedList<JCheckBoxMenuItem>();
+//	private ButtonGroup bg = new ButtonGroup();
 	
+	//private ButtonGroup AvailableOSCheckBoxMenuItems = new ButtonGroup();
 	//Import related
 	private LinkedList<String> GFFIncludeTypes;
 	private LinkedList<String> GFFDisplayTypes;
@@ -167,7 +188,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenuItem MG_NewGS;
 	private JMenu MG_CurrentGS;
 	private JMenuItem MG_ManageGS;
-	private JMenuItem MG_NoGS;
+	private JCheckBoxMenuItem MG_NoGS;
 	private JMenuItem MG_ManageCurrentGS;
 	private JMenuItem MG_ImportGS;
 	private JMenu MG_AddGenomes;
@@ -188,6 +209,150 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenuItem ML_DissMeas;
 	private JMenuItem ML_Phylo;
 	private JMenuItem ML_Motifs;
+	
+	// ----- Classes --------------------------------------------------//
+	
+	//genomes from files filter
+	class GenomeFileFilter implements FilenameFilter {
+
+		@Override
+		public boolean accept(File dir, String name) {
+			if (name.endsWith(".gff")				//GFF file
+					|| name.endsWith(".gb")			//Gb file
+					|| name.endsWith(".gbk")){
+				return true;
+			} else {
+				return false;
+			}
+		}
+		
+	}
+	
+	//load genomes
+	public class LoadGenomesWorker extends SwingWorker<Void, Void>{
+
+		//Fields
+		public File SelectedFile;
+		
+		//constructor
+		public LoadGenomesWorker(File SelectedDirectoryOrFile){
+			this.SelectedFile = SelectedDirectoryOrFile;
+		}
+		
+		//background
+		@Override
+		protected Void doInBackground() throws Exception {
+
+			//set Cursor
+			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			
+			//import genome(s).
+			if (SelectedFile.isDirectory()){
+				RetrieveFromDirectory();
+			} else {
+				RetrieveFromFile();
+			}
+			
+			//add a context set description, if appropriate
+			boolean MissingSingleGene = true;
+			for (ContextSetDescription CSD : OS.getCSDs()){
+				if (CSD.getName().equals("SingleGene")){
+					MissingSingleGene = false;
+				}
+			}
+			
+			if (MissingSingleGene){
+				//add to OS
+				ContextSetDescription CSD = new ContextSetDescription();
+				CSD.setName("SingleGene");
+				CSD.setPreprocessed(true);
+				CSD.setType("IntergenicDist");
+				OS.getCSDs().add(CSD);
+				
+				//add to menu
+				panBtn.getContextSetMenu().addItem("SingleGene");
+				panBtn.getContextSetMenu().removeItem("<none>");
+			}
+			
+			return null;
+		}
+		
+		//post-import
+		public void done(){
+			
+			//re-set cursor, progress bar
+			setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			
+			//reset progress bar
+			panBtn.getProgressBar().setString("");
+			panBtn.getProgressBar().setBorderPainted(false);
+			panBtn.getProgressBar().setValue(0);
+			
+		}
+		
+		//additional methods
+		public void RetrieveFromDirectory(){
+			
+			//Start counter
+			int OrgCounter = 0;
+			
+			// Retrieve files
+			File[] GenomeFiles = SelectedFile.listFiles(new GenomeFileFilter());
+
+			//TODO: need to think about memory management here
+			for (File f : GenomeFiles){
+				AnnotatedGenome AG = new AnnotatedGenome();
+				
+				//GFF file import
+				if (f.getName().endsWith(".gff")){
+				
+					// set appropriate types to import
+					AG.setIncludeTypes(GFFIncludeTypes);
+					AG.setDisplayOnlyTypes(GFFDisplayTypes);
+
+					// Annotation information
+					AG.importElements(f.getAbsolutePath());
+
+					// reference to genome file
+					AG.setGenomeFile(f);
+
+					// Species Name + genus
+					String[] SpeciesName = f.getName().split(".gff");
+					String TheName = SpeciesName[0];
+					AG.setSpecies(TheName);
+
+					String[] Genus = SpeciesName[0].split("_");
+					String TheGenus = Genus[0];
+					AG.setGenus(TheGenus);
+
+					// add Context set
+					AG.MakeSingleGeneContextSet("SingleGene");
+
+					// add to hash map
+					OS.getSpecies().put(TheName, AG);
+
+					// add name to array of species
+					OS.getSpeciesNames().add(TheName);
+
+					// update progress bar
+					OrgCounter++;
+					int progress = (int) Math
+							.round(100 * ((double) OrgCounter / (double) GenomeFiles.length));
+					setProgress(progress);
+					//panBtn.getProgressBar().setValue(progress);
+					
+				//genbank file import
+				} else {
+					//TODO: need to genbank on it.
+				}
+			}
+
+		}
+		
+		public void RetrieveFromFile(){
+			System.out.println("File!");
+		}
+	}
 	
 	// ----- Methods ---------------------------------------------------//		
 
@@ -728,8 +893,11 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//Import genomes options
 		MG_NewGS = new JMenuItem("New Genome Set");
 		MG_CurrentGS = new JMenu("Genome Sets");
-		MG_NoGS = new JMenuItem("None Available");
+		MG_NoGS = new JCheckBoxMenuItem("None Available");
+		MG_NoGS.setSelected(false);
 		MG_NoGS.setEnabled(false);
+		AvailableOSCheckBoxMenuItems.add(MG_NoGS);
+		//TODO: Available
 		MG_ManageGS = new JMenuItem("Manage Genome Sets");
 		MG_CurrentGS.add(MG_NoGS);
 		MG_ManageCurrentGS = new JMenuItem("Current Genome Set");
@@ -766,6 +934,11 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
 		MG_ImportGS.setAccelerator(Istroke);
 		MG_ImportGS.addActionListener(this);
+		
+		KeyStroke Astroke = KeyStroke.getKeyStroke(KeyEvent.VK_A, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		MG_Files.setAccelerator(Astroke);
+		MG_Files.addActionListener(this);
 		
 		//Import settings
 		MG_ImportSettings = new JMenu("Import Settings");
@@ -893,12 +1066,75 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		if (evt.getSource().equals(MG_Genbank)){
 			new GBKChecker(this);
 		}
-		
-		
-		
+
 		//Add one or more files to an existing genomic working set
 		if (evt.getSource().equals(MG_Files)){
 			
+			if (this.OS == null){
+				OS = new OrganismSet();
+				OS.setName("Default Genome Set");
+				
+				//update check box menu
+				for (JCheckBoxMenuItem b : getCurrentItems()){
+					if (b.equals(getMG_NoGS())){
+						getMG_CurrentGS().remove(b);
+					} else {
+						b.setSelected(false);
+					}
+				}
+				
+				//Add check box menu item
+				JCheckBoxMenuItem NewOS = new JCheckBoxMenuItem(OS.getName());
+				NewOS.setSelected(true);	
+				NewOS.addActionListener(this);
+				
+				//update menu + corresponding list
+				getCurrentItems().add(NewOS);
+				getMG_CurrentGS().add(NewOS);
+
+			}
+			
+			// initialize output
+			JFileChooser GetGenomes = new JFileChooser();
+			
+			GetGenomes.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+			GetGenomes
+					.setDialogTitle("Select An Annotated Genome File or Directory of Annotated Genome Files");
+
+			//retrieve directory
+			if (this.FileChooserSource != null) {
+				GetGenomes.setCurrentDirectory(FileChooserSource);
+			} else {
+				GetGenomes.setCurrentDirectory(new File("."));
+			}
+		
+			GetGenomes.showOpenDialog(GetGenomes);
+			
+			// note current directory for next time
+			if (GetGenomes.getCurrentDirectory() != null) {
+				this.FileChooserSource = GetGenomes.getCurrentDirectory();
+			}
+			
+			//begin import
+			LoadGenomesWorker LGW = new LoadGenomesWorker(GetGenomes.getSelectedFile());
+			LGW.addPropertyChangeListener(panBtn);
+			LGW.execute();
+			
+		}
+		
+		//check box selection display
+		//TODO: add many more things
+		if (this.AvailableOSCheckBoxMenuItems.contains(evt.getSource())){
+			
+			for (JCheckBoxMenuItem b : AvailableOSCheckBoxMenuItems){
+				if (b.equals(evt.getSource())){
+					if (!b.isSelected()){
+						b.setSelected(true);
+					}
+				} else {
+					b.setSelected(false);
+				}
+			}
 		}
 		
 		/*
@@ -926,21 +1162,17 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		}
 	}
 
-
 	public LinkedList<String> getGFFIncludeTypes() {
 		return GFFIncludeTypes;
 	}
-
 
 	public void setGFFIncludeTypes(LinkedList<String> gFFIncludeTypes) {
 		GFFIncludeTypes = gFFIncludeTypes;
 	}
 
-
 	public LinkedList<String> getGFFDisplayTypes() {
 		return GFFDisplayTypes;
 	}
-
 
 	public void setGFFDisplayTypes(LinkedList<String> gFFDisplayTypes) {
 		GFFDisplayTypes = gFFDisplayTypes;
@@ -982,8 +1214,40 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		return MG_NoGS;
 	}
 
-	public void setMG_NoGS(JMenuItem mG_NoGS) {
+	public void setMG_NoGS(JCheckBoxMenuItem mG_NoGS) {
 		MG_NoGS = mG_NoGS;
+	}
+
+	public LinkedHashMap<String, OSRetrieval> getOSSeeds() {
+		return OSSeeds;
+	}
+
+	public void setOSSeeds(LinkedHashMap<String, OSRetrieval> oSSeeds) {
+		OSSeeds = oSSeeds;
+	}
+
+	public LinkedList<JCheckBoxMenuItem> getCurrentItems() {
+		return AvailableOSCheckBoxMenuItems;
+	}
+
+	public void setCurrentItems(LinkedList<JCheckBoxMenuItem> currentItems) {
+		AvailableOSCheckBoxMenuItems = currentItems;
+	}
+
+	@Override
+	public void itemStateChanged(ItemEvent e) {
+		//change position, if appropriate
+
+//		for (JCheckBoxMenuItem b : AvailableOSCheckBoxMenuItems){
+//			if (b.equals(e.getItemSelectable())){
+//				if (!b.isSelected()){
+//					b.setSelected(true);
+//				}
+//			} else {
+//				b.setSelected(false);
+//			}
+//		}
+
 	}
 	
 }

@@ -25,9 +25,9 @@ import definicions.MatriuDistancies;
 public class OrganismSet {
 
 	//fields
-	private LinkedHashMap<String, AnnotatedGenome> Species;		//-Species-information--------
-	private LinkedList<String> SpeciesNames;					//-Species-Names--------------
-	private LinkedList<ContextSetDescription> CSDs;				//-Info-about-Context-Sets----
+	private LinkedHashMap<String, AnnotatedGenome> Species = new LinkedHashMap<String, AnnotatedGenome>();		//-Species-information--------
+	private LinkedList<String> SpeciesNames = new LinkedList<String>();					//-Species-Names--------------
+	private LinkedList<ContextSetDescription> CSDs = new LinkedList<ContextSetDescription>();				//-Info-about-Context-Sets----
 	private LinkedList<MotifGroupDescription> MGDescriptions;
 	private LinkedList<CustomDissimilarity> CustomDissimilarities = new LinkedList<CustomDissimilarity>();
 	private boolean GeneClustersLoaded = false;					//-Gene-Clusters--------------
@@ -38,6 +38,7 @@ public class OrganismSet {
 	private File SourceDirectory;								//-Source information
 	private String Notes;
 	private String Name;
+	private OSRetrieval RetrievalInfo;							//-For Memory management
 	
 	// ----------------------- Construction ------------------------//
 	 	
@@ -778,6 +779,14 @@ public class OrganismSet {
 
 	public void setName(String name) {
 		Name = name;
+	}
+
+	public OSRetrieval getRetrievalInfo() {
+		return RetrievalInfo;
+	}
+
+	public void setRetrievalInfo(OSRetrieval retrievalInfo) {
+		RetrievalInfo = retrievalInfo;
 	}
 
 } //completes classbody

@@ -2053,5 +2053,13 @@ import definicions.MatriuDistancies;
 			PhyloTreeLeaves = phyloTreeLeaves;
 		}
 
+		public JProgressBar getProgressBar() {
+			return progressBar;
+		}
+
+		public void setProgressBar(JProgressBar progressBar) {
+			this.progressBar = progressBar;
+		}
+
 
 	}
