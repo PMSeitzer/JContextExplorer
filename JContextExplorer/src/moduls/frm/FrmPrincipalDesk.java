@@ -262,6 +262,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			}
 			
 			if (MissingSingleGene){
+				
 				//add to OS
 				ContextSetDescription CSD = new ContextSetDescription();
 				CSD.setName("SingleGene");

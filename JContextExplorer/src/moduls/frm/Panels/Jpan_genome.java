@@ -54,7 +54,6 @@ public class Jpan_genome extends JPanel implements ActionListener,
 	private final FrmPrincipalDesk fr;
 	
 	//display-related
-	private OrganismSet OS;
 	private Jpan_genome jg;
 	private JButton btnSelectAll, btndeSelectAll, btnViewContexts, btnViewAnnotations, btnSelectNodes;
 	private String strSelectAll = "Select All";
@@ -85,7 +84,6 @@ public class Jpan_genome extends JPanel implements ActionListener,
 		this.jg = this;
 		this.getPanel();
 		this.setVisible(true);
-		this.OS = fr.getOS();
 	}
 
 	private void getPanel() {
@@ -352,30 +350,21 @@ public class Jpan_genome extends JPanel implements ActionListener,
 						CSDToContexts.setEC(CSD.getEC());
 						CSDToContexts.setGraphicalContexts(CSD.getGraphicalContexts());
 						
-						//CSDTemp.setNodeNames(CSD.getNodeNames());
-						//CSDTemp.setCoordinates(coordinates)
-						
-						//debugging
-//						System.out.println("Before passing into main frame");
-//						for (ContextLeaf CL : CSD.getGraphicalContexts()){
-//							System.out.println(CL.getName() + " " + CSD.getEC().getContexts().get(CL.getName()));
-//						}
-						
 						//set wait cursor
 						fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 						
-						new mainFrame(CSDToContexts, OS, Title, fr);
+						new mainFrame(CSDToContexts, fr.getOS(), Title, fr);
 						
 						// return cursor to default
 						fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 					}
 					
 				} catch (Exception e1){
-					e1.printStackTrace();
-					String exceptionString = "Select nodes of interest by clicking on the node name in the dendrogram." + "\n" +
-								"ctrl+click and shift+click can be used to select several nodes simultaneously." + "\n" + 
-								"You may select all or deselect all nodes by pushing the 'select all' and 'deselect all' buttons.";
-					JOptionPane.showMessageDialog(null,exceptionString);
+//					e1.printStackTrace();
+//					String exceptionString = "Select nodes of interest by clicking on the node name in the dendrogram." + "\n" +
+//								"ctrl+click and shift+click can be used to select several nodes simultaneously." + "\n" + 
+//								"You may select all or deselect all nodes by pushing the 'select all' and 'deselect all' buttons.";
+//					JOptionPane.showMessageDialog(null,exceptionString);
 				}
 			
 		}

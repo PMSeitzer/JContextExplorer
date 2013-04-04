@@ -153,20 +153,49 @@ public class NewGS extends JFrame implements ActionListener{
 					
 					//update profiles
 					f.getAvailableOrganismSets().add(OS.getName());
-					f.setOS(OS);
+					
+					//Switch options										
+					boolean AtLeastOneOS = true;
+					boolean SetNewOSToSelected = false;
 					
 					//update check box menu
 					for (JCheckBoxMenuItem b : f.getCurrentItems()){
 						if (b.equals(f.getMG_NoGS())){
 							f.getMG_CurrentGS().remove(b);
-						} else {
-							b.setSelected(false);
-						}
+							f.getCurrentItems().remove(b);
+							AtLeastOneOS = false;
+							break;
+						} 
+					}
+					
+					//if multiple OS, option to switch to newly created OS.
+					if (AtLeastOneOS){
+						
+						String MsgSwitch = "Would you like to switch to this genome set now?\n" +
+											"depending on the number and size of genomes in a genome set,\n" +
+											"switching between genome sets may be a time-consuming process.";
+						
+						int SwitchOS = JOptionPane.showConfirmDialog(null,MsgSwitch,
+								"Proceed with context viewing", JOptionPane.YES_NO_OPTION);
+						
+						if (SwitchOS == JOptionPane.YES_OPTION){
+							
+							//add selection, and de-select all others
+							f.setOS(OS);
+							for (JCheckBoxMenuItem b : f.getCurrentItems()){
+								b.setSelected(false);
+							}
+							SetNewOSToSelected = true;
+						} 
+						
+					} else {
+						f.setOS(OS);
+						SetNewOSToSelected = true;
 					}
 					
 					//Add new check box menu item
 					JCheckBoxMenuItem NewOS = new JCheckBoxMenuItem(OS.getName());
-					NewOS.setSelected(true);	
+					NewOS.setSelected(SetNewOSToSelected);	
 					NewOS.addActionListener(f);
 					
 					//update menu + corresponding list

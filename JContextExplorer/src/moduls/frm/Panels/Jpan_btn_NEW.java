@@ -153,9 +153,6 @@ import definicions.MatriuDistancies;
 		
 		private int HorizontalScrollBuffer = 30;
 		private int VerticalScrollValue = 1500;
-		
-		//organism set
-		private OrganismSet OS;
 
 		private String currentQuery;
 
@@ -296,7 +293,8 @@ import definicions.MatriuDistancies;
 				
 				//recover the context set description
 				ContextSetDescription CurrentCSD = null;
-				for (ContextSetDescription csd : OS.getCSDs()){
+				
+				for (ContextSetDescription csd : fr.getOS().getCSDs()){
 					if (csd.getName().contentEquals(this.ContextSetName)){
 						CurrentCSD = csd;
 						break;
@@ -314,7 +312,7 @@ import definicions.MatriuDistancies;
 					ContextSetName = CurrentCSD.getCassetteOf();
 					
 					//recover the context set description of the cassette
-					for (ContextSetDescription csd : OS.getCSDs()){
+					for (ContextSetDescription csd : fr.getOS().getCSDs()){
 						if (csd.getName().contentEquals(ContextSetName)){
 							CurrentCSD = csd;
 							break;
@@ -352,7 +350,7 @@ import definicions.MatriuDistancies;
 				HashSet<String> GenesForCassettes = new HashSet<String>();
 
 				//iterate through species.
-				for (Entry<String, AnnotatedGenome> entry : OS.getSpecies().entrySet()) {
+				for (Entry<String, AnnotatedGenome> entry : fr.getOS().getSpecies().entrySet()) {
 
 					//initialize output
 					HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = null;
@@ -416,7 +414,7 @@ import definicions.MatriuDistancies;
 					}
 					
 					SpeciesCounter++;
-					progress = (int) (50*((double)SpeciesCounter/(double)OS.getSpecies().size()));
+					progress = (int) (50*((double)SpeciesCounter/(double)fr.getOS().getSpecies().size()));
 					//update progress
 					setProgress(progress);
 				}
@@ -439,7 +437,7 @@ import definicions.MatriuDistancies;
 						CurrentCSD.setGenesAfter(GenesBefore);
 
 						//retrieve alternative set of hits
-						for (Entry<String, AnnotatedGenome> entry : OS.getSpecies().entrySet()) {
+						for (Entry<String, AnnotatedGenome> entry : fr.getOS().getSpecies().entrySet()) {
 							
 							//Retrieve matches
 							HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = 
@@ -541,7 +539,7 @@ import definicions.MatriuDistancies;
 					String SpeciesKey;
 					LinkedList<GenomicElementAndQueryMatch> SpeciesGenes;
 					
-					for (AnnotatedGenome AG : OS.getSpecies().values()){
+					for (AnnotatedGenome AG : fr.getOS().getSpecies().values()){
 						
 						//Species Name
 						SpeciesKey = AG.getSpecies() + "-1";
@@ -625,7 +623,7 @@ import definicions.MatriuDistancies;
 				
 				//recover the context set description
 				ContextSetDescription CurrentCSD = null;
-				for (ContextSetDescription csd : OS.getCSDs()){
+				for (ContextSetDescription csd : fr.getOS().getCSDs()){
 					if (csd.getName().contentEquals(this.ContextSetName)){
 						CurrentCSD = csd;
 						break;
@@ -641,7 +639,7 @@ import definicions.MatriuDistancies;
 					ContextSetName = CurrentCSD.getCassetteOf();
 					
 					//recover the context set description of the cassette
-					for (ContextSetDescription csd : OS.getCSDs()){
+					for (ContextSetDescription csd : fr.getOS().getCSDs()){
 						if (csd.getName().contentEquals(ContextSetName)){
 							CurrentCSD = csd;
 							break;
@@ -678,7 +676,7 @@ import definicions.MatriuDistancies;
 				HashSet<Integer> GenesForCassettes = new HashSet<Integer>();
 				
 				//iterate through species.
-				for (Entry<String, AnnotatedGenome> entry : OS.getSpecies().entrySet()) {
+				for (Entry<String, AnnotatedGenome> entry : fr.getOS().getSpecies().entrySet()) {
 
 					HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = null;
 					
@@ -746,7 +744,7 @@ import definicions.MatriuDistancies;
 					GenesForCassettes.remove(0);
 					
 					SpeciesCounter++;
-					progress = (int) (50*((double)SpeciesCounter/(double)OS.getSpecies().size()));
+					progress = (int) (50*((double)SpeciesCounter/(double)fr.getOS().getSpecies().size()));
 					
 					//update progress
 					setProgress(progress);
@@ -771,7 +769,7 @@ import definicions.MatriuDistancies;
 						CurrentCSD.setGenesAfter(GenesBefore);
 
 						//retrieve alternative set of hits
-						for (Entry<String, AnnotatedGenome> entry : OS.getSpecies().entrySet()) {
+						for (Entry<String, AnnotatedGenome> entry : fr.getOS().getSpecies().entrySet()) {
 							
 							//Retrieve matches
 							HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = 
@@ -873,7 +871,7 @@ import definicions.MatriuDistancies;
 					String SpeciesKey;
 					LinkedList<GenomicElementAndQueryMatch> SpeciesGenes;
 					
-					for (AnnotatedGenome AG : OS.getSpecies().values()){
+					for (AnnotatedGenome AG : fr.getOS().getSpecies().values()){
 						
 						//Species Name
 						SpeciesKey = AG.getSpecies() + "-1";
@@ -1052,7 +1050,7 @@ import definicions.MatriuDistancies;
 			this.getPanel();
 			this.searchFieldSize = searchField.getPreferredSize();
 			this.setVisible(true);
-			this.OS = fr.getOS();
+
 		}
 
 		private void getPanel() {
