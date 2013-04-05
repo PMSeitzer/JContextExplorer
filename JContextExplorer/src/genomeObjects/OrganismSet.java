@@ -25,9 +25,18 @@ import definicions.MatriuDistancies;
 public class OrganismSet {
 
 	//fields
-	private LinkedHashMap<String, AnnotatedGenome> Species = new LinkedHashMap<String, AnnotatedGenome>();		//-Species-information--------
-	private LinkedList<String> SpeciesNames = new LinkedList<String>();					//-Species-Names--------------
-	private LinkedList<ContextSetDescription> CSDs = new LinkedList<ContextSetDescription>();				//-Info-about-Context-Sets----
+	//Actively loaded genomes
+	private LinkedHashMap<String, AnnotatedGenome> Species 
+		= new LinkedHashMap<String, AnnotatedGenome>();		//-Species-information--------
+	
+	//Genome Name, instructions to retrieve
+	private LinkedHashMap<String, RetrieveGenomeInstructions> InstructionsToRetrieve
+		= new LinkedHashMap<String, RetrieveGenomeInstructions>();
+	
+	private LinkedList<String> SpeciesNames
+		= new LinkedList<String>();					//-Species-Names--------------
+	private LinkedList<ContextSetDescription> CSDs
+		= new LinkedList<ContextSetDescription>();				//-Info-about-Context-Sets----
 	private LinkedList<MotifGroupDescription> MGDescriptions;
 	private LinkedList<CustomDissimilarity> CustomDissimilarities = new LinkedList<CustomDissimilarity>();
 	private boolean GeneClustersLoaded = false;					//-Gene-Clusters--------------
@@ -35,10 +44,8 @@ public class OrganismSet {
 	private boolean ContinueImportingOperons = true;			
 	private LinkedList<String> IncludeTypes;					//-Types of data worth importing/processing
 	private LinkedList<String> DisplayOnlyTypes;
-	private File SourceDirectory;								//-Source information
 	private String Notes;
 	private String Name;
-	private OSRetrieval RetrievalInfo;							//-For Memory management
 	
 	// ----------------------- Construction ------------------------//
 	 	
@@ -69,7 +76,7 @@ public class OrganismSet {
 						AnnotatedGenome AG = new AnnotatedGenome();
 						
 						//Annotation information
-						AG.importElements(ImportedLine[0]);
+						AG.importFromGFFFile(ImportedLine[0]);
 						
 						//reference to genome file
 						AG.setGenomeFile(new File(ImportedLine[1]));
@@ -739,14 +746,6 @@ public class OrganismSet {
 		MGDescriptions = mGDescriptions;
 	}
 
-	public File getSourceDirectory() {
-		return SourceDirectory;
-	}
-
-	public void setSourceDirectory(File sourceDirectory) {
-		SourceDirectory = sourceDirectory;
-	}
-
 	public LinkedList<CustomDissimilarity> getCustomDissimilarities() {
 		return CustomDissimilarities;
 	}
@@ -781,12 +780,12 @@ public class OrganismSet {
 		Name = name;
 	}
 
-	public OSRetrieval getRetrievalInfo() {
-		return RetrievalInfo;
+	public LinkedHashMap<String, RetrieveGenomeInstructions> getInstructionsToRetrieve() {
+		return InstructionsToRetrieve;
 	}
 
-	public void setRetrievalInfo(OSRetrieval retrievalInfo) {
-		RetrievalInfo = retrievalInfo;
+	public void setInstructionsToRetrieve(LinkedHashMap<String, RetrieveGenomeInstructions> instructionsToRetrieve) {
+		InstructionsToRetrieve = instructionsToRetrieve;
 	}
 
 } //completes classbody

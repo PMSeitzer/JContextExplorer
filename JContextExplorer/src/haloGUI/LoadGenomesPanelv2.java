@@ -1058,7 +1058,7 @@ public class LoadGenomesPanelv2 extends JLayeredPane implements ActionListener,
 							if (ImportedLine.length == 3) {
 
 								// Annotation information
-								AG.importElements(ImportedLine[0]);
+								AG.importFromGFFFile(ImportedLine[0]);
 
 								// reference to genome file
 								AG.setGenomeFile(new File(ImportedLine[1]));
@@ -1072,13 +1072,13 @@ public class LoadGenomesPanelv2 extends JLayeredPane implements ActionListener,
 																	// last =
 																	// species
 																	// name
-								AG.importElements(ImportedLine[0]);
+								AG.importFromGFFFile(ImportedLine[0]);
 								SpeciesName = ImportedLine[(ImportedLine.length - 1)];
 								AG.setGenomeFile(new File(""));
 							} else {
 
 								// import elements
-								AG.importElements(ImportedLine[0]);
+								AG.importFromGFFFile(ImportedLine[0]);
 
 								// retrieve species name
 								String SpeciesNameElements[] = ImportedLine[0]
@@ -1178,7 +1178,7 @@ public class LoadGenomesPanelv2 extends JLayeredPane implements ActionListener,
 							AG.setDisplayOnlyTypes(DisplayOnlyTypes);
 
 							// Annotation information
-							AG.importElements(f.getAbsolutePath());
+							AG.importFromGFFFile(f.getAbsolutePath());
 
 							// reference to genome file
 							AG.setGenomeFile(f);
@@ -1570,7 +1570,6 @@ public class LoadGenomesPanelv2 extends JLayeredPane implements ActionListener,
 	public void invokeDendrograma() {
 
 		// System.out.println("Breakpoint!");
-		OS.setSourceDirectory(ReferenceDirectory);
 		//OS.ExportExtendedGFFFile();
 		new Dendrograma(OS);
 

@@ -34,7 +34,7 @@ public AnnotatedGenome() {
 	}
 
 //import annotated elements from a .GFF file.
-public void importElements(String filename){
+public void importFromGFFFile(String filename){
 	
 	//define a null linked list
 	LinkedList<GenomicElement> Elements = new LinkedList<GenomicElement>();

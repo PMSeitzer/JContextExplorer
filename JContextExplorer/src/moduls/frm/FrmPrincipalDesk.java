@@ -21,7 +21,7 @@ package moduls.frm;
 import genomeObjects.AnnotatedGenome;
 import genomeObjects.CSDisplayData;
 import genomeObjects.ContextSetDescription;
-import genomeObjects.OSRetrieval;
+import genomeObjects.OSCreationInstructions;
 import genomeObjects.OrganismSet;
 import haloGUI.GBKChecker;
 import haloGUI.GFFChecker;
@@ -143,7 +143,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	
 	private FrmPiz currentFpizpanel;
 	
-	private OrganismSet OS; //OrganismSet information
+	private OrganismSet OS; //currently active Organism Set information
 	
 	//data necessary to render contexts
 	private boolean[] SelectedNodeNumbers;
@@ -161,9 +161,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	// ----- New Fields (1.2) ------------------------------------------//
 	
 	//Multiple OS
-	private HashSet<String> AvailableOrganismSets = new HashSet<String>();
-	private LinkedHashMap<String, OSRetrieval> OSSeeds 
-		= new LinkedHashMap<String, OSRetrieval>();
+	private LinkedHashMap<String, OSCreationInstructions> GenomeSets 
+		= new LinkedHashMap<String, OSCreationInstructions>();
 	private LinkedList<JCheckBoxMenuItem> AvailableOSCheckBoxMenuItems 
 		= new LinkedList<JCheckBoxMenuItem>();
 //	private ButtonGroup bg = new ButtonGroup();
@@ -312,7 +311,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					AG.setDisplayOnlyTypes(GFFDisplayTypes);
 
 					// Annotation information
-					AG.importElements(f.getAbsolutePath());
+					AG.importFromGFFFile(f.getAbsolutePath());
 
 					// reference to genome file
 					AG.setGenomeFile(f);
@@ -355,8 +354,45 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		}
 	}
 	
-	// ----- Methods ---------------------------------------------------//		
+	//reloading an OS from instructions
+	public class LoadOSWorker extends SwingWorker<Void, Void>{
 
+		//fields
+		OSCreationInstructions OSC;
+		
+		//constructor
+		public LoadOSWorker(OSCreationInstructions OSC){
+			this.OSC = OSC;
+		}
+		
+		@Override
+		protected Void doInBackground() throws Exception {
+			
+			return null;
+		}
+		
+		//post-processing
+		public void done(){
+			
+		}
+	}
+	
+	// ===== Methods ===================================================//		
+
+	// ----- Data Retrieval Methods ------------------------------------//	
+	
+	public void LoadOrganismSet(String Name){
+		
+		//Retrieve organism set
+		OSCreationInstructions OSC = GenomeSets.get(Name);
+		
+		//Send process to another thread
+		LoadOSWorker LOW = new LoadOSWorker(OSC);
+		LOW.addPropertyChangeListener(panBtn);
+		LOW.execute();
+		
+	}
+	
 	public int getInternalFrameID() {
 		return InternalFrameID;
 	}
@@ -1195,14 +1231,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		GBKDisplayTypes = gBKDisplayTypes;
 	}
 
-	public HashSet<String> getAvailableOrganismSets() {
-		return AvailableOrganismSets;
-	}
-
-	public void setAvailableOrganismSets(HashSet<String> availableOrganismSets) {
-		AvailableOrganismSets = availableOrganismSets;
-	}
-
 	public JMenu getMG_CurrentGS() {
 		return MG_CurrentGS;
 	}
@@ -1219,12 +1247,12 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_NoGS = mG_NoGS;
 	}
 
-	public LinkedHashMap<String, OSRetrieval> getOSSeeds() {
-		return OSSeeds;
+	public LinkedHashMap<String, OSCreationInstructions> getGenomeSets() {
+		return GenomeSets;
 	}
 
-	public void setOSSeeds(LinkedHashMap<String, OSRetrieval> oSSeeds) {
-		OSSeeds = oSSeeds;
+	public void setOSSeeds(LinkedHashMap<String, OSCreationInstructions> oSSeeds) {
+		GenomeSets = oSSeeds;
 	}
 
 	public LinkedList<JCheckBoxMenuItem> getCurrentItems() {

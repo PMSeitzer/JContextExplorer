@@ -612,7 +612,7 @@ public class LoadGenomesPanel extends JPanel
 							if (ImportedLine.length == 3){
 							
 								//Annotation information
-								AG.importElements(ImportedLine[0]);
+								AG.importFromGFFFile(ImportedLine[0]);
 							
 								//reference to genome file
 								AG.setGenomeFile(new File(ImportedLine[1]));
@@ -622,7 +622,7 @@ public class LoadGenomesPanel extends JPanel
 								//System.out.println("Species " + ImportedLine[2] + " Completed.");
 							
 							} else{ //first = annotation file, last = species name
-								AG.importElements(ImportedLine[0]);
+								AG.importFromGFFFile(ImportedLine[0]);
 								AG.setSpecies(ImportedLine[(ImportedLine.length-1)]);
 								AG.setGenomeFile(new File(""));
 							}

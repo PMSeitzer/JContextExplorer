@@ -1,5 +1,6 @@
 package GenomicSetHandling;
 
+import genomeObjects.OSCreationInstructions;
 import genomeObjects.OrganismSet;
 
 import java.awt.BorderLayout;
@@ -139,7 +140,7 @@ public class NewGS extends JFrame implements ActionListener{
 		if (e.getSource().equals(btnOK)){
 			//Empty string is just read as close window.
 			if (!TxtName.getText().equals("")){
-				if (f.getAvailableOrganismSets().contains(TxtName.getText())){
+				if (f.getGenomeSets().keySet().contains(TxtName.getText())){
 					
 					JOptionPane.showMessageDialog(null,"A Genome Set of this name already exists.\nPlease choose another Name.",
 							"Name Already in use", JOptionPane.ERROR_MESSAGE);
@@ -150,9 +151,6 @@ public class NewGS extends JFrame implements ActionListener{
 					OrganismSet OS = new OrganismSet();
 					OS.setName(TxtName.getText());
 					OS.setNotes(OrganismSetNotes.getText());
-					
-					//update profiles
-					f.getAvailableOrganismSets().add(OS.getName());
 					
 					//Switch options										
 					boolean AtLeastOneOS = true;
@@ -202,6 +200,12 @@ public class NewGS extends JFrame implements ActionListener{
 					f.getCurrentItems().add(NewOS);
 					f.getMG_CurrentGS().add(NewOS);
 
+					//update profiles
+					OSCreationInstructions CI = new OSCreationInstructions();
+					CI.setName(OS.getName());
+					CI.setNotes(OS.getNotes());
+					f.getGenomeSets().put(TxtName.getText(), CI);
+					
 					//close window
 					this.dispose();
 				}
