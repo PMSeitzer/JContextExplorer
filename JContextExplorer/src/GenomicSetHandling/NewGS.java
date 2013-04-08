@@ -6,6 +6,7 @@ import genomeObjects.OrganismSet;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -162,6 +163,7 @@ public class NewGS extends JFrame implements ActionListener{
 							f.getMG_CurrentGS().remove(b);
 							f.getCurrentItems().remove(b);
 							AtLeastOneOS = false;
+							SetNewOSToSelected = true;
 							break;
 						} 
 					}
@@ -179,22 +181,19 @@ public class NewGS extends JFrame implements ActionListener{
 						if (SwitchOS == JOptionPane.YES_OPTION){
 							
 							//add selection, and de-select all others
-							f.setOS(OS);
 							for (JCheckBoxMenuItem b : f.getCurrentItems()){
 								b.setSelected(false);
 							}
 							SetNewOSToSelected = true;
 						} 
 						
-					} else {
-						f.setOS(OS);
-						SetNewOSToSelected = true;
 					}
 					
 					//Add new check box menu item
 					JCheckBoxMenuItem NewOS = new JCheckBoxMenuItem(OS.getName());
 					NewOS.setSelected(SetNewOSToSelected);	
 					NewOS.addActionListener(f);
+					NewOS.setName(OS.getName());
 					
 					//update menu + corresponding list
 					f.getCurrentItems().add(NewOS);
@@ -205,6 +204,24 @@ public class NewGS extends JFrame implements ActionListener{
 					CI.setName(OS.getName());
 					CI.setNotes(OS.getNotes());
 					f.getGenomeSets().put(TxtName.getText(), CI);
+					
+					//switch OS
+					if (SetNewOSToSelected){
+						
+						//wait cursor
+						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+						
+						//record previously selected
+						if (f.getOS() != null){
+							f.ExportSerializedOS(f.getOS().getName());
+						}
+
+						//default cursor
+						setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+					}
+
+					//update organism set
+					f.setOS(OS);
 					
 					//close window
 					this.dispose();

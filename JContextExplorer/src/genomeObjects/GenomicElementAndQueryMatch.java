@@ -1,6 +1,8 @@
 package genomeObjects;
 
-public class GenomicElementAndQueryMatch {
+import java.io.Serializable;
+
+public class GenomicElementAndQueryMatch implements Serializable{
 
 	//fields
 	private GenomicElement E;

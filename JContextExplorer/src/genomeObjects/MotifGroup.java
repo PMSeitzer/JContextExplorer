@@ -1,8 +1,9 @@
 package genomeObjects;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 
-public class MotifGroup {
+public class MotifGroup implements Serializable{
 
 	//Fields
 	private LinkedList<SequenceMotif> MotifInstances = new LinkedList<SequenceMotif>();

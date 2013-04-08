@@ -4,6 +4,7 @@ import genomeObjects.GenomicElement;
 import genomeObjects.GenomicElementAndQueryMatch;
 
 import java.awt.Point;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,7 +17,7 @@ import org.biojava3.core.sequence.Strand;
 import moduls.frm.children.GapPoint;
 import moduls.frm.children.GapPointMapping;
 
-public class CustomDissimilarity {
+public class CustomDissimilarity implements Serializable {
 
 	//Fields
 	//General

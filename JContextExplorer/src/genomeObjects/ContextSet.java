@@ -1,9 +1,10 @@
 package genomeObjects;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-public class ContextSet {
+public class ContextSet implements Serializable{
 	
 	//fields
 	private String Name;

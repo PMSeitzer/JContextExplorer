@@ -1,8 +1,9 @@
 package genomeObjects;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import org.biojava3.core.sequence.Strand;
-public class SequenceMotif {
+public class SequenceMotif implements Serializable{
 
 	//Fields
 	private int Start;							//Start coordinate

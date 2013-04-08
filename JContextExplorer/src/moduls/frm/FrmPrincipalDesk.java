@@ -42,8 +42,12 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -161,8 +165,13 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	// ----- New Fields (1.2) ------------------------------------------//
 	
 	//Multiple OS
+//	private LinkedHashMap<String, OSCreationInstructions> GenomeSets 
+//		= new LinkedHashMap<String, OSCreationInstructions>();
 	private LinkedHashMap<String, OSCreationInstructions> GenomeSets 
-		= new LinkedHashMap<String, OSCreationInstructions>();
+	= new LinkedHashMap<String, OSCreationInstructions>();	
+	
+	private LinkedHashMap<String, File> GenomeSetFiles = 
+			new LinkedHashMap<String, File>();
 	private LinkedList<JCheckBoxMenuItem> AvailableOSCheckBoxMenuItems 
 		= new LinkedList<JCheckBoxMenuItem>();
 //	private ButtonGroup bg = new ButtonGroup();
@@ -380,6 +389,43 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	// ===== Methods ===================================================//		
 
 	// ----- Data Retrieval Methods ------------------------------------//	
+	
+	//Export an existing Organism Set object into a file
+	public void ExportSerializedOS(String OSName){
+		try {
+			File f = new File(OSName);
+			System.out.println("Export: " + f.getAbsolutePath());
+			GenomeSetFiles.put(OS.getName(), f);
+	        FileOutputStream fileOut = new FileOutputStream(f);
+	        ObjectOutputStream out = new ObjectOutputStream(fileOut);
+	        out.writeObject(OS);
+	        out.close();
+	        fileOut.close();
+	        //TODO: get back to the same file??? -> need to understand file streams better
+
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
+	}
+	
+	//Import an Organism Set object into memory
+	public OrganismSet ImportSerializedOS(String OSName){
+		OrganismSet OSImported = null;
+		try
+	      {	
+		     File f = GenomeSetFiles.get(OSName);
+		     System.out.println("Import: " + f.getAbsolutePath());
+	         FileInputStream fileIn = new FileInputStream(f);
+	         ObjectInputStream in = new ObjectInputStream(fileIn);
+	         OS = (OrganismSet) in.readObject();
+	         in.close();
+	         fileIn.close();
+	         
+	      }catch(Exception ex) {
+	         ex.printStackTrace();  
+	      }
+		return OSImported;
+	}
 	
 	public void LoadOrganismSet(String Name){
 		
@@ -1163,15 +1209,53 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//TODO: add many more things
 		if (this.AvailableOSCheckBoxMenuItems.contains(evt.getSource())){
 			
-			for (JCheckBoxMenuItem b : AvailableOSCheckBoxMenuItems){
-				if (b.equals(evt.getSource())){
-					if (!b.isSelected()){
+			//don't do anything if only one item in the list.
+			if (this.AvailableOSCheckBoxMenuItems.size() > 1){
+				
+				//Initialize: no OS
+				String OSName = null;
+
+				//selection process
+				for (JCheckBoxMenuItem b : AvailableOSCheckBoxMenuItems){
+					if (b.equals(evt.getSource())){
+						OSName = b.getName();
 						b.setSelected(true);
+					} else {
+						b.setSelected(false);
 					}
-				} else {
-					b.setSelected(false);
 				}
+				
+				//If the OS is already loaded, no need for further action.
+				if (OSName.equals(OS.getName())){
+					OSName = null;
+				}
+				
+				//If an appropriate name to switch to is determined
+				if (OSName != null){
+					
+					//wait cursor
+					setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+					//Switching protocol
+					ExportSerializedOS(OS.getName());		//Export current
+					GenomeSetFiles.put(OS.getName(), new File(OS.getName()));		//Note current
+					this.OS = new OrganismSet();			//Reset
+					this.OS = ImportSerializedOS(OSName);	//Import
+					
+					//default cursor
+					setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+					
+				}
+				
+			} else {
+				
+				//item remains enabled.
+				for (JCheckBoxMenuItem b : AvailableOSCheckBoxMenuItems){
+					b.setSelected(true);
+				}
+				
 			}
+
 		}
 		
 		/*
@@ -1277,6 +1361,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 //			}
 //		}
 
+	}
+
+	public LinkedHashMap<String, File> getGenomeSetFiles() {
+		return GenomeSetFiles;
+	}
+
+	public void setGenomeSetFiles(LinkedHashMap<String, File> genomeSetFiles) {
+		GenomeSetFiles = genomeSetFiles;
 	}
 	
 }

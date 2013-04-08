@@ -1,6 +1,8 @@
 package genomeObjects;
 
-public class RetrieveGenomeInstructions {
+import java.io.Serializable;
+
+public class RetrieveGenomeInstructions implements Serializable {
 
 	//Fields
 	private String Source;	

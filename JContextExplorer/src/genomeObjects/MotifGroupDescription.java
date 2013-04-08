@@ -1,8 +1,9 @@
 package genomeObjects;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 
-public class MotifGroupDescription {
+public class MotifGroupDescription implements Serializable {
 
 	//Fields
 	private String Name;

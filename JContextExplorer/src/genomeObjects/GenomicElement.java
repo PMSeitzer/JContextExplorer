@@ -2,12 +2,13 @@
 
 package genomeObjects;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.LinkedList;
 
 import org.biojava3.core.sequence.Strand;
 
-public class GenomicElement {
+public class GenomicElement implements Serializable{
 	
 	//Fields 
     private String Contig;              //-Biological-placement----------

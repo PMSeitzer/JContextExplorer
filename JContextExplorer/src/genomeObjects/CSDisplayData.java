@@ -2,12 +2,13 @@ package genomeObjects;
 
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 
 import moduls.frm.ContextLeaf;
 
-public class CSDisplayData {
+public class CSDisplayData implements Serializable {
 
 	//fields
 	private String[] NodeNames;				//--Contexts under investigation

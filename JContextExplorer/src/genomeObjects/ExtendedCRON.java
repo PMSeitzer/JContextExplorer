@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.HashMap;
@@ -19,7 +20,7 @@ import java.util.Set;
 
 import operonClustering.*;
 
-public class ExtendedCRON {
+public class ExtendedCRON implements Serializable{
 
 	//fields
 	private String Name;

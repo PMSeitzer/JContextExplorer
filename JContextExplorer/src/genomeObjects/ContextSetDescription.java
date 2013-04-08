@@ -1,6 +1,8 @@
 package genomeObjects;
 
-public class ContextSetDescription {
+import java.io.Serializable;
+
+public class ContextSetDescription implements Serializable{
 
 	//required fields
 	private String Name;

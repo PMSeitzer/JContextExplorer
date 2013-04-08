@@ -11,7 +11,7 @@ import org.biojava3.core.sequence.DNASequence;
 import org.biojava3.core.sequence.Strand;
 import org.biojava3.core.sequence.io.FastaReaderHelper;
 
-public class AnnotatedGenome {
+public class AnnotatedGenome implements Serializable {
 	
 	//Fields 
     private String Genus;               						//-Biological-organization-------------

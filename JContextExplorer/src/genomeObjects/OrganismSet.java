@@ -4,7 +4,10 @@ import importExport.DadesExternes;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -22,7 +25,12 @@ import operonClustering.CustomDissimilarity;
 
 import definicions.MatriuDistancies;
 
-public class OrganismSet {
+public class OrganismSet implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	//fields
 	//Actively loaded genomes
@@ -664,6 +672,7 @@ public class OrganismSet {
 
 	//------------------------- Export --------------------------------//
 	
+	//extend the basic genomic information in the organism set as .GFF file
 	public void ExportExtendedGFFFile(){
 		
 		String DirName = "/Users/phillipseitzer/Documents/Halophiles_2012/EightyHalophiles/ExtendedAnnotations";
