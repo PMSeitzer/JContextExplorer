@@ -12,6 +12,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Toolkit;
+import java.awt.Dialog.ModalityType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -19,6 +20,7 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -30,7 +32,7 @@ import javax.swing.JTextField;
 
 import moduls.frm.FrmPrincipalDesk;
 
-public class NewGS extends JFrame implements ActionListener{
+public class NewGS extends JDialog implements ActionListener{
 
 	//fields
 	//data/base
@@ -49,6 +51,7 @@ public class NewGS extends JFrame implements ActionListener{
 		this.getPanel();
 		this.pack();
 		
+		this.setModalityType(ModalityType.DOCUMENT_MODAL);
 		this.setVisible(true);
 	}
 	
@@ -157,22 +160,22 @@ public class NewGS extends JFrame implements ActionListener{
 					boolean AtLeastOneOS = true;
 					boolean SetNewOSToSelected = false;
 					
-					//update check box menu
+					//If this isthe first OS, not much more to do.
 					for (JCheckBoxMenuItem b : f.getCurrentItems()){
 						if (b.equals(f.getMG_NoGS())){
 							f.getMG_CurrentGS().remove(b);
 							f.getCurrentItems().remove(b);
 							AtLeastOneOS = false;
-							SetNewOSToSelected = true;
+							f.setOS(OS);
 							break;
 						} 
 					}
-					
+
 					//if multiple OS, option to switch to newly created OS.
 					if (AtLeastOneOS){
 						
 						String MsgSwitch = "Would you like to switch to this genome set now?\n" +
-											"depending on the number and size of genomes in a genome set,\n" +
+											"Depending on the number and size of genomes in a genome set,\n" +
 											"switching between genome sets may be a time-consuming process.";
 						
 						int SwitchOS = JOptionPane.showConfirmDialog(null,MsgSwitch,
@@ -189,23 +192,7 @@ public class NewGS extends JFrame implements ActionListener{
 						
 					}
 					
-					//Add new check box menu item
-					JCheckBoxMenuItem NewOS = new JCheckBoxMenuItem(OS.getName());
-					NewOS.setSelected(SetNewOSToSelected);	
-					NewOS.addActionListener(f);
-					NewOS.setName(OS.getName());
-					
-					//update menu + corresponding list
-					f.getCurrentItems().add(NewOS);
-					f.getMG_CurrentGS().add(NewOS);
-
-					//update profiles
-					OSCreationInstructions CI = new OSCreationInstructions();
-					CI.setName(OS.getName());
-					CI.setNotes(OS.getNotes());
-					f.getGenomeSets().put(TxtName.getText(), CI);
-					
-					//switch OS
+					//switch OS, if multiple OS, and option
 					if (SetNewOSToSelected){
 						
 						//wait cursor
@@ -216,12 +203,27 @@ public class NewGS extends JFrame implements ActionListener{
 							f.ExportSerializedOS(f.getOS().getName());
 						}
 
+						//update organism set
+						f.setOS(OS);
+						
 						//default cursor
 						setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 					}
-
-					//update organism set
-					f.setOS(OS);
+					
+					//Global actions
+					
+					//Add new check box menu item
+					JCheckBoxMenuItem NewOS = new JCheckBoxMenuItem(OS.getName());
+					NewOS.setSelected(SetNewOSToSelected);	
+					if (!AtLeastOneOS){
+						NewOS.setSelected(true);
+					}
+					NewOS.addActionListener(f);
+					NewOS.setName(OS.getName());
+					
+					//update menu + corresponding list
+					f.getCurrentItems().add(NewOS);
+					f.getMG_CurrentGS().add(NewOS);
 					
 					//close window
 					this.dispose();

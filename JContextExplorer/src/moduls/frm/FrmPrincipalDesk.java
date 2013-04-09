@@ -409,8 +409,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	}
 	
 	//Import an Organism Set object into memory
-	public OrganismSet ImportSerializedOS(String OSName){
-		OrganismSet OSImported = null;
+	public void ImportSerializedOS(String OSName){
+
 		try
 	      {	
 		     File f = GenomeSetFiles.get(OSName);
@@ -424,7 +424,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	      }catch(Exception ex) {
 	         ex.printStackTrace();  
 	      }
-		return OSImported;
+
 	}
 	
 	public void LoadOrganismSet(String Name){
@@ -1240,7 +1240,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					ExportSerializedOS(OS.getName());		//Export current
 					GenomeSetFiles.put(OS.getName(), new File(OS.getName()));		//Note current
 					this.OS = new OrganismSet();			//Reset
-					this.OS = ImportSerializedOS(OSName);	//Import
+					ImportSerializedOS(OSName);	//Import
 					
 					//default cursor
 					setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
