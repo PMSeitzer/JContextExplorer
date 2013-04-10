@@ -29,6 +29,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.RootPaneContainer;
 
 import moduls.frm.FrmPrincipalDesk;
 
@@ -195,8 +196,10 @@ public class NewGS extends JDialog implements ActionListener{
 					//switch OS, if multiple OS, and option
 					if (SetNewOSToSelected){
 						
-						//wait cursor
-						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+						//switch cursor
+						Component glassPane = f.getGlassPane();
+						glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+						glassPane.setVisible(true);
 						
 						//record previously selected
 						if (f.getOS() != null){
@@ -207,7 +210,12 @@ public class NewGS extends JDialog implements ActionListener{
 						f.setOS(OS);
 						
 						//default cursor
-						setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+						glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+						glassPane.setVisible(false);
+					
+					//Initialize a file for this organism set, even though it's not being used.
+					} else {
+						f.ExportNonFocusOS(OS);
 					}
 					
 					//Global actions

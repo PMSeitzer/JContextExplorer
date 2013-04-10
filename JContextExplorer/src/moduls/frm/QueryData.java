@@ -13,7 +13,16 @@ public class QueryData {
 	private String DissimilarityType;
 	private PostSearchAnalyses AnalysesList;
 	private CSDisplayData CSD;
+	private String OSName;
 	
+	public String getOSName() {
+		return OSName;
+	}
+
+	public void setOSName(String oSName) {
+		OSName = oSName;
+	}
+
 	//Constructor
 	public QueryData(){
 		

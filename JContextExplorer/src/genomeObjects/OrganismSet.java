@@ -55,6 +55,12 @@ public class OrganismSet implements Serializable{
 	private String Notes;
 	private String Name;
 	
+	//Analysis-type data
+							//Motifs
+							//Context Sets
+							//Dissimilarity metrics
+							//Phylogeny info
+	
 	// ----------------------- Construction ------------------------//
 	 	
 	//constructor

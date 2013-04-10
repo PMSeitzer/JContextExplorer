@@ -60,6 +60,11 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 		this.getPanel();
 
 	}
+	
+	//dummy constructor
+	public FrmSearchResults(){
+		
+	}
 
 	//create panel
 	public void getPanel(){

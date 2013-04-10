@@ -163,7 +163,7 @@ import definicions.MatriuDistancies;
 		private String strUpdate = "Update";
 		
 		//display search results
-		private FrmSearchResults SearchResultsFrame = null;
+		private FrmSearchResults SearchResultsFrame = new FrmSearchResults();
 		
 		//parameters associated with phylo tree
 		private double PhyloTreeLength;
@@ -252,6 +252,7 @@ import definicions.MatriuDistancies;
 					this.WorkerQD.getAnalysesList().setOptionComputeContextGraph(false);
 					if (this.WorkerQD.getCSD().getEC().getNumberOfEntries() == 0){
 						String errMsg = "There were no matches to the query (or queries).";
+						SearchResultsFrame = new FrmSearchResults();
 						showError(errMsg);
 					}
 				}
@@ -1363,6 +1364,7 @@ import definicions.MatriuDistancies;
 			//initialize a new 'querydata' object whenever an action is taken - 
 			//represents current search parameter space
 			QueryData QD = new QueryData();
+			QD.setOSName(fr.getOS().getName()); 	//Important later for context viewing.
 			if (!evt.getSource().equals(contextSetMenu)){
 				if (searchType.getSelection().equals(annotationSearch.getModel())){
 					QD.setAnnotationSearch(true);

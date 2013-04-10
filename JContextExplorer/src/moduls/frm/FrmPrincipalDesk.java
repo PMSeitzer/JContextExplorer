@@ -388,21 +388,36 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	
 	// ===== Methods ===================================================//		
 
-	// ----- Data Retrieval Methods ------------------------------------//	
+	// ----- OS Data Retrieval Methods ------------------------------------//	
 	
 	//Export an existing Organism Set object into a file
 	public void ExportSerializedOS(String OSName){
 		try {
 			File f = new File(OSName);
-			System.out.println("Export: " + f.getAbsolutePath());
+			//System.out.println("Export: " + f.getAbsolutePath());
 			GenomeSetFiles.put(OS.getName(), f);
 	        FileOutputStream fileOut = new FileOutputStream(f);
 	        ObjectOutputStream out = new ObjectOutputStream(fileOut);
 	        out.writeObject(OS);
 	        out.close();
 	        fileOut.close();
-	        //TODO: get back to the same file??? -> need to understand file streams better
 
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
+	}
+	
+	//Export a non-focussed organism set into a file.
+	public void ExportNonFocusOS(OrganismSet OS_2){
+		try {
+			File f = new File(OS_2.getName());
+			//System.out.println("Export: " + f.getAbsolutePath());
+			GenomeSetFiles.put(OS_2.getName(), f);
+	        FileOutputStream fileOut = new FileOutputStream(f);
+	        ObjectOutputStream out = new ObjectOutputStream(fileOut);
+	        out.writeObject(OS_2);
+	        out.close();
+	        fileOut.close();
 		} catch (Exception ex){
 			ex.printStackTrace();
 		}
@@ -414,7 +429,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		try
 	      {	
 		     File f = GenomeSetFiles.get(OSName);
-		     System.out.println("Import: " + f.getAbsolutePath());
+		     //System.out.println("Import: " + f.getAbsolutePath());
 	         FileInputStream fileIn = new FileInputStream(f);
 	         ObjectInputStream in = new ObjectInputStream(fileIn);
 	         OS = (OrganismSet) in.readObject();
@@ -425,6 +440,35 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	         ex.printStackTrace();  
 	      }
 
+	}
+	
+	//Method to switch between two OS (files already exist)
+	public void SwitchBetweenOS(String FirstOS, String SecondOS){
+		
+		//switch cursor
+		Component glassPane = this.getRootPane().getGlassPane();
+		glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		glassPane.setVisible(true);
+		
+		//Switch in OS
+		ExportSerializedOS(FirstOS);
+		GenomeSetFiles.put(OS.getName(), new File(OS.getName()));
+		this.OS = new OrganismSet();
+		ImportSerializedOS(SecondOS);
+
+		//Switch in menu
+		for (JCheckBoxMenuItem b : this.AvailableOSCheckBoxMenuItems){
+			if (b.getName().equals(SecondOS)){
+				b.setSelected(true);
+			} else{
+				b.setSelected(false);
+			}
+		}
+		
+		//switch cursor
+		glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+		glassPane.setVisible(false);
+		
 	}
 	
 	public void LoadOrganismSet(String Name){
@@ -1205,8 +1249,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			
 		}
 		
-		//check box selection display
-		//TODO: add many more things
+		/*
+		 * Switching between genome sets
+		 */
+
 		if (this.AvailableOSCheckBoxMenuItems.contains(evt.getSource())){
 			
 			//don't do anything if only one item in the list.
@@ -1214,7 +1260,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				
 				//Initialize: no OS
 				String OSName = null;
-
+				
 				//selection process
 				for (JCheckBoxMenuItem b : AvailableOSCheckBoxMenuItems){
 					if (b.equals(evt.getSource())){
@@ -1230,20 +1276,26 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					OSName = null;
 				}
 				
+				//helpful debugging
+				System.out.println("Current: " + OS.getName() + " Switch to: " + OSName);
+				
 				//If an appropriate name to switch to is determined
 				if (OSName != null){
 					
-					//wait cursor
-					setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+					//switch cursor
+					Component glassPane = this.getRootPane().getGlassPane();
+					glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+					glassPane.setVisible(true);
 
 					//Switching protocol
 					ExportSerializedOS(OS.getName());		//Export current
 					GenomeSetFiles.put(OS.getName(), new File(OS.getName()));		//Note current
 					this.OS = new OrganismSet();			//Reset
 					ImportSerializedOS(OSName);	//Import
-					
+
 					//default cursor
-					setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+					glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+					glassPane.setVisible(false);
 					
 				}
 				

@@ -278,87 +278,112 @@ public class Jpan_genome extends JPanel implements ActionListener,
 		
 				try {
 					
-					//retrieve most current + sort
-					CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
-					CSD.setCurrentlyViewedPanel(fr.getSelectedAnalysisType());
+					boolean ProceedToViewContexts = false;
 					
-					//sort
-					if (CSD.getCurrentlyViewedPanel().equals("Search Results")){
-						
-						//alphabetical order.
-						Arrays.sort(CSD.getGraphicalContexts(), ContextLeaf.getAlphabeticalComparator());
-						
-					} else if (CSD.getCurrentlyViewedPanel().equals("Context Tree")){
-						
-						//based on context tree.
-						Arrays.sort(CSD.getGraphicalContexts(), ContextLeaf.getContextTreeOrderComparator());
-						
-					} else if (CSD.getCurrentlyViewedPanel().equals("Phylogenetic Tree")) {
-						
-						//based on phylogenetic tree.
-						Arrays.sort(CSD.getGraphicalContexts(), ContextLeaf.getPhylogeneticTreeOrderComparator());
-					}
-					
-					//System.out.println("Currently Viewed: " + CSD.getCurrentlyViewedPanel());
-					
-					//remove empties from selection
-					for (ContextLeaf CL : CSD.getGraphicalContexts()){
-						if (CSD.getEC().getContexts().get(CL.getName()).isEmpty()){
-							CL.setSelected(false);
-						}
-					}
-					
-					//count number selected
-					int NumSelected = 0;
-					for (ContextLeaf CL : CSD.getGraphicalContexts()){
-						if (CL.isSelected()){
-							NumSelected++;
-						}
-					}
-					
-					//issue warning if the number is very high
-					if (NumSelected >= ViewingThreshold ) {
-						String SureYouWantToView = "You are attempting to view a large number (" + NumSelected +
-								") of contexts simultaneously." + "\n"
-								+ "Proceeding may cause this program to crash." + "\n"
-								+ "Are you sure you would like to proceed?" + "\n";
+					//ensure same genome set before continuing.
+					if (!fr.getCurrentFrame().getInternalFrameData().getQD().getOSName().equals(fr.getOS().getName())){
 						
 						//ask question, and maybe proceed with search
-						int ViewCheck = JOptionPane.showConfirmDialog(null,SureYouWantToView,
-								"Proceed with context viewing", JOptionPane.YES_NO_CANCEL_OPTION);
+						String SwitchOS = "In order to view these contexts, you must switch to the " +
+								fr.getCurrentFrame().getInternalFrameData().getQD().getOSName() + " genome set.\n"+
+								"This may be a time-consuming process. Would you like to switch genome sets now?";
+						
+						int ViewCheck = JOptionPane.showConfirmDialog(null,SwitchOS,
+								"Proceed with context viewing", JOptionPane.YES_NO_OPTION);
 						
 						if (ViewCheck == JOptionPane.YES_OPTION){
-							this.ProceedWithContextView  = true;
-						} else {
-							this.ProceedWithContextView = false;
+							fr.SwitchBetweenOS(fr.getOS().getName(), fr.getCurrentFrame().getInternalFrameData().getQD().getOSName());
+							ProceedToViewContexts = true;
 						}
+						
 					} else {
-						ProceedWithContextView = true;
+						ProceedToViewContexts = true;
+					}
+					
+					//proceed!
+					if (ProceedToViewContexts){
+						//retrieve most current + sort
+						CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
+						CSD.setCurrentlyViewedPanel(fr.getSelectedAnalysisType());
+						
+						//sort
+						if (CSD.getCurrentlyViewedPanel().equals("Search Results")){
+							
+							//alphabetical order.
+							Arrays.sort(CSD.getGraphicalContexts(), ContextLeaf.getAlphabeticalComparator());
+							
+						} else if (CSD.getCurrentlyViewedPanel().equals("Context Tree")){
+							
+							//based on context tree.
+							Arrays.sort(CSD.getGraphicalContexts(), ContextLeaf.getContextTreeOrderComparator());
+							
+						} else if (CSD.getCurrentlyViewedPanel().equals("Phylogenetic Tree")) {
+							
+							//based on phylogenetic tree.
+							Arrays.sort(CSD.getGraphicalContexts(), ContextLeaf.getPhylogeneticTreeOrderComparator());
+						}
+						
+						//System.out.println("Currently Viewed: " + CSD.getCurrentlyViewedPanel());
+						
+						//remove empties from selection
+						for (ContextLeaf CL : CSD.getGraphicalContexts()){
+							if (CSD.getEC().getContexts().get(CL.getName()).isEmpty()){
+								CL.setSelected(false);
+							}
+						}
+						
+						//count number selected
+						int NumSelected = 0;
+						for (ContextLeaf CL : CSD.getGraphicalContexts()){
+							if (CL.isSelected()){
+								NumSelected++;
+							}
+						}
+						
+						//issue warning if the number is very high
+						if (NumSelected >= ViewingThreshold ) {
+							String SureYouWantToView = "You are attempting to view a large number (" + NumSelected +
+									") of contexts simultaneously." + "\n"
+									+ "Proceeding may cause this program to crash." + "\n"
+									+ "Are you sure you would like to proceed?" + "\n";
+							
+							//ask question, and maybe proceed with search
+							int ViewCheck = JOptionPane.showConfirmDialog(null,SureYouWantToView,
+									"Proceed with context viewing", JOptionPane.YES_NO_OPTION);
+							
+							if (ViewCheck == JOptionPane.YES_OPTION){
+								this.ProceedWithContextView  = true;
+							} else {
+								this.ProceedWithContextView = false;
+							}
+						} else {
+							ProceedWithContextView = true;
+						}
+
+						//proceed with context viewer
+						if (ProceedWithContextView == true){
+						
+							//open context viewer frame
+							//String Title =  "Context Viewer: " + fr.getCurrentFrame().getInternalPanel().getCSD().getEC().getName();
+							String Title =  "Context Viewer: " + fr.getCurrentFrame().getInternalFrameData().getQD().getName();
+							
+							//Attempt: try an instance that will be forever disconnected.
+							CSDisplayData CSDToContexts = new CSDisplayData();
+							
+							//map variables.
+							CSDToContexts.setEC(CSD.getEC());
+							CSDToContexts.setGraphicalContexts(CSD.getGraphicalContexts());
+							
+							//set wait cursor
+							fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+							
+							new mainFrame(CSDToContexts, fr.getOS(), Title, fr);
+							
+							// return cursor to default
+							fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+						}
 					}
 
-					//proceed with context viewer
-					if (ProceedWithContextView == true){
-					
-						//open context viewer frame
-						//String Title =  "Context Viewer: " + fr.getCurrentFrame().getInternalPanel().getCSD().getEC().getName();
-						String Title =  "Context Viewer: " + fr.getCurrentFrame().getInternalFrameData().getQD().getName();
-						
-						//Attempt: try an instance that will be forever disconnected.
-						CSDisplayData CSDToContexts = new CSDisplayData();
-						
-						//map variables.
-						CSDToContexts.setEC(CSD.getEC());
-						CSDToContexts.setGraphicalContexts(CSD.getGraphicalContexts());
-						
-						//set wait cursor
-						fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-						
-						new mainFrame(CSDToContexts, fr.getOS(), Title, fr);
-						
-						// return cursor to default
-						fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-					}
-					
 				} catch (Exception e1){
 //					e1.printStackTrace();
 //					String exceptionString = "Select nodes of interest by clicking on the node name in the dendrogram." + "\n" +
