@@ -19,6 +19,8 @@ import java.util.Map.Entry;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 
+import newickTreeParsing.Tree;
+
 import org.biojava3.core.sequence.Strand;
 
 import operonClustering.CustomDissimilarity;
@@ -46,7 +48,8 @@ public class OrganismSet implements Serializable{
 	private LinkedList<ContextSetDescription> CSDs
 		= new LinkedList<ContextSetDescription>();				//-Info-about-Context-Sets----
 	private LinkedList<MotifGroupDescription> MGDescriptions;
-	private LinkedList<CustomDissimilarity> CustomDissimilarities = new LinkedList<CustomDissimilarity>();
+	private LinkedList<CustomDissimilarity> CustomDissimilarities
+		= new LinkedList<CustomDissimilarity>();
 	private boolean GeneClustersLoaded = false;					//-Gene-Clusters--------------
 	public int LargestCluster = 0;
 	private boolean ContinueImportingOperons = true;			
@@ -55,10 +58,17 @@ public class OrganismSet implements Serializable{
 	private String Notes;
 	private String Name;
 	
+	//phylogeny
+	private LinkedList<Tree> ParsedPhyTrees = new LinkedList<Tree>();
+	private LinkedList<File> LoadedPhyTrees = new LinkedList<File>();
+	
+	//motifs
+	private LinkedList<String> MotifNames = new LinkedList<String>();
+	
 	//Analysis-type data
 							//Motifs
-							//Context Sets
-							//Dissimilarity metrics
+							//Context Sets					OK
+							//Dissimilarity metrics			OK
 							//Phylogeny info
 	
 	// ----------------------- Construction ------------------------//
@@ -801,6 +811,30 @@ public class OrganismSet implements Serializable{
 
 	public void setInstructionsToRetrieve(LinkedHashMap<String, RetrieveGenomeInstructions> instructionsToRetrieve) {
 		InstructionsToRetrieve = instructionsToRetrieve;
+	}
+
+	public LinkedList<Tree> getParsedPhyTrees() {
+		return ParsedPhyTrees;
+	}
+
+	public void setParsedPhyTrees(LinkedList<Tree> parsedPhyTrees) {
+		ParsedPhyTrees = parsedPhyTrees;
+	}
+
+	public LinkedList<File> getLoadedPhyTrees() {
+		return LoadedPhyTrees;
+	}
+
+	public void setLoadedPhyTrees(LinkedList<File> loadedPhyTrees) {
+		LoadedPhyTrees = loadedPhyTrees;
+	}
+
+	public LinkedList<String> getMotifNames() {
+		return MotifNames;
+	}
+
+	public void setMotifNames(LinkedList<String> motifNames) {
+		MotifNames = motifNames;
 	}
 
 } //completes classbody

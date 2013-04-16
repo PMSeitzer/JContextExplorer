@@ -74,6 +74,8 @@ import javax.swing.SwingWorker;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 
+import operonClustering.CustomDissimilarity;
+
 import GenomicSetHandling.NewGS;
 
 import moduls.frm.Panels.Jpan_DisplayOptions;
@@ -443,6 +445,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	}
 	
 	//Method to switch between two OS (files already exist)
+	@SuppressWarnings("unchecked")
 	public void SwitchBetweenOS(String FirstOS, String SecondOS){
 		
 		//switch cursor
@@ -464,6 +467,68 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				b.setSelected(false);
 			}
 		}
+		
+		// ====== Context Set Menu ======//
+		
+		this.getPanBtn().getContextSetMenu().removeAllItems();
+		
+		if (OS.getCSDs().size() > 0){
+			for (ContextSetDescription CSD : OS.getCSDs()){
+				this.getPanBtn().getContextSetMenu().addItem(CSD.getName());
+			}
+		} else {
+			this.getPanBtn().getContextSetMenu().addItem("<none>");
+		}
+
+		// ====== Custom Dissimilarities ======//
+		
+		//Switch dissimilarities
+		this.getPan_Menu().getCbDissimilarity().removeAllItems();
+		
+		//add all custom dissimilarities
+		if (OS.getCustomDissimilarities().size() > 0){
+			for (CustomDissimilarity CD : OS.getCustomDissimilarities()){
+				this.getPan_Menu().getCbDissimilarity().addItem(CD.getName());
+			}
+		}
+		
+		//add fundamental dissimilarities
+		this.getPan_Menu().getCbDissimilarity().addItem("Common Genes - Dice");
+		this.getPan_Menu().getCbDissimilarity().addItem("Common Genes - Jaccard");
+		this.getPan_Menu().getCbDissimilarity().addItem("Moving Distances");
+		this.getPan_Menu().getCbDissimilarity().addItem("Total Length");
+		
+		// ====== Phylogenetic Trees ======//
+		
+		this.getPanPhyTreeMenu().setParsedPhyTrees(OS.getParsedPhyTrees());
+		this.getPanPhyTreeMenu().setLoadedPhyTrees(OS.getLoadedPhyTrees());	
+		if (OS.getLoadedPhyTrees().size() > 0){
+			this.getPanPhyTreeMenu().setFilePath(OS.getLoadedPhyTrees().get(0));
+		}
+		
+		//update GUI
+		this.getPanPhyTreeMenu().getMenuLoadedPhyTrees().removeAllItems();
+		String[] PhyTrees = this.getPanPhyTreeMenu().getLoadedPhyTrees();
+		if (PhyTrees.length > 0){
+			for (String s : PhyTrees){
+				this.getPanPhyTreeMenu().getMenuLoadedPhyTrees().addItem(s);
+			}
+		} else {
+			this.getPanPhyTreeMenu().getMenuLoadedPhyTrees().addItem("<none>");
+		}
+
+		// ====== Motif Menu ======//
+		
+		//Most motifs are in the actual organism sets, this simply adjusts the menu.
+		this.getPanMotifOptions().getMenuOfMotifs().removeAllItems();
+		if (OS.getMotifNames().size() > 0){
+			for (String s : OS.getMotifNames()){
+				this.getPanMotifOptions().getMenuOfMotifs().addItem(s);
+			}
+		} else{
+			this.getPanMotifOptions().getMenuOfMotifs().addItem("<none>");
+		}
+
 		
 		//switch cursor
 		glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -1277,25 +1342,27 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				}
 				
 				//helpful debugging
-				System.out.println("Current: " + OS.getName() + " Switch to: " + OSName);
+				//System.out.println("Current: " + OS.getName() + " Switch to: " + OSName);
 				
-				//If an appropriate name to switch to is determined
+				//If an appropriate name 
 				if (OSName != null){
 					
-					//switch cursor
-					Component glassPane = this.getRootPane().getGlassPane();
-					glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-					glassPane.setVisible(true);
-
-					//Switching protocol
-					ExportSerializedOS(OS.getName());		//Export current
-					GenomeSetFiles.put(OS.getName(), new File(OS.getName()));		//Note current
-					this.OS = new OrganismSet();			//Reset
-					ImportSerializedOS(OSName);	//Import
-
-					//default cursor
-					glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-					glassPane.setVisible(false);
+//					//switch cursor
+//					Component glassPane = this.getRootPane().getGlassPane();
+//					glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+//					glassPane.setVisible(true);
+//
+//					//Switching protocol
+//					ExportSerializedOS(OS.getName());		//Export current
+//					GenomeSetFiles.put(OS.getName(), new File(OS.getName()));		//Note current
+//					this.OS = new OrganismSet();			//Reset
+//					ImportSerializedOS(OSName);	//Import
+//
+//					//default cursor
+//					glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+//					glassPane.setVisible(false);
+					
+					this.SwitchBetweenOS(OS.getName(), OSName);
 					
 				}
 				

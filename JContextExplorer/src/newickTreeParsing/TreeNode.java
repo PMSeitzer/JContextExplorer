@@ -1,6 +1,7 @@
 package newickTreeParsing;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -16,7 +17,7 @@ import java.util.*;
  * @see Tree
  * @see GridCell
  */
-public class TreeNode {
+public class TreeNode implements Serializable{
 
 	private double Support;
 	

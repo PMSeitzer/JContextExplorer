@@ -401,6 +401,11 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 				for (String s : PhyTrees){
 					menuLoadedPhyTrees.addItem(s);
 				}
+				
+				//update OS
+				f.getOS().getParsedPhyTrees().add(t);
+				f.getOS().getLoadedPhyTrees().add(0, TreeFile);
+				
 			}
 		}
 	}
@@ -428,6 +433,34 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 
 	public JCheckBox getChkWeights() {
 		return chkWeights;
+	}
+
+	public LinkedList<Tree> getParsedPhyTrees() {
+		return ParsedPhyTrees;
+	}
+
+	public void setParsedPhyTrees(LinkedList<Tree> parsedPhyTrees) {
+		ParsedPhyTrees = parsedPhyTrees;
+	}
+
+	public void setLoadedPhyTrees(LinkedList<File> loadedPhyTrees) {
+		LoadedPhyTrees = loadedPhyTrees;
+	}
+
+	public File getFilePath() {
+		return FilePath;
+	}
+
+	public void setFilePath(File filePath) {
+		FilePath = filePath;
+	}
+
+	public JComboBox<String> getMenuLoadedPhyTrees() {
+		return menuLoadedPhyTrees;
+	}
+
+	public void setMenuLoadedPhyTrees(JComboBox<String> menuLoadedPhyTrees) {
+		this.menuLoadedPhyTrees = menuLoadedPhyTrees;
 	}
 
 }

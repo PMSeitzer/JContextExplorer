@@ -1275,14 +1275,17 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 					
 					//rebuild appropriately
 					SequenceMotifsMenu.removeAllItems();
-					
 					for (String s : SequenceMotifsAsList){
 						if (!s.equals("<none>")){
 							SequenceMotifsMenu.addItem(s);
-							
 						}
 					}
 
+					//update OS
+					f.getOS().setMotifNames(SequenceMotifsAsList);
+					if (f.getOS().getMotifNames().contains("<none>")){
+						f.getOS().getMotifNames().remove("<none>");
+					}
 					
 					//pre-processed sets are reset
 					MotifFilesLoaded = false;

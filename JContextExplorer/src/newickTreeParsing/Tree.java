@@ -1,6 +1,7 @@
 package newickTreeParsing;
 
 import java.util.*;
+import java.io.Serializable;
 import java.text.Collator;
 
 /**
@@ -13,7 +14,7 @@ import java.text.Collator;
  * @see     TreeNode
  */
 
-public class Tree {
+public class Tree implements Serializable{
 
 	/** The list of nodes of the tree indexed by their keys, indexed by key */ 
 	public ArrayList nodes; 
