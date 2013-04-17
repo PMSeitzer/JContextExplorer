@@ -188,24 +188,32 @@ public class Jpan_MotifOptions extends JPanel implements ActionListener{
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		//update check boxes for motif search/display options.
-		if (e.getSource().equals(IncludeMotifsComp)){
-			f.setIncludeMotifs(IncludeMotifsComp.isSelected());
-		}
 		
-		if (e.getSource().equals(IncludeMotifsDisp)){
-			f.setDisplayMotifs(IncludeMotifsDisp.isSelected());
-		}
-		
-		//launch add/remove motifs window
-		if (e.getSource().equals(btnLoadMotifs)){
-			new ManageMotifs(f);
-		}
-		
-		//launch motif viewer window
-		if (e.getSource().equals(btnGetInfo)){
+		if (f.getOS() != null){
 			
+			//update check boxes for motif search/display options.
+			if (e.getSource().equals(IncludeMotifsComp)){
+				f.setIncludeMotifs(IncludeMotifsComp.isSelected());
+			}
+			
+			if (e.getSource().equals(IncludeMotifsDisp)){
+				f.setDisplayMotifs(IncludeMotifsDisp.isSelected());
+			}
+			
+			//launch add/remove motifs window
+			if (e.getSource().equals(btnLoadMotifs)){
+				new ManageMotifs(f);
+			}
+			
+			//launch motif viewer window
+			if (e.getSource().equals(btnGetInfo)){
+				
+			}
+			
+		} else {
+			f.NoOS();
 		}
+
 	}
 
 	public JComboBox<String> getMenuOfMotifs() {

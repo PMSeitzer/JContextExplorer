@@ -287,80 +287,88 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent evt) {
 		
-		//load button
-		if (evt.getSource().equals(btnPhyTree)){
-			ImportPhyTree();
-		}
-		
-		//switch menu to active tree
-		if (evt.getSource().equals(menuLoadedPhyTrees)){
-			//retrieve name of current tree
-			String CurrentName = (String) menuLoadedPhyTrees.getSelectedItem();
+		if (f.getOS() != null){
 			
-			//find this tree in the list, and set it to the active one.
-			for (Tree t : ParsedPhyTrees){
-				if (t.getName().equals(CurrentName)){
-					setCurrentParsedTree(t);
-					break;
-				}
-			}
-		}
-		
-		//remove an available phylogenetic tree
-		if (evt.getSource().equals(btnRemoveSelectedPhyTree)){
 			
-			//remove from the list of trees
-			for (Tree t : ParsedPhyTrees){
-				if (t.getName().equals((String) menuLoadedPhyTrees.getSelectedItem())){
-					ParsedPhyTrees.remove(t);
-					break;
-				}
+			//load button
+			if (evt.getSource().equals(btnPhyTree)){
+				ImportPhyTree();
 			}
 			
-			//remove from the list of files
-			for (File f: LoadedPhyTrees){
-				if (f.getName().equals((String) menuLoadedPhyTrees.getSelectedItem())){
-					LoadedPhyTrees.remove(f);
-					break;
-				}
-			}
-			
-			//remake the menu
-			menuLoadedPhyTrees.removeAllItems();
-			String[] PhyTrees = getLoadedPhyTrees();
-			for (String s : PhyTrees){
-				menuLoadedPhyTrees.addItem(s);
-			}
-		}
-		
-		//display options
-		if (evt.getSource().equals(radPhylogram)){
-			this.chkDashed.setEnabled(true);
-			
-		}
-		
-		if (evt.getSource().equals(radCladogram)){
-			this.chkDashed.setEnabled(false);
-		}
-		
-		//redraw phylogenetic tree
-		if (evt.getSource().equals(radPhylogram) || 
-				evt.getSource().equals(radCladogram) ||
-				evt.getSource().equals(chkDashed) ||
-				evt.getSource().equals(chkWeights)){
-			
-			//update phylogenetic tree, if appropriate.
-			if (f.getCurrentFrame() != null){	//frame exists
+			//switch menu to active tree
+			if (evt.getSource().equals(menuLoadedPhyTrees)){
+				//retrieve name of current tree
+				String CurrentName = (String) menuLoadedPhyTrees.getSelectedItem();
 				
-				//phylogenetic tree exists
-				if (f.getCurrentFrame().getInternalFrameData().getQD().getAnalysesList().isOptionRenderPhylogeny()){
-					
-					//repaint!
-					f.getCurrentFrame().getInternalFrameData().getPhyloTreePanel().repaint();
-					
+				//find this tree in the list, and set it to the active one.
+				for (Tree t : ParsedPhyTrees){
+					if (t.getName().equals(CurrentName)){
+						setCurrentParsedTree(t);
+						break;
+					}
 				}
 			}
+			
+			//remove an available phylogenetic tree
+			if (evt.getSource().equals(btnRemoveSelectedPhyTree)){
+				
+				//remove from the list of trees
+				for (Tree t : ParsedPhyTrees){
+					if (t.getName().equals((String) menuLoadedPhyTrees.getSelectedItem())){
+						ParsedPhyTrees.remove(t);
+						break;
+					}
+				}
+				
+				//remove from the list of files
+				for (File f: LoadedPhyTrees){
+					if (f.getName().equals((String) menuLoadedPhyTrees.getSelectedItem())){
+						LoadedPhyTrees.remove(f);
+						break;
+					}
+				}
+				
+				//remake the menu
+				menuLoadedPhyTrees.removeAllItems();
+				String[] PhyTrees = getLoadedPhyTrees();
+				for (String s : PhyTrees){
+					menuLoadedPhyTrees.addItem(s);
+				}
+			}
+			
+			//display options
+			if (evt.getSource().equals(radPhylogram)){
+				this.chkDashed.setEnabled(true);
+				
+			}
+			
+			if (evt.getSource().equals(radCladogram)){
+				this.chkDashed.setEnabled(false);
+			}
+			
+			//redraw phylogenetic tree
+			if (evt.getSource().equals(radPhylogram) || 
+					evt.getSource().equals(radCladogram) ||
+					evt.getSource().equals(chkDashed) ||
+					evt.getSource().equals(chkWeights)){
+				
+				//update phylogenetic tree, if appropriate.
+				if (f.getCurrentFrame() != null){	//frame exists
+					
+					//phylogenetic tree exists
+					if (f.getCurrentFrame().getInternalFrameData().getQD().getAnalysesList().isOptionRenderPhylogeny()){
+						
+						//repaint!
+						f.getCurrentFrame().getInternalFrameData().getPhyloTreePanel().repaint();
+						
+					}
+				}
+			}
+			
+		} else {
+			f.NoOS();
 		}
+
 
 	}
 

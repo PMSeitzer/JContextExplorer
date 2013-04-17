@@ -221,322 +221,330 @@ public class Jpan_genome extends JPanel implements ActionListener,
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		//select all button
 		
-		if (e.getSource()==btnSelectAll){
+		if (fr.getOS() != null){
 			
-			try {
 			
-			//retrieve most current
-			CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
-			
-			//Change all leaves to selected state
-			for (ContextLeaf CL : CSD.getGraphicalContexts()){
-				CL.setSelected(true);
-			}
-			
-			//update
-			fr.getCurrentFrame().getInternalFrameData().getQD().setCSD(CSD);
-			
-			//update displays
-			fr.UpdateSelectedNodes();
-			
-			} catch (Exception e1){
-				JOptionPane.showMessageDialog(null,"Please enter a query in the search bar (top left-hand corner).",
-						"Submit Query",JOptionPane.INFORMATION_MESSAGE);
-				e1.printStackTrace();
-			}
-		}
-		
-		//deselect all button
-		if (e.getSource() == btndeSelectAll){
-			
-			try {
-			
-			//retrieve most current
-			CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
-			
-			//Change all leaves to selected state
-			for (ContextLeaf CL : CSD.getGraphicalContexts()){
-				CL.setSelected(false);
-			}
-			
-			//update
-			fr.getCurrentFrame().getInternalFrameData().getQD().setCSD(CSD);
-			
-			//update displays
-			fr.UpdateSelectedNodes();
-			
-			} catch (Exception e1) {
-				JOptionPane.showMessageDialog(null,"Please enter a query in the search bar (top left-hand corner).",
-						"Submit Query",JOptionPane.INFORMATION_MESSAGE);
-			}
-		}
-		
-		//invoke view context frame
-		if (e.getSource() == btnViewContexts){
-		
+			//select all button
+			if (e.getSource()==btnSelectAll){
+				
 				try {
-					
-					boolean ProceedToViewContexts = false;
-					
-					//ensure same genome set before continuing.
-					if (!fr.getCurrentFrame().getInternalFrameData().getQD().getOSName().equals(fr.getOS().getName())){
-						
-						//ask question, and maybe proceed with search
-						String SwitchOS = "In order to view these contexts, you must switch to the " +
-								fr.getCurrentFrame().getInternalFrameData().getQD().getOSName() + " genome set.\n"+
-								"This may be a time-consuming process. Would you like to switch genome sets now?";
-						
-						int ViewCheck = JOptionPane.showConfirmDialog(null,SwitchOS,
-								"Proceed with context viewing", JOptionPane.YES_NO_OPTION);
-						
-						if (ViewCheck == JOptionPane.YES_OPTION){
-							fr.SwitchBetweenOS(fr.getOS().getName(), fr.getCurrentFrame().getInternalFrameData().getQD().getOSName());
-							ProceedToViewContexts = true;
-						}
-						
-					} else {
-						ProceedToViewContexts = true;
-					}
-					
-					//proceed!
-					if (ProceedToViewContexts){
-						//retrieve most current + sort
-						CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
-						CSD.setCurrentlyViewedPanel(fr.getSelectedAnalysisType());
-						
-						//sort
-						if (CSD.getCurrentlyViewedPanel().equals("Search Results")){
-							
-							//alphabetical order.
-							Arrays.sort(CSD.getGraphicalContexts(), ContextLeaf.getAlphabeticalComparator());
-							
-						} else if (CSD.getCurrentlyViewedPanel().equals("Context Tree")){
-							
-							//based on context tree.
-							Arrays.sort(CSD.getGraphicalContexts(), ContextLeaf.getContextTreeOrderComparator());
-							
-						} else if (CSD.getCurrentlyViewedPanel().equals("Phylogenetic Tree")) {
-							
-							//based on phylogenetic tree.
-							Arrays.sort(CSD.getGraphicalContexts(), ContextLeaf.getPhylogeneticTreeOrderComparator());
-						}
-						
-						//System.out.println("Currently Viewed: " + CSD.getCurrentlyViewedPanel());
-						
-						//remove empties from selection
-						for (ContextLeaf CL : CSD.getGraphicalContexts()){
-							if (CSD.getEC().getContexts().get(CL.getName()).isEmpty()){
-								CL.setSelected(false);
-							}
-						}
-						
-						//count number selected
-						int NumSelected = 0;
-						for (ContextLeaf CL : CSD.getGraphicalContexts()){
-							if (CL.isSelected()){
-								NumSelected++;
-							}
-						}
-						
-						//issue warning if the number is very high
-						if (NumSelected >= ViewingThreshold ) {
-							String SureYouWantToView = "You are attempting to view a large number (" + NumSelected +
-									") of contexts simultaneously." + "\n"
-									+ "Proceeding may cause this program to crash." + "\n"
-									+ "Are you sure you would like to proceed?" + "\n";
-							
-							//ask question, and maybe proceed with search
-							int ViewCheck = JOptionPane.showConfirmDialog(null,SureYouWantToView,
-									"Proceed with context viewing", JOptionPane.YES_NO_OPTION);
-							
-							if (ViewCheck == JOptionPane.YES_OPTION){
-								this.ProceedWithContextView  = true;
-							} else {
-								this.ProceedWithContextView = false;
-							}
-						} else {
-							ProceedWithContextView = true;
-						}
-
-						//proceed with context viewer
-						if (ProceedWithContextView == true){
-						
-							//open context viewer frame
-							//String Title =  "Context Viewer: " + fr.getCurrentFrame().getInternalPanel().getCSD().getEC().getName();
-							String Title =  "Context Viewer: " + fr.getCurrentFrame().getInternalFrameData().getQD().getName();
-							
-							//Attempt: try an instance that will be forever disconnected.
-							CSDisplayData CSDToContexts = new CSDisplayData();
-							
-							//map variables.
-							CSDToContexts.setEC(CSD.getEC());
-							CSDToContexts.setGraphicalContexts(CSD.getGraphicalContexts());
-							
-							//set wait cursor
-							fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-							
-							new mainFrame(CSDToContexts, fr.getOS(), Title, fr);
-							
-							// return cursor to default
-							fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-						}
-					}
-
-				} catch (Exception e1){
-//					e1.printStackTrace();
-//					String exceptionString = "Select nodes of interest by clicking on the node name in the dendrogram." + "\n" +
-//								"ctrl+click and shift+click can be used to select several nodes simultaneously." + "\n" + 
-//								"You may select all or deselect all nodes by pushing the 'select all' and 'deselect all' buttons.";
-//					JOptionPane.showMessageDialog(null,exceptionString);
-				}
-			
-		}
-		
-		//select a subset of nodes
-		if (e.getSource() == btnSelectNodes || e.getSource() == searchForNodes){
-			
-			try {
 				
 				//retrieve most current
 				CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
 				
-				if (searchForNodes.getText().equals("")){
-					String MessageString;
-					MessageString = "Please enter either one or more genera or species, separated by commas." + "\n" 
-									+ "This will select all appropriate nodes in the tree.";
-					JOptionPane.showMessageDialog(null, MessageString);
-				} else {
-
-					//recover query, split by semicolon, comma, or white space
-					String Query = searchForNodes.getText();
-					String[] Queries = Query.split(";");
-					if (Queries.length == 1){
-						Queries = Query.split(",");
-					}
-					if (Queries.length == 1) {
-						Queries = Query.split("\\s+");
-					}
-					
-					//check queries against node name
-					boolean SelectNode = false;
-					for (ContextLeaf CL : CSD.getGraphicalContexts()){
-						SelectNode = false;
-						
-						//Search basic node name
-						for (int j = 0; j <Queries.length; j++){
-							if (CL.getName().toUpperCase().contains(Queries[j].toUpperCase().replaceAll("\\s",""))){
-								SelectNode = true;
-							}
-						}
-						
-						//check all genes associated with this context leaf
-						LinkedList<GenomicElementAndQueryMatch> Genes = CSD.getEC().getContexts().get(CL.getName());
-						
-						//Search contexts
-						for (int j = 0; j <Queries.length; j++){
-							
-							//search gene ids of genes
-							if (Queries[j].toUpperCase().contains("GENEID:")){
-								try {
-									
-									//retrieve Gene ID
-									//int GeneIDNumber = Integer.parseInt(Queries[j].substring(7));
-									String GeneID = Queries[j].substring(7);
-									
-									//if a gene matches, select this context
-									for (GenomicElementAndQueryMatch GandE : Genes){
-										if (GandE.getE().getGeneID().toUpperCase().equals(GeneID.toUpperCase())){
-											SelectNode = true;
-										}
-									}
-									
-								} catch (Exception ex) {
-									JOptionPane.showMessageDialog(null,"GENEID values must be integers.",
-											"GENEID value unreadable",JOptionPane.ERROR_MESSAGE);
-								}
-
-							}
-							
-							//search homology clusters
-							if (Queries[j].toUpperCase().contains("CLUSTERID:")){
-								try {
-									
-									//retrieve Id number
-									int ClusterIDNumber = Integer.parseInt(Queries[j].substring(10));
-									
-									//if a gene matches, select this context
-									for (GenomicElementAndQueryMatch GandE : Genes){
-										if (GandE.getE().getClusterID() == ClusterIDNumber){
-											SelectNode = true;
-										}
-									}
-									
-								} catch (Exception ex) {
-									JOptionPane.showMessageDialog(null,"CLUSTERID values must be integers.",
-											"CLUSTERID value unreadable",JOptionPane.ERROR_MESSAGE);
-								}
-							}
-							
-							//search annotation
-							if (Queries[j].toUpperCase().contains("ANNOTATION:")){
-								try {
-									
-									//retrieve Id number
-									String AnnotationFragment = Queries[j].substring(11).toUpperCase();
-									
-									//if a gene matches, select this context
-									for (GenomicElementAndQueryMatch GandE : Genes){
-										if (GandE.getE().getAnnotation().toUpperCase().contains(AnnotationFragment)){
-											SelectNode = true;
-										}
-									}
-									
-								} catch (Exception ex) {
-//									JOptionPane.showMessageDialog(null,"CLUSTERID values must be integers.",
-//											"CLUSTERID value unreadable",JOptionPane.ERROR_MESSAGE);
-								}
-							}
-							
-							//search motif
-							if (Queries[j].toUpperCase().contains("MOTIF:")){
-								try {
-									
-									//retrieve motif name
-									String MotifName = Queries[j].substring(6).toUpperCase();
-									
-									//if a gene matches, select this context
-									for (GenomicElementAndQueryMatch GandE : Genes){
-										if (GandE.getE().getAssociatedMotifNames().contains(MotifName)){
-											SelectNode = true;
-										}
-									}
-									
-								} catch (Exception ex) {
-//									JOptionPane.showMessageDialog(null,"There are no motifs of that na.",
-//											"CLUSTERID value unreadable",JOptionPane.ERROR_MESSAGE);
-								}
-							}
-							
-						}
-						CL.setSelected(SelectNode);
-					}
-					
-					//update CSD + frame
-					fr.getCurrentFrame().getInternalFrameData().getQD().setCSD(CSD);
-					fr.UpdateSelectedNodes();
-					
+				//Change all leaves to selected state
+				for (ContextLeaf CL : CSD.getGraphicalContexts()){
+					CL.setSelected(true);
 				}
-
 				
+				//update
+				fr.getCurrentFrame().getInternalFrameData().getQD().setCSD(CSD);
 				
-			} catch (Exception e1){
+				//update displays
+				fr.UpdateSelectedNodes();
+				
+				} catch (Exception e1){
 					JOptionPane.showMessageDialog(null,"Please enter a query in the search bar (top left-hand corner).",
 							"Submit Query",JOptionPane.INFORMATION_MESSAGE);
-					//e1.printStackTrace();
+					e1.printStackTrace();
+				}
 			}
+			
+			//deselect all button
+			if (e.getSource() == btndeSelectAll){
+				
+				try {
+				
+				//retrieve most current
+				CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
+				
+				//Change all leaves to selected state
+				for (ContextLeaf CL : CSD.getGraphicalContexts()){
+					CL.setSelected(false);
+				}
+				
+				//update
+				fr.getCurrentFrame().getInternalFrameData().getQD().setCSD(CSD);
+				
+				//update displays
+				fr.UpdateSelectedNodes();
+				
+				} catch (Exception e1) {
+					JOptionPane.showMessageDialog(null,"Please enter a query in the search bar (top left-hand corner).",
+							"Submit Query",JOptionPane.INFORMATION_MESSAGE);
+				}
+			}
+			
+			//invoke view context frame
+			if (e.getSource() == btnViewContexts){
+			
+					try {
+						
+						boolean ProceedToViewContexts = false;
+						
+						//ensure same genome set before continuing.
+						if (!fr.getCurrentFrame().getInternalFrameData().getQD().getOSName().equals(fr.getOS().getName())){
+							
+							//ask question, and maybe proceed with search
+							String SwitchOS = "In order to view these contexts, you must switch to the " +
+									fr.getCurrentFrame().getInternalFrameData().getQD().getOSName() + " genome set.\n"+
+									"This may be a time-consuming process. Would you like to switch genome sets now?";
+							
+							int ViewCheck = JOptionPane.showConfirmDialog(null,SwitchOS,
+									"Proceed with context viewing", JOptionPane.YES_NO_OPTION);
+							
+							if (ViewCheck == JOptionPane.YES_OPTION){
+								fr.SwitchBetweenOS(fr.getOS().getName(), fr.getCurrentFrame().getInternalFrameData().getQD().getOSName());
+								ProceedToViewContexts = true;
+							}
+							
+						} else {
+							ProceedToViewContexts = true;
+						}
+						
+						//proceed!
+						if (ProceedToViewContexts){
+							//retrieve most current + sort
+							CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
+							CSD.setCurrentlyViewedPanel(fr.getSelectedAnalysisType());
+							
+							//sort
+							if (CSD.getCurrentlyViewedPanel().equals("Search Results")){
+								
+								//alphabetical order.
+								Arrays.sort(CSD.getGraphicalContexts(), ContextLeaf.getAlphabeticalComparator());
+								
+							} else if (CSD.getCurrentlyViewedPanel().equals("Context Tree")){
+								
+								//based on context tree.
+								Arrays.sort(CSD.getGraphicalContexts(), ContextLeaf.getContextTreeOrderComparator());
+								
+							} else if (CSD.getCurrentlyViewedPanel().equals("Phylogenetic Tree")) {
+								
+								//based on phylogenetic tree.
+								Arrays.sort(CSD.getGraphicalContexts(), ContextLeaf.getPhylogeneticTreeOrderComparator());
+							}
+							
+							//System.out.println("Currently Viewed: " + CSD.getCurrentlyViewedPanel());
+							
+							//remove empties from selection
+							for (ContextLeaf CL : CSD.getGraphicalContexts()){
+								if (CSD.getEC().getContexts().get(CL.getName()).isEmpty()){
+									CL.setSelected(false);
+								}
+							}
+							
+							//count number selected
+							int NumSelected = 0;
+							for (ContextLeaf CL : CSD.getGraphicalContexts()){
+								if (CL.isSelected()){
+									NumSelected++;
+								}
+							}
+							
+							//issue warning if the number is very high
+							if (NumSelected >= ViewingThreshold ) {
+								String SureYouWantToView = "You are attempting to view a large number (" + NumSelected +
+										") of contexts simultaneously." + "\n"
+										+ "Proceeding may cause this program to crash." + "\n"
+										+ "Are you sure you would like to proceed?" + "\n";
+								
+								//ask question, and maybe proceed with search
+								int ViewCheck = JOptionPane.showConfirmDialog(null,SureYouWantToView,
+										"Proceed with context viewing", JOptionPane.YES_NO_OPTION);
+								
+								if (ViewCheck == JOptionPane.YES_OPTION){
+									this.ProceedWithContextView  = true;
+								} else {
+									this.ProceedWithContextView = false;
+								}
+							} else {
+								ProceedWithContextView = true;
+							}
+
+							//proceed with context viewer
+							if (ProceedWithContextView == true){
+							
+								//open context viewer frame
+								//String Title =  "Context Viewer: " + fr.getCurrentFrame().getInternalPanel().getCSD().getEC().getName();
+								String Title =  "Context Viewer: " + fr.getCurrentFrame().getInternalFrameData().getQD().getName();
+								
+								//Attempt: try an instance that will be forever disconnected.
+								CSDisplayData CSDToContexts = new CSDisplayData();
+								
+								//map variables.
+								CSDToContexts.setEC(CSD.getEC());
+								CSDToContexts.setGraphicalContexts(CSD.getGraphicalContexts());
+								
+								//set wait cursor
+								fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+								
+								new mainFrame(CSDToContexts, fr.getOS(), Title, fr);
+								
+								// return cursor to default
+								fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+							}
+						}
+
+					} catch (Exception e1){
+//						e1.printStackTrace();
+//						String exceptionString = "Select nodes of interest by clicking on the node name in the dendrogram." + "\n" +
+//									"ctrl+click and shift+click can be used to select several nodes simultaneously." + "\n" + 
+//									"You may select all or deselect all nodes by pushing the 'select all' and 'deselect all' buttons.";
+//						JOptionPane.showMessageDialog(null,exceptionString);
+					}
+				
+			}
+			
+			//select a subset of nodes
+			if (e.getSource() == btnSelectNodes || e.getSource() == searchForNodes){
+				
+				try {
+					
+					//retrieve most current
+					CSD = fr.getCurrentFrame().getInternalFrameData().getQD().getCSD();
+					
+					if (searchForNodes.getText().equals("")){
+						String MessageString;
+						MessageString = "Please enter either one or more genera or species, separated by commas." + "\n" 
+										+ "This will select all appropriate nodes in the tree.";
+						JOptionPane.showMessageDialog(null, MessageString);
+					} else {
+
+						//recover query, split by semicolon, comma, or white space
+						String Query = searchForNodes.getText();
+						String[] Queries = Query.split(";");
+						if (Queries.length == 1){
+							Queries = Query.split(",");
+						}
+						if (Queries.length == 1) {
+							Queries = Query.split("\\s+");
+						}
+						
+						//check queries against node name
+						boolean SelectNode = false;
+						for (ContextLeaf CL : CSD.getGraphicalContexts()){
+							SelectNode = false;
+							
+							//Search basic node name
+							for (int j = 0; j <Queries.length; j++){
+								if (CL.getName().toUpperCase().contains(Queries[j].toUpperCase().replaceAll("\\s",""))){
+									SelectNode = true;
+								}
+							}
+							
+							//check all genes associated with this context leaf
+							LinkedList<GenomicElementAndQueryMatch> Genes = CSD.getEC().getContexts().get(CL.getName());
+							
+							//Search contexts
+							for (int j = 0; j <Queries.length; j++){
+								
+								//search gene ids of genes
+								if (Queries[j].toUpperCase().contains("GENEID:")){
+									try {
+										
+										//retrieve Gene ID
+										//int GeneIDNumber = Integer.parseInt(Queries[j].substring(7));
+										String GeneID = Queries[j].substring(7);
+										
+										//if a gene matches, select this context
+										for (GenomicElementAndQueryMatch GandE : Genes){
+											if (GandE.getE().getGeneID().toUpperCase().equals(GeneID.toUpperCase())){
+												SelectNode = true;
+											}
+										}
+										
+									} catch (Exception ex) {
+										JOptionPane.showMessageDialog(null,"GENEID values must be integers.",
+												"GENEID value unreadable",JOptionPane.ERROR_MESSAGE);
+									}
+
+								}
+								
+								//search homology clusters
+								if (Queries[j].toUpperCase().contains("CLUSTERID:")){
+									try {
+										
+										//retrieve Id number
+										int ClusterIDNumber = Integer.parseInt(Queries[j].substring(10));
+										
+										//if a gene matches, select this context
+										for (GenomicElementAndQueryMatch GandE : Genes){
+											if (GandE.getE().getClusterID() == ClusterIDNumber){
+												SelectNode = true;
+											}
+										}
+										
+									} catch (Exception ex) {
+										JOptionPane.showMessageDialog(null,"CLUSTERID values must be integers.",
+												"CLUSTERID value unreadable",JOptionPane.ERROR_MESSAGE);
+									}
+								}
+								
+								//search annotation
+								if (Queries[j].toUpperCase().contains("ANNOTATION:")){
+									try {
+										
+										//retrieve Id number
+										String AnnotationFragment = Queries[j].substring(11).toUpperCase();
+										
+										//if a gene matches, select this context
+										for (GenomicElementAndQueryMatch GandE : Genes){
+											if (GandE.getE().getAnnotation().toUpperCase().contains(AnnotationFragment)){
+												SelectNode = true;
+											}
+										}
+										
+									} catch (Exception ex) {
+//										JOptionPane.showMessageDialog(null,"CLUSTERID values must be integers.",
+//												"CLUSTERID value unreadable",JOptionPane.ERROR_MESSAGE);
+									}
+								}
+								
+								//search motif
+								if (Queries[j].toUpperCase().contains("MOTIF:")){
+									try {
+										
+										//retrieve motif name
+										String MotifName = Queries[j].substring(6).toUpperCase();
+										
+										//if a gene matches, select this context
+										for (GenomicElementAndQueryMatch GandE : Genes){
+											if (GandE.getE().getAssociatedMotifNames().contains(MotifName)){
+												SelectNode = true;
+											}
+										}
+										
+									} catch (Exception ex) {
+//										JOptionPane.showMessageDialog(null,"There are no motifs of that na.",
+//												"CLUSTERID value unreadable",JOptionPane.ERROR_MESSAGE);
+									}
+								}
+								
+							}
+							CL.setSelected(SelectNode);
+						}
+						
+						//update CSD + frame
+						fr.getCurrentFrame().getInternalFrameData().getQD().setCSD(CSD);
+						fr.UpdateSelectedNodes();
+						
+					}
+
+					
+					
+				} catch (Exception e1){
+						JOptionPane.showMessageDialog(null,"Please enter a query in the search bar (top left-hand corner).",
+								"Submit Query",JOptionPane.INFORMATION_MESSAGE);
+						//e1.printStackTrace();
+				}
+			}
+			
+		} else {
+			fr.NoOS();
 		}
+
 	}
 
 	@Override

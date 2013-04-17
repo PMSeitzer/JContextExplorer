@@ -1345,276 +1345,283 @@ import definicions.MatriuDistancies;
 		// BUTTONS PUSHED -> LOAD FILE OR UPDATE TREE
 		@Override
 		public void actionPerformed(final ActionEvent evt) {
-			String action = null;
-			FitxerDades fitxTmp;
-			boolean ambDades = false;
-			InternalFrameData ifd;
-			double minBase;
-			MDComputation mdComputation;
-			String query;
-
-			/*
-			 * Available actions:
-			 * (1) Load				 [Create a new Context Tree]
-			 * (2) Reload			 [Update Context Tree - new matrix]
-			 * (3) Redraw			 [Update Context Tree - old matrix]
-			 * (4) cluster search    [take place of Reload]
-			 */
 			
-			//initialize a new 'querydata' object whenever an action is taken - 
-			//represents current search parameter space
-			QueryData QD = new QueryData();
-			QD.setOSName(fr.getOS().getName()); 	//Important later for context viewing.
-			if (!evt.getSource().equals(contextSetMenu)){
-				if (searchType.getSelection().equals(annotationSearch.getModel())){
-					QD.setAnnotationSearch(true);
-				} else {
-					QD.setAnnotationSearch(false);
-				}
-				QD.setContextSetName(contextSetMenu.getSelectedItem().toString());
-				QD.setDissimilarityType(fr.getPanMenu().getCbDissimilarity().getSelectedItem().toString());
-				QD.setAnalysesList(new PostSearchAnalyses(
-						fr.getPanMenuTab().getJpo().getDrawSearchResults().isSelected(), //search results
-						fr.getPanMenuTab().getJpo().getDrawContextTree().isSelected(), //draw context tree
-						fr.getPanMenuTab().getJpo().getDrawContextGraph().isSelected(), //draw context graph
-						fr.getPanMenuTab().getJpo().getDrawPhylogeneticTree().isSelected() //phylogeny
-						));
-			}
-			
-			//check: if none selected, show search results only.
-			if (!fr.getPanMenuTab().getJpo().getDrawSearchResults().isSelected() &&
-					!fr.getPanMenuTab().getJpo().getDrawContextTree().isSelected() &&
-					!fr.getPanMenuTab().getJpo().getDrawContextGraph().isSelected() &&
-					!fr.getPanMenuTab().getJpo().getDrawPhylogeneticTree().isSelected()){
-				System.out.println("No analyses were specified. Switching 'Print Search Results' on.");
-				QD.getAnalysesList().setOptionDisplaySearches(true);
-				fr.getPanMenuTab().getJpo().getDrawSearchResults().setSelected(true);
-			}
-
-			//Search Query
-			if (evt.getSource().equals(searchField) || evt.getSource().equals(btnSubmit)){
+			if (fr.getOS() != null){
 				
-				if (!searchField.getText().equals("")) {
-					
-					//System.out.println("Search field invoked with query:" + searchField.getText());
+				
+				String action = null;
+				FitxerDades fitxTmp;
+				boolean ambDades = false;
+				InternalFrameData ifd;
+				double minBase;
+				MDComputation mdComputation;
+				String query;
+
+				/*
+				 * Available actions:
+				 * (1) Load				 [Create a new Context Tree]
+				 * (2) Reload			 [Update Context Tree - new matrix]
+				 * (3) Redraw			 [Update Context Tree - old matrix]
+				 * (4) cluster search    [take place of Reload]
+				 */
+				
+				//initialize a new 'querydata' object whenever an action is taken - 
+				//represents current search parameter space
+				QueryData QD = new QueryData();
+				QD.setOSName(fr.getOS().getName()); 	//Important later for context viewing.
+				if (!evt.getSource().equals(contextSetMenu)){
 					if (searchType.getSelection().equals(annotationSearch.getModel())){
-						currentQuery = "Search Query: " + searchField.getText();
+						QD.setAnnotationSearch(true);
 					} else {
-						currentQuery ="Search Query: Cluster(s) " + searchField.getText();
+						QD.setAnnotationSearch(false);
 					}
-				
-					action = "Load";
-					buttonClicked = true;
-					ambDades = true;
-				
-				} else {
-					showError("Please enter a query in the search bar.");
+					QD.setContextSetName(contextSetMenu.getSelectedItem().toString());
+					QD.setDissimilarityType(fr.getPanMenu().getCbDissimilarity().getSelectedItem().toString());
+					QD.setAnalysesList(new PostSearchAnalyses(
+							fr.getPanMenuTab().getJpo().getDrawSearchResults().isSelected(), //search results
+							fr.getPanMenuTab().getJpo().getDrawContextTree().isSelected(), //draw context tree
+							fr.getPanMenuTab().getJpo().getDrawContextGraph().isSelected(), //draw context graph
+							fr.getPanMenuTab().getJpo().getDrawPhylogeneticTree().isSelected() //phylogeny
+							));
 				}
 				
-			} else if (evt.getSource().equals(btnUpdate)) {
-				
-				//set wait cursor
-				fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				
-				// UPDATE
-				buttonClicked = true;
-				ifd = currentInternalFrame.getInternalFrameData();
+				//check: if none selected, show search results only.
+				if (!fr.getPanMenuTab().getJpo().getDrawSearchResults().isSelected() &&
+						!fr.getPanMenuTab().getJpo().getDrawContextTree().isSelected() &&
+						!fr.getPanMenuTab().getJpo().getDrawContextGraph().isSelected() &&
+						!fr.getPanMenuTab().getJpo().getDrawPhylogeneticTree().isSelected()){
+					System.out.println("No analyses were specified. Switching 'Print Search Results' on.");
+					QD.getAnalysesList().setOptionDisplaySearches(true);
+					fr.getPanMenuTab().getJpo().getDrawSearchResults().setSelected(true);
+				}
 
-				if ((Jpan_Menu.getTypeData() == ifd.getTypeData())
-						&& (Jpan_Menu.getMethod() == ifd.getMethod())
-						&& (Jpan_Menu.getPrecision() == ifd.getPrecision())
-						&& (QD.getDissimilarityType().equals(ifd.getQD().getDissimilarityType()))
-						&& (QD.getContextSetName().equals(ifd.getQD().getContextSetName()))
+				//Search Query
+				if (evt.getSource().equals(searchField) || evt.getSource().equals(btnSubmit)){
+					
+					if (!searchField.getText().equals("")) {
 						
-						/* TODO:
-						 * Currently set so that any tab change will cause for re-computation.  This should be changed, later,
-						 * to account for re-computations of different kinds, for different analyses. (1-14-2013)
-						 */
-						&& (QD.getAnalysesList().isOptionDisplaySearches() == ifd.getQD().getAnalysesList().isOptionDisplaySearches())
-						&& (QD.getAnalysesList().isOptionComputeDendrogram() == ifd.getQD().getAnalysesList().isOptionComputeDendrogram())
-						&& (QD.getAnalysesList().isOptionComputeContextGraph() == ifd.getQD().getAnalysesList().isOptionComputeContextGraph())
-						&& (QD.getAnalysesList().isOptionRenderPhylogeny() == ifd.getQD().getAnalysesList().isOptionRenderPhylogeny())){
-						//&& (QD.getAnalysesList().equals(ifd.getQD().getAnalysesList()))){
-				
-					action = "Redraw"; // no new matrix required
-					//System.out.println("Action = Redraw");
-				} else {
-					action = "Reload"; //a new matrix is required
-					//System.out.println("Action = Reloaded");
-//					System.out.println("Method:" + (Jpan_Menu.getMethod() == ifd.getMethod()));
-//					System.out.println("Precision: " + (Jpan_Menu.getPrecision() == ifd.getPrecision()));
-//					System.out.println("Dissimilarity Type: " + (QD.getDissimilarityType().equals(ifd.getQD().getDissimilarityType())));
-//					System.out.println("Context Set Name: " + (QD.getContextSetName().equals(ifd.getQD().getContextSetName())));
-					
-					//the problem!
-					//System.out.println("Analyses List: " + (QD.getAnalysesList().equals(ifd.getQD().getAnalysesList())));
-//					
-//					System.out.println("QD List:" + QD.getAnalysesList().isOptionDisplaySearches() 
-//							+ " " + QD.getAnalysesList().isOptionComputeDendrogram()
-//							+ " " + QD.getAnalysesList().isOptionComputeContextGraph()
-//							+ " " + QD.getAnalysesList().isOptionRenderPhylogeny());
-//					
-//					System.out.println("ifd:" + ifd.getQD().getAnalysesList().isOptionDisplaySearches() 
-//							+ " " + ifd.getQD().getAnalysesList().isOptionComputeDendrogram()
-//							+ " " + ifd.getQD().getAnalysesList().isOptionComputeContextGraph()
-//							+ " " + ifd.getQD().getAnalysesList().isOptionRenderPhylogeny());
-				}
-				ambDades = true;
-				
-			} else if (evt.getSource().equals(btnManage)){
-				action = "manage contexts";
-				buttonClicked = true;
-				//new manageContextSets(this.fr, fr.getOS().getCSDs(), this);
-				new manageContextSetsv2(this.fr, this);
-			}
-			
-			//CARRY OUT ACTION
-			if (ambDades && (action.equals("Load"))) {
-				String TheName = searchField.getText() + " [" + contextSetMenu.getSelectedItem() + "]";
-				QD.setName(TheName);
-				try {
-					
-					//DATA SOURCE
-					fitx = new FitxerDades();	
-					fitx.setNom("");
-					fitx.setPath("");
-					
-					//parse into candidates
-					String[] Queries = searchField.getText().split(";");
-					minBase = Double.MAX_VALUE;
-					
-					if (searchType.getSelection().equals(annotationSearch.getModel())){
-						
-						//before carrying out search, ask user about their search.
-						String Hypo = "hypothetical protein";
-						String Unk = "Unknown function";
-						
-						if (Hypo.contains(searchField.getText()) || Unk.contains(searchField.getText()) ||
-								searchField.getText().length() <= 3){
-							
-							String SureYouWantToSearch = "You have entered a search query that may return a large number of results." + "\n"
-									+ "Proceeding may cause this program to crash." + "\n"
-									+ "Are you sure you would like to proceed?" + "\n";
-							
-							//ask question, and maybe proceed with search
-							int SearchCheck = JOptionPane.showConfirmDialog(null,SureYouWantToSearch,
-									"Proceed with search", JOptionPane.YES_NO_CANCEL_OPTION);
-							
-							if (SearchCheck == JOptionPane.YES_OPTION){
-								this.ProceedWithSearch = true;
-							} else {
-								this.ProceedWithSearch = false;
-								de = null; //this will effectively fast-forward to the catch statement
-							}
+						//System.out.println("Search field invoked with query:" + searchField.getText());
+						if (searchType.getSelection().equals(annotationSearch.getModel())){
+							currentQuery = "Search Query: " + searchField.getText();
 						} else {
-							this.ProceedWithSearch = true;
+							currentQuery ="Search Query: Cluster(s) " + searchField.getText();
 						}
-						
-						if (this.ProceedWithSearch == true){
-						
-							QD.setQueries(Queries);
+					
+						action = "Load";
+						buttonClicked = true;
+						ambDades = true;
+					
+					} else {
+						showError("Please enter a query in the search bar.");
+					}
+					
+				} else if (evt.getSource().equals(btnUpdate)) {
+					
+					//set wait cursor
+					fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+					
+					// UPDATE
+					buttonClicked = true;
+					ifd = currentInternalFrame.getInternalFrameData();
+
+					if ((Jpan_Menu.getTypeData() == ifd.getTypeData())
+							&& (Jpan_Menu.getMethod() == ifd.getMethod())
+							&& (Jpan_Menu.getPrecision() == ifd.getPrecision())
+							&& (QD.getDissimilarityType().equals(ifd.getQD().getDissimilarityType()))
+							&& (QD.getContextSetName().equals(ifd.getQD().getContextSetName()))
 							
-							//single, interruptable Swing Worker
+							/* TODO:
+							 * Currently set so that any tab change will cause for re-computation.  This should be changed, later,
+							 * to account for re-computations of different kinds, for different analyses. (1-14-2013)
+							 */
+							&& (QD.getAnalysesList().isOptionDisplaySearches() == ifd.getQD().getAnalysesList().isOptionDisplaySearches())
+							&& (QD.getAnalysesList().isOptionComputeDendrogram() == ifd.getQD().getAnalysesList().isOptionComputeDendrogram())
+							&& (QD.getAnalysesList().isOptionComputeContextGraph() == ifd.getQD().getAnalysesList().isOptionComputeContextGraph())
+							&& (QD.getAnalysesList().isOptionRenderPhylogeny() == ifd.getQD().getAnalysesList().isOptionRenderPhylogeny())){
+							//&& (QD.getAnalysesList().equals(ifd.getQD().getAnalysesList()))){
+					
+						action = "Redraw"; // no new matrix required
+						//System.out.println("Action = Redraw");
+					} else {
+						action = "Reload"; //a new matrix is required
+						//System.out.println("Action = Reloaded");
+//						System.out.println("Method:" + (Jpan_Menu.getMethod() == ifd.getMethod()));
+//						System.out.println("Precision: " + (Jpan_Menu.getPrecision() == ifd.getPrecision()));
+//						System.out.println("Dissimilarity Type: " + (QD.getDissimilarityType().equals(ifd.getQD().getDissimilarityType())));
+//						System.out.println("Context Set Name: " + (QD.getContextSetName().equals(ifd.getQD().getContextSetName())));
+						
+						//the problem!
+						//System.out.println("Analyses List: " + (QD.getAnalysesList().equals(ifd.getQD().getAnalysesList())));
+//						
+//						System.out.println("QD List:" + QD.getAnalysesList().isOptionDisplaySearches() 
+//								+ " " + QD.getAnalysesList().isOptionComputeDendrogram()
+//								+ " " + QD.getAnalysesList().isOptionComputeContextGraph()
+//								+ " " + QD.getAnalysesList().isOptionRenderPhylogeny());
+//						
+//						System.out.println("ifd:" + ifd.getQD().getAnalysesList().isOptionDisplaySearches() 
+//								+ " " + ifd.getQD().getAnalysesList().isOptionComputeDendrogram()
+//								+ " " + ifd.getQD().getAnalysesList().isOptionComputeContextGraph()
+//								+ " " + ifd.getQD().getAnalysesList().isOptionRenderPhylogeny());
+					}
+					ambDades = true;
+					
+				} else if (evt.getSource().equals(btnManage)){
+					action = "manage contexts";
+					buttonClicked = true;
+					//new manageContextSets(this.fr, fr.getOS().getCSDs(), this);
+					new manageContextSetsv2(this.fr, this);
+				}
+				
+				//CARRY OUT ACTION
+				if (ambDades && (action.equals("Load"))) {
+					String TheName = searchField.getText() + " [" + contextSetMenu.getSelectedItem() + "]";
+					QD.setName(TheName);
+					try {
+						
+						//DATA SOURCE
+						fitx = new FitxerDades();	
+						fitx.setNom("");
+						fitx.setPath("");
+						
+						//parse into candidates
+						String[] Queries = searchField.getText().split(";");
+						minBase = Double.MAX_VALUE;
+						
+						if (searchType.getSelection().equals(annotationSearch.getModel())){
+							
+							//before carrying out search, ask user about their search.
+							String Hypo = "hypothetical protein";
+							String Unk = "Unknown function";
+							
+							if (Hypo.contains(searchField.getText()) || Unk.contains(searchField.getText()) ||
+									searchField.getText().length() <= 3){
+								
+								String SureYouWantToSearch = "You have entered a search query that may return a large number of results." + "\n"
+										+ "Proceeding may cause this program to crash." + "\n"
+										+ "Are you sure you would like to proceed?" + "\n";
+								
+								//ask question, and maybe proceed with search
+								int SearchCheck = JOptionPane.showConfirmDialog(null,SureYouWantToSearch,
+										"Proceed with search", JOptionPane.YES_NO_CANCEL_OPTION);
+								
+								if (SearchCheck == JOptionPane.YES_OPTION){
+									this.ProceedWithSearch = true;
+								} else {
+									this.ProceedWithSearch = false;
+									de = null; //this will effectively fast-forward to the catch statement
+								}
+							} else {
+								this.ProceedWithSearch = true;
+							}
+							
+							if (this.ProceedWithSearch == true){
+							
+								QD.setQueries(Queries);
+								
+								//single, interruptable Swing Worker
+								CurrentSearch = new SearchWorker(QD,action,
+										Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
+										Jpan_Menu.getPrecision());
+								CurrentSearch.addPropertyChangeListener(this);
+								CurrentSearch.execute();
+
+							}
+
+						} else {
+							LinkedList<Integer> NumQueriesList = new LinkedList<Integer>();
+							for (int i = 0; i < Queries.length; i++){
+								try {
+									NumQueriesList.add(Integer.parseInt(Queries[i].trim()));
+								} catch (Exception ex){}
+							}
+							
+							int[] NumQueries = new int[NumQueriesList.size()];
+							for (int i = 0; i < NumQueriesList.size(); i++){
+								NumQueries[i] = NumQueriesList.get(i);
+							}
+							
+							//store 
+							QD.setClusters(NumQueries);
+							
+							//try: unified swingworker approach
 							CurrentSearch = new SearchWorker(QD,action,
 									Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
-									Jpan_Menu.getPrecision());
+									Jpan_Menu.getPrecision());//phylogeny
 							CurrentSearch.addPropertyChangeListener(this);
 							CurrentSearch.execute();
-
 						}
 
+
+					} catch (Exception e1) {
+						
+						e1.printStackTrace();
+						
+						fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+						
+						buttonClicked = false;
+						//showError(e1.getMessage());
+						if (searchType.getSelection().equals(annotationSearch.getModel())){
+							if (this.ProceedWithSearch == true){
+								showError("There were no matches to the query (or queries).");
+							}
+						} else {
+							//String LastCluster = Integer.toString(OS.LargestCluster);
+							String errMsg = "There were no matches to the query (or queries).";
+							showError(errMsg);
+						}
+					}
+				} else if (ambDades && action.equals("Reload")) {
+					
+					//retrieve information from selected frame
+					QueryData SelectedFrame = currentInternalFrame.getInternalFrameData().getQD();
+					
+					//update internal frame data
+					SelectedFrame.setDissimilarityType(QD.getDissimilarityType());
+					SelectedFrame.setContextSetName(QD.getContextSetName());
+					SelectedFrame.setAnalysesList(QD.getAnalysesList());
+					
+					if (SelectedFrame.isAnnotationSearch()){
+						CurrentSearch = new SearchWorker(SelectedFrame,action,
+								Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
+								Jpan_Menu.getPrecision());//phylogeny
+						CurrentSearch.addPropertyChangeListener(this);
+						CurrentSearch.execute();
 					} else {
-						LinkedList<Integer> NumQueriesList = new LinkedList<Integer>();
-						for (int i = 0; i < Queries.length; i++){
-							try {
-								NumQueriesList.add(Integer.parseInt(Queries[i].trim()));
-							} catch (Exception ex){}
-						}
-						
-						int[] NumQueries = new int[NumQueriesList.size()];
-						for (int i = 0; i < NumQueriesList.size(); i++){
-							NumQueries[i] = NumQueriesList.get(i);
-						}
-						
-						//store 
-						QD.setClusters(NumQueries);
-						
-						//try: unified swingworker approach
-						CurrentSearch = new SearchWorker(QD,action,
+						CurrentSearch = new SearchWorker(SelectedFrame,action,
 								Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
 								Jpan_Menu.getPrecision());//phylogeny
 						CurrentSearch.addPropertyChangeListener(this);
 						CurrentSearch.execute();
 					}
-
-
-				} catch (Exception e1) {
 					
-					e1.printStackTrace();
-					
+				// in this case, no need to modify what's already in the internal frame.
+				} else if (ambDades && action.equals("Redraw")) {
+					//only GUI updates - no recomputations
+					showCalls(action, currentInternalFrame.getInternalFrameData().getQD());//phylogeny
 					fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-					
-					buttonClicked = false;
-					//showError(e1.getMessage());
-					if (searchType.getSelection().equals(annotationSearch.getModel())){
-						if (this.ProceedWithSearch == true){
-							showError("There were no matches to the query (or queries).");
-						}
-					} else {
-						//String LastCluster = Integer.toString(OS.LargestCluster);
-						String errMsg = "There were no matches to the query (or queries).";
-						showError(errMsg);
-					}
-				}
-			} else if (ambDades && action.equals("Reload")) {
-				
-				//retrieve information from selected frame
-				QueryData SelectedFrame = currentInternalFrame.getInternalFrameData().getQD();
-				
-				//update internal frame data
-				SelectedFrame.setDissimilarityType(QD.getDissimilarityType());
-				SelectedFrame.setContextSetName(QD.getContextSetName());
-				SelectedFrame.setAnalysesList(QD.getAnalysesList());
-				
-				if (SelectedFrame.isAnnotationSearch()){
-					CurrentSearch = new SearchWorker(SelectedFrame,action,
-							Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
-							Jpan_Menu.getPrecision());//phylogeny
-					CurrentSearch.addPropertyChangeListener(this);
-					CurrentSearch.execute();
+
 				} else {
-					CurrentSearch = new SearchWorker(SelectedFrame,action,
-							Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
-							Jpan_Menu.getPrecision());//phylogeny
-					CurrentSearch.addPropertyChangeListener(this);
-					CurrentSearch.execute();
+					buttonClicked = false;
 				}
 				
-			// in this case, no need to modify what's already in the internal frame.
-			} else if (ambDades && action.equals("Redraw")) {
-				//only GUI updates - no recomputations
-				showCalls(action, currentInternalFrame.getInternalFrameData().getQD());//phylogeny
-				fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+				//cancel button - version 1.1
+				if (evt.getSource().equals(btnCancel)){
+					
+					//Kill swing worker
+					if (CurrentSearch != null){
+						CurrentSearch.cancel(true);
+						CurrentSearch = null;
+						de = null;
+					}
 
+					//message to console
+//					System.out.println("Search successfully cancelled.");
+				}
 			} else {
-				buttonClicked = false;
+				fr.NoOS();
 			}
-			
-			//cancel button - version 1.1
-			if (evt.getSource().equals(btnCancel)){
-				
-				//Kill swing worker
-				if (CurrentSearch != null){
-					CurrentSearch.cancel(true);
-					CurrentSearch = null;
-					de = null;
-				}
-
-				//message to console
-//				System.out.println("Search successfully cancelled.");
-			}
-		} 
-
+		}
+		
 		private void showCalls(final String action, QueryData qD) {
 			try {
 				fr.setCfgPhylo(null);	//for re-drawing.

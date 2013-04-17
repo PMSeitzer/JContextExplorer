@@ -4,8 +4,10 @@ import importExport.DadesExternes;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -39,9 +41,15 @@ public class OrganismSet implements Serializable{
 	private LinkedHashMap<String, AnnotatedGenome> Species 
 		= new LinkedHashMap<String, AnnotatedGenome>();		//-Species-information--------
 	
+	private LinkedHashMap<String, Boolean> AGLoaded = 
+			new LinkedHashMap<String, Boolean>();
+	
+	private LinkedHashMap<String, File> CachedAG =
+			new LinkedHashMap<String, File>();
 	//Genome Name, instructions to retrieve
 	private LinkedHashMap<String, RetrieveGenomeInstructions> InstructionsToRetrieve
 		= new LinkedHashMap<String, RetrieveGenomeInstructions>();
+
 	
 	private LinkedList<String> SpeciesNames
 		= new LinkedList<String>();					//-Species-Names--------------
@@ -204,6 +212,74 @@ public class OrganismSet implements Serializable{
 		}
 	}
 	
+	//Export an existing AnnotatdGenome object into a file
+	public void ExportSerializedAG(AnnotatedGenome AG){
+		try {
+			//TODO: need to make this!
+			String fileName = Name + "/" + AG.getSpecies();
+			File f = new File(fileName);
+			AGLoaded.put(AG.getSpecies(), false);	//Note status of this genome.
+			CachedAG.put(AG.getSpecies(), f);		//Note file.
+	        FileOutputStream fileOut = new FileOutputStream(f);
+	        ObjectOutputStream out = new ObjectOutputStream(fileOut);
+	        out.writeObject(AG);
+	        out.close();
+	        fileOut.close();
+
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
+	}
+	
+	//Import a previously scanned AnnotatedGenome from a file
+	public void ImportSerializedAG(String SpeciesName){
+
+		try
+	      {	
+		     File f = CachedAG.get(SpeciesName);
+	         FileInputStream fileIn = new FileInputStream(f);
+	         ObjectInputStream in = new ObjectInputStream(fileIn);
+	         AnnotatedGenome AG = (AnnotatedGenome) in.readObject();
+	         AGLoaded.put(SpeciesName, true);
+	         Species.put(SpeciesName, AG);
+	         in.close();
+	         fileIn.close();
+	         
+	      }catch(Exception ex) {
+	         ex.printStackTrace();  
+	      }
+
+	}
+	
+	//retrieve info
+	public void AdjustAvailableSpecies(String Species2Add){
+		
+		//only perform action if not already included
+		if (!Species.containsKey(Species2Add)){
+			
+			//remove a species.
+			int i = 0;
+			boolean CheckNext = true;
+			while(CheckNext){
+				
+				//check if over the limit
+				if (i >= SpeciesNames.size()){
+					CheckNext = false;
+				} else {
+					if (AGLoaded.get(SpeciesNames.get(i).equals(false))){
+						CheckNext = false;
+					}
+				}
+				
+				//increment counter
+				i++;
+			}
+			ExportSerializedAG(Species.remove(SpeciesNames.get(i)));
+			
+			//add the new species.
+			ImportSerializedAG(Species2Add);
+		}
+	}
 	//----------------------- Searches --------------------------------//
 	
 	//display clusters
@@ -835,6 +911,22 @@ public class OrganismSet implements Serializable{
 
 	public void setMotifNames(LinkedList<String> motifNames) {
 		MotifNames = motifNames;
+	}
+
+	public LinkedHashMap<String, Boolean> getAGLoaded() {
+		return AGLoaded;
+	}
+
+	public void setAGLoaded(LinkedHashMap<String, Boolean> aGLoaded) {
+		AGLoaded = aGLoaded;
+	}
+
+	public LinkedHashMap<String, File> getCachedAG() {
+		return CachedAG;
+	}
+
+	public void setCachedAG(LinkedHashMap<String, File> cachedAG) {
+		CachedAG = cachedAG;
 	}
 
 } //completes classbody

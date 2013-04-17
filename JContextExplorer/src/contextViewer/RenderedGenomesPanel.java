@@ -881,7 +881,9 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 			//debugging: print statements
 			//System.out.println(i + ": " + SpeciesName + "-" + ContigName);
 			
-			//retrieve genome
+			//TODO: modifications, of course!
+			//retrieve genome - load if necessary
+			mf.getOS().AdjustAvailableSpecies(SpeciesName);
 			AnnotatedGenome AG = mf.getOS().getSpecies().get(SpeciesName);
 			
 			//information

@@ -272,6 +272,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				}
 			}
 			
+			
+			//Modify this!!
 			if (MissingSingleGene){
 				
 				//add to OS
@@ -340,11 +342,18 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					// add Context set
 					AG.MakeSingleGeneContextSet("SingleGene");
 
+					//if (getAvailableMemory() < 100000){
+						OS.AdjustAvailableSpecies(TheName);
+						System.out.println("Adjustment!");
+					//}
+					System.out.println("Memory: " + getAvailableMemory());
+					
 					// add to hash map
 					OS.getSpecies().put(TheName, AG);
 
 					// add name to array of species
 					OS.getSpeciesNames().add(TheName);
+					OS.getAGLoaded().put(TheName, true);
 
 					// update progress bar
 					OrgCounter++;
@@ -389,9 +398,92 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		}
 	}
 	
-	// ===== Methods ===================================================//		
+	//Constructor
+	public FrmPrincipalDesk(final String title, OrganismSet theOrganismSet) {
+		
+		//INITIALIZATIONS
+		super(title);
+		this.OS = theOrganismSet;
+//		if (OS.getSourceDirectory() != null){
+//			this.FileChooserSource = OS.getSourceDirectory();
+//		}
+		
+		//DESKTOP FRAME INFORMATION
+		pan_Desk = new JDesktopPane();
+		pan_Desk.setBackground(Color.LIGHT_GRAY);
+		pan_Desk.setBorder(BorderFactory.createTitledBorder(""));
 
-	// ----- OS Data Retrieval Methods ------------------------------------//	
+		//CREATE COMPONENT PANELS
+		panMenu = new Jpan_Menu(this); 			//Settings panel (West)
+		pan_Exit = new Jpan_btnExit(this); 		//About + Exit (SouthWest)
+		panBtn = new Jpan_btn_NEW(this);
+		panGenome = new Jpan_genome(this);		//scrollable genome view
+		
+		//ORIENTATION PANELS
+		//CENTER: THIS
+		pan_Center = new JPanel();
+		pan_Center.setLayout(new BorderLayout());
+		pan_Center.add(pan_Desk, BorderLayout.CENTER);
+		
+		//WEST: Update Settings, Searching
+		pan_West = new JPanel();
+		pan_West.setLayout(new BorderLayout());
+		pan_West.add(panBtn, BorderLayout.NORTH);
+	
+		//switch 1
+//			JScrollPane scrollPane1 = new JScrollPane(panMenu);	
+//		pan_West.add(scrollPane1, BorderLayout.CENTER);
+		
+		//options/menus
+		panGraphMenu = new Jpan_GraphMenu(this);		//Graph menu
+		panMotifOptions = new Jpan_MotifOptions(this);	//Motif Options tab
+		panPhyTreeMenu = new Jpan_PhyTreeMenu(this);	//Loadable phylogenetic tree
+		panDisplayOptions = new Jpan_DisplayOptions(this);//options panel
+		panMenuTab = new Jpan_TabbedMenu(panDisplayOptions, panMenu, panGraphMenu,
+				panMotifOptions,panPhyTreeMenu);
+		pan_West.add(panMenuTab, BorderLayout.CENTER);
+		
+		//SOUTH: Genome context viewing
+		pan_South = new JPanel();
+		pan_South.setLayout(new BorderLayout());
+		pan_South.add(panGenome);
+		
+		pan_Center.add(pan_South, BorderLayout.SOUTH);
+		
+		//set precision value
+		Jpan_Menu.setPrecision(18);
+		
+		//SET PROPERTIES OF DESKTOP FRAME
+		//JFrame.setDefaultLookAndFeelDecorated(true);
+		JFrame.setDefaultLookAndFeelDecorated(false);
+		final int width_win = Parametres_Inicials.getWidth_frmPrincipal();
+		final int height_win = Parametres_Inicials.getHeight_frmPrincipal();
+		this.setSize(width_win, height_win);
+		//this.setVisible(true);
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		//ADD ORIENTATION FRAMES TO DESKTOP FRAME
+		this.add(pan_West, BorderLayout.WEST);
+		this.add(pan_Center, BorderLayout.CENTER);
+		
+		//finally, create menu bar
+		CreateAndAddMenuBar();
+		
+		//Initialize various data import for default settings.
+		InitializeData();
+		
+		//disable components, if appropriate
+		if (OS == null){
+			NoOSMenuComponents(false);
+		}
+
+	}
+	
+	// =================================================================//
+	// ===== Methods ===================================================//		
+	// =================================================================//
+	
+	// ----- Memory Management ---------------------------------------------//	
 	
 	//Export an existing Organism Set object into a file
 	public void ExportSerializedOS(String OSName){
@@ -545,6 +637,37 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 	}
 	
+	//when No OS loaded
+	public void NoOS(){
+		
+		//TODO: indicate menu bar?
+		
+		String MenuBar = "Please define a genome set before continuing.\n" +
+						"This can be accomplished by selecting 'New Genome Set'\n" +
+						"From the Genomes drop-down menu, or by typing ";
+		String invokeNew;
+		if (System.getProperty("os.name").contains("Mac")){
+			invokeNew = "command + N";
+		} else {
+			invokeNew = "ctrl + N";
+		}
+		
+		String msg = MenuBar + invokeNew;
+		JOptionPane.showMessageDialog(null, msg,
+				"No Genome Set Defined", JOptionPane.ERROR_MESSAGE);
+	}
+	
+	//activate/deactivate
+	public void NoOSMenuComponents(boolean SwitchPos){
+		M_Load.setEnabled(SwitchPos);
+		M_Export.setEnabled(SwitchPos);
+	}
+	
+	//check heap size
+	public long getAvailableMemory(){
+		return Runtime.getRuntime().freeMemory();
+	}
+	
 	public void LoadOrganismSet(String Name){
 		
 		//Retrieve organism set
@@ -557,94 +680,42 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 	}
 	
+	// ----- Internal Frame Data Management ---------------------------//
+	
+	//Create an internal frame
+	public FrmInternalFrame createInternalFrame(boolean isUpdate,
+			String methodName) {
+		int x, y, width, height;
+		this.InternalFrameID = InternalFrameID + 1;
+		FrmInternalFrame pizarra;
+		
+		x = 0;
+		y = 0;
+		width = Parametres_Inicials.getWidth_frmDesk();
+		height = Parametres_Inicials.getHeight_frmDesk();
+		
+		//pizarra translates to "slate" - internal tree frame
+		pizarra = new FrmInternalFrame(methodName, isUpdate, x, y, this);
+		pizarra.setSize(width, height);
+		pizarra.setBackground(Color.BLUE);
+		pizarra.setLayout(new BorderLayout());
+		pizarra.addInternalFrameListener(panBtn);
+		pizarra.addInternalFrameListener(panGenome);
+		pan_Desk.add(pizarra, BorderLayout.CENTER);
+				
+		//desktop manager maximizes frame.
+		DefaultDesktopManager ddm = new DefaultDesktopManager();
+		ddm.maximizeFrame(pizarra);
+
+		return pizarra;
+	}
+	
 	public int getInternalFrameID() {
 		return InternalFrameID;
 	}
 
 	public void setInternalFrameID(int internalFrameID) {
 		InternalFrameID = internalFrameID;
-	}
-
-	//This is the main GUI window.
-	public FrmPrincipalDesk(final String title, OrganismSet theOrganismSet) {
-		
-		//INITIALIZATIONS
-		super(title);
-		this.OS = theOrganismSet;
-//		if (OS.getSourceDirectory() != null){
-//			this.FileChooserSource = OS.getSourceDirectory();
-//		}
-		
-		//DESKTOP FRAME INFORMATION
-		pan_Desk = new JDesktopPane();
-		pan_Desk.setBackground(Color.LIGHT_GRAY);
-		pan_Desk.setBorder(BorderFactory.createTitledBorder(""));
-
-		//CREATE COMPONENT PANELS
-		panMenu = new Jpan_Menu(this); 			//Settings panel (West)
-		pan_Exit = new Jpan_btnExit(this); 		//About + Exit (SouthWest)
-		panBtn = new Jpan_btn_NEW(this);
-		panGenome = new Jpan_genome(this);		//scrollable genome view
-		
-		//ORIENTATION PANELS
-		//CENTER: THIS
-		pan_Center = new JPanel();
-		pan_Center.setLayout(new BorderLayout());
-		pan_Center.add(pan_Desk, BorderLayout.CENTER);
-		
-		//WEST: Update Settings, Searching
-		pan_West = new JPanel();
-		pan_West.setLayout(new BorderLayout());
-		pan_West.add(panBtn, BorderLayout.NORTH);
-	
-		//switch 1
-//			JScrollPane scrollPane1 = new JScrollPane(panMenu);	
-//		pan_West.add(scrollPane1, BorderLayout.CENTER);
-		
-		//options/menus
-		panGraphMenu = new Jpan_GraphMenu(this);		//Graph menu
-		panMotifOptions = new Jpan_MotifOptions(this);	//Motif Options tab
-		panPhyTreeMenu = new Jpan_PhyTreeMenu(this);	//Loadable phylogenetic tree
-		panDisplayOptions = new Jpan_DisplayOptions(this);//options panel
-		panMenuTab = new Jpan_TabbedMenu(panDisplayOptions, panMenu, panGraphMenu,
-				panMotifOptions,panPhyTreeMenu);
-		pan_West.add(panMenuTab, BorderLayout.CENTER);
-		
-		//SOUTH: Genome context viewing
-		pan_South = new JPanel();
-		pan_South.setLayout(new BorderLayout());
-		pan_South.add(panGenome);
-		
-		pan_Center.add(pan_South, BorderLayout.SOUTH);
-		
-		//set precision value
-		Jpan_Menu.setPrecision(18);
-		
-		//SET PROPERTIES OF DESKTOP FRAME
-		//JFrame.setDefaultLookAndFeelDecorated(true);
-		JFrame.setDefaultLookAndFeelDecorated(false);
-		final int width_win = Parametres_Inicials.getWidth_frmPrincipal();
-		final int height_win = Parametres_Inicials.getHeight_frmPrincipal();
-		this.setSize(width_win, height_win);
-		//this.setVisible(true);
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
-		//ADD ORIENTATION FRAMES TO DESKTOP FRAME
-		this.add(pan_West, BorderLayout.WEST);
-		this.add(pan_Center, BorderLayout.CENTER);
-		
-		//finally, create menu bar
-		CreateAndAddMenuBar();
-		
-		//Initialize various data import for default settings.
-		InitializeData();
-		
-		//disable components, if appropriate
-		if (OS == null){
-			M_Load.setEnabled(false);
-			M_Export.setEnabled(false);
-		}
-
 	}
 
 	public void InitializeData(){
@@ -690,54 +761,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		}
 		//System.out.println("return");
 		return cfg;
-	}
-
-	//Create an internal frame
-	public FrmInternalFrame createInternalFrame(boolean isUpdate,
-			String methodName) {
-		int x, y, width, height;
-		this.InternalFrameID = InternalFrameID + 1;
-		FrmInternalFrame pizarra;
-		
-//		if (isUpdate) {
-//			x = currentFpiz.getX();
-//			y = currentFpiz.getY();
-//			width = currentFpiz.getWidth();
-//			height = currentFpiz.getHeight();
-//			x = 0;
-//			y = 0;
-//			width = Parametres_Inicials.getWidth_frmDesk();
-//			height = Parametres_Inicials.getHeight_frmDesk();
-//			
-//		} else {
-//			x = 0;
-//			y = 0;
-//			width = Parametres_Inicials.getWidth_frmDesk();
-//			height = Parametres_Inicials.getHeight_frmDesk();
-//		}
-		
-		x = 0;
-		y = 0;
-		width = Parametres_Inicials.getWidth_frmDesk();
-		height = Parametres_Inicials.getHeight_frmDesk();
-		
-		//pizarra translates to "slate" - internal tree frame
-		pizarra = new FrmInternalFrame(methodName, isUpdate, x, y, this);
-		pizarra.setSize(width, height);
-		pizarra.setBackground(Color.BLUE);
-		pizarra.setLayout(new BorderLayout());
-		pizarra.addInternalFrameListener(panBtn);
-		pizarra.addInternalFrameListener(panGenome);
-		pan_Desk.add(pizarra, BorderLayout.CENTER);
-				
-		//desktop manager maximizes frame.
-		DefaultDesktopManager ddm = new DefaultDesktopManager();
-		ddm.maximizeFrame(pizarra);
-		
-		//add to listener
-		//pizarra.addInternalFrameListener(this);
-
-		return pizarra;
 	}
 
 	//Are you sure you want to Exit?
@@ -1121,7 +1144,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_ManageCurrentGS.setAccelerator(Cstroke);
 		MG_ManageCurrentGS.addActionListener(this);
 		
-		
 		MG_ImportGS = new JMenuItem("Import Genome Set from .GS File");
 		MG_AddGenomes = new JMenu("Import Genomes into current Genome Set");
 		MG_Files = new JMenuItem("From Genbank or .GFF Files");
@@ -1188,7 +1210,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		M_Genomes.addSeparator();
 		M_Genomes.add(MG_PopularSets);
 			
-		//load non-genomes things
+		// ====== load non-genomes things ===== //
 		M_Load = new JMenu("Load");
 			
 		//Components

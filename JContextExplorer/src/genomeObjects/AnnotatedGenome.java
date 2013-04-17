@@ -143,6 +143,7 @@ public void importFromGFFFile(String filename){
 
 	}
 
+
 //----------------------- add cluster number -----------------------//
 
 //Organism - Gene Name - Cluster Number [OR] Gene Name - Cluster Number [OR] Gene Name

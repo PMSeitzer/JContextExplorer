@@ -1264,31 +1264,36 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener{
 
 	@Override
 	public void actionPerformed(ActionEvent evt) {
-		if (evt.getActionCommand().equals("orientacio_dendo")) {
-			pimg.setImatge(Orientation.values()[cbTreeOrientation
-					.getSelectedIndex()]);
-		} else if (evt.getActionCommand().equals("color_marge")) {
-			colorBands = this.changeColorFont(colorBands);
-		} else if (evt.getActionCommand().equals("font_noms")) {
-			final FontSelection f = new FontSelection(fontNodesLabels);
-			f.setVisible(true);
-			fontNodesLabels = f.getNewFont();
-		} else if (evt.getActionCommand().equals("color_noms")) {
-			colorNodesLabels = this.changeColorFont(colorNodesLabels);
-		} else if (evt.getActionCommand().equals("color_axis")) {
-			colorAxis = this.changeColorFont(colorAxis);
-		} else if (evt.getActionCommand().equals("font_axis")) {
-			final FontSelection f = new FontSelection(fontAxisLabels);
-			f.setVisible(true);
-			fontAxisLabels = f.getNewFont();
-		} else if (evt.getActionCommand().equals("color_label")) {
-			colorAxisLabels = this.changeColorFont(colorAxisLabels);
-		} else if (evt.getSource().equals(btnManageDissimilarity)){
-			new ManageDissimilarity(fr);
+		
+		if (fr.getOS() != null){
+			
+			if (evt.getActionCommand().equals("orientacio_dendo")) {
+				pimg.setImatge(Orientation.values()[cbTreeOrientation
+						.getSelectedIndex()]);
+			} else if (evt.getActionCommand().equals("color_marge")) {
+				colorBands = this.changeColorFont(colorBands);
+			} else if (evt.getActionCommand().equals("font_noms")) {
+				final FontSelection f = new FontSelection(fontNodesLabels);
+				f.setVisible(true);
+				fontNodesLabels = f.getNewFont();
+			} else if (evt.getActionCommand().equals("color_noms")) {
+				colorNodesLabels = this.changeColorFont(colorNodesLabels);
+			} else if (evt.getActionCommand().equals("color_axis")) {
+				colorAxis = this.changeColorFont(colorAxis);
+			} else if (evt.getActionCommand().equals("font_axis")) {
+				final FontSelection f = new FontSelection(fontAxisLabels);
+				f.setVisible(true);
+				fontAxisLabels = f.getNewFont();
+			} else if (evt.getActionCommand().equals("color_label")) {
+				colorAxisLabels = this.changeColorFont(colorAxisLabels);
+			} else if (evt.getSource().equals(btnManageDissimilarity)){
+				new ManageDissimilarity(fr);
+			}
+			
+		} else {
+			fr.NoOS();
 		}
-//		else {
-//			FesLog.LOG.warning(Language.getLabel(47) + ": " + evt.toString());
-//		}
+
 	}
 
 	// FOCUS EVENTS

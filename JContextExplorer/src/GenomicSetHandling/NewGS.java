@@ -196,39 +196,14 @@ public class NewGS extends JDialog implements ActionListener{
 					//Initialize a file for the organism set, even if we don't use it.
 					f.ExportNonFocusOS(OS);
 					
+					//turn on additional options
+					f.NoOSMenuComponents(true);
+					
 					//switch OS, if multiple OS, and option
-					if (SetNewOSToSelected){
-						
+					if (SetNewOSToSelected){						
 						f.SwitchBetweenOS(f.getOS().getName(), OS.getName());
-						
-//						//switch cursor
-//						Component glassPane = f.getGlassPane();
-//						glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-//						glassPane.setVisible(true);
-//						
-//						//record previously selected
-//						if (f.getOS() != null){
-//							f.ExportSerializedOS(f.getOS().getName());
-//						}
-//
-//						//update organism set
-//						f.setOS(OS);
-//						
-//						//update menu
-//						f.getPanBtn().getContextSetMenu().removeAllItems();
-//						f.getPanBtn().getContextSetMenu().addItem("<none>");
-//						
-//						//default cursor
-//						glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-//						glassPane.setVisible(false);
-					
-					//Initialize a file for this organism set, even though it's not being used.
-					}
-					
-//					else {
-//						f.ExportNonFocusOS(OS);
-//					}
-					
+				     }
+
 					//Global actions
 					
 					//Add new check box menu item in the main menu
