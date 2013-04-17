@@ -4,7 +4,7 @@ import genomeObjects.AnnotatedGenome;
 import genomeObjects.ContextSet;
 import genomeObjects.OrganismSet;
 //import importExport.FitxerDades;
-import inicial.Dendrograma;
+import inicial.JContextExplorer;
 //import inicial.Language;
 
 import javax.swing.*;
@@ -984,7 +984,7 @@ public class LoadGenomesPanel extends JPanel
 		
 //		System.out.println("Breakpoint!");
 		
-		new Dendrograma(OS);
+		new JContextExplorer(OS);
 		
 //		//optional print statements (working)
 //		System.out.println(OS.getSpeciesNames());

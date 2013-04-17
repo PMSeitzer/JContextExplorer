@@ -4,7 +4,7 @@ import javax.swing.UIManager;
 
 import haloGUI.StartFrame;
 
-public class JContextExplorer {
+public class JContextExplorer_old {
 	
 	public static void main(String[] args) throws Exception{
 		

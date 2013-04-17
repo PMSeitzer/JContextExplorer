@@ -76,6 +76,7 @@ import javax.swing.event.InternalFrameListener;
 
 import operonClustering.CustomDissimilarity;
 
+import GenomicSetHandling.ImportGenbankIDs;
 import GenomicSetHandling.NewGS;
 
 import moduls.frm.Panels.Jpan_DisplayOptions;
@@ -448,6 +449,11 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	@SuppressWarnings("unchecked")
 	public void SwitchBetweenOS(String FirstOS, String SecondOS){
 		
+		//System.out.println("Switch!");
+		
+		//switch progressbar
+		this.getPanBtn().getProgressBar().setIndeterminate(true);
+		
 		//switch cursor
 		Component glassPane = this.getRootPane().getGlassPane();
 		glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -533,6 +539,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//switch cursor
 		glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		glassPane.setVisible(false);
+		
+		//switch progressbar
+		this.getPanBtn().getProgressBar().setIndeterminate(false);
 		
 	}
 	
@@ -1112,6 +1121,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_ManageCurrentGS.setAccelerator(Cstroke);
 		MG_ManageCurrentGS.addActionListener(this);
 		
+		
 		MG_ImportGS = new JMenuItem("Import Genome Set from .GS File");
 		MG_AddGenomes = new JMenu("Import Genomes into current Genome Set");
 		MG_Files = new JMenuItem("From Genbank or .GFF Files");
@@ -1127,10 +1137,23 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_ImportGS.setAccelerator(Istroke);
 		MG_ImportGS.addActionListener(this);
 		
-		KeyStroke Astroke = KeyStroke.getKeyStroke(KeyEvent.VK_A, 
+		//add genome file
+		KeyStroke Fstroke = KeyStroke.getKeyStroke(KeyEvent.VK_F, 
 				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-		MG_Files.setAccelerator(Astroke);
+		MG_Files.setAccelerator(Fstroke);
 		MG_Files.addActionListener(this);
+		
+		//add genomes by ID
+		KeyStroke Rstroke = KeyStroke.getKeyStroke(KeyEvent.VK_R, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		MG_AccessionID.setAccelerator(Rstroke);
+		MG_AccessionID.addActionListener(this);
+		
+		//Browse NCBI genomes
+		KeyStroke Bstroke = KeyStroke.getKeyStroke(KeyEvent.VK_B, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		MG_Ncbi.setAccelerator(Bstroke);
+		MG_Ncbi.addActionListener(this);
 		
 		//Import settings
 		MG_ImportSettings = new JMenu("Import Settings");
@@ -1314,6 +1337,11 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			
 		}
 		
+		//Add genomes from NCBI
+		if (evt.getSource().equals(MG_AccessionID)){
+			new ImportGenbankIDs();
+		}
+		
 		/*
 		 * Switching between genome sets
 		 */
@@ -1340,28 +1368,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				if (OSName.equals(OS.getName())){
 					OSName = null;
 				}
-				
-				//helpful debugging
-				//System.out.println("Current: " + OS.getName() + " Switch to: " + OSName);
-				
+
 				//If an appropriate name 
 				if (OSName != null){
-					
-//					//switch cursor
-//					Component glassPane = this.getRootPane().getGlassPane();
-//					glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-//					glassPane.setVisible(true);
-//
-//					//Switching protocol
-//					ExportSerializedOS(OS.getName());		//Export current
-//					GenomeSetFiles.put(OS.getName(), new File(OS.getName()));		//Note current
-//					this.OS = new OrganismSet();			//Reset
-//					ImportSerializedOS(OSName);	//Import
-//
-//					//default cursor
-//					glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-//					glassPane.setVisible(false);
-					
+
 					this.SwitchBetweenOS(OS.getName(), OSName);
 					
 				}
@@ -1399,6 +1409,28 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//Add motifs
 		if (evt.getSource().equals(ML_Motifs)){
 			new ManageMotifs(this);
+		}
+		
+		/*
+		 * WEB-RELATED
+		 */
+		
+		if (evt.getSource().equals(MG_Ncbi)){
+			try {
+								
+				if (System.getProperty("os.name").contains("Windows")){
+					Runtime.getRuntime().exec("cmd /c start http://www.ncbi.nlm.nih.gov/genome/browse");
+				} else if (System.getProperty("os.name").contains("Mac")){
+					Runtime.getRuntime().exec("open http://www.ncbi.nlm.nih.gov/genome/browse");
+				} else {
+					Runtime.getRuntime().exec("firefox http://www.ncbi.nlm.nih.gov/genome/browse");
+				}
+				
+			} catch (Exception ex){
+				JOptionPane.showMessageDialog(null, 
+						"Unable to connect to internet or locate NCBI website.",
+						"NCBI Website Error", JOptionPane.ERROR_MESSAGE);
+			}
 		}
 	}
 

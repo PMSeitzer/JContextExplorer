@@ -45,14 +45,14 @@ import moduls.frm.FrmPrincipalDesk;
  *
  * @since JDK 6.0
  */
-public class Dendrograma {
+public class JContextExplorer {
 
 	//Current organism set
 	private OrganismSet OS;
 	private JMenuBar MB;
 	private FrmPrincipalDesk f;
 	
-	public Dendrograma(OrganismSet theOrganismSet) {
+	public JContextExplorer(OrganismSet theOrganismSet) {
 
 		//Determine operating system
 		String os = System.getProperty("os.name").toLowerCase();
@@ -96,7 +96,7 @@ public class Dendrograma {
 	public static void main(String args[]){
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				new Dendrograma(null);
+				new JContextExplorer(null);
 			}
 		});
 	}
