@@ -216,10 +216,11 @@ public class OrganismSet implements Serializable{
 	public void ExportSerializedAG(AnnotatedGenome AG){
 		try {
 			//TODO: need to make this!
-			String fileName = Name + "/" + AG.getSpecies();
+			String fileName = Name + "_" + AG.getSpecies();
 			File f = new File(fileName);
 			AGLoaded.put(AG.getSpecies(), false);	//Note status of this genome.
 			CachedAG.put(AG.getSpecies(), f);		//Note file.
+			Species.remove(AG.getSpecies());		//Remove from active set.
 	        FileOutputStream fileOut = new FileOutputStream(f);
 	        ObjectOutputStream out = new ObjectOutputStream(fileOut);
 	        out.writeObject(AG);
@@ -236,12 +237,12 @@ public class OrganismSet implements Serializable{
 
 		try
 	      {	
-		     File f = CachedAG.get(SpeciesName);
+		     File f = CachedAG.get(SpeciesName);		//Get appropriate file
 	         FileInputStream fileIn = new FileInputStream(f);
 	         ObjectInputStream in = new ObjectInputStream(fileIn);
 	         AnnotatedGenome AG = (AnnotatedGenome) in.readObject();
-	         AGLoaded.put(SpeciesName, true);
-	         Species.put(SpeciesName, AG);
+	         AGLoaded.put(SpeciesName, true);			//Update status
+	         Species.put(SpeciesName, AG);				//Add to active set
 	         in.close();
 	         fileIn.close();
 	         
@@ -251,15 +252,17 @@ public class OrganismSet implements Serializable{
 
 	}
 	
-	//retrieve info
+	//Add one species to active loaded set, while simultaneously removing another.
+	//TODO: this method is deprecated!!!
 	public void AdjustAvailableSpecies(String Species2Add){
 		
 		//only perform action if not already included
 		if (!Species.containsKey(Species2Add)){
 			
-			//remove a species.
+			//Remove the first species in the list.
 			int i = 0;
 			boolean CheckNext = true;
+			boolean RemoveSpeciesi = false;
 			while(CheckNext){
 				
 				//check if over the limit
@@ -274,12 +277,30 @@ public class OrganismSet implements Serializable{
 				//increment counter
 				i++;
 			}
-			ExportSerializedAG(Species.remove(SpeciesNames.get(i)));
+			
+			//only can remove if the species is both in the list of names + active species
+			if (SpeciesNames.contains(Species2Add)){
+				ExportSerializedAG(Species.remove(SpeciesNames.get(i)));
+			}
 			
 			//add the new species.
-			ImportSerializedAG(Species2Add);
+			if (CachedAG.get(Species2Add) != null){
+				ImportSerializedAG(Species2Add);
+			}
+
 		}
 	}
+	
+	//First species in list that is loaded is removed.
+	public void FindAG2Deactivate(){
+		for (String s : SpeciesNames){
+			if (AGLoaded.get(s).equals(true)){
+				ExportSerializedAG(Species.get(s));
+				break;
+			}
+		}
+	}
+	
 	//----------------------- Searches --------------------------------//
 	
 	//display clusters

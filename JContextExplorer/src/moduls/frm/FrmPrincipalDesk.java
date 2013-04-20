@@ -206,6 +206,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenuItem MG_Files;
 	private JMenuItem MG_AccessionID;
 	private JMenuItem MG_Ncbi;
+	private JMenuItem MG_NcbiTax;
 	private JMenu MG_ImportSettings;
 	private JMenuItem MG_GS;
 	private JMenuItem MG_GFF;
@@ -343,9 +344,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					AG.MakeSingleGeneContextSet("SingleGene");
 
 					//if (getAvailableMemory() < 100000){
-						OS.AdjustAvailableSpecies(TheName);
-						System.out.println("Adjustment!");
+					
+						//System.out.println("Adjustment!");
+					
+					//TODO: this isn't working! Why not??
+					//OS.FindAG2Deactivate();
+
 					//}
+					
 					System.out.println("Memory: " + getAvailableMemory());
 					
 					// add to hash map
@@ -1148,10 +1154,11 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_AddGenomes = new JMenu("Import Genomes into current Genome Set");
 		MG_Files = new JMenuItem("From Genbank or .GFF Files");
 		MG_AccessionID = new JMenuItem ("From a list of Genbank IDs");
-		MG_Ncbi = new JMenuItem("Browse publically available NCBI genomes");
+		MG_Ncbi = new JMenuItem("Browse NCBI available genomes by organism name");
+		MG_NcbiTax = new JMenuItem("Launch NCBI microbial taxonomy browser");
 		MG_AddGenomes.add(MG_Files);
 		MG_AddGenomes.add(MG_AccessionID);
-		MG_AddGenomes.add(MG_Ncbi);
+		//MG_AddGenomes.add(MG_Ncbi);
 
 		//Current genome set
 		KeyStroke Istroke = KeyStroke.getKeyStroke(KeyEvent.VK_I, 
@@ -1171,11 +1178,17 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_AccessionID.setAccelerator(Rstroke);
 		MG_AccessionID.addActionListener(this);
 		
-		//Browse NCBI genomes
+		//Browse NCBI genomes by organism
 		KeyStroke Bstroke = KeyStroke.getKeyStroke(KeyEvent.VK_B, 
 				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
 		MG_Ncbi.setAccelerator(Bstroke);
 		MG_Ncbi.addActionListener(this);
+		
+		//Browse NCBI genomes by taxonomy
+		KeyStroke Tstroke = KeyStroke.getKeyStroke(KeyEvent.VK_T, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		MG_NcbiTax.setAccelerator(Tstroke);
+		MG_NcbiTax.addActionListener(this);
 		
 		//Import settings
 		MG_ImportSettings = new JMenu("Import Settings");
@@ -1207,6 +1220,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		M_Genomes.add(MG_ImportGS);
 		M_Genomes.add(MG_AddGenomes);
 		M_Genomes.add(MG_ImportSettings);
+		M_Genomes.addSeparator();
+		M_Genomes.add(MG_Ncbi);
+		M_Genomes.add(MG_NcbiTax);
 		M_Genomes.addSeparator();
 		M_Genomes.add(MG_PopularSets);
 			
@@ -1361,7 +1377,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Add genomes from NCBI
 		if (evt.getSource().equals(MG_AccessionID)){
-			new ImportGenbankIDs();
+			new ImportGenbankIDs(this);
 		}
 		
 		/*
@@ -1450,7 +1466,25 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				
 			} catch (Exception ex){
 				JOptionPane.showMessageDialog(null, 
-						"Unable to connect to internet or locate NCBI website.",
+						"Unable to connect to internet or locate website.",
+						"NCBI Website Error", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		
+		if (evt.getSource().equals(MG_NcbiTax)){
+			try {
+				
+				if (System.getProperty("os.name").contains("Windows")){
+					Runtime.getRuntime().exec("cmd /c start http://www.ncbi.nlm.nih.gov/genomes/MICROBES/microbial_taxtree.html");
+				} else if (System.getProperty("os.name").contains("Mac")){
+					Runtime.getRuntime().exec("open http://www.ncbi.nlm.nih.gov/genomes/MICROBES/microbial_taxtree.html");
+				} else {
+					Runtime.getRuntime().exec("firefox http://www.ncbi.nlm.nih.gov/genomes/MICROBES/microbial_taxtree.html");
+				}
+				
+			} catch (Exception ex){
+				JOptionPane.showMessageDialog(null, 
+						"Unable to connect to internet or locate website.",
 						"NCBI Website Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}
