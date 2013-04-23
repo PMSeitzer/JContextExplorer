@@ -20,6 +20,7 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -33,7 +34,7 @@ import javax.swing.RootPaneContainer;
 
 import moduls.frm.FrmPrincipalDesk;
 
-public class NewGS extends JDialog implements ActionListener{
+public class CurrentGenomeSet extends JDialog implements ActionListener{
 
 	//fields
 	//data/base
@@ -41,15 +42,21 @@ public class NewGS extends JDialog implements ActionListener{
 	
 	//GUI
 	private JPanel jp, jp2, jpEnclosing;
-	private JTextField LblName, TxtName, LblNotes;
-	private JTextArea OrganismSetNotes;
+	private JTextField LblName, TxtName, LblNotes, LblGenomes;
+	private JTextArea OrganismSetNotes, LblInfo;
+	private JComboBox menuGenomes;
 	private JButton btnOK;
 	
+	private String strGenomes = "Genomes";
+	private String strSelectGenome = "Select Genome";
+	
 	//Constructor
-	public NewGS(FrmPrincipalDesk f){
+	public CurrentGenomeSet(FrmPrincipalDesk f){
+		//
 		this.f = f;
 		this.getFrame();
 		this.getPanel();
+		this.getData();
 		this.pack();
 		
 		this.setModalityType(ModalityType.DOCUMENT_MODAL);
@@ -61,7 +68,7 @@ public class NewGS extends JDialog implements ActionListener{
 		this.setSize(400,400);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		this.setLocationRelativeTo(null);
-		this.setTitle("Create New Genome Set");
+		this.setTitle("Current Genome Set");
 		this.setResizable(false);
 	}
 	
@@ -91,7 +98,7 @@ public class NewGS extends JDialog implements ActionListener{
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 1;
 		TxtName = new JTextField("");
-		TxtName.setEditable(true);
+		TxtName.setEditable(false);
 		TxtName.setColumns(30);
 		jp.add(TxtName, c);
 		
@@ -106,7 +113,7 @@ public class NewGS extends JDialog implements ActionListener{
 		LblNotes.setEditable(false);
 		jp.add(LblNotes, c);
 		
-		//Actual enter points form
+		//Enter notes here
 		c.gridx = 1;
 		c.gridy = gridy;
 		c.gridwidth = 1;
@@ -119,14 +126,52 @@ public class NewGS extends JDialog implements ActionListener{
 		jp.add(ptsscroll, c);
 		gridy++;
 		
+		//Genomes 
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		LblGenomes = new JTextField(strGenomes);
+		LblGenomes.setEditable(false);
+		jp.add(LblGenomes, c);
+		
+		//Pull-down menu
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		String[] Empty = {"<none>"};
+		menuGenomes = new JComboBox<String>(Empty);
+		jp.add(menuGenomes, c);
+		gridy++;
+		
+		//information bar
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 2;
+		c.ipady = 7;
+		LblInfo = new JTextArea("");
+		LblInfo.setEditable(false);
+		JScrollPane ptsscroll2 = new JScrollPane(LblInfo);
+		ptsscroll2.setPreferredSize(new Dimension(50, 100));
+		jp.add(ptsscroll2, c);
+		gridy++;
+		
 		//central frame
 		jp2 = new JPanel();
 		jp2.setLayout(new GridBagLayout());
 		GridBagConstraints d = new GridBagConstraints();
+		gridy = 0;
+
+		//OK button
 		d.gridheight = 1;
 		d.gridx = 0;
-		d.gridy = 0;
+		d.gridy = gridy;
 		d.fill = GridBagConstraints.NONE;
+		d.anchor = GridBagConstraints.CENTER;
 		btnOK = new JButton("OK");
 		btnOK.addActionListener(this);
 		jp2.add(btnOK, d);
@@ -140,93 +185,63 @@ public class NewGS extends JDialog implements ActionListener{
 		
 	}
 
+	//Data for components
+	public void getData(){
+		TxtName.setText(f.getOS().getName());
+		OrganismSetNotes.setText(f.getOS().getNotes());
+		
+		//Update genomes
+		strGenomes = strGenomes + " (" + String.valueOf(f.getOS().getSpeciesNames().size()) + "):";
+		LblGenomes.setText(strGenomes);
+		if (f.getOS().getSpeciesNames().size() > 0){
+			menuGenomes.removeItemAt(0);
+			menuGenomes.addItem(strSelectGenome);
+			for (String s : f.getOS().getSpeciesNames()){
+				menuGenomes.addItem(s);
+			}
+			menuGenomes.addActionListener(this);
+		}
+
+	}
+	
 	//Actions!
 	@Override
 	public void actionPerformed(ActionEvent e) {
+
+		//View Statistics, Update
 		if (e.getSource().equals(btnOK)){
-			//Empty string is just read as close window.
-			if (!TxtName.getText().equals("")){
-				if (f.getGenomeSets().keySet().contains(TxtName.getText())){
-					
-					JOptionPane.showMessageDialog(null,"A Genome Set of this name already exists.\nPlease choose another Name.",
-							"Name Already in use", JOptionPane.ERROR_MESSAGE);
-					
-				} else {
-					
-					//Information
-					OrganismSet OS = new OrganismSet();
-					OS.setName(TxtName.getText());
-					OS.setNotes(OrganismSetNotes.getText());
-					
-					//Switch options										
-					boolean AtLeastOneOS = true;
-					boolean SetNewOSToSelected = false;
-					
-					//If this isthe first OS, not much more to do.
-					for (JCheckBoxMenuItem b : f.getCurrentItems()){
-						if (b.equals(f.getMG_NoGS())){
-							f.getMG_CurrentGS().remove(b);
-							f.getCurrentItems().remove(b);
-							AtLeastOneOS = false;
-							f.setOS(OS);
-							break;
-						} 
-					}
 
-					//if multiple OS, option to switch to newly created OS.
-					if (AtLeastOneOS){
-						
-						String MsgSwitch = "Would you like to switch to this genome set now?\n" +
-											"Depending on the number and size of genomes in a genome set,\n" +
-											"switching between genome sets may be a time-consuming process.";
-						
-						int SwitchOS = JOptionPane.showConfirmDialog(null,MsgSwitch,
-								"Proceed with context viewing", JOptionPane.YES_NO_OPTION);
-						
-						if (SwitchOS == JOptionPane.YES_OPTION){
-							
-							//add selection, and de-select all others
-							for (JCheckBoxMenuItem b : f.getCurrentItems()){
-								b.setSelected(false);
-							}
-							SetNewOSToSelected = true;
-						} 
-						
-					}
-					
-					//Initialize a file for the organism set, even if we don't use it.
-					f.ExportNonFocusOS(OS);
-					
-					//turn on additional options
-					f.NoOSMenuComponents(true);
-					
-					//switch OS, if multiple OS, and option
-					if (SetNewOSToSelected){						
-						f.SwitchBetweenOS(f.getOS().getName(), OS.getName());
-				     }
-
-					//Global actions
-					
-					//Add new check box menu item in the main menu
-					JCheckBoxMenuItem NewOS = new JCheckBoxMenuItem(OS.getName());
-					NewOS.setSelected(SetNewOSToSelected);	
-					if (!AtLeastOneOS){
-						NewOS.setSelected(true);
-					}
-					NewOS.addActionListener(f);
-					NewOS.setName(OS.getName());
-					
-					//update menu + corresponding list
-					f.getCurrentItems().add(NewOS);
-					f.getMG_CurrentGS().add(NewOS);
-					
-					//close window
-					this.dispose();
-				}
-				
-			} else{
-				this.dispose();
-			}
+			//Update fields
+			f.getOS().setNotes(OrganismSetNotes.getText());
+			
+			//close
+			this.dispose();
 		}
+		
+		//Show organism data somehow
+		if (e.getSource().equals(menuGenomes)){
+			for (String s : f.getOS().getSpeciesNames()){
+				
+				//find appropriate species
+				if (menuGenomes.getSelectedItem().equals(s)){
+					showGenomeInfo(s);
+				}
+			}
+			
+			if (menuGenomes.getSelectedItem().equals(strSelectGenome)){
+				LblInfo.setText("");
+			}
+			
+		}
+		
+	}
+	
+	//TODO: re-work this method, think how to show information intuitively
+	public void showGenomeInfo(String GenomeName){
+		
+		LblInfo.setText(f.getOS().getGenomeDescriptions().get(GenomeName));
+		
+		//LblInfo.setText(GenomeName);
+		//LblInfo.setText(GenomeName + "\n" + f.getOS().getNotes());
 	}
 }

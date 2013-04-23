@@ -16,9 +16,11 @@ import java.awt.event.FocusListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -304,6 +306,8 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 		this.getPanel();
 		//RetrieveGenomeFromNCBI("NC_008095");
 		this.setVisible(true);
+		
+		//RetrieveGenomeFromNCBI("NC_010162");
 	}
 	
 	//===== Components ======/
@@ -506,11 +510,20 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 			
 			// ======== Parse Genbank File ======== //
 			
+			
+//			String outFile = "/Users/phillipseitzer/Desktop/Sorangium_cellulosum.gbk";
+//			BufferedWriter bw2 = new BufferedWriter(new FileWriter(outFile));
+			
 			//Currently just printing - need to parse this!
 			while((Line2 = br2.readLine()) != null){
 				System.out.println(Line2);
+//				bw2.write(Line2);
+//				bw2.write("\n");
+//				bw2.flush();
+
 			}
 			
+//			bw2.close();
 			br2.close();
 			
 		} catch (MalformedURLException e) {

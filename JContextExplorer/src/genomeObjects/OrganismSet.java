@@ -37,15 +37,18 @@ public class OrganismSet implements Serializable{
 	private static final long serialVersionUID = 1L;
 
 	//fields
+	//Genome-related
+	
 	//Actively loaded genomes
 	private LinkedHashMap<String, AnnotatedGenome> Species 
 		= new LinkedHashMap<String, AnnotatedGenome>();		//-Species-information--------
-	
 	private LinkedHashMap<String, Boolean> AGLoaded = 
-			new LinkedHashMap<String, Boolean>();
-	
+			new LinkedHashMap<String, Boolean>();	
 	private LinkedHashMap<String, File> CachedAG =
 			new LinkedHashMap<String, File>();
+	private LinkedHashMap<String, String> GenomeDescriptions =
+			new LinkedHashMap<String, String>();
+	
 	//Genome Name, instructions to retrieve
 	private LinkedHashMap<String, RetrieveGenomeInstructions> InstructionsToRetrieve
 		= new LinkedHashMap<String, RetrieveGenomeInstructions>();
@@ -948,6 +951,15 @@ public class OrganismSet implements Serializable{
 
 	public void setCachedAG(LinkedHashMap<String, File> cachedAG) {
 		CachedAG = cachedAG;
+	}
+
+	public LinkedHashMap<String, String> getGenomeDescriptions() {
+		return GenomeDescriptions;
+	}
+
+	public void setGenomeDescriptions(
+			LinkedHashMap<String, String> genomeDescriptions) {
+		GenomeDescriptions = genomeDescriptions;
 	}
 
 } //completes classbody

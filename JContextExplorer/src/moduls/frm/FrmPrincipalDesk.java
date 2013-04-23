@@ -76,6 +76,7 @@ import javax.swing.event.InternalFrameListener;
 
 import operonClustering.CustomDissimilarity;
 
+import GenomicSetHandling.CurrentGenomeSet;
 import GenomicSetHandling.ImportGenbankIDs;
 import GenomicSetHandling.NewGS;
 
@@ -179,6 +180,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		= new LinkedList<JCheckBoxMenuItem>();
 //	private ButtonGroup bg = new ButtonGroup();
 	
+	private LinkedHashMap<JMenuItem, String> PopularGenomeSets =
+			new LinkedHashMap<JMenuItem, String>();
+	
 	//private ButtonGroup AvailableOSCheckBoxMenuItems = new ButtonGroup();
 	//Import related
 	private LinkedList<String> GFFIncludeTypes;
@@ -208,13 +212,18 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenuItem MG_Ncbi;
 	private JMenuItem MG_NcbiTax;
 	private JMenu MG_ImportSettings;
-	private JMenuItem MG_GS;
+	private JMenuItem MG_NcbiSettings;
 	private JMenuItem MG_GFF;
 	private JMenuItem MG_Genbank;
+	
+	//popular sets
 	private JMenu MG_PopularSets;
 	private JMenuItem MG_Halos;
 	private JMenuItem MG_Myxo;
 	private JMenuItem MG_Chloroviruses;
+	private String strHalos = "Halophilic Archaea";
+	private String strMyxo = "Myxococcus";
+	private String strChloroviruses = "Chloroviruses";
 	
 	//Load components
 	private JMenuItem ML_ContextSet;
@@ -352,7 +361,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 					//}
 					
-					System.out.println("Memory: " + getAvailableMemory());
+					//System.out.println("Memory: " + getAvailableMemory());
 					
 					// add to hash map
 					OS.getSpecies().put(TheName, AG);
@@ -360,6 +369,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					// add name to array of species
 					OS.getSpeciesNames().add(TheName);
 					OS.getAGLoaded().put(TheName, true);
+					OS.getGenomeDescriptions().put(TheName, AG.getTextDescription());
 
 					// update progress bar
 					OrgCounter++;
@@ -725,6 +735,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	}
 
 	public void InitializeData(){
+		
+		// ===== Import parameters ======== //
+		
 		//GFF files
 		GFFIncludeTypes = new LinkedList<String>();
 		GFFIncludeTypes.add("CDS");
@@ -740,6 +753,25 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		GBKIncludeTypes.add("Test!");
 		
 		GBKDisplayTypes = new LinkedList<String>();
+		
+		// ===== Popular Genome Sets ======== //
+		
+		//add names
+		MG_Halos.setName(strHalos);
+		MG_Chloroviruses.setName(strChloroviruses);
+		MG_Myxo.setName(strMyxo);
+		
+		//add entries
+		PopularGenomeSets.put(MG_Halos, "");
+		PopularGenomeSets.put(MG_Chloroviruses, "");
+		PopularGenomeSets.put(MG_Myxo, "");
+		
+		//add action listener
+		for (JMenuItem j : PopularGenomeSets.keySet()){
+			j.addActionListener(this);
+		}
+		
+		
 	}
 	
 	public Jpan_MotifOptions getPanMotifOptions() {
@@ -1145,15 +1177,15 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_ManageGS.addActionListener(this);
 		
 		//Current genome set
-		KeyStroke Cstroke = KeyStroke.getKeyStroke(KeyEvent.VK_C, 
+		KeyStroke Gstroke = KeyStroke.getKeyStroke(KeyEvent.VK_G, 
 				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-		MG_ManageCurrentGS.setAccelerator(Cstroke);
+		MG_ManageCurrentGS.setAccelerator(Gstroke);
 		MG_ManageCurrentGS.addActionListener(this);
 		
 		MG_ImportGS = new JMenuItem("Import Genome Set from .GS File");
 		MG_AddGenomes = new JMenu("Import Genomes into current Genome Set");
 		MG_Files = new JMenuItem("From Genbank or .GFF Files");
-		MG_AccessionID = new JMenuItem ("From a list of Genbank IDs");
+		MG_AccessionID = new JMenuItem ("Directly from NCBI Databases");
 		MG_Ncbi = new JMenuItem("Browse NCBI available genomes by organism name");
 		MG_NcbiTax = new JMenuItem("Launch NCBI microbial taxonomy browser");
 		MG_AddGenomes.add(MG_Files);
@@ -1194,19 +1226,19 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_ImportSettings = new JMenu("Import Settings");
 		MG_GFF = new JMenuItem(".GFF Files ");
 		MG_Genbank = new JMenuItem("Genbank Files");
-		MG_GS = new JMenuItem(".GS Files");
-		MG_ImportSettings.add(MG_GS);
+		MG_NcbiSettings = new JMenuItem("NCBI Database query settings");
 		MG_ImportSettings.add(MG_GFF);
 		MG_ImportSettings.add(MG_Genbank);
+		MG_ImportSettings.add(MG_NcbiSettings);
 	
 		MG_GFF.addActionListener(this);
 		MG_Genbank.addActionListener(this);
 		
 		//Popular sets
 		MG_PopularSets = new JMenu("Retrieve Popular Genome Set");
-		MG_Halos = new JMenuItem("Halophilic Archaea");
-		MG_Chloroviruses = new JMenuItem("Chloroviruses");
-		MG_Myxo = new JMenuItem("Myxococcux Xanthus");
+		MG_Halos = new JMenuItem(strHalos);
+		MG_Chloroviruses = new JMenuItem(strChloroviruses);
+		MG_Myxo = new JMenuItem(strMyxo);
 		MG_PopularSets.add(MG_Halos);
 		MG_PopularSets.add(MG_Chloroviruses);
 		MG_PopularSets.add(MG_Myxo);
@@ -1236,7 +1268,18 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		ML_DissMeas = new JMenuItem("Dissimilarity Measure");
 		ML_Phylo = new JMenuItem("Phylogenetic Tree");
 		ML_Motifs = new JMenuItem("Sequence Motifs");
-			
+
+		ML_ContextSet.addActionListener(this);
+		ML_DissMeas.addActionListener(this);
+	
+		//Load phylogenetic tree
+		KeyStroke Pstroke = KeyStroke.getKeyStroke(KeyEvent.VK_P, 
+			Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		ML_Phylo.setAccelerator(Pstroke);
+		ML_Phylo.addActionListener(this);
+	
+		ML_Motifs.addActionListener(this);
+		
 		//add to menu
 		M_Load.add(HomologyClusterMenu);
 		M_Load.add(GeneIDs);
@@ -1244,12 +1287,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		M_Load.add(ML_DissMeas);
 		M_Load.add(ML_Phylo);
 		M_Load.add(ML_Motifs);
-			
-		ML_ContextSet.addActionListener(this);
-		ML_DissMeas.addActionListener(this);
-		ML_Phylo.addActionListener(this);
-		ML_Motifs.addActionListener(this);
-		
+
 		//Export menu
 		M_Export = new JMenu("Export");
 		JMenuItem GWS = new JMenuItem("Genome Set");
@@ -1302,7 +1340,12 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Current genome set
 		if (evt.getSource().equals(MG_ManageCurrentGS)){
-			System.out.println("TODO: Current Genome Set");
+			if (getOS() != null){
+				new CurrentGenomeSet(this);
+			} else {
+				this.NoOS();
+			}
+
 		}
 		
 		//Import from .GS file
@@ -1425,6 +1468,15 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 		}
 		
+		//Load Popular genome set
+		for (JMenuItem j : PopularGenomeSets.keySet()){
+			if (j.equals(evt.getSource())){
+				
+				//TODO: Import data from internet!!
+				System.out.println("Picked " + j.getName());
+			}
+		}
+		
 		/*
 		 * LOAD
 		 */
@@ -1453,6 +1505,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		 * WEB-RELATED
 		 */
 		
+		//Launch NCBI genome search window
 		if (evt.getSource().equals(MG_Ncbi)){
 			try {
 								
@@ -1471,6 +1524,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			}
 		}
 		
+		//Launch NCBI taxonomy browser
 		if (evt.getSource().equals(MG_NcbiTax)){
 			try {
 				

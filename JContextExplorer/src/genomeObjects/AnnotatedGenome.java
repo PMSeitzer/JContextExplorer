@@ -25,6 +25,7 @@ public class AnnotatedGenome implements Serializable {
 	private LinkedList<String> GFFIncludeTypes;					//-Types of data worth importing/processing
 	private LinkedList<String> GFFDisplayTypes;
 	private boolean AGClustersLoaded = false;
+	private String TextDescription;								//-Info about the genome
 	
 // ----------------------- Construction ------------------------//
       
@@ -44,6 +45,11 @@ public void importFromGFFFile(String filename){
 			BufferedReader br = new BufferedReader(new FileReader(filename));
 			String Line = null;
 			int Counter = 0;
+			
+			//Information for statistics - type counts
+			LinkedHashMap<String, Integer> Counts 
+				= new LinkedHashMap<String, Integer>();
+			HashSet<String> ContigCount = new HashSet<String>();
 			
 			while((Line = br.readLine()) != null){
 				
@@ -124,10 +130,35 @@ public void importFromGFFFile(String filename){
 							//add to list
 							Elements.add(E);
 							
+							//Record counts of types
+							if (Counts.get(E.getType()) != null){
+								int OldCount = Counts.get(E.getType());
+								Counts.put(E.getType(),(OldCount+1));
+							} else {
+								Counts.put(E.getType(), 1);
+							}
+							
+							//Record counts of contigs
+							ContigCount.add(E.getContig());
+							
 						} catch (Exception ex) {}
 
 					}
 			}
+			
+			//Convert feature counts to string, for display.
+			//Number of contigs / plasmids / chromosomes
+			TextDescription = "Sequences (" + String.valueOf(ContigCount.size()) + "):\n";
+			for (String s : ContigCount){
+				TextDescription = TextDescription + s + "\n";
+			}
+
+			//Feature tabulation
+			TextDescription = TextDescription + "\nFeature Types (" + String.valueOf(Counts.values().size()) + "):\n";
+			for (String s : Counts.keySet()){
+				TextDescription = TextDescription + s + " (" + String.valueOf(Counts.get(s)) + ")\n";
+			}
+			
 			br.close();		
 			
 		}catch(Exception ex){
@@ -1302,6 +1333,14 @@ public boolean isAGClustersLoaded() {
 
 public void setAGClustersLoaded(boolean aGClustersLoaded) {
 	AGClustersLoaded = aGClustersLoaded;
+}
+
+public String getTextDescription() {
+	return TextDescription;
+}
+
+public void setTextDescription(String textDescription) {
+	TextDescription = textDescription;
 }
 
 //-----------------------Deprecated ----------------------//
