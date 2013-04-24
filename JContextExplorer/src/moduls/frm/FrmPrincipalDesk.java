@@ -230,6 +230,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenuItem ML_DissMeas;
 	private JMenuItem ML_Phylo;
 	private JMenuItem ML_Motifs;
+	private JMenuItem ML_HomologyClusterMenu;
+	private JMenuItem ML_GeneIDs;
+	
+	//export components
+	private JMenuItem ME_GWS;
+	private JMenuItem ME_GFFs;
+	private JMenuItem ME_Genbanks;
+	private JMenuItem ME_Clusters;
 	
 	// ----- Classes --------------------------------------------------//
 	
@@ -409,6 +417,32 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		}
 		
 		//post-processing
+		public void done(){
+			
+		}
+	}
+	
+	//load genome IDs / homology clusters
+	public class LoadTagsWorker extends SwingWorker<Void, Void>{
+
+		//Fields
+		protected File SourceFile;
+		protected boolean isClusters;
+		
+		//constructor
+		public LoadTagsWorker(File f, boolean isClusters){
+			this.SourceFile = f;
+			this.isClusters = isClusters;	//true = clusters, false = gene IDs
+		}
+		
+		//background
+		@Override
+		protected Void doInBackground() throws Exception {
+
+		return null;	
+		}
+		
+		//done
 		public void done(){
 			
 		}
@@ -1159,15 +1193,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_NoGS.setSelected(false);
 		MG_NoGS.setEnabled(false);
 		AvailableOSCheckBoxMenuItems.add(MG_NoGS);
-		//TODO: Available
 		MG_ManageGS = new JMenuItem("Manage Genome Sets");
 		MG_CurrentGS.add(MG_NoGS);
 		MG_ManageCurrentGS = new JMenuItem("Current Genome Set");
 		
-		//Key stroke shortcuts
-		KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_N, 
+		//New genome set
+		KeyStroke Nstroke = KeyStroke.getKeyStroke(KeyEvent.VK_N, 
 				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-		MG_NewGS.setAccelerator(stroke);
+		MG_NewGS.setAccelerator(Nstroke);
 		MG_NewGS.addActionListener(this);
 		
 		//Manage sets
@@ -1192,7 +1225,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_AddGenomes.add(MG_AccessionID);
 		//MG_AddGenomes.add(MG_Ncbi);
 
-		//Current genome set
+		//Import a genome set (.gs)
 		KeyStroke Istroke = KeyStroke.getKeyStroke(KeyEvent.VK_I, 
 				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
 		MG_ImportGS.setAccelerator(Istroke);
@@ -1262,8 +1295,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		M_Load = new JMenu("Load");
 			
 		//Components
-		JMenuItem HomologyClusterMenu = new JMenuItem("Homology Clusters");
-		JMenuItem GeneIDs = new JMenuItem("Gene IDs");
+		ML_HomologyClusterMenu = new JMenuItem("Homology Clusters");
+		ML_GeneIDs = new JMenuItem("Gene IDs");
 		ML_ContextSet = new JMenuItem("Context Set");
 		ML_DissMeas = new JMenuItem("Dissimilarity Measure");
 		ML_Phylo = new JMenuItem("Phylogenetic Tree");
@@ -1271,6 +1304,18 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 		ML_ContextSet.addActionListener(this);
 		ML_DissMeas.addActionListener(this);
+		
+		//Load homology clusters
+		KeyStroke Hstroke = KeyStroke.getKeyStroke(KeyEvent.VK_U, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		ML_HomologyClusterMenu.setAccelerator(Hstroke);
+		ML_HomologyClusterMenu.addActionListener(this);
+		
+		//Load gene IDs
+		KeyStroke Dstroke = KeyStroke.getKeyStroke(KeyEvent.VK_D, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		ML_GeneIDs.setAccelerator(Dstroke);
+		ML_GeneIDs.addActionListener(this);
 	
 		//Load phylogenetic tree
 		KeyStroke Pstroke = KeyStroke.getKeyStroke(KeyEvent.VK_P, 
@@ -1281,8 +1326,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		ML_Motifs.addActionListener(this);
 		
 		//add to menu
-		M_Load.add(HomologyClusterMenu);
-		M_Load.add(GeneIDs);
+		M_Load.add(ML_HomologyClusterMenu);
+		M_Load.add(ML_GeneIDs);
 		M_Load.add(ML_ContextSet);
 		M_Load.add(ML_DissMeas);
 		M_Load.add(ML_Phylo);
@@ -1290,15 +1335,21 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 		//Export menu
 		M_Export = new JMenu("Export");
-		JMenuItem GWS = new JMenuItem("Genome Set");
-		JMenuItem GFFs = new JMenuItem("Genomes as GFF files");
-		JMenuItem Genbanks = new JMenuItem("Genomes as Genbank files");
-		JMenuItem Clusters = new JMenuItem("Homology Clusters");
-			
-		M_Export.add(GWS);
-		M_Export.add(GFFs);
-		M_Export.add(Genbanks);
-		M_Export.add(Clusters);
+		ME_GWS = new JMenuItem("Genome Set");
+		ME_GFFs = new JMenuItem("Genomes as GFF files");
+		ME_Genbanks = new JMenuItem("Genomes as Genbank files");
+		ME_Clusters = new JMenuItem("Homology Clusters");
+		
+		//New genome set
+		KeyStroke Xstroke = KeyStroke.getKeyStroke(KeyEvent.VK_X, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		ME_GFFs.setAccelerator(Xstroke);
+		ME_GFFs.addActionListener(this);
+		
+		M_Export.add(ME_GWS);
+		M_Export.add(ME_GFFs);
+		M_Export.add(ME_Genbanks);
+		M_Export.add(ME_Clusters);
 			
 		//Help menu
 		M_Help = new JMenu("Help");
@@ -1542,6 +1593,40 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 						"NCBI Website Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}
+		
+		/*
+		 * EXPORT
+		 */
+		if (evt.getSource().equals(ME_GFFs)){
+			
+			// initialize output
+			JFileChooser ExportGenomes = new JFileChooser();
+			
+			ExportGenomes.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			ExportGenomes
+					.setDialogTitle("Select a Directory for Export");
+
+			//retrieve directory
+			if (this.FileChooserSource != null) {
+				ExportGenomes.setCurrentDirectory(FileChooserSource);
+			} else {
+				ExportGenomes.setCurrentDirectory(new File("."));
+			}
+		
+			ExportGenomes.showOpenDialog(ExportGenomes);
+			
+			//File Path
+			String DirName = "";
+			
+			// note current directory for next time
+			if (ExportGenomes.getCurrentDirectory() != null) {
+				this.FileChooserSource = ExportGenomes.getCurrentDirectory();
+			}
+			DirName = ExportGenomes.getCurrentDirectory().getPath();
+			this.getOS().ExportExtendedGFFFile(DirName);
+			
+		}
+		
 	}
 
 	public LinkedList<String> getGFFIncludeTypes() {

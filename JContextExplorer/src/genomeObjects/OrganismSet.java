@@ -789,9 +789,9 @@ public class OrganismSet implements Serializable{
 	//------------------------- Export --------------------------------//
 	
 	//extend the basic genomic information in the organism set as .GFF file
-	public void ExportExtendedGFFFile(){
+	public void ExportExtendedGFFFile(String DirName){
 		
-		String DirName = "/Users/phillipseitzer/Documents/Halophiles_2012/EightyHalophiles/ExtendedAnnotations";
+		//String DirName = "/Users/phillipseitzer/Documents/Halophiles_2012/EightyHalophiles/ExtendedAnnotations";
 		
 		for (String s : this.Species.keySet()){
 			String FileName = DirName + "/" + s + ".gff";

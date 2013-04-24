@@ -726,13 +726,15 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		contexts = mf.getCSD().getEC().getContexts();
 		SourceSpecies = mf.getCSD().getEC().getSourceSpeciesNames();
 		SourceContigs = mf.getCSD().getEC().getSourceContigNames();
-		//ECRONType = mf.getCSD().getEC().getSearchType();
 		
-		if (mf.getOS().isGeneClustersLoaded()){
-			ECRONType = "cluster";
-		} else {
-			ECRONType = "annotation";
-		}
+		//What to do about this? should the display type possibly be an option?
+		ECRONType = mf.getCSD().getEC().getSearchType();
+				
+//		if (mf.getOS().isGeneClustersLoaded()){
+//			ECRONType = "cluster";
+//		} else {
+//			ECRONType = "annotation";
+//		}
 		
 		int LongestRange = 0; 
 		
@@ -1224,6 +1226,9 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	        
 	        
 		} else if (ECRONType.equals("cluster")){
+			
+			//Debugging
+			//System.out.println("Type is cluster!!");
 			
 			//define a new counting array
 			Count<Integer, Integer> AnnColors = new Count<Integer, Integer>();

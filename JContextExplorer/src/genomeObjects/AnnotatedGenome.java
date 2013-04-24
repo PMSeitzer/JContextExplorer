@@ -26,6 +26,7 @@ public class AnnotatedGenome implements Serializable {
 	private LinkedList<String> GFFDisplayTypes;
 	private boolean AGClustersLoaded = false;
 	private String TextDescription;								//-Info about the genome
+	private String GenbankID;
 	
 // ----------------------- Construction ------------------------//
       
@@ -1341,6 +1342,14 @@ public String getTextDescription() {
 
 public void setTextDescription(String textDescription) {
 	TextDescription = textDescription;
+}
+
+public String getGenbankID() {
+	return GenbankID;
+}
+
+public void setGenbankID(String genbankID) {
+	GenbankID = genbankID;
 }
 
 //-----------------------Deprecated ----------------------//

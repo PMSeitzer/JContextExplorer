@@ -41,8 +41,9 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 	private String strLoadPhyTreeBanner = " LOAD A PHYLOGENETIC TREE";
 	private JButton btnPhyTree;
 	private String strPhyTree = "Load";
-	private JTextField CurrentTree;
+	private JTextField CurrentTree, TreeType;
 	private String strCurrentTree = " Current Tree: ";
+	private String strTreeType = " Tree Type:";
 	private JLabel CurrentlyEnabledBanner;
 	private String strCurrentlyEnabledBanner = " AVAILABLE PHYLOGENETIC TREES";
 	private JComboBox<String> menuLoadedPhyTrees;
@@ -51,8 +52,11 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 	
 	private JLabel DisplayOptionsBanner;
 	private String strDisplayOptions = " PHYLOGENETIC TREE DISPLAY OPTIONS";
-	private ButtonGroup PhyloDisplayOptions;
+	private ButtonGroup PhyloDisplayOptions, PhyloTreeType;
 	private JRadioButton radCladogram, radPhylogram;
+	private JRadioButton radSpecies, radGene;
+	private String strSpecies = "Species Tree";
+	private String strGene = "Gene Tree";
 	private JCheckBox chkDashed, chkWeights;
 	private String strCladogram = "Cladogram";
 	private String strPhylogram = "Phylogram";
@@ -164,12 +168,54 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 		add(btnRemoveSelectedPhyTree,c);
 		gridy++;
 		
+		//Currently Loaded tree tag
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.NONE;
+		c.gridwidth = 1;
+		TreeType = new JTextField(strTreeType);
+		TreeType.setFont(fontStandard);
+		TreeType.setEditable(false);
+		add(TreeType,c);
+		gridy++;
+		
+		//define button group
+		PhyloTreeType = new ButtonGroup();
+		radSpecies = new JRadioButton(strSpecies);
+		radGene = new JRadioButton(strGene);
+		PhyloTreeType.add(radSpecies);
+		PhyloTreeType.add(radGene);
+		
+		//Tree option 1: Species Tree
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		radSpecies.setSelected(true);
+		radSpecies.addActionListener(this);
+		add(radSpecies, c);
+		
+		//Tree option 2: Gene Tree
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(1,1,10,1);
+		c.gridwidth = 1;
+		radGene.setSelected(false);
+		radGene.addActionListener(this);
+		add(radGene, c);
+		gridy++;
+		
 		//Display Options banner
 		c.gridx = 0;
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 4;
+		c.insets = new Insets(0,0,0,0);
 		DisplayOptionsBanner = new JLabel(strDisplayOptions);
 		DisplayOptionsBanner.setBackground(Color.GRAY);
 		DisplayOptionsBanner.setOpaque(true);
@@ -177,7 +223,6 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 		add(DisplayOptionsBanner,c);
 		gridy++;
 		
-
 		//define button group
 		PhyloDisplayOptions = new ButtonGroup();
 		radCladogram = new JRadioButton(strCladogram);
@@ -469,6 +514,22 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 
 	public void setMenuLoadedPhyTrees(JComboBox<String> menuLoadedPhyTrees) {
 		this.menuLoadedPhyTrees = menuLoadedPhyTrees;
+	}
+
+	public JRadioButton getRadSpecies() {
+		return radSpecies;
+	}
+
+	public void setRadSpecies(JRadioButton radSpecies) {
+		this.radSpecies = radSpecies;
+	}
+
+	public JRadioButton getRadGene() {
+		return radGene;
+	}
+
+	public void setRadGene(JRadioButton radGene) {
+		this.radGene = radGene;
 	}
 
 }

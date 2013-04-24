@@ -588,9 +588,15 @@ public class FrmPhylo extends JPanel implements MouseListener{
 			if (e.isShiftDown() == true || e.isControlDown() == true){
 				for (ContextLeaf CL : CSD.getGraphicalContexts()){
 					for (int i = 0; i < CSD.getPhyloNodeNames().length; i++){
-						if (CL.getSourceSpecies().equals(CSD.getPhyloNodeNames()[i])){
-							SelectedAfterClick[i] = CL.isSelected();
-							break;
+						//Species Tree
+						if (fr.getPanPhyTreeMenu().getRadSpecies().isSelected()){
+							if (CL.getSourceSpecies().equals(CSD.getPhyloNodeNames()[i])){
+								SelectedAfterClick[i] = CL.isSelected();
+								break;
+							}
+						//Gene Tree
+						} else {
+							
 						}
 					}
 				}
@@ -641,9 +647,17 @@ public class FrmPhylo extends JPanel implements MouseListener{
 				
 				//option to re-select?
 				for (int i = 0; i < CSD.getPhyloNodeNames().length; i++){
-					if (CL.getSourceSpecies().equals(CSD.getPhyloNodeNames()[i])){
-						CL.setSelected(SelectedAfterClick[i]);
+					
+					//Species Tree
+					if (fr.getPanPhyTreeMenu().getRadSpecies().isSelected()){
+						if (CL.getSourceSpecies().equals(CSD.getPhyloNodeNames()[i])){
+							CL.setSelected(SelectedAfterClick[i]);
+						}
+					//Gene Tree	
+					} else {
+						
 					}
+					
 				}
 			}
 			
