@@ -93,7 +93,7 @@ public class Fig_Pizarra {
 			posNodes = val_Max_show;
 		}
 		Branca(abre, cf.getConfigMenu().isFranjaVisible()); //branch
-		construeixMatriuUltrametrica(c);
+		construeixMatriuUltrametrica(c, false);
 	}
 
 	public Fig_Pizarra(Tree ImportedNewickTree, final Config cf) throws Exception {
@@ -114,7 +114,9 @@ public class Fig_Pizarra {
 			posNodes = val_Max_show;
 		}
 		Branca(abre, cf.getConfigMenu().isFranjaVisible()); //branch
-		construeixMatriuUltrametrica(c);
+		
+		//time-consuming point!
+		construeixMatriuUltrametrica(c, true);
 		
 		//save the value as a field.
 		this.ComputedRootCluster = c;
@@ -405,7 +407,7 @@ public class Fig_Pizarra {
 	}
 
 	//			build ultrametric matrix
-	public void construeixMatriuUltrametrica(Cluster c) {
+	public void construeixMatriuUltrametrica(Cluster c, boolean isPhylo) {
 		List<Cluster> lFills = c.getLstFills();
 		List<String> lNoms = new LinkedList<String>();
 		for (int i = 0; i < lFills.size(); i++)
@@ -421,7 +423,11 @@ public class Fig_Pizarra {
 
 		}
 
-		ompleMatriuUltrametrica(c);
+		//Only need to fill matrix when computing contex tree.
+		if (!isPhylo){
+			ompleMatriuUltrametrica(c);
+		}
+
 	}
 
 	//			 fill ultrametric matrix

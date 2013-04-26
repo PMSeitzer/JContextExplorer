@@ -41,13 +41,18 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.URL;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -180,8 +185,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		= new LinkedList<JCheckBoxMenuItem>();
 //	private ButtonGroup bg = new ButtonGroup();
 	
-	private LinkedHashMap<JMenuItem, String> PopularGenomeSets =
-			new LinkedHashMap<JMenuItem, String>();
+	private LinkedHashMap<JCheckBoxMenuItem, String> PopularGenomeSets =
+			new LinkedHashMap<JCheckBoxMenuItem, String>();
 	
 	//private ButtonGroup AvailableOSCheckBoxMenuItems = new ButtonGroup();
 	//Import related
@@ -218,9 +223,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	
 	//popular sets
 	private JMenu MG_PopularSets;
-	private JMenuItem MG_Halos;
-	private JMenuItem MG_Myxo;
-	private JMenuItem MG_Chloroviruses;
+	private JCheckBoxMenuItem MG_Halos;
+	private JCheckBoxMenuItem MG_Myxo;
+	private JCheckBoxMenuItem MG_Chloroviruses;
 	private String strHalos = "Halophilic Archaea";
 	private String strMyxo = "Myxococcus";
 	private String strChloroviruses = "Chloroviruses";
@@ -587,6 +592,39 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	}
 	
+	//Import Organism Set from web - store locally in file on computer,
+	//then import as usual.
+	public void ImportPopularSet(JCheckBoxMenuItem m, boolean AddToCurrent){
+		
+		//Retrieve info		
+		File f = new File(m.getName());
+		String strURL = PopularGenomeSets.get(m);
+		GenomeSetFiles.put(m.getName(), f);
+		
+
+	}
+	
+	//Import a popular set and store it as a file on your computer.
+	public void StorePopularSetAsFile(String strURL, File OrgFile){
+		
+		try
+	      {	
+
+			URL GbURL = new URL(strURL);
+			InputStream is = GbURL.openStream();
+			BufferedReader br = new BufferedReader(new InputStreamReader(is));
+			FileWriter fw = new FileWriter(OrgFile);
+			String s = null;
+			while ( (s = br.readLine()) != null ){
+				fw.write(s + "\n");
+			}
+	         
+	      }catch(Exception ex) {
+	         ex.printStackTrace();  
+	      }
+		
+	}
+	
 	//Method to switch between two OS (files already exist)
 	@SuppressWarnings("unchecked")
 	public void SwitchBetweenOS(String FirstOS, String SecondOS){
@@ -795,7 +833,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_Chloroviruses.setName(strChloroviruses);
 		MG_Myxo.setName(strMyxo);
 		
-		//add entries
+		//add entries - URLs
 		PopularGenomeSets.put(MG_Halos, "");
 		PopularGenomeSets.put(MG_Chloroviruses, "");
 		PopularGenomeSets.put(MG_Myxo, "");
@@ -1269,9 +1307,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Popular sets
 		MG_PopularSets = new JMenu("Retrieve Popular Genome Set");
-		MG_Halos = new JMenuItem(strHalos);
-		MG_Chloroviruses = new JMenuItem(strChloroviruses);
-		MG_Myxo = new JMenuItem(strMyxo);
+		MG_Halos = new JCheckBoxMenuItem(strHalos);
+		MG_Chloroviruses = new JCheckBoxMenuItem(strChloroviruses);
+		MG_Myxo = new JCheckBoxMenuItem(strMyxo);
 		MG_PopularSets.add(MG_Halos);
 		MG_PopularSets.add(MG_Chloroviruses);
 		MG_PopularSets.add(MG_Myxo);
@@ -1520,11 +1558,57 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		}
 		
 		//Load Popular genome set
-		for (JMenuItem j : PopularGenomeSets.keySet()){
+		for (JCheckBoxMenuItem j : PopularGenomeSets.keySet()){
 			if (j.equals(evt.getSource())){
+
+				//Message
+				String Msg = "Would you like to switch to this genomic set,\n"+
+						"or import the contents of this genomic set into the current genomic set?";
 				
-				//TODO: Import data from internet!!
-				System.out.println("Picked " + j.getName());
+				//Show dialog
+				int Option = JOptionPane.showOptionDialog(null, 
+				        Msg, 
+				        "Feedback", 
+				        JOptionPane.YES_NO_CANCEL_OPTION, 
+				        JOptionPane.INFORMATION_MESSAGE, 
+				        null, 
+				        new String[]{"Cancel", "Add to Current Set", "Switch Sets"}, // option types
+				        "default");
+				
+				//parse options
+				if (Option != JOptionPane.YES_OPTION){ //Cancel
+					if (Option == JOptionPane.NO_OPTION){ //Add
+						System.out.println("Add");
+					} else {
+						System.out.println("Switch"); // Switch
+					}
+				}
+				
+				//Cancel option
+				if (Option == JOptionPane.YES_OPTION){
+					j.setSelected(false);
+				}
+				
+				//Add
+				if (Option == JOptionPane.NO_OPTION){
+					ImportPopularSet(j, true);
+				}
+				
+				//Switch
+				if (Option == JOptionPane.CANCEL_OPTION){
+					//Update menu bar
+					for (JCheckBoxMenuItem q : PopularGenomeSets.keySet()){
+						if (q != j){
+							q.setSelected(false);
+						}
+					}
+					
+					//Import set, and simultaneously switch sets to this new set.
+					ImportPopularSet(j, false);
+				}
+				
+				//Debugging
+				//System.out.println("Picked " + j.getName());
 			}
 		}
 		

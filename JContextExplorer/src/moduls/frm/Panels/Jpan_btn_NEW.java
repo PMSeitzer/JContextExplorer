@@ -168,7 +168,10 @@ import definicions.MatriuDistancies;
 		//parameters associated with phylo tree
 		private double PhyloTreeLength;
 		private int PhyloTreeLeaves;
-				
+	
+	// ----- New Fields (1.2) --------------------------------------------//
+		private int ScrollInc = 30;
+		
 	// ----- Methods -----------------------------------------------//	
 		
 		// ---- Thread Workers for Searches ------------------------//
@@ -1737,6 +1740,7 @@ import definicions.MatriuDistancies;
 					fPizSP = new JScrollPane(fPiz);
 					fPizSP.setSize(pizarra.getSize());
 					fPizSP.setPreferredSize(pizarra.getSize());
+					fPizSP.getVerticalScrollBar().setUnitIncrement(ScrollInc);
 					
 					//update CSD with context tree rectangles
 					CSD = fPiz.getCSD();
@@ -1830,6 +1834,7 @@ import definicions.MatriuDistancies;
 						
 						//scroll panel
 						fPhyloSP = new JScrollPane(fPhylo);
+						fPhyloSP.getVerticalScrollBar().setUnitIncrement(ScrollInc);
 						
 						//update CSD with phylogenetic tree rectangles
 						CSD = fPhylo.getCSD();
