@@ -1217,7 +1217,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		
 		//REMOVE BUTTON
 		if (evt.getSource().equals(btnRemoveCS)){
-			if (fr.getOS().getCSDs().size() > 1){
+			if (!contextSetMenu.getSelectedItem().equals("SingleGene")){
 				
 				try {
 					
@@ -1270,8 +1270,8 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 				
 				//remove the one and only context set
 				 JOptionPane.showMessageDialog(null, 
-						 "Unable to remove - please retain at least one context set at all times.",
-						 "Retain One or More Context Sets",JOptionPane.ERROR_MESSAGE);
+						 "Unable to remove this context set.",
+						 "SingleGene Context Set",JOptionPane.ERROR_MESSAGE);
 				
 			}
 		} else if (evt.getSource().equals(btnOK)){

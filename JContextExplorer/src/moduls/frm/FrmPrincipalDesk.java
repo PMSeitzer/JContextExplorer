@@ -45,6 +45,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -75,6 +76,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
@@ -244,6 +246,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenuItem ME_Genbanks;
 	private JMenuItem ME_Clusters;
 	
+	//help components
+	private JMenuItem MH_Manual;
+	private JMenuItem MH_Video; 
+	private JMenuItem MH_DataSets;
 	// ----- Classes --------------------------------------------------//
 	
 	//genomes from files filter
@@ -296,22 +302,38 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			}
 			
 			
-			//Modify this!!
+			//create default single gene set
 			if (MissingSingleGene){
 				
 				//add to OS
 				ContextSetDescription CSD = new ContextSetDescription();
 				CSD.setName("SingleGene");
-				CSD.setPreprocessed(true);
-				CSD.setType("IntergenicDist");
+				CSD.setType("SingleGene");
+				CSD.setPreprocessed(false);
 				OS.getCSDs().add(CSD);
 				
 				//add to menu
 				panBtn.getContextSetMenu().addItem("SingleGene");
 				panBtn.getContextSetMenu().removeItem("<none>");
+				
+//				//DEBUGGING!!
+//				
+//				//BUGGY - but, almost there! another day or two should have it.
+//				//add to OS
+//				CSD = new ContextSetDescription();
+//				CSD.setName("OperonTest");
+//				CSD.setType("Operons-NR");
+//				CSD.setPreprocessed(false);
+//				CSD.setNeedSameStrand(true);
+//				CSD.setIntGenSpacing(50);
+//				OS.getCSDs().add(CSD);
+//				
+//				//add to menu
+//				panBtn.getContextSetMenu().addItem("OperonTest");
 			}
 			
 			return null;
+
 		}
 		
 		//post-import
@@ -324,6 +346,12 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			panBtn.getProgressBar().setString("");
 			panBtn.getProgressBar().setBorderPainted(false);
 			panBtn.getProgressBar().setValue(0);
+			
+			//enable components
+			OSMenuComponentsEnabled(true);
+			
+			//UI update
+			SwingUtilities.updateComponentTreeUI(getRootPane());
 			
 		}
 		
@@ -443,14 +471,375 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//background
 		@Override
 		protected Void doInBackground() throws Exception {
-
+			if (isClusters){
+				LoadHomologyClusters();
+			} else {
+				LoadGeneIDs();
+			}
 		return null;	
+		}
+		
+		//Load homology clusters
+		public void LoadHomologyClusters(){
+			int LineCounter = 0;
+			int clusterProgress = 0;
+			setProgress(clusterProgress);
+
+			try {
+
+				// First: count lines in the file
+				// import buffered reader
+				BufferedReader br_count = new BufferedReader(
+						new FileReader(SourceFile));
+				int TotalLines = 0;
+
+				// count lines
+				while (br_count.readLine() != null) {
+					TotalLines++;
+				}
+
+				// Second: import/process lines in the file
+				// import buffered reader
+				BufferedReader br = new BufferedReader(new FileReader(
+						SourceFile));
+				String Line = null;
+				int ClusterNumCounter = 0;
+
+				while ((Line = br.readLine()) != null) {
+
+					// import each line
+					String[] ImportedLine = Line.split("\t");
+
+					// increment cluster counter.
+					ClusterNumCounter++;
+
+					// try to parse every line
+					try {
+						// Gene Name
+						if (ImportedLine.length == 1) {
+
+							// add cluster number
+							for (AnnotatedGenome AG : OS.getSpecies()
+									.values()) {
+								AG.addClusterNumber(
+										ImportedLine[0].replace("_ ", " "),
+										ClusterNumCounter);
+							}
+
+							// largest cluster designation is always the
+							// last
+							OS.LargestCluster = TotalLines;
+
+							// Gene Name - Cluster Number
+						} else if (ImportedLine.length == 2) {
+
+							// recover bioinfo
+							int GeneClusterNum = Integer
+									.parseInt(ImportedLine[1]);
+
+							// set largest cluster number
+							if (OS.LargestCluster < GeneClusterNum) {
+								OS.LargestCluster = GeneClusterNum;
+							}
+
+							// add cluster number
+							for (AnnotatedGenome AG : OS.getSpecies()
+									.values()) {
+								AG.addClusterNumber(
+										ImportedLine[0].replace("_", " "),
+										GeneClusterNum);
+							}
+
+							// Organism - Gene Name - Cluster Number
+						} else if (ImportedLine.length == 3) {
+
+							// recover bioinfo
+							int GeneClusterNum = Integer
+									.parseInt(ImportedLine[2]);
+
+							// set largest cluster number
+							if (OS.LargestCluster < GeneClusterNum) {
+								OS.LargestCluster = GeneClusterNum;
+							}
+
+							// add cluster number
+							OS.getSpecies()
+									.get(ImportedLine[0])
+									.addClusterNumber(
+											ImportedLine[1].replace("_",
+													" "), GeneClusterNum);
+
+							// Organism - Contig - Gene Name - Cluster
+							// Number
+						} else if (ImportedLine.length == 4) {
+
+							// recover bioinfo
+							int GeneClusterNum = Integer
+									.parseInt(ImportedLine[3]);
+
+							// set largest cluster number
+							if (OS.LargestCluster < GeneClusterNum) {
+								OS.LargestCluster = GeneClusterNum;
+							}
+
+							// add cluster number
+							OS.getSpecies()
+									.get(ImportedLine[0])
+									.addClusterNumber(
+											ImportedLine[1],
+											ImportedLine[2].replace("_",
+													" "), GeneClusterNum);
+
+							// Organism - Contig - Gene Start - Gene Stop -
+							// Cluster Number
+						} else if (ImportedLine.length == 5) {
+
+							// recover bioinfo
+							int GeneStart = Integer
+									.parseInt(ImportedLine[2]);
+							int GeneStop = Integer
+									.parseInt(ImportedLine[3]);
+							int GeneClusterNum = Integer
+									.parseInt(ImportedLine[4]);
+
+							// set largest cluster number
+							if (OS.LargestCluster < GeneClusterNum) {
+								OS.LargestCluster = GeneClusterNum;
+							}
+
+							// add cluster number
+							OS.getSpecies()
+									.get(ImportedLine[0])
+									.addClusterNumber(ImportedLine[1],
+											GeneStart, GeneStop,
+											GeneClusterNum);
+
+						} else {
+							throw new Exception();
+						}
+					} catch (Exception ex) {
+					}
+
+					// report to SwingWorker
+					LineCounter++;
+
+					// update progress
+					clusterProgress = (int) Math
+							.round(100 * ((double) LineCounter / (double) TotalLines));
+					setProgress(clusterProgress);
+
+				}
+
+			} catch (Exception ex) {
+
+				setProgress(0);
+
+				JOptionPane
+						.showMessageDialog(
+								null,
+								"The file could not be loaded or was improperly formatted.",
+								"Invalid File Format",
+								JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		
+		//Load gene IDs
+		public void LoadGeneIDs(){
+			
 		}
 		
 		//done
 		public void done(){
 			
+			//re-set cursor, progress bar
+			setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			
+			//reset progress bar
+			panBtn.getProgressBar().setString("");
+			panBtn.getProgressBar().setBorderPainted(false);
+			panBtn.getProgressBar().setValue(0);
+			
 		}
+	}
+	
+	//Export files of a particular type
+	public class ExportWorker extends SwingWorker<Void, Void>{
+
+		//Fields
+		protected String DirName;
+		
+		//constructor
+		public ExportWorker(String DirName){
+			this.DirName = DirName;
+		}
+		
+		@Override
+		protected Void doInBackground() throws Exception {
+			
+			//Initialize values
+			int clusterProgress = 0;
+			setProgress(clusterProgress);
+			double LineCounter = 0;
+			double TotalSpecies = OS.getSpecies().size();
+			
+			//iterate through species
+			for (String s : OS.getSpecies().keySet()){
+				String FileName = DirName + "/" + s + ".gff";
+				AnnotatedGenome AG = OS.getSpecies().get(s);
+				AG.ExportExtendedGFFFile(FileName);
+				LineCounter++;
+				
+				// update progress
+				clusterProgress = (int) Math
+						.round(100 * ((double) LineCounter / (double) TotalSpecies));
+				setProgress(clusterProgress);
+			}
+			
+			return null;
+		}
+		
+		//done
+		public void done(){
+			
+			//re-set cursor, progress bar
+			setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			
+			//reset progress bar
+			panBtn.getProgressBar().setString("");
+			panBtn.getProgressBar().setBorderPainted(false);
+			panBtn.getProgressBar().setValue(0);
+			
+		}
+		
+	}
+	
+	//Switch between genome sets
+	public class SwitchWorker extends SwingWorker<Void, Void>{
+
+		//Fields
+		public String FirstOS;
+		public String SecondOS;
+		
+		//Constructor
+		public SwitchWorker(String FirstOS, String SecondOS){
+			this.FirstOS = FirstOS;
+			this.SecondOS = SecondOS;
+		}
+		
+		@Override
+		protected Void doInBackground() throws Exception {
+
+			//switch progressbar
+			getPanBtn().getProgressBar().setIndeterminate(true);
+			
+			//switch cursor
+			Component glassPane = getRootPane().getGlassPane();
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			glassPane.setVisible(true);
+			
+			//UI update
+			SwingUtilities.updateComponentTreeUI(getRootPane());
+			
+			setProgress(100);
+			
+			//Switch in OS
+			ExportSerializedOS(FirstOS);
+			GenomeSetFiles.put(OS.getName(), new File(OS.getName()));
+			OS = new OrganismSet();
+			ImportSerializedOS(SecondOS);
+
+			//Switch in menu
+			for (JCheckBoxMenuItem b : AvailableOSCheckBoxMenuItems){
+				if (b.getName().equals(SecondOS)){
+					b.setSelected(true);
+				} else{
+					b.setSelected(false);
+				}
+			}
+			
+			// ====== Context Set Menu ======//
+			
+			getPanBtn().getContextSetMenu().removeAllItems();
+			
+			if (OS.getCSDs().size() > 0){
+				for (ContextSetDescription CSD : OS.getCSDs()){
+					getPanBtn().getContextSetMenu().addItem(CSD.getName());
+				}
+			} else {
+				getPanBtn().getContextSetMenu().addItem("<none>");
+			}
+
+			// ====== Custom Dissimilarities ======//
+			
+			//Switch dissimilarities
+			getPan_Menu().getCbDissimilarity().removeAllItems();
+			
+			//add all custom dissimilarities
+			if (OS.getCustomDissimilarities().size() > 0){
+				for (CustomDissimilarity CD : OS.getCustomDissimilarities()){
+					getPan_Menu().getCbDissimilarity().addItem(CD.getName());
+				}
+			}
+			
+			//add fundamental dissimilarities
+			getPan_Menu().getCbDissimilarity().addItem("Common Genes - Dice");
+			getPan_Menu().getCbDissimilarity().addItem("Common Genes - Jaccard");
+			getPan_Menu().getCbDissimilarity().addItem("Moving Distances");
+			getPan_Menu().getCbDissimilarity().addItem("Total Length");
+			
+			// ====== Phylogenetic Trees ======//
+			
+			getPanPhyTreeMenu().setParsedPhyTrees(OS.getParsedPhyTrees());
+			getPanPhyTreeMenu().setLoadedPhyTrees(OS.getLoadedPhyTrees());	
+			if (OS.getLoadedPhyTrees().size() > 0){
+				getPanPhyTreeMenu().setFilePath(OS.getLoadedPhyTrees().get(0));
+			}
+			
+			//update GUI
+			getPanPhyTreeMenu().getMenuLoadedPhyTrees().removeAllItems();
+			String[] PhyTrees = getPanPhyTreeMenu().getLoadedPhyTrees();
+			if (PhyTrees.length > 0){
+				for (String s : PhyTrees){
+					getPanPhyTreeMenu().getMenuLoadedPhyTrees().addItem(s);
+				}
+			} else {
+				getPanPhyTreeMenu().getMenuLoadedPhyTrees().addItem("<none>");
+			}
+
+			// ====== Motif Menu ======//
+			
+			//Most motifs are in the actual organism sets, this simply adjusts the menu.
+			getPanMotifOptions().getMenuOfMotifs().removeAllItems();
+			if (OS.getMotifNames().size() > 0){
+				for (String s : OS.getMotifNames()){
+					getPanMotifOptions().getMenuOfMotifs().addItem(s);
+				}
+			} else{
+				getPanMotifOptions().getMenuOfMotifs().addItem("<none>");
+			}
+
+			//switch cursor
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			glassPane.setVisible(false);
+			
+			getPanBtn().getProgressBar().setIndeterminate(false);
+			
+			return null;
+		}
+		
+		//done
+		public void done(){
+			
+			//re-set cursor, progress bar
+			setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			
+			//reset progress bar
+			panBtn.getProgressBar().setString("");
+			panBtn.getProgressBar().setBorderPainted(false);
+			panBtn.getProgressBar().setValue(0);
+			
+		}
+		
 	}
 	
 	//Constructor
@@ -529,7 +918,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//disable components, if appropriate
 		if (OS == null){
-			NoOSMenuComponents(false);
+			OSMenuComponentsEnabled(false);
 		}
 
 	}
@@ -632,12 +1021,17 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//System.out.println("Switch!");
 		
 		//switch progressbar
+		this.getPanBtn().getProgressBar().setValue(100);
 		this.getPanBtn().getProgressBar().setIndeterminate(true);
+		this.getPanBtn().repaint();
 		
 		//switch cursor
 		Component glassPane = this.getRootPane().getGlassPane();
 		glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		glassPane.setVisible(true);
+		
+		//UI update
+		SwingUtilities.updateComponentTreeUI(getRootPane());
 		
 		//Switch in OS
 		ExportSerializedOS(FirstOS);
@@ -715,14 +1109,24 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			this.getPanMotifOptions().getMenuOfMotifs().addItem("<none>");
 		}
 
-		
 		//switch cursor
 		glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		glassPane.setVisible(false);
 		
 		//switch progressbar
+		this.getPanBtn().getProgressBar().setValue(0);
 		this.getPanBtn().getProgressBar().setIndeterminate(false);
 		
+		//UI update
+		SwingUtilities.updateComponentTreeUI(getRootPane());
+		
+	}
+	
+	//invoke swing worker, for progress bar stuff
+	public void CallSwitchWorker(String FirstOS, String SecondOS){
+		SwitchWorker SW = new SwitchWorker(FirstOS, SecondOS);
+		SW.addPropertyChangeListener(panBtn);
+		SW.execute();
 	}
 	
 	//when No OS loaded
@@ -746,9 +1150,11 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	}
 	
 	//activate/deactivate
-	public void NoOSMenuComponents(boolean SwitchPos){
+	public void OSMenuComponentsEnabled(boolean SwitchPos){
+
 		M_Load.setEnabled(SwitchPos);
 		M_Export.setEnabled(SwitchPos);
+
 	}
 	
 	//check heap size
@@ -1391,14 +1797,17 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			
 		//Help menu
 		M_Help = new JMenu("Help");
-		JMenuItem Manual = new JMenuItem("User's Manual");
-		JMenuItem Video = new JMenuItem("Video Tutorials");
-		JMenuItem DataSets = new JMenuItem("Existing Datasets");
+		MH_Manual = new JMenuItem("User's Manual");
+		MH_Video = new JMenuItem("Video Tutorials");
+		MH_DataSets = new JMenuItem("Existing Datasets");
 			
+		MH_Manual.addActionListener(this);
+		MH_Video.addActionListener(this);
+		
 		M_Help.addSeparator();
-		M_Help.add(Manual);
-		M_Help.add(Video);
-		M_Help.add(DataSets);
+		M_Help.add(MH_Manual);
+		M_Help.add(MH_Video);
+		M_Help.add(MH_DataSets);
 			
 		//Add sub-menus to top-level
 		MB.add(M_Genomes);
@@ -1504,7 +1913,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			LoadGenomesWorker LGW = new LoadGenomesWorker(GetGenomes.getSelectedFile());
 			LGW.addPropertyChangeListener(panBtn);
 			LGW.execute();
-			
+		
 		}
 		
 		//Add genomes from NCBI
@@ -1542,8 +1951,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				//If an appropriate name 
 				if (OSName != null){
 
-					this.SwitchBetweenOS(OS.getName(), OSName);
-					
+					//this.SwitchBetweenOS(OS.getName(), OSName);
+					this.CallSwitchWorker(OS.getName(), OSName);
 				}
 				
 			} else {
@@ -1616,6 +2025,37 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		 * LOAD
 		 */
 		
+		//load homology clusters or gene IDs
+		if (evt.getSource().equals(ML_HomologyClusterMenu)){
+			
+			// initialize output
+			JFileChooser GetHC = new JFileChooser();
+			
+			GetHC.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			GetHC
+					.setDialogTitle("Select pre-computed Homology Clusters File");
+
+			//retrieve directory
+			if (this.FileChooserSource != null) {
+				GetHC.setCurrentDirectory(FileChooserSource);
+			} else {
+				GetHC.setCurrentDirectory(new File("."));
+			}
+		
+			GetHC.showOpenDialog(GetHC);
+			
+			// note current directory for next time
+			if (GetHC.getCurrentDirectory() != null) {
+				this.FileChooserSource = GetHC.getCurrentDirectory();
+			}
+			
+			//begin import
+			LoadTagsWorker LTW = new LoadTagsWorker(GetHC.getSelectedFile(), true);
+			LTW.addPropertyChangeListener(panBtn);
+			LTW.execute();
+			
+		}
+		
 		//load context set
 		if (evt.getSource().equals(ML_ContextSet)){
 			new manageContextSetsv2(this, this.getPanBtn());
@@ -1642,41 +2082,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Launch NCBI genome search window
 		if (evt.getSource().equals(MG_Ncbi)){
-			try {
-								
-				if (System.getProperty("os.name").contains("Windows")){
-					Runtime.getRuntime().exec("cmd /c start http://www.ncbi.nlm.nih.gov/genome/browse");
-				} else if (System.getProperty("os.name").contains("Mac")){
-					Runtime.getRuntime().exec("open http://www.ncbi.nlm.nih.gov/genome/browse");
-				} else {
-					Runtime.getRuntime().exec("firefox http://www.ncbi.nlm.nih.gov/genome/browse");
-				}
-				
-			} catch (Exception ex){
-				JOptionPane.showMessageDialog(null, 
-						"Unable to connect to internet or locate website.",
-						"NCBI Website Error", JOptionPane.ERROR_MESSAGE);
-			}
+			LaunchWebsite("http://www.ncbi.nlm.nih.gov/genome/browse");
 		}
 		
 		//Launch NCBI taxonomy browser
 		if (evt.getSource().equals(MG_NcbiTax)){
-			try {
-				
-				if (System.getProperty("os.name").contains("Windows")){
-					Runtime.getRuntime().exec("cmd /c start http://www.ncbi.nlm.nih.gov/genomes/MICROBES/microbial_taxtree.html");
-				} else if (System.getProperty("os.name").contains("Mac")){
-					Runtime.getRuntime().exec("open http://www.ncbi.nlm.nih.gov/genomes/MICROBES/microbial_taxtree.html");
-				} else {
-					Runtime.getRuntime().exec("firefox http://www.ncbi.nlm.nih.gov/genomes/MICROBES/microbial_taxtree.html");
-				}
-				
-			} catch (Exception ex){
-				JOptionPane.showMessageDialog(null, 
-						"Unable to connect to internet or locate website.",
-						"NCBI Website Error", JOptionPane.ERROR_MESSAGE);
-			}
+			LaunchWebsite("http://www.ncbi.nlm.nih.gov/genomes/MICROBES/microbial_taxtree.html");
 		}
+
 		
 		/*
 		 * EXPORT
@@ -1706,13 +2119,55 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			if (ExportGenomes.getCurrentDirectory() != null) {
 				this.FileChooserSource = ExportGenomes.getCurrentDirectory();
 			}
-			DirName = ExportGenomes.getCurrentDirectory().getPath();
-			this.getOS().ExportExtendedGFFFile(DirName);
+			//DirName = ExportGenomes.getCurrentDirectory().getPath();
+			DirName = ExportGenomes.getSelectedFile().getPath();
 			
+			//begin export
+			ExportWorker EW = new ExportWorker(DirName);
+			EW.addPropertyChangeListener(panBtn);
+			EW.execute();
+			
+		}
+		
+		
+		/*
+		 * HELP
+		 */
+		
+		//Launch User'sManual
+		if (evt.getSource().equals(MH_Manual)){
+			LaunchWebsite("http://www.bme.ucdavis.edu/facciotti/files/2012/11/UsersManual.pdf");
+		}
+		
+		//Youtube page of video tutorials
+		if (evt.getSource().equals(MH_Video)){
+			LaunchWebsite("http://www.youtube.com/user/JContextExplorer");
 		}
 		
 	}
 
+	//Launch a website, using default browser.
+	public void LaunchWebsite(String URL){
+		try {
+			String cmd = "";
+			if (System.getProperty("os.name").contains("Windows")){
+				cmd = "cmd /c start " + URL;
+				Runtime.getRuntime().exec(cmd);
+			} else if (System.getProperty("os.name").contains("Mac")){
+				cmd = "open " + URL;
+				Runtime.getRuntime().exec(cmd);
+			} else {
+				cmd = "firefox " + URL;
+				Runtime.getRuntime().exec(cmd);
+			}
+			
+		} catch (Exception ex){
+			JOptionPane.showMessageDialog(null, 
+					"Unable to connect to internet or locate website.",
+					"Internet Error", JOptionPane.ERROR_MESSAGE);
+		}
+	}
+	
 	public LinkedList<String> getGFFIncludeTypes() {
 		return GFFIncludeTypes;
 	}

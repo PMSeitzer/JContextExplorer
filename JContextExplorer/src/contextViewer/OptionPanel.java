@@ -220,7 +220,7 @@ public class OptionPanel extends JPanel implements ActionListener{
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.NONE;
 		cbCoordinates = new JCheckBox(strcbCoordinates);
-		cbCoordinates.setSelected(false);
+		cbCoordinates.setSelected(true);
 		cbCoordinates.addActionListener(this);
 		cbCoordinates.setFont(fontStandard);
 		add(cbCoordinates, c);
@@ -232,7 +232,7 @@ public class OptionPanel extends JPanel implements ActionListener{
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.NONE;
 		cbStrandNormalize = new JCheckBox(strcbStrandNormalize);
-		cbStrandNormalize.setSelected(false);
+		cbStrandNormalize.setSelected(true);
 		cbStrandNormalize.addActionListener(this);
 		cbStrandNormalize.setFont(fontStandard);
 		add(cbStrandNormalize, c);

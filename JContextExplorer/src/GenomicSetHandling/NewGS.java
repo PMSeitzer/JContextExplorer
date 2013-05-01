@@ -198,11 +198,12 @@ public class NewGS extends JDialog implements ActionListener{
 					f.ExportNonFocusOS(OS);
 					
 					//turn on additional options
-					f.NoOSMenuComponents(true);
+					f.OSMenuComponentsEnabled(true);
 					
 					//switch OS, if multiple OS, and option
 					if (SetNewOSToSelected){						
-						f.SwitchBetweenOS(f.getOS().getName(), OS.getName());
+						//f.SwitchBetweenOS(f.getOS().getName(), OS.getName());
+						f.CallSwitchWorker(f.getOS().getName(), OS.getName());
 				     }
 
 					//Global actions

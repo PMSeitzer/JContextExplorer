@@ -681,7 +681,6 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 	//group genes together according to the specificed gene grouping protocol.
 	if (CSD.getType().contentEquals("Range")) {
 		
-
 		//iterate through all elements
 		for (int i = 0; i <this.Elements.size(); i++){
 				
@@ -1171,82 +1170,307 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 		if (MQMatches != null){
 			Hits.add(MQMatches);
 		}
-	
-//		//old way - split by contig
-//		//all genomic element matches
-//		LinkedList<GenomicElement> ElementMatches = new LinkedList<GenomicElement>();
-//		
-//		//all contigs featured in all matches
-//		HashSet<String> ContigNames = new HashSet<String>();
-//		
-//		//iterate through all elements, find all matches
-//		for (GenomicElement E : Elements){
-//			
-//			//determine if the element is a query match.
-//			QueryMatch = false;
-//			if (IsCluster){
-//				for (int j = 0; j <ClusterNumbers.length; j++){
-//					if (E.getClusterID() == ClusterNumbers[j]){
-//						ElementMatches.add(E);
-//						ContigNames.add(E.getContig());
-//					}
-//				}
-//
-//			} else {
-//				for (int j = 0; j < Queries.length; j++){
-//					if (E.getAnnotation().toUpperCase().contains(Queries[j].trim().toUpperCase())){
-//						ElementMatches.add(E);
-//						ContigNames.add(E.getContig());
-//					}
-//				}
-//			}
-//		}
-//		
-//		//create an iterator for the HashSet
-//		Iterator<String> it = ContigNames.iterator();
-//		
-//		//each contig receives it's own linked list
-//		while(it.hasNext()){
-//			
-//			//retrieve the contig
-//			String Contig = it.next();
-//			
-//			//find all genomic elements with this contig
-//			LinkedList<GenomicElementAndQueryMatch> LL = new LinkedList<GenomicElementAndQueryMatch>();
-//			
-//			for (GenomicElement E : ElementMatches){
-//				if (E.getContig().contentEquals(Contig)){
-//					GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
-//					GandE.setE(E); GandE.setQueryMatch(true);
-//					
-//					//check against user-defined set of valid types
-//					boolean ElementIsValid = false;
-//					for (String s : this.IncludeTypes){
-//						if (GandE.getE().getType().contentEquals(s)){
-//							ElementIsValid = true;
-//							break;
-//						}
-//					}
-//					
-//					//only add elements of the appropriate type - otherwise, skip
-//					if (ElementIsValid){
-//		
-//						LL.add(GandE);
-//					}
-//					
-//				}
-//			}
-//			
-//			//add all non-null linked lists
-//			if (LL != null){
-//				Hits.add(LL);
-//			}
-//			
-//		}
 		
-	} else if (CSD.getType().contentEquals("Combination")) {
+	} else if (CSD.getType().contentEquals("Operons-NR")) {
+				
+		//Initialize a hashset for query matches, and for linked lists of genomic elements.
+		HashSet<GenomicElement> QueryMatchSet 
+			= new HashSet<GenomicElement>();
+		
+		HashSet<LinkedList<GenomicElement>> E_Hits = 
+				new HashSet<LinkedList<GenomicElement>>();
+		
+		//iterate through all elements
+		for (int i = 0; i < this.Elements.size(); i++){
+				
+			//determine if the element is a query match.
+			QueryMatch = false;
+			if (IsCluster){
+				for (int j = 0; j < ClusterNumbers.length; j++){
+					if (this.Elements.get(i).getClusterID() == ClusterNumbers[j]){
+						QueryMatch = true;
+						break;
+					}
+				}
+			} else {
+				for (int j = 0; j < Queries.length; j++){
+					if (this.Elements.get(i).getAnnotation().toUpperCase().contains(Queries[j].trim().toUpperCase())){
+						QueryMatch = true;
+						break;
+					} else if (this.Elements.get(i).getGeneID().toUpperCase().equals(Queries[j].trim().toUpperCase())){
+						QueryMatch = true;
+						break;
+					}
+				}
+			}
+		
+			//if it is, extract the appropriate range
+			if (QueryMatch){
+				
+				//System.out.println("Breakpoint!");
+				
+				//current element is the query match.
+				GenomicElement E_curr = this.Elements.get(i);
+				
+				//add to list of query matches
+				QueryMatchSet.add(E_curr);
+				
+				//define a new GenomicElementAndQueryMatch
+				LinkedList<GenomicElement> LL = new LinkedList<GenomicElement>();
+				LL.add(E_curr);
+
+				// ----- global switches ---- //
+				
+				boolean AddUpstream = true;
+				boolean AddDownstream = true;
+				int GeneNumber;
+				boolean ValidElementsRemain;
+				GenomicElement E_can;
+				boolean Add2Operon;
+				
+				// ----- Add upstream ---- //
+				
+				//switches
+				GeneNumber = i;
+				ValidElementsRemain = false;
+				
+				//Initialize a candidate genomic element for operon addition.
+				E_can = null;
+				
+				//add to operon switch.
+				Add2Operon = false;
+				
+				//add upstream elements to list, if appropriate.
+				while (AddUpstream){
+					
+					//default: no more valid elements, do not add to operon
+					ValidElementsRemain = false;
+					Add2Operon = false;
+					
+					//find next valid element
+					for (int q = GeneNumber-1; q >= 0; q--){
+						E_can = Elements.get(q);
+						for (String s : this.GFFIncludeTypes){
+							if (E_can.getType().contentEquals(s)){
+								ValidElementsRemain = true;
+								GeneNumber = q;
+								break;
+							}
+						}
+						
+						//break out of outer loop
+						if (ValidElementsRemain){
+							break;
+						}
+					}
+					
+					//compare to current to candidate.
+					if (ValidElementsRemain){
+						
+						//check operon requirements.
+						if (E_can.getContig().equals(E_curr.getContig()) &&			//Contig Match
+								E_curr.getStart()-E_can.getStop() <= CSD.getIntGenSpacing()){ 	//Distance match
+							
+							//check for same strand.
+							if (CSD.isNeedSameStrand()){
+								if (E_can.getStrand().equals(E_curr.getStrand())){
+									Add2Operon = true;
+								}
+							} else {
+								Add2Operon = true;
+							}
+							
+						}
+						
+						//add, if appropriate
+						if (Add2Operon){
+							
+							//add genomic element to growing operon chain
+							LL.add(0,E_can);
+							
+							//re-set counter
+							E_curr = E_can;
+							
+						} else{
+							
+							//once you stop adding, no going back.
+							AddUpstream = false;
+							
+						}
+						
+					} else {
+						
+						//finished with operon.
+						AddUpstream = false;
+					}
+
+				}
+						
+				// ----- Add downstream ---- //
+
+				//switches
+				GeneNumber = i;
+				ValidElementsRemain = false;
+				
+				//Initialize a candidate genomic element for operon addition.
+				E_can = null;
+				
+				//add to operon switch.
+				Add2Operon = false;
+				
+				//add upstream elements to list, if appropriate.
+				while (AddDownstream){
+					
+					//default: no more valid elements, do not add to operon
+					ValidElementsRemain = false;
+					Add2Operon = false;
+					
+					//find next valid element
+					for (int q = GeneNumber-1; q >= 0; q--){
+						E_can = Elements.get(q);
+						for (String s : this.GFFIncludeTypes){
+							if (E_can.getType().contentEquals(s)){
+								ValidElementsRemain = true;
+								GeneNumber = q;
+								break;
+							}
+						}
+						
+						//break out of outer loop
+						if (ValidElementsRemain){
+							break;
+						}
+					}
+					
+					//compare to current to candidate.
+					if (ValidElementsRemain){
+						
+						//check operon requirements.
+						if (E_can.getContig().equals(E_curr.getContig()) &&			//Contig Match
+								E_can.getStart()-E_curr.getStop() <= CSD.getIntGenSpacing()){ 	//Distance match
+							
+							//check for same strand.
+							if (CSD.isNeedSameStrand()){
+								if (E_can.getStrand().equals(E_curr.getStrand())){
+									Add2Operon = true;
+								}
+							} else {
+								Add2Operon = true;
+							}
+							
+						}
+						
+						//add, if appropriate
+						if (Add2Operon){
+							
+							//add genomic element to growing operon chain
+							LL.add(E_can);
+							
+							//re-set counter
+							E_curr = E_can;
+							
+						} else{
+							
+							//once you stop adding, no going back.
+							AddDownstream = false;
+							
+						}
+						
+					} else {
+						
+						//finished with operon.
+						AddDownstream = false;
+					}
+
+				}
+				
+				//finally, add this to the hit list (pre-query match tags)
+				E_Hits.add(LL);
+						
+			}
+
+		}
+		
+		//build up actual hits - add query information
+		for (LinkedList<GenomicElement> LL : E_Hits){
+			
+			//initialize list
+			LinkedList<GenomicElementAndQueryMatch> LLq 
+				= new LinkedList<GenomicElementAndQueryMatch>();
+			
+			//iterate through elements, add query tag
+			for (GenomicElement E : LL){
+				
+				//initialize genomic element and query match
+				GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+				GandE.setE(E);
+				
+				//if this element is in the set of query matches, tag
+				if (QueryMatchSet.contains(E)){
+					GandE.setQueryMatch(true);
+				} else {
+					GandE.setQueryMatch(false);
+				}
+				
+				//add query-updated element to list
+				LLq.add(GandE);
+			}
+			
+			//add completed list to final output set.
+			Hits.add(LLq);
+			
+		}
 		
 
+	} else if (CSD.getType().contentEquals("SingleGene")) {
+		
+		//iterate through all elements
+		for (GenomicElement E : Elements){
+			
+			//re-set for each gene.
+			QueryMatch = false;
+			
+			//check for match
+			if (IsCluster){
+				for (int j = 0; j < ClusterNumbers.length; j++){
+					if (E.getClusterID() == ClusterNumbers[j]){
+						QueryMatch = true;
+						break;
+					}
+				}
+			} else {
+				for (int j = 0; j < Queries.length; j++){
+					if (E.getAnnotation().toUpperCase().contains(Queries[j].trim().toUpperCase())){
+						QueryMatch = true;
+						break;
+					} else if (E.getGeneID().toUpperCase().equals(Queries[j].trim().toUpperCase())){
+						QueryMatch = true;
+						break;
+					}
+				}
+			}
+			
+			//add to list
+			if (QueryMatch){
+				//System.out.println("Breakpoint!");
+				
+				//Define Match
+				GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+				GandE.setE(E); 
+				GandE.setQueryMatch(true);
+				
+				//gene should be in a class all of its own
+				LinkedList<GenomicElementAndQueryMatch> LL 
+					= new LinkedList<GenomicElementAndQueryMatch>();
+				
+				//add gene to list
+				LL.add(GandE);
+				
+				//add list to set of lists
+				Hits.add(LL);
+			}
+
+		}
 		
 	} // various gene grouping strategies
 

@@ -68,7 +68,6 @@ public class OrganismSet implements Serializable{
 	private LinkedList<String> DisplayOnlyTypes;
 	private String Notes;
 	private String Name;
-	private int MaxClusterNumber;	//for re-numbering, when merging genomic sets.
 	
 	//phylogeny
 	private LinkedList<Tree> ParsedPhyTrees = new LinkedList<Tree>();
@@ -961,14 +960,6 @@ public class OrganismSet implements Serializable{
 	public void setGenomeDescriptions(
 			LinkedHashMap<String, String> genomeDescriptions) {
 		GenomeDescriptions = genomeDescriptions;
-	}
-
-	public int getMaxClusterNumber() {
-		return MaxClusterNumber;
-	}
-
-	public void setMaxClusterNumber(int maxClusterNumber) {
-		MaxClusterNumber = maxClusterNumber;
 	}
 
 } //completes classbody

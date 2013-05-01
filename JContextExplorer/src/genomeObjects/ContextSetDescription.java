@@ -11,6 +11,10 @@ public class ContextSetDescription implements Serializable{
 	private boolean isCassette = false;
 	
 	//optional fields
+	//distance
+	private int IntGenSpacing;
+	private boolean NeedSameStrand;
+	
 	//Range
 	private int NtRangeBefore;
 	private int NtRangeAfter;
@@ -107,5 +111,21 @@ public class ContextSetDescription implements Serializable{
 
 	public void setRelativeBeforeAfter(boolean relativeBeforeAfter) {
 		RelativeBeforeAfter = relativeBeforeAfter;
+	}
+
+	public int getIntGenSpacing() {
+		return IntGenSpacing;
+	}
+
+	public void setIntGenSpacing(int intGenSpacing) {
+		IntGenSpacing = intGenSpacing;
+	}
+
+	public boolean isNeedSameStrand() {
+		return NeedSameStrand;
+	}
+
+	public void setNeedSameStrand(boolean needSameStrand) {
+		NeedSameStrand = needSameStrand;
 	}
 }

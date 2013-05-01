@@ -83,6 +83,8 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
         
         //Create the scroll pane and add the tree to it. 
         JScrollPane treeView = new JScrollPane(SearchResults);
+        Dimension D = treeView.getPreferredSize();
+        treeView.setPreferredSize(new Dimension(D.height-20,D.width));
         
         //add to top panel
         TreeDisplay.add(treeView);

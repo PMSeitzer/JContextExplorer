@@ -134,8 +134,8 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	//boolean variables for check box repainting
 	private boolean ShowSurrounding = true;
 	private boolean ColorSurrounding = false;
-	private boolean StrandNormalize = false;
-	private boolean ShowCoordinates = false;
+	private boolean StrandNormalize = true;
+	private boolean ShowCoordinates = true;
 
 	//mouse-related info
 	private boolean GeneInformationIsBeingDisplayed = false;

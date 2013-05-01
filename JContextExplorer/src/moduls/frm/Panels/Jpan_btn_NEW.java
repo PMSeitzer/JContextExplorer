@@ -375,7 +375,7 @@ import definicions.MatriuDistancies;
 						}
 
 					}
-
+					
 					//create an iterator for the HashSet
 					Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
 					 
@@ -696,7 +696,9 @@ import definicions.MatriuDistancies;
 							JOptionPane.showMessageDialog(null, "This gene grouping requires exactly two search queries.",
 									"Inappropriate Number of Queries",JOptionPane.ERROR_MESSAGE);
 						} else {
+
 							Matches = entry.getValue().MatchesOnTheFly(null, this.ClusterNumber, CurrentCSD);
+
 						}
 
 					}
