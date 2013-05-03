@@ -83,6 +83,7 @@ public class mainFrame extends JFrame implements ComponentListener{
 		//spdim.setSize(dim.getWidth()-ScrollPaneInset, (dim.getHeight() - op.getOpdim().getHeight())-ScrollPaneInset);
 		spdim.setSize(dim.getWidth()-(ScrollPaneInset*2), (dim.getHeight() - op.getOpdim().getHeight())-4*ScrollPaneInset);
 		scrollPane1.setPreferredSize(spdim);
+		scrollPane1.getVerticalScrollBar().setUnitIncrement(10);
 		
 		//scrollPane1.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		pan_North.add(scrollPane1, BorderLayout.CENTER);

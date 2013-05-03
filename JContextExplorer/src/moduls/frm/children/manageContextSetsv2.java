@@ -623,14 +623,16 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		c.fill = GridBagConstraints.HORIZONTAL;
 		computeIntergenic = new JButton(strcomputeIntergenic);
 		computeIntergenic.addActionListener(this);
-		jp.add(computeIntergenic, c);
+		//jp.add(computeIntergenic, c);
 		CSIntergenicDist_group.add(computeIntergenic);
 		
 		//check box
 		c.ipady = 0;
 		c.gridy = gridy;
-		c.gridx = 2;
-		c.gridwidth = 3;
+		//c.gridx = 2
+		//c.gridwidth = 3;
+		c.gridx = 1;
+		c.gridwidth = 4;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		cbStrandOption = new JCheckBox(strcbStrandOption);
 		cbStrandOption.setSelected(true);
@@ -1144,12 +1146,13 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 			
 			if (AcceptableName == true){
 			
-				//rule out pre-processed cases, if necessary
-				if (CSType.isSelected(CSIntergenicDist.getModel()) && ReadyToAdd == false) {
-					JOptionPane.showMessageDialog(null, 
-							"Select the compute button to compute genomic groupings before adding", "Gene Groupings not computed",
-							JOptionPane.ERROR_MESSAGE);
-				} else if (CSType.isSelected(CSLoaded.getModel()) && ReadyToAdd == false){
+//				//rule out pre-processed cases, if necessary
+//				if (CSType.isSelected(CSIntergenicDist.getModel()) && ReadyToAdd == false) {
+//					JOptionPane.showMessageDialog(null, 
+//							"Select the compute button to compute genomic groupings before adding", "Gene Groupings not computed",
+//							JOptionPane.ERROR_MESSAGE);
+//				} else 
+					if (CSType.isSelected(CSLoaded.getModel()) && ReadyToAdd == false){
 					JOptionPane.showMessageDialog(null, 
 							"Select the load button to load genomic groupings from file before adding", "Gene Groupings not loaded",
 							JOptionPane.ERROR_MESSAGE);
@@ -1163,8 +1166,11 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 					ToAdd = new ContextSetDescription();
 					
 					if (CSType.isSelected(CSIntergenicDist.getModel())){		//CSType (1) - CSIntergenicDist
-						ToAdd.setType("IntergenicDist");
-						ToAdd.setPreprocessed(true);
+						ToAdd.setType("IntergenicDist-pre");
+						//ToAdd.setPreprocessed(true);
+						ToAdd.setPreprocessed(false);
+						ToAdd.setNeedSameStrand(cbStrandOption.isSelected());
+						ToAdd.setIntGenSpacing(Integer.parseInt(intergenicTolerance.getText()));
 					} else if (CSType.isSelected(CSLoaded.getModel())){ 		//CSType (6) - CSLoaded
 						ToAdd.setType("Loaded");
 						ToAdd.setPreprocessed(true);
@@ -1322,11 +1328,23 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 
 		//update the message to the user based on what they're doing
 		if (CSType.isSelected(CSIntergenicDist.getModel())){
-			if (ComputedGrouping == true){
-				LoadedFileName.setText(ComputedString);
-			} else {
-				LoadedFileName.setText("No gene groupings currently computed.");
-			}
+//			if (ComputedGrouping == true){
+//				LoadedFileName.setText(ComputedString);
+//			} else {
+//				LoadedFileName.setText("No gene groupings currently computed.");
+//			}
+			//Initialize label sring
+			
+			//build string message
+			String strText = "Adjacent";
+			
+				//mention strandedness
+				if (cbStrandOption.isSelected()){
+					strText = strText + ", same-stranded";
+				} 
+				strText = strText + " genes with intergenic distance <= " + intergenicTolerance.getText() +" nt are grouped together.";
+			LoadedFileName.setText(strText);
+			
 		} else if (CSType.isSelected(CSLoaded.getModel())){
 			if (LoadedGrouping == true){
 				LoadedFileName.setText(LoadedString);

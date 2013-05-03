@@ -78,6 +78,8 @@ import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 
@@ -320,16 +322,20 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 //				
 //				//BUGGY - but, almost there! another day or two should have it.
 //				//add to OS
+				
+				//fixed.
+				
+				
 //				CSD = new ContextSetDescription();
 //				CSD.setName("OperonTest");
 //				CSD.setType("Operons-NR");
 //				CSD.setPreprocessed(false);
 //				CSD.setNeedSameStrand(true);
-//				CSD.setIntGenSpacing(50);
+//				CSD.setIntGenSpacing(-2);
 //				OS.getCSDs().add(CSD);
-//				
-//				//add to menu
-//				panBtn.getContextSetMenu().addItem("OperonTest");
+				
+				//add to menu
+				panBtn.getContextSetMenu().addItem("OperonTest");
 			}
 			
 			return null;
@@ -391,7 +397,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					AG.setGenus(TheGenus);
 
 					// add Context set
-					AG.MakeSingleGeneContextSet("SingleGene");
+					//AG.MakeSingleGeneContextSet("SingleGene");
 
 					//if (getAvailableMemory() < 100000){
 					
@@ -848,6 +854,12 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//INITIALIZATIONS
 		super(title);
 		this.OS = theOrganismSet;
+		
+		//set UI to look natural
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (Exception ex) {}
+		
 //		if (OS.getSourceDirectory() != null){
 //			this.FileChooserSource = OS.getSourceDirectory();
 //		}

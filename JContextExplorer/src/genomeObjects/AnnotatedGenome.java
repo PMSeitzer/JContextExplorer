@@ -1171,7 +1171,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 			Hits.add(MQMatches);
 		}
 		
-	} else if (CSD.getType().contentEquals("Operons-NR")) {
+	} else if (CSD.getType().contentEquals("IntergenicDist-pre")) {
 				
 		//Initialize a hashset for query matches, and for linked lists of genomic elements.
 		HashSet<GenomicElement> QueryMatchSet 
@@ -1307,13 +1307,14 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 				}
 						
 				// ----- Add downstream ---- //
-
+				
 				//switches
 				GeneNumber = i;
 				ValidElementsRemain = false;
 				
-				//Initialize a candidate genomic element for operon addition.
+				//Re-initialize genomic elements for comparison.
 				E_can = null;
+				E_curr = this.Elements.get(i);
 				
 				//add to operon switch.
 				Add2Operon = false;
@@ -1326,7 +1327,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 					Add2Operon = false;
 					
 					//find next valid element
-					for (int q = GeneNumber-1; q >= 0; q--){
+					for (int q = GeneNumber+1; q < Elements.size(); q++){
 						E_can = Elements.get(q);
 						for (String s : this.GFFIncludeTypes){
 							if (E_can.getType().contentEquals(s)){
