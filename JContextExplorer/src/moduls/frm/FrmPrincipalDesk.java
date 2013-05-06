@@ -24,6 +24,7 @@ import genomeObjects.ContextSetDescription;
 import genomeObjects.OSCreationInstructions;
 import genomeObjects.OrganismSet;
 import haloGUI.GBKChecker;
+import haloGUI.GBKFieldMapping;
 import haloGUI.GFFChecker;
 import inicial.FesLog;
 import inicial.Language;
@@ -194,10 +195,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	
 	//private ButtonGroup AvailableOSCheckBoxMenuItems = new ButtonGroup();
 	//Import related
-	private LinkedList<String> GFFIncludeTypes;
-	private LinkedList<String> GFFDisplayTypes;
-	private LinkedList<String> GBKIncludeTypes;
-	private LinkedList<String> GBKDisplayTypes;
+	private LinkedList<String> FeatureIncludeTypes;
+	private LinkedList<String> FeatureDisplayTypes;
+	private GBKFieldMapping GBKFields;
 	
 	//Menu bar related
 	private JMenuBar MB;
@@ -274,27 +274,78 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	public class LoadGenomesWorker extends SwingWorker<Void, Void>{
 
 		//Fields
-		public File SelectedFile;
+		public File[] AllFiles;
+		public double TotalNumberOfFiles;
 		
 		//constructor
-		public LoadGenomesWorker(File SelectedDirectoryOrFile){
-			this.SelectedFile = SelectedDirectoryOrFile;
+		public LoadGenomesWorker(File[] Selected){
+			AllFiles = Selected;
 		}
 		
 		//background
 		@Override
 		protected Void doInBackground() throws Exception {
-
+			
 			//set Cursor
 			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			
-			//import genome(s).
-			if (SelectedFile.isDirectory()){
-				RetrieveFromDirectory();
-			} else {
-				RetrieveFromFile();
-			}
+			//determine total number of files
+			int TotalFiles = 0;
 			
+			for (File f : AllFiles){
+				if (f.isDirectory()){
+					File[] DirFiles = f.listFiles();
+					for (File f2 : DirFiles){
+						if (f2.getName().endsWith(".gff") || f2.getName().endsWith(".gb") || f2.getName().endsWith(".gbk") || f2.getName().endsWith(".gbf")){
+							TotalFiles++;
+						}
+					}
+				} else {
+					if (f.getName().endsWith(".gff") || f.getName().endsWith(".gb") || f.getName().endsWith(".gbk") || f.getName().endsWith(".gbf")){
+						TotalFiles++;
+					}
+				}
+			}
+			TotalNumberOfFiles = TotalFiles;
+			
+			//initialize counter
+			int OrgCounter = 0;
+
+			//Add all files
+			for (File SelectedFile : AllFiles) {
+				
+				//import genome(s).
+				if (SelectedFile.isDirectory()){
+					//OrgCounter = RetrieveFromDirectory(SelectedFile);
+					
+					//process all appropriate files in the directory.
+					File[] DirFiles = SelectedFile.listFiles();
+					
+					for (File f2: DirFiles){
+						
+						//process file, retrieve organism counter
+						OrgCounter = RetrieveFromFile(f2, OrgCounter);
+
+						// update progress bar
+						int progress = (int) Math
+								.round(100 * ((double) OrgCounter / TotalNumberOfFiles));
+						setProgress(progress);
+						
+					}
+					
+				} else {
+					
+					//process file, retrieve organism counter
+					OrgCounter = RetrieveFromFile(SelectedFile, OrgCounter);
+					
+					// update progress bar
+					int progress = (int) Math
+							.round(100 * ((double) OrgCounter / TotalNumberOfFiles));
+					setProgress(progress);
+					
+				}
+			}
+				
 			//add a context set description, if appropriate
 			boolean MissingSingleGene = true;
 			for (ContextSetDescription CSD : OS.getCSDs()){
@@ -302,7 +353,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					MissingSingleGene = false;
 				}
 			}
-			
 			
 			//create default single gene set
 			if (MissingSingleGene){
@@ -317,27 +367,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				//add to menu
 				panBtn.getContextSetMenu().addItem("SingleGene");
 				panBtn.getContextSetMenu().removeItem("<none>");
-				
-//				//DEBUGGING!!
-//				
-//				//BUGGY - but, almost there! another day or two should have it.
-//				//add to OS
-				
-				//fixed.
-				
-				
-//				CSD = new ContextSetDescription();
-//				CSD.setName("OperonTest");
-//				CSD.setType("Operons-NR");
-//				CSD.setPreprocessed(false);
-//				CSD.setNeedSameStrand(true);
-//				CSD.setIntGenSpacing(-2);
-//				OS.getCSDs().add(CSD);
-				
-				//add to menu
-				panBtn.getContextSetMenu().addItem("OperonTest");
+
 			}
-			
+
 			return null;
 
 		}
@@ -362,7 +394,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		}
 		
 		//additional methods
-		public void RetrieveFromDirectory(){
+		public void RetrieveFromDirectory(File SelectedFile){
 			
 			//Start counter
 			int OrgCounter = 0;
@@ -378,8 +410,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				if (f.getName().endsWith(".gff")){
 				
 					// set appropriate types to import
-					AG.setIncludeTypes(GFFIncludeTypes);
-					AG.setDisplayOnlyTypes(GFFDisplayTypes);
+					AG.setIncludeTypes(FeatureIncludeTypes);
+					AG.setDisplayOnlyTypes(FeatureDisplayTypes);
 
 					// Annotation information
 					AG.importFromGFFFile(f.getAbsolutePath());
@@ -426,15 +458,114 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					//panBtn.getProgressBar().setValue(progress);
 					
 				//genbank file import
-				} else {
-					//TODO: need to genbank on it.
+				} else if (f.getName().endsWith(".gb") || f.getName().endsWith(".gbk")){
+					//TODO!!!
+					// set appropriate types to import
+					AG.setIncludeTypes(FeatureIncludeTypes);
+					AG.setDisplayOnlyTypes(FeatureDisplayTypes);
+					
 				}
 			}
 
 		}
 		
-		public void RetrieveFromFile(){
-			System.out.println("File!");
+		//single file import
+		public int RetrieveFromFile(File f, int OrgCounter){
+			
+			//initialize annotated genome
+			AnnotatedGenome AG = new AnnotatedGenome();
+			
+			//GFF file import
+			if (f.getName().endsWith(".gff")){
+			
+				//increment counter.
+				OrgCounter++;
+				
+				// set appropriate types to import
+				AG.setIncludeTypes(FeatureIncludeTypes);
+				AG.setDisplayOnlyTypes(FeatureDisplayTypes);
+
+				// Annotation information
+				AG.importFromGFFFile(f.getAbsolutePath());
+
+				// reference to genome file
+				AG.setGenomeFile(f);
+
+				// Species Name + genus
+				String[] SpeciesName = f.getName().split(".gff");
+				String TheName = SpeciesName[0];
+				AG.setSpecies(TheName);
+
+				String[] Genus = SpeciesName[0].split("_");
+				String TheGenus = Genus[0];
+				AG.setGenus(TheGenus);
+
+				// add Context set
+				//AG.MakeSingleGeneContextSet("SingleGene");
+
+				//if (getAvailableMemory() < 100000){
+				
+					//System.out.println("Adjustment!");
+				
+				//TODO: this isn't working! Why not??
+				//OS.FindAG2Deactivate();
+
+				//}
+				
+				//System.out.println("Memory: " + getAvailableMemory());
+				
+				// add to hash map
+				OS.getSpecies().put(TheName, AG);
+
+				// add name to array of species
+				OS.getSpeciesNames().add(TheName);
+				OS.getAGLoaded().put(TheName, true);
+				OS.getGenomeDescriptions().put(TheName, AG.getTextDescription());
+				
+			//genbank file import
+			} else if (f.getName().endsWith(".gb") || f.getName().endsWith(".gbk") || f.getName().endsWith(".gbf")){
+
+				//increment counter.
+				OrgCounter++;
+				
+				// set appropriate types to import
+				AG.setIncludeTypes(FeatureIncludeTypes);
+				AG.setDisplayOnlyTypes(FeatureDisplayTypes);
+				AG.setGFM(GBKFields);
+				
+				// Annotation information
+				AG.importFromGBKFile(f.getAbsolutePath());
+
+				// reference to genome file
+				AG.setGenomeFile(f);
+
+				String[] SpeciesName = null;
+				// Species Name + genus
+				if (f.getName().endsWith(".gbk")){
+					SpeciesName = f.getName().split(".gbk");
+				} else if (f.getName().endsWith(".gb")){
+					SpeciesName = f.getName().split(".gb");
+				} else if (f.getName().endsWith(".gbf")){
+					SpeciesName = f.getName().split(".gbf");
+				}
+				
+				String TheName = SpeciesName[0];
+				AG.setSpecies(TheName);
+
+				String[] Genus = SpeciesName[0].split("_");
+				String TheGenus = Genus[0];
+				AG.setGenus(TheGenus);
+				
+				// add to hash map
+				OS.getSpecies().put(TheName, AG);
+
+				// add name to array of species
+				OS.getSpeciesNames().add(TheName);
+				OS.getAGLoaded().put(TheName, true);
+				OS.getGenomeDescriptions().put(TheName, AG.getTextDescription());
+			}
+			
+			return OrgCounter;
 		}
 	}
 	
@@ -860,10 +991,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception ex) {}
 		
-//		if (OS.getSourceDirectory() != null){
-//			this.FileChooserSource = OS.getSourceDirectory();
-//		}
-		
 		//DESKTOP FRAME INFORMATION
 		pan_Desk = new JDesktopPane();
 		pan_Desk.setBackground(Color.LIGHT_GRAY);
@@ -885,11 +1012,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		pan_West = new JPanel();
 		pan_West.setLayout(new BorderLayout());
 		pan_West.add(panBtn, BorderLayout.NORTH);
-	
-		//switch 1
-//			JScrollPane scrollPane1 = new JScrollPane(panMenu);	
-//		pan_West.add(scrollPane1, BorderLayout.CENTER);
-		
+
 		//options/menus
 		panGraphMenu = new Jpan_GraphMenu(this);		//Graph menu
 		panMotifOptions = new Jpan_MotifOptions(this);	//Motif Options tab
@@ -1229,20 +1352,17 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		// ===== Import parameters ======== //
 		
 		//GFF files
-		GFFIncludeTypes = new LinkedList<String>();
-		GFFIncludeTypes.add("CDS");
-		GFFIncludeTypes.add("tRNA");
-		GFFIncludeTypes.add("rRNA");
+		FeatureIncludeTypes = new LinkedList<String>();
+		FeatureIncludeTypes.add("CDS");
+		FeatureIncludeTypes.add("tRNA");
+		FeatureIncludeTypes.add("rRNA");
 		
-		GFFDisplayTypes = new LinkedList<String>();
-		GFFDisplayTypes.add("mobile_element");
-		GFFDisplayTypes.add("IS_element");
+		FeatureDisplayTypes = new LinkedList<String>();
+		FeatureDisplayTypes.add("mobile_element");
+		FeatureDisplayTypes.add("IS_element");
 		
 		//Genbank files
-		GBKIncludeTypes = new LinkedList<String>();
-		GBKIncludeTypes.add("Test!");
-		
-		GBKDisplayTypes = new LinkedList<String>();
+		setGBKFields(new GBKFieldMapping());
 		
 		// ===== Popular Genome Sets ======== //
 		
@@ -1713,9 +1833,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Import settings
 		MG_ImportSettings = new JMenu("Import Settings");
-		MG_GFF = new JMenuItem(".GFF Files ");
-		MG_Genbank = new JMenuItem("Genbank Files");
-		MG_NcbiSettings = new JMenuItem("NCBI Database query settings");
+		MG_GFF = new JMenuItem("Feature Type Settings");
+		MG_Genbank = new JMenuItem("Genbank File Options");
+		MG_NcbiSettings = new JMenuItem("NCBI Database Query Settings");
 		MG_ImportSettings.add(MG_GFF);
 		MG_ImportSettings.add(MG_Genbank);
 		MG_ImportSettings.add(MG_NcbiSettings);
@@ -1903,6 +2023,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			// initialize output
 			JFileChooser GetGenomes = new JFileChooser();
 			
+			GetGenomes.setMultiSelectionEnabled(true);
 			GetGenomes.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 			GetGenomes
 					.setDialogTitle("Select An Annotated Genome File or Directory of Annotated Genome Files");
@@ -1922,7 +2043,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			}
 			
 			//begin import
-			LoadGenomesWorker LGW = new LoadGenomesWorker(GetGenomes.getSelectedFile());
+			File[] files = GetGenomes.getSelectedFiles();
+			LoadGenomesWorker LGW = new LoadGenomesWorker(files);
 			LGW.addPropertyChangeListener(panBtn);
 			LGW.execute();
 		
@@ -2181,35 +2303,19 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	}
 	
 	public LinkedList<String> getGFFIncludeTypes() {
-		return GFFIncludeTypes;
+		return FeatureIncludeTypes;
 	}
 
 	public void setGFFIncludeTypes(LinkedList<String> gFFIncludeTypes) {
-		GFFIncludeTypes = gFFIncludeTypes;
+		FeatureIncludeTypes = gFFIncludeTypes;
 	}
 
 	public LinkedList<String> getGFFDisplayTypes() {
-		return GFFDisplayTypes;
+		return FeatureDisplayTypes;
 	}
 
 	public void setGFFDisplayTypes(LinkedList<String> gFFDisplayTypes) {
-		GFFDisplayTypes = gFFDisplayTypes;
-	}
-
-	public LinkedList<String> getGBKIncludeTypes() {
-		return GBKIncludeTypes;
-	}
-
-	public void setGBKIncludeTypes(LinkedList<String> gBKIncludeTypes) {
-		GBKIncludeTypes = gBKIncludeTypes;
-	}
-
-	public LinkedList<String> getGBKDisplayTypes() {
-		return GBKDisplayTypes;
-	}
-
-	public void setGBKDisplayTypes(LinkedList<String> gBKDisplayTypes) {
-		GBKDisplayTypes = gBKDisplayTypes;
+		FeatureDisplayTypes = gFFDisplayTypes;
 	}
 
 	public JMenu getMG_CurrentGS() {
@@ -2266,6 +2372,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	public void setGenomeSetFiles(LinkedHashMap<String, File> genomeSetFiles) {
 		GenomeSetFiles = genomeSetFiles;
+	}
+
+	public GBKFieldMapping getGBKFields() {
+		return GBKFields;
+	}
+
+	public void setGBKFields(GBKFieldMapping gBKFields) {
+		GBKFields = gBKFields;
 	}
 	
 }

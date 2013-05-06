@@ -137,7 +137,7 @@ public class GFFChecker extends JFrame implements ActionListener{
         //text into document
         try {
 			doc.insertString(doc.getLength(), "Instructions:\n\n", doc.getStyle("bold"));
-			doc.insertString(doc.getLength(), "The third column of a .GFF file describes each annotated feature's biological \"type\".", doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), "The third column of a .GFF file, or the first column of a GenBank file, describes each annotated feature's biological \"type\".", doc.getStyle("regular"));
 			doc.insertString(doc.getLength(), "  For example, coding regions", doc.getStyle("regular"));
 			doc.insertString(doc.getLength(), " often have a type designation of \"CDS\" or \"gene\", and transfer RNA often have a type designation of \"tRNA\".\n\n", doc.getStyle("regular"));
 			doc.insertString(doc.getLength(), "This tool allows you to specify how to handle different types of annotated features.\n", doc.getStyle("regular"));
@@ -155,9 +155,9 @@ public class GFFChecker extends JFrame implements ActionListener{
 			doc.insertString(doc.getLength(), "To remove types from a list, select the type with your mouse, and push the \"Remove\" button. \n", doc.getStyle("Regular"));
 			doc.insertString(doc.getLength(), "To transfer types from one list to another, select the type with your mouse, and drag the type to the other list.\n\n", doc.getStyle("Regular"));
 			doc.insertString(doc.getLength(), "WARNING!\n", doc.getStyle("bold"));
-			doc.insertString(doc.getLength(), "Features in the GFF file may not overlap in the genomic coordinates they span.  In the case that they do overlap, JContextExplorer will exhibit unpredictable behavior ", doc.getStyle("Regular"));
+			doc.insertString(doc.getLength(), "Features in a GFF or GenBank file may not overlap in the genomic coordinates they span.  In the case that they do overlap, JContextExplorer will exhibit unpredictable behavior ", doc.getStyle("Regular"));
 			doc.insertString(doc.getLength(), "and likely fail.\n", doc.getStyle("Regular"));
-			doc.insertString(doc.getLength(), "Please ensure that no annotated features overlap prior to loading GFF files.", doc.getStyle("bold"));
+			doc.insertString(doc.getLength(), "Please ensure that no annotated features overlap prior to loading GFF or GenBank files.", doc.getStyle("bold"));
 			doc.insertString(doc.getLength(), "\n\nFor additional help and examples, please consult the JContextExplorer manual.", doc.getStyle("regular"));
 
         } catch (BadLocationException e) {
@@ -172,7 +172,7 @@ public class GFFChecker extends JFrame implements ActionListener{
 		this.setSize(700,620);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		this.setLocationRelativeTo(null);
-		this.setTitle("GFF File Type Import Settings");
+		this.setTitle("Feature Type Import Settings");
 	}
 	
 	//Create panel	

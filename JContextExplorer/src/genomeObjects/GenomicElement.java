@@ -21,6 +21,7 @@ public class GenomicElement implements Serializable{
     private int ClusterID;				//
     private String GeneID;					//
     private HashSet<SequenceMotif> AssociatedMotifs = new HashSet<SequenceMotif>();
+    private String Translation;
 
     //Constructor
     // ----------------------- Constructor-----------------------------//
@@ -154,6 +155,14 @@ public class GenomicElement implements Serializable{
 			
 		}
 		
+	}
+
+	public String getTranslation() {
+		return Translation;
+	}
+
+	public void setTranslation(String translation) {
+		Translation = translation;
 	}
 
 }
