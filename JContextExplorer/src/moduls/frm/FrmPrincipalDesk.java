@@ -54,6 +54,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -97,7 +99,6 @@ import moduls.frm.Panels.Jpan_MotifOptions;
 import moduls.frm.Panels.Jpan_PhyTreeMenu;
 import moduls.frm.Panels.Jpan_TabbedMenu;
 import moduls.frm.Panels.Jpan_btn;
-import moduls.frm.Panels.Jpan_btnExit;
 import moduls.frm.Panels.Jpan_btn_NEW;
 import moduls.frm.Panels.Jpan_genome;
 import moduls.frm.children.DeviationMeasuresBox;
@@ -132,7 +133,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	
 	private static final long serialVersionUID = 1L;
 
-	private final JPanel pan_West, pan_Exit, pan_South; //Segment space into different groups
+	private final JPanel pan_West, pan_South; //Segment space into different groups
 	
 	private final JPanel pan_Center;
 										//pan_Exit = About + Exit buttons
@@ -252,10 +253,11 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenuItem MH_Manual;
 	private JMenuItem MH_Video; 
 	private JMenuItem MH_DataSets;
-	// ----- Classes --------------------------------------------------//
+	
+	// ===== Classes ===== //
 	
 	//genomes from files filter
-	class GenomeFileFilter implements FilenameFilter {
+	public class GenomeFileFilter implements FilenameFilter {
 
 		@Override
 		public boolean accept(File dir, String name) {
@@ -894,66 +896,68 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				}
 			}
 			
-			// ====== Context Set Menu ======//
+			NewOSUpdateGUI();
 			
-			getPanBtn().getContextSetMenu().removeAllItems();
-			
-			if (OS.getCSDs().size() > 0){
-				for (ContextSetDescription CSD : OS.getCSDs()){
-					getPanBtn().getContextSetMenu().addItem(CSD.getName());
-				}
-			} else {
-				getPanBtn().getContextSetMenu().addItem("<none>");
-			}
-
-			// ====== Custom Dissimilarities ======//
-			
-			//Switch dissimilarities
-			getPan_Menu().getCbDissimilarity().removeAllItems();
-			
-			//add all custom dissimilarities
-			if (OS.getCustomDissimilarities().size() > 0){
-				for (CustomDissimilarity CD : OS.getCustomDissimilarities()){
-					getPan_Menu().getCbDissimilarity().addItem(CD.getName());
-				}
-			}
-			
-			//add fundamental dissimilarities
-			getPan_Menu().getCbDissimilarity().addItem("Common Genes - Dice");
-			getPan_Menu().getCbDissimilarity().addItem("Common Genes - Jaccard");
-			getPan_Menu().getCbDissimilarity().addItem("Moving Distances");
-			getPan_Menu().getCbDissimilarity().addItem("Total Length");
-			
-			// ====== Phylogenetic Trees ======//
-			
-			getPanPhyTreeMenu().setParsedPhyTrees(OS.getParsedPhyTrees());
-			getPanPhyTreeMenu().setLoadedPhyTrees(OS.getLoadedPhyTrees());	
-			if (OS.getLoadedPhyTrees().size() > 0){
-				getPanPhyTreeMenu().setFilePath(OS.getLoadedPhyTrees().get(0));
-			}
-			
-			//update GUI
-			getPanPhyTreeMenu().getMenuLoadedPhyTrees().removeAllItems();
-			String[] PhyTrees = getPanPhyTreeMenu().getLoadedPhyTrees();
-			if (PhyTrees.length > 0){
-				for (String s : PhyTrees){
-					getPanPhyTreeMenu().getMenuLoadedPhyTrees().addItem(s);
-				}
-			} else {
-				getPanPhyTreeMenu().getMenuLoadedPhyTrees().addItem("<none>");
-			}
-
-			// ====== Motif Menu ======//
-			
-			//Most motifs are in the actual organism sets, this simply adjusts the menu.
-			getPanMotifOptions().getMenuOfMotifs().removeAllItems();
-			if (OS.getMotifNames().size() > 0){
-				for (String s : OS.getMotifNames()){
-					getPanMotifOptions().getMenuOfMotifs().addItem(s);
-				}
-			} else{
-				getPanMotifOptions().getMenuOfMotifs().addItem("<none>");
-			}
+//			// ====== Context Set Menu ======//
+//			
+//			getPanBtn().getContextSetMenu().removeAllItems();
+//			
+//			if (OS.getCSDs().size() > 0){
+//				for (ContextSetDescription CSD : OS.getCSDs()){
+//					getPanBtn().getContextSetMenu().addItem(CSD.getName());
+//				}
+//			} else {
+//				getPanBtn().getContextSetMenu().addItem("<none>");
+//			}
+//
+//			// ====== Custom Dissimilarities ======//
+//			
+//			//Switch dissimilarities
+//			getPan_Menu().getCbDissimilarity().removeAllItems();
+//			
+//			//add all custom dissimilarities
+//			if (OS.getCustomDissimilarities().size() > 0){
+//				for (CustomDissimilarity CD : OS.getCustomDissimilarities()){
+//					getPan_Menu().getCbDissimilarity().addItem(CD.getName());
+//				}
+//			}
+//			
+//			//add fundamental dissimilarities
+//			getPan_Menu().getCbDissimilarity().addItem("Common Genes - Dice");
+//			getPan_Menu().getCbDissimilarity().addItem("Common Genes - Jaccard");
+//			getPan_Menu().getCbDissimilarity().addItem("Moving Distances");
+//			getPan_Menu().getCbDissimilarity().addItem("Total Length");
+//			
+//			// ====== Phylogenetic Trees ======//
+//			
+//			getPanPhyTreeMenu().setParsedPhyTrees(OS.getParsedPhyTrees());
+//			getPanPhyTreeMenu().setLoadedPhyTrees(OS.getLoadedPhyTrees());	
+//			if (OS.getLoadedPhyTrees().size() > 0){
+//				getPanPhyTreeMenu().setFilePath(OS.getLoadedPhyTrees().get(0));
+//			}
+//			
+//			//update GUI
+//			getPanPhyTreeMenu().getMenuLoadedPhyTrees().removeAllItems();
+//			String[] PhyTrees = getPanPhyTreeMenu().getLoadedPhyTrees();
+//			if (PhyTrees.length > 0){
+//				for (String s : PhyTrees){
+//					getPanPhyTreeMenu().getMenuLoadedPhyTrees().addItem(s);
+//				}
+//			} else {
+//				getPanPhyTreeMenu().getMenuLoadedPhyTrees().addItem("<none>");
+//			}
+//
+//			// ====== Motif Menu ======//
+//			
+//			//Most motifs are in the actual organism sets, this simply adjusts the menu.
+//			getPanMotifOptions().getMenuOfMotifs().removeAllItems();
+//			if (OS.getMotifNames().size() > 0){
+//				for (String s : OS.getMotifNames()){
+//					getPanMotifOptions().getMenuOfMotifs().addItem(s);
+//				}
+//			} else{
+//				getPanMotifOptions().getMenuOfMotifs().addItem("<none>");
+//			}
 
 			//switch cursor
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -979,7 +983,53 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 	}
 	
-	//Constructor
+	//Load a popular set from the internet
+	public class LoadPopularWorker extends SwingWorker<Void, Void>{
+
+		//fields
+		protected JCheckBoxMenuItem SelectedItem;
+		
+		public LoadPopularWorker(JCheckBoxMenuItem j) {
+			this.SelectedItem = j;
+		}
+
+		@Override
+		protected Void doInBackground() throws Exception {
+			
+			//switch progressbar
+			getPanBtn().getProgressBar().setIndeterminate(true);
+			
+			//switch cursor
+			Component glassPane = getRootPane().getGlassPane();
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			glassPane.setVisible(true);
+			
+			//UI update
+			SwingUtilities.updateComponentTreeUI(getRootPane());
+			
+			setProgress(100);
+			
+			// ==== Call method ==== //
+			
+			ImportPopularSet(SelectedItem);
+			
+			//switch cursor
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			glassPane.setVisible(false);
+			
+			getPanBtn().getProgressBar().setIndeterminate(false);
+			
+			return null;
+		}
+		
+		//post-processing
+		public void done(){
+			setProgress(0);
+		}
+		
+	}
+	
+	// ==== Constructor ==== //
 	public FrmPrincipalDesk(final String title, OrganismSet theOrganismSet) {
 		
 		//INITIALIZATIONS
@@ -998,7 +1048,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 		//CREATE COMPONENT PANELS
 		panMenu = new Jpan_Menu(this); 			//Settings panel (West)
-		pan_Exit = new Jpan_btnExit(this); 		//About + Exit (SouthWest)
 		panBtn = new Jpan_btn_NEW(this);
 		panGenome = new Jpan_genome(this);		//scrollable genome view
 		
@@ -1058,698 +1107,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	}
 	
-	// =================================================================//
-	// ===== Methods ===================================================//		
-	// =================================================================//
-	
-	// ----- Memory Management ---------------------------------------------//	
-	
-	//Export an existing Organism Set object into a file
-	public void ExportSerializedOS(String OSName){
-		try {
-			File f = new File(OSName);
-			//System.out.println("Export: " + f.getAbsolutePath());
-			GenomeSetFiles.put(OS.getName(), f);
-	        FileOutputStream fileOut = new FileOutputStream(f);
-	        ObjectOutputStream out = new ObjectOutputStream(fileOut);
-	        out.writeObject(OS);
-	        out.close();
-	        fileOut.close();
-
-		} catch (Exception ex){
-			ex.printStackTrace();
-		}
-	}
-	
-	//Export a non-focussed organism set into a file.
-	public void ExportNonFocusOS(OrganismSet OS_2){
-		try {
-			File f = new File(OS_2.getName());
-			//System.out.println("Export: " + f.getAbsolutePath());
-			GenomeSetFiles.put(OS_2.getName(), f);
-	        FileOutputStream fileOut = new FileOutputStream(f);
-	        ObjectOutputStream out = new ObjectOutputStream(fileOut);
-	        out.writeObject(OS_2);
-	        out.close();
-	        fileOut.close();
-		} catch (Exception ex){
-			ex.printStackTrace();
-		}
-	}
-	
-	//Import an Organism Set object into memory
-	public void ImportSerializedOS(String OSName){
-
-		try
-	      {	
-		     File f = GenomeSetFiles.get(OSName);
-		     //System.out.println("Import: " + f.getAbsolutePath());
-	         FileInputStream fileIn = new FileInputStream(f);
-	         ObjectInputStream in = new ObjectInputStream(fileIn);
-	         OS = (OrganismSet) in.readObject();
-	         in.close();
-	         fileIn.close();
-	         
-	      }catch(Exception ex) {
-	         ex.printStackTrace();  
-	      }
-
-	}
-	
-	//Import Organism Set from web - store locally in file on computer,
-	//then import as usual.
-	public void ImportPopularSet(JCheckBoxMenuItem m, boolean AddToCurrent){
-		
-		//Retrieve info		
-		File f = new File(m.getName());
-		String strURL = PopularGenomeSets.get(m);
-		GenomeSetFiles.put(m.getName(), f);
-		
-
-	}
-	
-	//Import a popular set and store it as a file on your computer.
-	public void StorePopularSetAsFile(String strURL, File OrgFile){
-		
-		try
-	      {	
-
-			URL GbURL = new URL(strURL);
-			InputStream is = GbURL.openStream();
-			BufferedReader br = new BufferedReader(new InputStreamReader(is));
-			FileWriter fw = new FileWriter(OrgFile);
-			String s = null;
-			while ( (s = br.readLine()) != null ){
-				fw.write(s + "\n");
-			}
-	         
-	      }catch(Exception ex) {
-	         ex.printStackTrace();  
-	      }
-		
-	}
-	
-	//Method to switch between two OS (files already exist)
-	@SuppressWarnings("unchecked")
-	public void SwitchBetweenOS(String FirstOS, String SecondOS){
-		
-		//System.out.println("Switch!");
-		
-		//switch progressbar
-		this.getPanBtn().getProgressBar().setValue(100);
-		this.getPanBtn().getProgressBar().setIndeterminate(true);
-		this.getPanBtn().repaint();
-		
-		//switch cursor
-		Component glassPane = this.getRootPane().getGlassPane();
-		glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-		glassPane.setVisible(true);
-		
-		//UI update
-		SwingUtilities.updateComponentTreeUI(getRootPane());
-		
-		//Switch in OS
-		ExportSerializedOS(FirstOS);
-		GenomeSetFiles.put(OS.getName(), new File(OS.getName()));
-		this.OS = new OrganismSet();
-		ImportSerializedOS(SecondOS);
-
-		//Switch in menu
-		for (JCheckBoxMenuItem b : this.AvailableOSCheckBoxMenuItems){
-			if (b.getName().equals(SecondOS)){
-				b.setSelected(true);
-			} else{
-				b.setSelected(false);
-			}
-		}
-		
-		// ====== Context Set Menu ======//
-		
-		this.getPanBtn().getContextSetMenu().removeAllItems();
-		
-		if (OS.getCSDs().size() > 0){
-			for (ContextSetDescription CSD : OS.getCSDs()){
-				this.getPanBtn().getContextSetMenu().addItem(CSD.getName());
-			}
-		} else {
-			this.getPanBtn().getContextSetMenu().addItem("<none>");
-		}
-
-		// ====== Custom Dissimilarities ======//
-		
-		//Switch dissimilarities
-		this.getPan_Menu().getCbDissimilarity().removeAllItems();
-		
-		//add all custom dissimilarities
-		if (OS.getCustomDissimilarities().size() > 0){
-			for (CustomDissimilarity CD : OS.getCustomDissimilarities()){
-				this.getPan_Menu().getCbDissimilarity().addItem(CD.getName());
-			}
-		}
-		
-		//add fundamental dissimilarities
-		this.getPan_Menu().getCbDissimilarity().addItem("Common Genes - Dice");
-		this.getPan_Menu().getCbDissimilarity().addItem("Common Genes - Jaccard");
-		this.getPan_Menu().getCbDissimilarity().addItem("Moving Distances");
-		this.getPan_Menu().getCbDissimilarity().addItem("Total Length");
-		
-		// ====== Phylogenetic Trees ======//
-		
-		this.getPanPhyTreeMenu().setParsedPhyTrees(OS.getParsedPhyTrees());
-		this.getPanPhyTreeMenu().setLoadedPhyTrees(OS.getLoadedPhyTrees());	
-		if (OS.getLoadedPhyTrees().size() > 0){
-			this.getPanPhyTreeMenu().setFilePath(OS.getLoadedPhyTrees().get(0));
-		}
-		
-		//update GUI
-		this.getPanPhyTreeMenu().getMenuLoadedPhyTrees().removeAllItems();
-		String[] PhyTrees = this.getPanPhyTreeMenu().getLoadedPhyTrees();
-		if (PhyTrees.length > 0){
-			for (String s : PhyTrees){
-				this.getPanPhyTreeMenu().getMenuLoadedPhyTrees().addItem(s);
-			}
-		} else {
-			this.getPanPhyTreeMenu().getMenuLoadedPhyTrees().addItem("<none>");
-		}
-
-		// ====== Motif Menu ======//
-		
-		//Most motifs are in the actual organism sets, this simply adjusts the menu.
-		this.getPanMotifOptions().getMenuOfMotifs().removeAllItems();
-		if (OS.getMotifNames().size() > 0){
-			for (String s : OS.getMotifNames()){
-				this.getPanMotifOptions().getMenuOfMotifs().addItem(s);
-			}
-		} else{
-			this.getPanMotifOptions().getMenuOfMotifs().addItem("<none>");
-		}
-
-		//switch cursor
-		glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-		glassPane.setVisible(false);
-		
-		//switch progressbar
-		this.getPanBtn().getProgressBar().setValue(0);
-		this.getPanBtn().getProgressBar().setIndeterminate(false);
-		
-		//UI update
-		SwingUtilities.updateComponentTreeUI(getRootPane());
-		
-	}
-	
-	//invoke swing worker, for progress bar stuff
-	public void CallSwitchWorker(String FirstOS, String SecondOS){
-		SwitchWorker SW = new SwitchWorker(FirstOS, SecondOS);
-		SW.addPropertyChangeListener(panBtn);
-		SW.execute();
-	}
-	
-	//when No OS loaded
-	public void NoOS(){
-		
-		//TODO: indicate menu bar?
-		
-		String MenuBar = "Please define a genome set before continuing.\n" +
-						"This can be accomplished by selecting 'New Genome Set'\n" +
-						"From the Genomes drop-down menu, or by typing ";
-		String invokeNew;
-		if (System.getProperty("os.name").contains("Mac")){
-			invokeNew = "command + N";
-		} else {
-			invokeNew = "ctrl + N";
-		}
-		
-		String msg = MenuBar + invokeNew;
-		JOptionPane.showMessageDialog(null, msg,
-				"No Genome Set Defined", JOptionPane.ERROR_MESSAGE);
-	}
-	
-	//activate/deactivate
-	public void OSMenuComponentsEnabled(boolean SwitchPos){
-
-		M_Load.setEnabled(SwitchPos);
-		M_Export.setEnabled(SwitchPos);
-
-	}
-	
-	//check heap size
-	public long getAvailableMemory(){
-		return Runtime.getRuntime().freeMemory();
-	}
-	
-	public void LoadOrganismSet(String Name){
-		
-		//Retrieve organism set
-		OSCreationInstructions OSC = GenomeSets.get(Name);
-		
-		//Send process to another thread
-		LoadOSWorker LOW = new LoadOSWorker(OSC);
-		LOW.addPropertyChangeListener(panBtn);
-		LOW.execute();
-		
-	}
-	
-	// ----- Internal Frame Data Management ---------------------------//
-	
-	//Create an internal frame
-	public FrmInternalFrame createInternalFrame(boolean isUpdate,
-			String methodName) {
-		int x, y, width, height;
-		this.InternalFrameID = InternalFrameID + 1;
-		FrmInternalFrame pizarra;
-		
-		x = 0;
-		y = 0;
-		width = Parametres_Inicials.getWidth_frmDesk();
-		height = Parametres_Inicials.getHeight_frmDesk();
-		
-		//pizarra translates to "slate" - internal tree frame
-		pizarra = new FrmInternalFrame(methodName, isUpdate, x, y, this);
-		pizarra.setSize(width, height);
-		pizarra.setBackground(Color.BLUE);
-		pizarra.setLayout(new BorderLayout());
-		pizarra.addInternalFrameListener(panBtn);
-		pizarra.addInternalFrameListener(panGenome);
-		pan_Desk.add(pizarra, BorderLayout.CENTER);
-				
-		//desktop manager maximizes frame.
-		DefaultDesktopManager ddm = new DefaultDesktopManager();
-		ddm.maximizeFrame(pizarra);
-
-		return pizarra;
-	}
-	
-	public int getInternalFrameID() {
-		return InternalFrameID;
-	}
-
-	public void setInternalFrameID(int internalFrameID) {
-		InternalFrameID = internalFrameID;
-	}
-
-	public void InitializeData(){
-		
-		// ===== Import parameters ======== //
-		
-		//GFF files
-		FeatureIncludeTypes = new LinkedList<String>();
-		FeatureIncludeTypes.add("CDS");
-		FeatureIncludeTypes.add("tRNA");
-		FeatureIncludeTypes.add("rRNA");
-		
-		FeatureDisplayTypes = new LinkedList<String>();
-		FeatureDisplayTypes.add("mobile_element");
-		FeatureDisplayTypes.add("IS_element");
-		
-		//Genbank files
-		setGBKFields(new GBKFieldMapping());
-		
-		// ===== Popular Genome Sets ======== //
-		
-		//add names
-		MG_Halos.setName(strHalos);
-		MG_Chloroviruses.setName(strChloroviruses);
-		MG_Myxo.setName(strMyxo);
-		
-		//add entries - URLs
-		PopularGenomeSets.put(MG_Halos, "");
-		PopularGenomeSets.put(MG_Chloroviruses, "");
-		PopularGenomeSets.put(MG_Myxo, "");
-		
-		//add action listener
-		for (JMenuItem j : PopularGenomeSets.keySet()){
-			j.addActionListener(this);
-		}
-		
-		
-	}
-	
-	public Jpan_MotifOptions getPanMotifOptions() {
-		return panMotifOptions;
-	}
-
-	public Jpan_btn_NEW getPanBtn() {
-		return panBtn;
-	}
-
-	public Config getConfig() {
-		//System.out.println("enter getconfig");
-		cfg = new Config(Jpan_Menu.getCfgPanel());
-		//System.out.println("made a config");
-		
-		//problem 11-
-		try {
-			cfg.setMatriu(panBtn.getMatriu());
-		} catch (Exception ex) {}
-
-		//System.out.println("set matrix");
-		if (cfg.getValorMaxim() == 0) {
-			cfg.getConfigMenu().setValMax(cfg.getCimDendograma());
-			//System.out.println("set valmax");
-		}
-		//System.out.println("return");
-		return cfg;
-	}
-
-	//Are you sure you want to Exit?
-	public void toGoOut() {
-		final String msg = Language.getLabel(0);
-		int opt;
-		opt = JOptionPane.showConfirmDialog(null, msg, Language.getLabel(46),
-				JOptionPane.YES_NO_OPTION);
-		if (opt == JOptionPane.YES_OPTION) {
-			FesLog.LOG.info("Exit");
-			System.exit(0);
-		}
-	}
-
-	//Save stuff
-	public void savePicture(final BufferedImage buff, final String tipus)
-			throws Exception {
-		String sPath;
-		String sNameNoExt = Jpan_btn.getFileNameNoExt();
-		final FileDialog fd = new FileDialog(this, Language.getLabel(75) + " "
-				+ tipus.toUpperCase(), FileDialog.SAVE);
-		fd.setFile(sNameNoExt + "." + tipus);
-		fd.setVisible(true);
-
-		if (fd.getFile() != null) {
-			sPath = fd.getDirectory() + fd.getFile();
-			final File fil = new File(sPath);
-			try {
-				ImageIO.write(buff, tipus, fil);
-//				FesLog.LOG.info("Imatge Emmagatzemada amb exit");
-			} catch (final IOException e) {
-				String msg_err = Language.getLabel(76);
-//				FesLog.LOG
-//						.throwing(
-//								"FrmPrincipalDesk",
-//								"savePicture(final BufferedImage buff, final String tipus)",
-//								e);
-				throw new Exception(msg_err);
-			} catch (Exception e) {
-				String msg_err = Language.getLabel(77);
-//				FesLog.LOG
-//						.throwing(
-//								"FrmPrincipalDesk",
-//								"savePicture(final BufferedImage buff, final String tipus)",
-//								e);
-				throw new Exception(msg_err);
-			}
-		}
-	}
-
-	public void savePostSript(FrmPiz frmpiz) throws Exception {
-		String sPath;
-		String sNameNoExt = Jpan_btn.getFileNameNoExt();
-		final FileDialog fd = new FileDialog(this, Language.getLabel(75)
-				+ " EPS", FileDialog.SAVE);
-		fd.setFile(sNameNoExt + ".eps");
-		fd.setVisible(true);
-
-		if (fd.getFile() != null) {
-			sPath = fd.getDirectory() + fd.getFile();
-			try {
-				new EPSExporter(cfg, frmpiz, sPath);
-
-//				FesLog.LOG.info("Imatge EPS emmagatzemada amb exit");
-			} catch (Exception e) {
-				System.out.println("Exception 291 FrmPrincipalDesk");
-				String msg_err = Language.getLabel(77);
-//				FesLog.LOG.throwing("FrmPrincipalDesk",
-//						"savePostScript(final BufferedImage buff)", e);
-				throw new Exception(msg_err);
-			}
-		}
-	}
-
-	public void saveTXT(Cluster arrel, int precisio, tipusDades tip)
-			throws Exception {
-		String sPath, msg_box = Language.getLabel(80) + " TXT";
-		String sNameNoExt = Jpan_btn.getFileNameNoExt();
-		FileDialog fd = new FileDialog(this, msg_box, FileDialog.SAVE);
-		fd.setFile(sNameNoExt + "-tree.txt");
-		fd.setVisible(true);
-		if (fd.getFile() != null) {
-			sPath = fd.getDirectory() + fd.getFile();
-			ToTXT saveTXT = new ToTXT(arrel, precisio, tip);
-			saveTXT.saveAsTXT(sPath);
-		}
-	}
-
-	//save Newick tree format
-	public void saveNewick(Cluster root, int precision, tipusDades typeData)
-			throws Exception {
-		String msgBox, sPath;
-		FileDialog fd;
-		double heightBottom, heightMin, heightMax, extraSpace;
-		//ToNewick toNewick;
-
-		msgBox = Language.getLabel(80) + " Newick";
-		String sNameNoExt = Jpan_btn.getFileNameNoExt();
-		fd = new FileDialog(this, msgBox, FileDialog.SAVE);
-		fd.setFile(sNameNoExt + "-Newick.txt");
-		fd.setVisible(true);
-		if (fd.getFile() != null) {
-			sPath = fd.getDirectory() + fd.getFile();
-			if (cfg.getTipusMatriu().equals(tipusDades.DISTANCIA)) {
-				heightBottom = 0.0;
-			} else {
-				heightMin = cfg.getBaseDendograma();
-				heightMax = cfg.getCimDendograma();
-				extraSpace = (heightMax - heightMin)
-						* (0.05 * MiMath.Arodoneix((heightMax - heightMin),
-								precision));
-				extraSpace = MiMath.Arodoneix(extraSpace, precision);
-				heightBottom = heightMax + extraSpace;
-			}
-			//old version
-//			toNewick = new ToNewick(root, precision, typeData, heightBottom);
-//			toNewick.saveAsNewick(sPath);
-			
-			//new version
-			ToNewick2 toNewick2 = new ToNewick2(root, precision, typeData, heightBottom);
-			toNewick2.saveAsNewick(sPath);
-
-		}
-	}
-
-	public void saveUltrametricTXT() throws Exception {
-		String sPath, msg_box = Language.getLabel(80) + " TXT";
-		String sNameNoExt = Jpan_btn.getFileNameNoExt();
-		FileDialog fd = new FileDialog(this, msg_box, FileDialog.SAVE);
-		fd.setFile(sNameNoExt + "-ultrametric.txt");
-		fd.setVisible(true);
-		if (fd.getFile() != null) {
-			sPath = fd.getDirectory() + fd.getFile();
-			Ultrametric um = new Ultrametric();
-			um.saveAsTXT(sPath, cfg.getPrecision());
-		}
-	}
-
-	public void showUltrametricErrors() {
-		DeviationMeasuresBox box = new DeviationMeasuresBox(this);
-		box.setVisible(true);
-	}
-
-	//Getters and Setters
-	public Jpan_Menu getPan_Menu() {
-		return this.panMenu;
-	}
-
-	public JDesktopPane getPan_Desk() {
-		return this.pan_Desk;
-	}
-
-	public void setCurrentFrame(FrmInternalFrame internalFrame) {
-		this.currentFpiz = internalFrame;
-	}
-	
-	public FrmInternalFrame getCurrentFrame(){
-		return currentFpiz;
-	}
-	
-	public OrganismSet getOS() {
-		return OS;
-	}
-
-	public void setOS(OrganismSet oS) {
-		OS = oS;
-	}
-
-	public boolean[] getSelectedNodeNumbers() {
-		return SelectedNodeNumbers;
-	}
-
-	public void setSelectedNodeNumbers(boolean[] selectedNodeNumbers) {
-		SelectedNodeNumbers = selectedNodeNumbers;
-	}
-
-	//centralized select node update source
-	public void UpdateSelectedNodes() {
-		
-		//search results frame
-		if (this.getCurrentFrame().getInternalFrameData().getSearchResultsFrame() != null){
-			this.getCurrentFrame().getInternalFrameData().getSearchResultsFrame().UpdateNodes();
-		}
-		
-		//context tree update
-		if (this.getCurrentFrame().getInternalFrameData().getContextTreePanel() != null){
-			this.getCurrentFrame().getInternalFrameData().getContextTreePanel().UpdateNodes();
-		}
-		
-		//phylo tree update
-		if (this.getCurrentFrame().getInternalFrameData().getPhyloTreePanel() != null){
-			this.getCurrentFrame().getInternalFrameData().getPhyloTreePanel().UpdateNodes();
-		}
-		
-	}
-
-	public Jpan_genome getPanGenome() {
-		return panGenome;
-	}
-
-	public CSDisplayData getCSD() {
-		return CSD;
-	}
-
-	public void setCSD(CSDisplayData cSD) {
-		CSD = cSD;
-//		System.out.println("Selected Nodes:" );
-//		if (CSD.getSelectedNodes() != null){
-//			for (int i = 0; i<CSD.getSelectedNodes().length; i++){
-//				System.out.println(i + ": " + CSD.getSelectedNodes()[i]);
-//			}
-//		} else {
-//			System.out.println("none");
-//		}
-	}
-
-	public Jpan_Menu getPanMenu() {
-		return panMenu;
-	}
-
-	public boolean isIncludeMotifs() {
-		return IncludeMotifs;
-	}
-
-	public void setIncludeMotifs(boolean includeMotifs) {
-		IncludeMotifs = includeMotifs;
-	}
-
-	public Jpan_TabbedMenu getPanMenuTab() {
-		return panMenuTab;
-	}
-
-	public Jpan_PhyTreeMenu getPanPhyTreeMenu() {
-		return panPhyTreeMenu;
-	}
-
-	//try to return a phylo config, if possible
-	public Config getCfgPhylo() {
-		try {
-			return cfgPhylo;
-		} catch (Exception ex){
-			cfgPhylo = new Config(Jpan_Menu.getCfgPanel());
-			//System.out.println("made a config");
-			
-			//problem 11-
-			try {
-				cfgPhylo.setMatriu(panBtn.getMatriu());
-			} catch (Exception ex2) {}
-
-			//System.out.println("set matrix");
-			if (cfgPhylo.getValorMaxim() == 0) {
-				cfgPhylo.getConfigMenu().setValMax(cfgPhylo.getCimDendograma());
-				//System.out.println("set valmax");
-			}
-			
-			return cfgPhylo;
-		}
-		
-
-	}
-
-	public void setCfgPhylo(Config cfgPhylo) {
-		this.cfgPhylo = cfgPhylo;
-	}
-
-	public Config getCfg() {
-		return cfg;
-	}
-
-	public void setCfg(Config cfg) {
-		this.cfg = cfg;
-	}
-
-	public String getSelectedAnalysisType() {
-		return SelectedAnalysisType;
-	}
-
-	public void setSelectedAnalysisType(String selectedAnalysisType) {
-		SelectedAnalysisType = selectedAnalysisType;
-	}
-
-	public boolean isDisplayMotifs() {
-		return DisplayMotifs;
-	}
-
-	public void setDisplayMotifs(boolean displayMotifs) {
-		DisplayMotifs = displayMotifs;
-	}
-
-	public File getFileChooserSource() {
-		return FileChooserSource;
-	}
-
-	public void setFileChooserSource(File fileChooserSource) {
-		FileChooserSource = fileChooserSource;
-	}
-
-	@Override
-	public void internalFrameActivated(InternalFrameEvent e) {
-	
-		FrmInternalFrame CurrentFrame = (FrmInternalFrame) e.getSource();
-		this.setCurrentFrame(CurrentFrame);
-		System.out.println(CurrentFrame.getInternalFrameData().getQD().getName());
-		
-	}
-
-	@Override
-	public void internalFrameClosed(InternalFrameEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void internalFrameClosing(InternalFrameEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void internalFrameDeactivated(InternalFrameEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void internalFrameDeiconified(InternalFrameEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void internalFrameIconified(InternalFrameEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void internalFrameOpened(InternalFrameEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
+	// ==== Construction Associated ==== //
 	
 	//create menu bar method
 	public void CreateAndAddMenuBar(){
@@ -1950,6 +1308,46 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		this.setJMenuBar(MB);
 	}
 		
+	//Initialize data
+	public void InitializeData(){
+		
+		// ===== Import parameters ======== //
+		
+		//GFF files
+		FeatureIncludeTypes = new LinkedList<String>();
+		FeatureIncludeTypes.add("CDS");
+		FeatureIncludeTypes.add("tRNA");
+		FeatureIncludeTypes.add("rRNA");
+		
+		FeatureDisplayTypes = new LinkedList<String>();
+		FeatureDisplayTypes.add("mobile_element");
+		FeatureDisplayTypes.add("IS_element");
+		
+		//Genbank files
+		setGBKFields(new GBKFieldMapping());
+		
+		// ===== Popular Genome Sets ======== //
+		
+		//add names
+		MG_Halos.setName(strHalos);
+		MG_Chloroviruses.setName(strChloroviruses);
+		MG_Myxo.setName(strMyxo);
+		
+		//add entries - URLs
+		PopularGenomeSets.put(MG_Halos, "");
+		PopularGenomeSets.put(MG_Chloroviruses, "http://www.bme.ucdavis.edu/facciotti/files/2013/05/Chloroviruses.txt");
+		PopularGenomeSets.put(MG_Myxo, "http://www.bme.ucdavis.edu/facciotti/files/2013/05/Myxococcus.txt");
+		
+		//add action listener
+		for (JMenuItem j : PopularGenomeSets.keySet()){
+			j.addActionListener(this);
+		}
+		
+		
+	}
+	
+	// ======= Action Methods ====== //
+	
 	//Action Listener - just for JMenuBar stuff
 	@Override
 	public void actionPerformed(ActionEvent evt) {
@@ -1997,27 +1395,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		if (evt.getSource().equals(MG_Files)){
 			
 			if (this.OS == null){
-				OS = new OrganismSet();
-				OS.setName("Default Genome Set");
-				
-				//update check box menu
-				for (JCheckBoxMenuItem b : getCurrentItems()){
-					if (b.equals(getMG_NoGS())){
-						getMG_CurrentGS().remove(b);
-					} else {
-						b.setSelected(false);
-					}
-				}
-				
-				//Add check box menu item
-				JCheckBoxMenuItem NewOS = new JCheckBoxMenuItem(OS.getName());
-				NewOS.setSelected(true);	
-				NewOS.addActionListener(this);
-				
-				//update menu + corresponding list
-				getCurrentItems().add(NewOS);
-				getMG_CurrentGS().add(NewOS);
-
+				MakeDefaultGenomeSet("Default Genome Set");
 			}
 			
 			// initialize output
@@ -2056,7 +1434,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		}
 		
 		/*
-		 * Switching between genome sets
+		 * SWITCHING BETWEEN GENOME SETS
 		 */
 
 		if (this.AvailableOSCheckBoxMenuItems.contains(evt.getSource())){
@@ -2085,7 +1463,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				//If an appropriate name 
 				if (OSName != null){
 
-					//this.SwitchBetweenOS(OS.getName(), OSName);
 					this.CallSwitchWorker(OS.getName(), OSName);
 				}
 				
@@ -2100,58 +1477,19 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 		}
 		
-		//Load Popular genome set
+		/*
+		 * POPULAR GENOME SET
+		 */
 		for (JCheckBoxMenuItem j : PopularGenomeSets.keySet()){
 			if (j.equals(evt.getSource())){
+				if (j.isSelected()){
 
-				//Message
-				String Msg = "Would you like to switch to this genomic set,\n"+
-						"or import the contents of this genomic set into the current genomic set?";
-				
-				//Show dialog
-				int Option = JOptionPane.showOptionDialog(null, 
-				        Msg, 
-				        "Feedback", 
-				        JOptionPane.YES_NO_CANCEL_OPTION, 
-				        JOptionPane.INFORMATION_MESSAGE, 
-				        null, 
-				        new String[]{"Cancel", "Add to Current Set", "Switch Sets"}, // option types
-				        "default");
-				
-				//parse options
-				if (Option != JOptionPane.YES_OPTION){ //Cancel
-					if (Option == JOptionPane.NO_OPTION){ //Add
-						System.out.println("Add");
-					} else {
-						System.out.println("Switch"); // Switch
-					}
-				}
-				
-				//Cancel option
-				if (Option == JOptionPane.YES_OPTION){
-					j.setSelected(false);
-				}
-				
-				//Add
-				if (Option == JOptionPane.NO_OPTION){
-					ImportPopularSet(j, true);
-				}
-				
-				//Switch
-				if (Option == JOptionPane.CANCEL_OPTION){
-					//Update menu bar
-					for (JCheckBoxMenuItem q : PopularGenomeSets.keySet()){
-						if (q != j){
-							q.setSelected(false);
-						}
-					}
+					LoadPopularWorker LPW = new LoadPopularWorker(j);
+					LPW.addPropertyChangeListener(panBtn);
+					LPW.execute();
 					
-					//Import set, and simultaneously switch sets to this new set.
-					ImportPopularSet(j, false);
+					break;
 				}
-				
-				//Debugging
-				//System.out.println("Picked " + j.getName());
 			}
 		}
 		
@@ -2302,6 +1640,612 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		}
 	}
 	
+	//create a default genome set, if no genome set exists.
+	public void MakeDefaultGenomeSet(String OSName){
+		OS = new OrganismSet();
+		OS.setName(OSName);
+		
+		//update check box menu
+		for (JCheckBoxMenuItem b : getCurrentItems()){
+			if (b.equals(getMG_NoGS())){
+				getMG_CurrentGS().remove(b);
+			} else {
+				b.setSelected(false);
+			}
+		}
+		
+		//Add check box menu item
+		JCheckBoxMenuItem NewOS = new JCheckBoxMenuItem(OS.getName());
+		NewOS.setName(OSName);
+		NewOS.setSelected(true);	
+		NewOS.addActionListener(this);
+		
+		//update menu + corresponding list
+		AvailableOSCheckBoxMenuItems.add(NewOS);
+		MG_CurrentGS.add(NewOS);
+
+	}
+	
+	//centralized select node update source
+	public void UpdateSelectedNodes() {
+		
+		//search results frame
+		if (this.getCurrentFrame().getInternalFrameData().getSearchResultsFrame() != null){
+			this.getCurrentFrame().getInternalFrameData().getSearchResultsFrame().UpdateNodes();
+		}
+		
+		//context tree update
+		if (this.getCurrentFrame().getInternalFrameData().getContextTreePanel() != null){
+			this.getCurrentFrame().getInternalFrameData().getContextTreePanel().UpdateNodes();
+		}
+		
+		//phylo tree update
+		if (this.getCurrentFrame().getInternalFrameData().getPhyloTreePanel() != null){
+			this.getCurrentFrame().getInternalFrameData().getPhyloTreePanel().UpdateNodes();
+		}
+		
+	}
+	
+	//invoke swing worker, for progress bar stuff
+	public void CallSwitchWorker(String FirstOS, String SecondOS){
+		SwitchWorker SW = new SwitchWorker(FirstOS, SecondOS);
+		SW.addPropertyChangeListener(panBtn);
+		SW.execute();
+	}
+	
+	//when No OS loaded
+	public void NoOS(){
+		
+		//TODO: indicate menu bar?
+		
+		String MenuBar = "Please define a genome set before continuing.\n" +
+						"This can be accomplished by selecting 'New Genome Set'\n" +
+						"From the Genomes drop-down menu, or by typing ";
+		String invokeNew;
+		if (System.getProperty("os.name").contains("Mac")){
+			invokeNew = "command + N";
+		} else {
+			invokeNew = "ctrl + N";
+		}
+		
+		String msg = MenuBar + invokeNew;
+		JOptionPane.showMessageDialog(null, msg,
+				"No Genome Set Defined", JOptionPane.ERROR_MESSAGE);
+	}
+
+	//activate/deactivate
+	public void OSMenuComponentsEnabled(boolean SwitchPos){
+
+		M_Load.setEnabled(SwitchPos);
+		M_Export.setEnabled(SwitchPos);
+
+	}
+	
+	// ==== Memory + OS Import/Export Management ====== //	
+	
+	//Export an existing Organism Set object into a file
+	public void ExportSerializedOS(String OSName){
+		try {
+			File f = new File(OSName);
+			//System.out.println("Export: " + f.getAbsolutePath());
+			GenomeSetFiles.put(OS.getName(), f);
+	        FileOutputStream fileOut = new FileOutputStream(f);
+	        ObjectOutputStream out = new ObjectOutputStream(fileOut);
+	        out.writeObject(OS);
+	        out.close();
+	        fileOut.close();
+
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
+	}
+	
+	//Export a non-focussed organism set into a file.
+	public void ExportNonFocusOS(OrganismSet OS_2){
+		try {
+			File f = new File(OS_2.getName());
+			//System.out.println("Export: " + f.getAbsolutePath());
+			GenomeSetFiles.put(OS_2.getName(), f);
+	        FileOutputStream fileOut = new FileOutputStream(f);
+	        ObjectOutputStream out = new ObjectOutputStream(fileOut);
+	        out.writeObject(OS_2);
+	        out.close();
+	        fileOut.close();
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
+	}
+	
+	//Import an Organism Set object into memory
+	public void ImportSerializedOS(String OSName){
+
+		try
+	      {	
+		     File f = GenomeSetFiles.get(OSName);
+		     //System.out.println("Import: " + f.getAbsolutePath());
+	         FileInputStream fileIn = new FileInputStream(f);
+	         ObjectInputStream in = new ObjectInputStream(fileIn);
+	         OS = (OrganismSet) in.readObject();
+	         in.close();
+	         fileIn.close();
+	         
+	      }catch(Exception ex) {
+	         ex.printStackTrace();  
+	      }
+
+	}
+	
+	//Import organism set info from web.
+	public void ImportPopularSet(JCheckBoxMenuItem m){
+		
+		//Retrieve info		
+		File f = new File(m.getName());
+		String strURL = PopularGenomeSets.get(m);
+		GenomeSetFiles.put(m.getName(), f);
+		
+		//Import!
+		try {
+			URL inputURL = new URL(strURL);
+			HttpURLConnection c = (HttpURLConnection) inputURL.openConnection();
+			ObjectInputStream in = new ObjectInputStream(c.getInputStream());
+				
+			//import data, update appropriately.
+			OrganismSet OSPopular = (OrganismSet) in.readObject();
+			
+			//Initialize a file for the organism set, even if we don't use it.
+			File fx = new File(OSPopular.getName());
+			GenomeSetFiles.put(OSPopular.getName(), fx);
+			
+			//Need a new check box
+			JCheckBoxMenuItem pop = new JCheckBoxMenuItem();
+			pop.setText(m.getText());
+			pop.setName(m.getName());
+			
+			//turn on additional options
+			OSMenuComponentsEnabled(true);
+			
+			//update current genome set menu
+			if (AvailableOSCheckBoxMenuItems.contains(MG_NoGS)){
+				
+				//make a new, default genome set.
+				MakeDefaultGenomeSet(OSPopular.getName());
+				
+				//update appropriately
+				OS = OSPopular;
+
+				
+			//Switch out of old genome set
+			} else {
+				
+				//Add this menu item to the list.				
+				AvailableOSCheckBoxMenuItems.add(pop);
+				this.CallSwitchWorker(OS.getName(), OSPopular.getName());
+			}
+		
+			//Update all GUI components
+			NewOSUpdateGUI();
+
+		} catch (Exception e) {
+			
+			//error message
+			JOptionPane.showMessageDialog(null, "There was a problem reading data from the internet.\nCheck your internet connection.",
+					"Data Import Error", JOptionPane.ERROR_MESSAGE);
+			
+			System.out.println("!!!!!!");
+			e.printStackTrace();
+		}
+
+
+	}
+
+	//Method to switch between two OS (files already exist)
+	@SuppressWarnings("unchecked")
+	public void SwitchBetweenOS(String FirstOS, String SecondOS){
+		
+		//System.out.println("Switch!");
+		
+		//switch progressbar
+		this.getPanBtn().getProgressBar().setValue(100);
+		this.getPanBtn().getProgressBar().setIndeterminate(true);
+		this.getPanBtn().repaint();
+		
+		//switch cursor
+		Component glassPane = this.getRootPane().getGlassPane();
+		glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		glassPane.setVisible(true);
+		
+		//UI update
+		SwingUtilities.updateComponentTreeUI(getRootPane());
+		
+		//Switch in OS - note helpful messages
+		ExportSerializedOS(FirstOS);
+		System.out.println("Finished Exporting Genome Set " + FirstOS);
+		GenomeSetFiles.put(OS.getName(), new File(OS.getName()));
+		this.OS = new OrganismSet();
+		ImportSerializedOS(SecondOS);
+		System.out.println("Finished Importing Genome Set " + SecondOS);
+		
+		//Switch in menu
+		for (JCheckBoxMenuItem b : this.AvailableOSCheckBoxMenuItems){
+			if (b.getName().equals(SecondOS)){
+				b.setSelected(true);
+			} else{
+				b.setSelected(false);
+			}
+		}
+		
+//		// ====== Context Set Menu ======//
+//		
+//		this.getPanBtn().getContextSetMenu().removeAllItems();
+//		
+//		if (OS.getCSDs().size() > 0){
+//			for (ContextSetDescription CSD : OS.getCSDs()){
+//				this.getPanBtn().getContextSetMenu().addItem(CSD.getName());
+//			}
+//		} else {
+//			this.getPanBtn().getContextSetMenu().addItem("<none>");
+//		}
+//
+//		// ====== Custom Dissimilarities ======//
+//		
+//		//Switch dissimilarities
+//		this.getPan_Menu().getCbDissimilarity().removeAllItems();
+//		
+//		//add all custom dissimilarities
+//		if (OS.getCustomDissimilarities().size() > 0){
+//			for (CustomDissimilarity CD : OS.getCustomDissimilarities()){
+//				this.getPan_Menu().getCbDissimilarity().addItem(CD.getName());
+//			}
+//		}
+//		
+//		//add fundamental dissimilarities
+//		this.getPan_Menu().getCbDissimilarity().addItem("Common Genes - Dice");
+//		this.getPan_Menu().getCbDissimilarity().addItem("Common Genes - Jaccard");
+//		this.getPan_Menu().getCbDissimilarity().addItem("Moving Distances");
+//		this.getPan_Menu().getCbDissimilarity().addItem("Total Length");
+//		
+//		// ====== Phylogenetic Trees ======//
+//		
+//		this.getPanPhyTreeMenu().setParsedPhyTrees(OS.getParsedPhyTrees());
+//		this.getPanPhyTreeMenu().setLoadedPhyTrees(OS.getLoadedPhyTrees());	
+//		if (OS.getLoadedPhyTrees().size() > 0){
+//			this.getPanPhyTreeMenu().setFilePath(OS.getLoadedPhyTrees().get(0));
+//		}
+//		
+//		//update GUI
+//		this.getPanPhyTreeMenu().getMenuLoadedPhyTrees().removeAllItems();
+//		String[] PhyTrees = this.getPanPhyTreeMenu().getLoadedPhyTrees();
+//		if (PhyTrees.length > 0){
+//			for (String s : PhyTrees){
+//				this.getPanPhyTreeMenu().getMenuLoadedPhyTrees().addItem(s);
+//			}
+//		} else {
+//			this.getPanPhyTreeMenu().getMenuLoadedPhyTrees().addItem("<none>");
+//		}
+//
+//		// ====== Motif Menu ======//
+//		
+//		//Most motifs are in the actual organism sets, this simply adjusts the menu.
+//		this.getPanMotifOptions().getMenuOfMotifs().removeAllItems();
+//		if (OS.getMotifNames().size() > 0){
+//			for (String s : OS.getMotifNames()){
+//				this.getPanMotifOptions().getMenuOfMotifs().addItem(s);
+//			}
+//		} else{
+//			this.getPanMotifOptions().getMenuOfMotifs().addItem("<none>");
+//		}
+
+		NewOSUpdateGUI();
+		
+		//switch cursor
+		glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+		glassPane.setVisible(false);
+		
+		//switch progressbar
+		this.getPanBtn().getProgressBar().setValue(0);
+		this.getPanBtn().getProgressBar().setIndeterminate(false);
+		
+		//UI update
+		SwingUtilities.updateComponentTreeUI(getRootPane());
+		
+	}
+
+	//Update GUI components when a new OS is loaded.
+	public void NewOSUpdateGUI(){
+		
+		// ====== Context Set Menu ======//
+		
+		this.getPanBtn().getContextSetMenu().removeAllItems();
+				
+		if (OS.getCSDs().size() > 0){
+			for (ContextSetDescription CSD : OS.getCSDs()){
+				this.getPanBtn().getContextSetMenu().addItem(CSD.getName());
+			}
+		} else {
+			this.getPanBtn().getContextSetMenu().addItem("<none>");
+		}
+
+		// ====== Custom Dissimilarities ======//
+		
+		//Switch dissimilarities
+		this.getPan_Menu().getCbDissimilarity().removeAllItems();
+		
+		//add all custom dissimilarities
+		if (OS.getCustomDissimilarities().size() > 0){
+			for (CustomDissimilarity CD : OS.getCustomDissimilarities()){
+				this.getPan_Menu().getCbDissimilarity().addItem(CD.getName());
+			}
+		}
+		
+		//add fundamental dissimilarities
+		this.getPan_Menu().getCbDissimilarity().addItem("Common Genes - Dice");
+		this.getPan_Menu().getCbDissimilarity().addItem("Common Genes - Jaccard");
+		this.getPan_Menu().getCbDissimilarity().addItem("Moving Distances");
+		this.getPan_Menu().getCbDissimilarity().addItem("Total Length");
+		
+		// ====== Phylogenetic Trees ======//
+		
+		this.getPanPhyTreeMenu().setParsedPhyTrees(OS.getParsedPhyTrees());
+		this.getPanPhyTreeMenu().setLoadedPhyTrees(OS.getLoadedPhyTrees());	
+		if (OS.getLoadedPhyTrees().size() > 0){
+			this.getPanPhyTreeMenu().setFilePath(OS.getLoadedPhyTrees().get(0));
+		}
+		
+		//update GUI
+		this.getPanPhyTreeMenu().getMenuLoadedPhyTrees().removeAllItems();
+		String[] PhyTrees = this.getPanPhyTreeMenu().getLoadedPhyTrees();
+		if (PhyTrees.length > 0){
+			for (String s : PhyTrees){
+				this.getPanPhyTreeMenu().getMenuLoadedPhyTrees().addItem(s);
+			}
+		} else {
+			this.getPanPhyTreeMenu().getMenuLoadedPhyTrees().addItem("<none>");
+		}
+
+		// ====== Motif Menu ======//
+		
+		//Most motifs are in the actual organism sets, this simply adjusts the menu.
+		this.getPanMotifOptions().getMenuOfMotifs().removeAllItems();
+		if (OS.getMotifNames().size() > 0){
+			for (String s : OS.getMotifNames()){
+				this.getPanMotifOptions().getMenuOfMotifs().addItem(s);
+			}
+		} else{
+			this.getPanMotifOptions().getMenuOfMotifs().addItem("<none>");
+		}		
+		
+		// ====== UI update ====== //
+		SwingUtilities.updateComponentTreeUI(getRootPane());
+		
+	}
+	
+	//check heap size
+	public long getAvailableMemory(){
+		return Runtime.getRuntime().freeMemory();
+	}
+	
+	//Call Load Organism Set Worker
+	public void LoadOrganismSet(String Name){
+		
+		//Retrieve organism set
+		OSCreationInstructions OSC = GenomeSets.get(Name);
+		
+		//Send process to another thread
+		LoadOSWorker LOW = new LoadOSWorker(OSC);
+		LOW.addPropertyChangeListener(panBtn);
+		LOW.execute();
+		
+	}
+
+	// ==== Save/Export Items (Original Multidendrograms) ==== //
+	
+	public void savePicture(final BufferedImage buff, final String tipus)
+			throws Exception {
+		String sPath;
+		String sNameNoExt = Jpan_btn.getFileNameNoExt();
+		final FileDialog fd = new FileDialog(this, Language.getLabel(75) + " "
+				+ tipus.toUpperCase(), FileDialog.SAVE);
+		fd.setFile(sNameNoExt + "." + tipus);
+		fd.setVisible(true);
+
+		if (fd.getFile() != null) {
+			sPath = fd.getDirectory() + fd.getFile();
+			final File fil = new File(sPath);
+			try {
+				ImageIO.write(buff, tipus, fil);
+//				FesLog.LOG.info("Imatge Emmagatzemada amb exit");
+			} catch (final IOException e) {
+				String msg_err = Language.getLabel(76);
+//				FesLog.LOG
+//						.throwing(
+//								"FrmPrincipalDesk",
+//								"savePicture(final BufferedImage buff, final String tipus)",
+//								e);
+				throw new Exception(msg_err);
+			} catch (Exception e) {
+				String msg_err = Language.getLabel(77);
+//				FesLog.LOG
+//						.throwing(
+//								"FrmPrincipalDesk",
+//								"savePicture(final BufferedImage buff, final String tipus)",
+//								e);
+				throw new Exception(msg_err);
+			}
+		}
+	}
+
+	public void savePostSript(FrmPiz frmpiz) throws Exception {
+		String sPath;
+		String sNameNoExt = Jpan_btn.getFileNameNoExt();
+		final FileDialog fd = new FileDialog(this, Language.getLabel(75)
+				+ " EPS", FileDialog.SAVE);
+		fd.setFile(sNameNoExt + ".eps");
+		fd.setVisible(true);
+
+		if (fd.getFile() != null) {
+			sPath = fd.getDirectory() + fd.getFile();
+			try {
+				new EPSExporter(cfg, frmpiz, sPath);
+
+//				FesLog.LOG.info("Imatge EPS emmagatzemada amb exit");
+			} catch (Exception e) {
+				System.out.println("Exception 291 FrmPrincipalDesk");
+				String msg_err = Language.getLabel(77);
+//				FesLog.LOG.throwing("FrmPrincipalDesk",
+//						"savePostScript(final BufferedImage buff)", e);
+				throw new Exception(msg_err);
+			}
+		}
+	}
+
+	public void saveTXT(Cluster arrel, int precisio, tipusDades tip)
+			throws Exception {
+		String sPath, msg_box = Language.getLabel(80) + " TXT";
+		String sNameNoExt = Jpan_btn.getFileNameNoExt();
+		FileDialog fd = new FileDialog(this, msg_box, FileDialog.SAVE);
+		fd.setFile(sNameNoExt + "-tree.txt");
+		fd.setVisible(true);
+		if (fd.getFile() != null) {
+			sPath = fd.getDirectory() + fd.getFile();
+			ToTXT saveTXT = new ToTXT(arrel, precisio, tip);
+			saveTXT.saveAsTXT(sPath);
+		}
+	}
+
+	//save Newick tree format
+	public void saveNewick(Cluster root, int precision, tipusDades typeData)
+			throws Exception {
+		String msgBox, sPath;
+		FileDialog fd;
+		double heightBottom, heightMin, heightMax, extraSpace;
+		//ToNewick toNewick;
+
+		msgBox = Language.getLabel(80) + " Newick";
+		String sNameNoExt = Jpan_btn.getFileNameNoExt();
+		fd = new FileDialog(this, msgBox, FileDialog.SAVE);
+		fd.setFile(sNameNoExt + "-Newick.txt");
+		fd.setVisible(true);
+		if (fd.getFile() != null) {
+			sPath = fd.getDirectory() + fd.getFile();
+			if (cfg.getTipusMatriu().equals(tipusDades.DISTANCIA)) {
+				heightBottom = 0.0;
+			} else {
+				heightMin = cfg.getBaseDendograma();
+				heightMax = cfg.getCimDendograma();
+				extraSpace = (heightMax - heightMin)
+						* (0.05 * MiMath.Arodoneix((heightMax - heightMin),
+								precision));
+				extraSpace = MiMath.Arodoneix(extraSpace, precision);
+				heightBottom = heightMax + extraSpace;
+			}
+			//old version
+//			toNewick = new ToNewick(root, precision, typeData, heightBottom);
+//			toNewick.saveAsNewick(sPath);
+			
+			//new version
+			ToNewick2 toNewick2 = new ToNewick2(root, precision, typeData, heightBottom);
+			toNewick2.saveAsNewick(sPath);
+
+		}
+	}
+
+	public void saveUltrametricTXT() throws Exception {
+		String sPath, msg_box = Language.getLabel(80) + " TXT";
+		String sNameNoExt = Jpan_btn.getFileNameNoExt();
+		FileDialog fd = new FileDialog(this, msg_box, FileDialog.SAVE);
+		fd.setFile(sNameNoExt + "-ultrametric.txt");
+		fd.setVisible(true);
+		if (fd.getFile() != null) {
+			sPath = fd.getDirectory() + fd.getFile();
+			Ultrametric um = new Ultrametric();
+			um.saveAsTXT(sPath, cfg.getPrecision());
+		}
+	}
+
+	public void showUltrametricErrors() {
+		DeviationMeasuresBox box = new DeviationMeasuresBox(this);
+		box.setVisible(true);
+	}
+	
+	// ======= Internal Frame Stuff ========//
+	
+	//Create an internal frame
+	public FrmInternalFrame createInternalFrame(boolean isUpdate,
+			String methodName) {
+		int x, y, width, height;
+		this.InternalFrameID = InternalFrameID + 1;
+		FrmInternalFrame pizarra;
+		
+		x = 0;
+		y = 0;
+		width = Parametres_Inicials.getWidth_frmDesk();
+		height = Parametres_Inicials.getHeight_frmDesk();
+		
+		//pizarra translates to "slate" - internal tree frame
+		pizarra = new FrmInternalFrame(methodName, isUpdate, x, y, this);
+		pizarra.setSize(width, height);
+		pizarra.setBackground(Color.BLUE);
+		pizarra.setLayout(new BorderLayout());
+		pizarra.addInternalFrameListener(panBtn);
+		pizarra.addInternalFrameListener(panGenome);
+		pan_Desk.add(pizarra, BorderLayout.CENTER);
+				
+		//desktop manager maximizes frame.
+		DefaultDesktopManager ddm = new DefaultDesktopManager();
+		ddm.maximizeFrame(pizarra);
+
+		return pizarra;
+	}
+	
+	//internal frame listener methods
+	
+	@Override
+	public void internalFrameActivated(InternalFrameEvent e) {
+	
+		FrmInternalFrame CurrentFrame = (FrmInternalFrame) e.getSource();
+		this.setCurrentFrame(CurrentFrame);
+		System.out.println(CurrentFrame.getInternalFrameData().getQD().getName());
+		
+	}
+
+	@Override
+	public void internalFrameClosed(InternalFrameEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void internalFrameClosing(InternalFrameEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void internalFrameDeactivated(InternalFrameEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void internalFrameDeiconified(InternalFrameEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void internalFrameIconified(InternalFrameEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void internalFrameOpened(InternalFrameEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	// ==== Setters And Getters ===== //
+	
 	public LinkedList<String> getGFFIncludeTypes() {
 		return FeatureIncludeTypes;
 	}
@@ -2382,4 +2326,175 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		GBKFields = gBKFields;
 	}
 	
+	public Jpan_genome getPanGenome() {
+		return panGenome;
+	}
+
+	public CSDisplayData getCSD() {
+		return CSD;
+	}
+
+	public void setCSD(CSDisplayData cSD) {
+		CSD = cSD;
+//		System.out.println("Selected Nodes:" );
+//		if (CSD.getSelectedNodes() != null){
+//			for (int i = 0; i<CSD.getSelectedNodes().length; i++){
+//				System.out.println(i + ": " + CSD.getSelectedNodes()[i]);
+//			}
+//		} else {
+//			System.out.println("none");
+//		}
+	}
+
+	public Jpan_Menu getPanMenu() {
+		return panMenu;
+	}
+
+	public boolean isIncludeMotifs() {
+		return IncludeMotifs;
+	}
+
+	public void setIncludeMotifs(boolean includeMotifs) {
+		IncludeMotifs = includeMotifs;
+	}
+
+	public Jpan_TabbedMenu getPanMenuTab() {
+		return panMenuTab;
+	}
+
+	public Jpan_PhyTreeMenu getPanPhyTreeMenu() {
+		return panPhyTreeMenu;
+	}
+
+	//try to return a phylo config, if possible
+	public Config getCfgPhylo() {
+		try {
+			return cfgPhylo;
+		} catch (Exception ex){
+			cfgPhylo = new Config(Jpan_Menu.getCfgPanel());
+			//System.out.println("made a config");
+			
+			//problem 11-
+			try {
+				cfgPhylo.setMatriu(panBtn.getMatriu());
+			} catch (Exception ex2) {}
+
+			//System.out.println("set matrix");
+			if (cfgPhylo.getValorMaxim() == 0) {
+				cfgPhylo.getConfigMenu().setValMax(cfgPhylo.getCimDendograma());
+				//System.out.println("set valmax");
+			}
+			
+			return cfgPhylo;
+		}
+		
+
+	}
+
+	public void setCfgPhylo(Config cfgPhylo) {
+		this.cfgPhylo = cfgPhylo;
+	}
+
+	public Config getCfg() {
+		return cfg;
+	}
+
+	public void setCfg(Config cfg) {
+		this.cfg = cfg;
+	}
+
+	public String getSelectedAnalysisType() {
+		return SelectedAnalysisType;
+	}
+
+	public void setSelectedAnalysisType(String selectedAnalysisType) {
+		SelectedAnalysisType = selectedAnalysisType;
+	}
+
+	public boolean isDisplayMotifs() {
+		return DisplayMotifs;
+	}
+
+	public void setDisplayMotifs(boolean displayMotifs) {
+		DisplayMotifs = displayMotifs;
+	}
+
+	public File getFileChooserSource() {
+		return FileChooserSource;
+	}
+
+	public void setFileChooserSource(File fileChooserSource) {
+		FileChooserSource = fileChooserSource;
+	}
+	
+	public int getInternalFrameID() {
+		return InternalFrameID;
+	}
+
+	public void setInternalFrameID(int internalFrameID) {
+		InternalFrameID = internalFrameID;
+	}
+
+	public Jpan_MotifOptions getPanMotifOptions() {
+		return panMotifOptions;
+	}
+
+	public Jpan_btn_NEW getPanBtn() {
+		return panBtn;
+	}
+
+	public Config getConfig() {
+		//System.out.println("enter getconfig");
+		cfg = new Config(Jpan_Menu.getCfgPanel());
+		//System.out.println("made a config");
+		
+		//problem 11-
+		try {
+			cfg.setMatriu(panBtn.getMatriu());
+		} catch (Exception ex) {}
+
+		//System.out.println("set matrix");
+		if (cfg.getValorMaxim() == 0) {
+			cfg.getConfigMenu().setValMax(cfg.getCimDendograma());
+			//System.out.println("set valmax");
+		}
+		//System.out.println("return");
+		return cfg;
+	}
+
+	
+	//Original Getters and Setters
+	
+	public Jpan_Menu getPan_Menu() {
+		return this.panMenu;
+	}
+
+	public JDesktopPane getPan_Desk() {
+		return this.pan_Desk;
+	}
+
+	public void setCurrentFrame(FrmInternalFrame internalFrame) {
+		this.currentFpiz = internalFrame;
+	}
+	
+	public FrmInternalFrame getCurrentFrame(){
+		return currentFpiz;
+	}
+	
+	public OrganismSet getOS() {
+		return OS;
+	}
+
+	public void setOS(OrganismSet oS) {
+		OS = oS;
+	}
+
+	public boolean[] getSelectedNodeNumbers() {
+		return SelectedNodeNumbers;
+	}
+
+	public void setSelectedNodeNumbers(boolean[] selectedNodeNumbers) {
+		SelectedNodeNumbers = selectedNodeNumbers;
+	}
+
 }

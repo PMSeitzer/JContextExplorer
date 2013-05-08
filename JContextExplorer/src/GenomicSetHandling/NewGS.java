@@ -162,7 +162,7 @@ public class NewGS extends JDialog implements ActionListener{
 					boolean AtLeastOneOS = true;
 					boolean SetNewOSToSelected = false;
 					
-					//If this isthe first OS, not much more to do.
+					//If this is the first OS, not much more to do.
 					for (JCheckBoxMenuItem b : f.getCurrentItems()){
 						if (b.equals(f.getMG_NoGS())){
 							f.getMG_CurrentGS().remove(b);
@@ -171,6 +171,13 @@ public class NewGS extends JDialog implements ActionListener{
 							f.setOS(OS);
 							break;
 						} 
+					}
+					
+					//Last check
+					for (JCheckBoxMenuItem b : f.getCurrentItems()){
+						if (b.getName().equals("Default Genome Set")){
+							AtLeastOneOS = true;
+						}
 					}
 
 					//if multiple OS, option to switch to newly created OS.
