@@ -876,9 +876,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			glassPane.setVisible(true);
 			
-			//UI update
-			SwingUtilities.updateComponentTreeUI(getRootPane());
-			
 			setProgress(100);
 			
 			//Switch in OS
@@ -1003,9 +1000,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			Component glassPane = getRootPane().getGlassPane();
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			glassPane.setVisible(true);
-			
-			//UI update
-			SwingUtilities.updateComponentTreeUI(getRootPane());
 			
 			setProgress(100);
 			
@@ -1691,6 +1685,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		SwitchWorker SW = new SwitchWorker(FirstOS, SecondOS);
 		SW.addPropertyChangeListener(panBtn);
 		SW.execute();
+		
+//		//UI update
+//		SwingUtilities.updateComponentTreeUI(getRootPane());
+		
 	}
 	
 	//when No OS loaded
@@ -2015,7 +2013,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		}		
 		
 		// ====== UI update ====== //
-		SwingUtilities.updateComponentTreeUI(getRootPane());
+		//SwingUtilities.updateComponentTreeUI(getRootPane());
 		
 	}
 	

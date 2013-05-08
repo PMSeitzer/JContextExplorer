@@ -175,7 +175,7 @@ public class NewGS extends JDialog implements ActionListener{
 					
 					//Last check
 					for (JCheckBoxMenuItem b : f.getCurrentItems()){
-						if (b.getName().equals("Default Genome Set")){
+						if (b.getText().equals("Default Genome Set")){
 							AtLeastOneOS = true;
 						}
 					}
@@ -209,7 +209,6 @@ public class NewGS extends JDialog implements ActionListener{
 					
 					//switch OS, if multiple OS, and option
 					if (SetNewOSToSelected){						
-						//f.SwitchBetweenOS(f.getOS().getName(), OS.getName());
 						f.CallSwitchWorker(f.getOS().getName(), OS.getName());
 				     }
 
