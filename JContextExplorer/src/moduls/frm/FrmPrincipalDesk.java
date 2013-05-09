@@ -231,9 +231,13 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JCheckBoxMenuItem MG_Halos;
 	private JCheckBoxMenuItem MG_Myxo;
 	private JCheckBoxMenuItem MG_Chloroviruses;
+	private JCheckBoxMenuItem MG_Staph;
+	private JCheckBoxMenuItem MG_Salmonella;
 	private String strHalos = "Halophilic Archaea";
 	private String strMyxo = "Myxococcus";
 	private String strChloroviruses = "Chloroviruses";
+	private String strStaph = "Staphylococcus Aureus";
+	private String strSalmonella = "Salmonella Enterica";
 	
 	//Load components
 	private JMenuItem ML_ContextSet;
@@ -894,67 +898,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			}
 			
 			NewOSUpdateGUI();
-			
-//			// ====== Context Set Menu ======//
-//			
-//			getPanBtn().getContextSetMenu().removeAllItems();
-//			
-//			if (OS.getCSDs().size() > 0){
-//				for (ContextSetDescription CSD : OS.getCSDs()){
-//					getPanBtn().getContextSetMenu().addItem(CSD.getName());
-//				}
-//			} else {
-//				getPanBtn().getContextSetMenu().addItem("<none>");
-//			}
-//
-//			// ====== Custom Dissimilarities ======//
-//			
-//			//Switch dissimilarities
-//			getPan_Menu().getCbDissimilarity().removeAllItems();
-//			
-//			//add all custom dissimilarities
-//			if (OS.getCustomDissimilarities().size() > 0){
-//				for (CustomDissimilarity CD : OS.getCustomDissimilarities()){
-//					getPan_Menu().getCbDissimilarity().addItem(CD.getName());
-//				}
-//			}
-//			
-//			//add fundamental dissimilarities
-//			getPan_Menu().getCbDissimilarity().addItem("Common Genes - Dice");
-//			getPan_Menu().getCbDissimilarity().addItem("Common Genes - Jaccard");
-//			getPan_Menu().getCbDissimilarity().addItem("Moving Distances");
-//			getPan_Menu().getCbDissimilarity().addItem("Total Length");
-//			
-//			// ====== Phylogenetic Trees ======//
-//			
-//			getPanPhyTreeMenu().setParsedPhyTrees(OS.getParsedPhyTrees());
-//			getPanPhyTreeMenu().setLoadedPhyTrees(OS.getLoadedPhyTrees());	
-//			if (OS.getLoadedPhyTrees().size() > 0){
-//				getPanPhyTreeMenu().setFilePath(OS.getLoadedPhyTrees().get(0));
-//			}
-//			
-//			//update GUI
-//			getPanPhyTreeMenu().getMenuLoadedPhyTrees().removeAllItems();
-//			String[] PhyTrees = getPanPhyTreeMenu().getLoadedPhyTrees();
-//			if (PhyTrees.length > 0){
-//				for (String s : PhyTrees){
-//					getPanPhyTreeMenu().getMenuLoadedPhyTrees().addItem(s);
-//				}
-//			} else {
-//				getPanPhyTreeMenu().getMenuLoadedPhyTrees().addItem("<none>");
-//			}
-//
-//			// ====== Motif Menu ======//
-//			
-//			//Most motifs are in the actual organism sets, this simply adjusts the menu.
-//			getPanMotifOptions().getMenuOfMotifs().removeAllItems();
-//			if (OS.getMotifNames().size() > 0){
-//				for (String s : OS.getMotifNames()){
-//					getPanMotifOptions().getMenuOfMotifs().addItem(s);
-//				}
-//			} else{
-//				getPanMotifOptions().getMenuOfMotifs().addItem("<none>");
-//			}
 
 			//switch cursor
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -1200,9 +1143,13 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_Halos = new JCheckBoxMenuItem(strHalos);
 		MG_Chloroviruses = new JCheckBoxMenuItem(strChloroviruses);
 		MG_Myxo = new JCheckBoxMenuItem(strMyxo);
+		MG_Staph = new JCheckBoxMenuItem(strStaph);
+		MG_Salmonella = new JCheckBoxMenuItem(strSalmonella);
 		MG_PopularSets.add(MG_Halos);
 		MG_PopularSets.add(MG_Chloroviruses);
 		MG_PopularSets.add(MG_Myxo);
+		MG_PopularSets.add(MG_Staph);
+		MG_PopularSets.add(MG_Salmonella);
 		
 		//Genomes menu - add to menu
 		M_Genomes.add(MG_NewGS);
@@ -1326,11 +1273,15 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_Halos.setName(strHalos);
 		MG_Chloroviruses.setName(strChloroviruses);
 		MG_Myxo.setName(strMyxo);
+		MG_Staph.setName(strStaph);
+		MG_Salmonella.setName(strSalmonella);
 		
 		//add entries - URLs
-		PopularGenomeSets.put(MG_Halos, "");
+		PopularGenomeSets.put(MG_Halos, "http://www.bme.ucdavis.edu/facciotti/files/2013/05/Haloarchaea.txt");
 		PopularGenomeSets.put(MG_Chloroviruses, "http://www.bme.ucdavis.edu/facciotti/files/2013/05/Chloroviruses.txt");
 		PopularGenomeSets.put(MG_Myxo, "http://www.bme.ucdavis.edu/facciotti/files/2013/05/Myxococcus.txt");
+		PopularGenomeSets.put(MG_Staph, "http://www.bme.ucdavis.edu/facciotti/files/2013/05/Staphylococcus_aureus.txt");
+		PopularGenomeSets.put(MG_Salmonella, "http://www.bme.ucdavis.edu/facciotti/files/2013/05/Salmonella_Enterica.txt");
 		
 		//add action listener
 		for (JMenuItem j : PopularGenomeSets.keySet()){
@@ -1589,9 +1540,11 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			DirName = ExportGenomes.getSelectedFile().getPath();
 			
 			//begin export
-			ExportWorker EW = new ExportWorker(DirName);
-			EW.addPropertyChangeListener(panBtn);
-			EW.execute();
+			if (DirName != null){
+				ExportWorker EW = new ExportWorker(DirName);
+				EW.addPropertyChangeListener(panBtn);
+				EW.execute();
+			}
 			
 		}
 		
@@ -1811,26 +1764,36 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				//update appropriately
 				OS = OSPopular;
 
+				//remove no GS type.
+				AvailableOSCheckBoxMenuItems.remove(MG_NoGS);
+				
+				//Update GUI
+				NewOSUpdateGUI();
 				
 			//Switch out of old genome set
 			} else {
 				
-				//Add this menu item to the list.				
+				//Create a GS
+				//Add this menu item to the list.			
 				AvailableOSCheckBoxMenuItems.add(pop);
+				MG_CurrentGS.add(pop);
+				
+				//create a dummy file for new genome set, store appropriately
+				OrganismSet OSDummy = new OrganismSet();
+				OSDummy.setName(pop.getName());
+				this.ExportNonFocusOS(OSDummy);
+
+				//invoke switch worker
 				this.CallSwitchWorker(OS.getName(), OSPopular.getName());
+				
 			}
-		
-			//Update all GUI components
-			NewOSUpdateGUI();
+			
 
 		} catch (Exception e) {
 			
 			//error message
 			JOptionPane.showMessageDialog(null, "There was a problem reading data from the internet.\nCheck your internet connection.",
 					"Data Import Error", JOptionPane.ERROR_MESSAGE);
-			
-			System.out.println("!!!!!!");
-			e.printStackTrace();
 		}
 
 
@@ -2460,7 +2423,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		return cfg;
 	}
 
-	
 	//Original Getters and Setters
 	
 	public Jpan_Menu getPan_Menu() {

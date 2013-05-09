@@ -1133,10 +1133,18 @@ public void ExportExtendedGFFFile(String FileName){
 			} else {
 				TheStrand = "-1";
 			}
-				
-			Line = E.getContig() + "\tGenBank\t" + E.getType() 
-					+ "\t" + E.getStart() + "\t" + E.getStop() + "\t+\t"
-					+ TheStrand + "\t.\t" + E.getAnnotation() + "\t" + E.getClusterID() + "\n";
+			
+			//build line
+			Line = E.getContig() + "\tGenBank\t" + String.valueOf(E.getType())
+					+ "\t" + String.valueOf(E.getStart()) + "\t" + String.valueOf(E.getStop()) + "\t+\t"
+					+ TheStrand + "\t.\t" + E.getAnnotation() + "\t" + String.valueOf(E.getClusterID());
+			
+			//possibly add homology cluster
+			if (E.getGeneID() != ""){
+				Line = Line + "\t" + E.getGeneID();
+			}
+			
+			Line = Line + "\n";
 			
 			bw.write(Line);
 			bw.flush();
