@@ -1498,8 +1498,8 @@ import definicions.MatriuDistancies;
 							String Hypo = "hypothetical protein";
 							String Unk = "Unknown function";
 							
-							if (Hypo.contains(searchField.getText()) || Unk.contains(searchField.getText()) ||
-									searchField.getText().length() <= 3){
+							if ((Hypo.contains(searchField.getText()) || Unk.contains(searchField.getText()) ||
+									searchField.getText().length() <= 3) && QD.getAnalysesList().isOptionComputeDendrogram()){
 								
 								String SureYouWantToSearch = "You have entered a search query that may return a large number of results." + "\n"
 										+ "Proceeding may cause this program to crash." + "\n"

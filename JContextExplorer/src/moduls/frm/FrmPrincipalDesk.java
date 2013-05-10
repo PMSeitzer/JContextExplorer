@@ -1434,6 +1434,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					LPW.execute();
 					
 					break;
+				} else {
+					j.setSelected(true);
 				}
 			}
 		}
@@ -1779,16 +1781,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				MG_CurrentGS.add(pop);
 				
 				//create a dummy file for new genome set, store appropriately
-				OrganismSet OSDummy = new OrganismSet();
-				OSDummy.setName(pop.getName());
-				this.ExportNonFocusOS(OSDummy);
+				OSPopular.setName(pop.getName());
+				this.ExportNonFocusOS(OSPopular);
 
 				//invoke switch worker
 				this.CallSwitchWorker(OS.getName(), OSPopular.getName());
 				
 			}
 			
-
 		} catch (Exception e) {
 			
 			//error message

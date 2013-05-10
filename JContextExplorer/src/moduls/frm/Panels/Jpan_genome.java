@@ -295,6 +295,7 @@ public class Jpan_genome extends JPanel implements ActionListener,
 									"Proceed with context viewing", JOptionPane.YES_NO_OPTION);
 							
 							if (ViewCheck == JOptionPane.YES_OPTION){
+								//fr.CallSwitchWorker(fr.getOS().getName(), fr.getCurrentFrame().getInternalFrameData().getQD().getOSName());
 								fr.SwitchBetweenOS(fr.getOS().getName(), fr.getCurrentFrame().getInternalFrameData().getQD().getOSName());
 								ProceedToViewContexts = true;
 							}
