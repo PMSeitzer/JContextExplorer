@@ -11,6 +11,7 @@ public class DrawGene extends DrawObject{
 	private Rectangle StrRevCoordinates;//coordinates of gene, flipped around
 
 	private GenomicElement BioInfo;		//Information delivered on click
+	private String SourceSpecies;		//Source species
 	
 	//Constructor
 	public DrawGene(){
@@ -37,6 +38,14 @@ public class DrawGene extends DrawObject{
 
 	public void setBioInfo(GenomicElement bioInfo) {
 		BioInfo = bioInfo;
+	}
+
+	public String getSourceSpecies() {
+		return SourceSpecies;
+	}
+
+	public void setSourceSpecies(String sourceSpecies) {
+		SourceSpecies = sourceSpecies;
 	}
 
 }

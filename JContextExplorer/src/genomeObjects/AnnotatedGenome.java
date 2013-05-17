@@ -30,6 +30,8 @@ public class AnnotatedGenome implements Serializable {
 	private String TextDescription = "";								//-Info about the genome
 	private String GenbankID;
 	private GBKFieldMapping GFM;
+	private LinkedHashMap<String, Integer> ContigEnds
+		= new LinkedHashMap<String, Integer>();
 	
 // ----------------------- Construction ------------------------//
       
@@ -134,6 +136,15 @@ public void importFromGFFFile(String filename){
 							//add to list
 							Elements.add(E);
 							
+							//add contig ends
+							if (ContigEnds.get(E.getContig()) != null){
+								if (ContigEnds.get(E.getContig()) < E.getStop()){
+									ContigEnds.put(E.getContig(), E.getStop());
+								}
+							} else {
+								ContigEnds.put(E.getContig(), E.getStop());
+							}
+							
 							//Record counts of types
 							if (Counts.get(E.getType()) != null){
 								int OldCount = Counts.get(E.getType());
@@ -181,313 +192,327 @@ public void importFromGFFFile(String filename){
 //import annotated elements from a .GBK file.
 public void importFromGBKFile(String filename){
 	
+	//call reader!
+	
 	try {
 
-		//Information for statistics - type counts
-		LinkedHashMap<String, Integer> Counts 
-			= new LinkedHashMap<String, Integer>();
-		HashSet<String> ContigCount = new HashSet<String>();
-		
-	      //create a buffered reader to read the sequence file specified by args[0]
-	      BufferedReader br = new BufferedReader(new FileReader(filename));
-	      String Line = null;
-	      boolean ReadFeatures = false;
-	      boolean NewFeature = false;
-	      boolean DescriptiveInfo = false;
-
-	      //Fields for genomic features.
-	      String ContigName = "";
-	      String TypeName = "";
-	      GenomicElement E = new GenomicElement();
-	      String LocusTag = "";
-	      boolean WritingProduct = false;
-	      boolean WritingTranslation = false;
+	     //create a buffered reader to read the sequence file specified by args[0]
+	     BufferedReader br = new BufferedReader(new FileReader(filename));
 	      
-	      //define types for import.
-	      LinkedList<String> Types = new LinkedList<String>();
-	      Types.addAll(FeatureIncludeTypes);
-	      Types.addAll(FeatureDisplayTypes);
+	     //call the reader!
+	     importFromGBKReader(br);
 	      
-	      //prepare list for addition
-	      Elements = new LinkedList<GenomicElement>();
-	      
-	      while ((Line = br.readLine()) != null){
-	    	  
-	    	  //trim the line to remove white space.
-	    	  Line = Line.trim();
-	    	  //System.out.println(Line);
-	    	  
-	    	  //System.out.println(Line);
-    		  String[] L = Line.split("\\s+");
-	    	  
-	    	  //new contig
-	    	  if (Line.startsWith("LOCUS")){
-	    		  ContigName = L[1];
-	    		  ContigCount.add(ContigName);
-	    		  DescriptiveInfo = true;
-	    	  }
-	    	  
-	    	  //read lines for features
-	    	  if (ReadFeatures){
-	    		  
-	    		  //check if line is a new feature
-	    		  for (String s : Types){
-	    			  //System.out.println(s);
-	    			  if (Line.startsWith(s) && !WritingProduct && !WritingTranslation && L[0].equals(s)){
-	    				  NewFeature = true;
-	    				  TypeName = s;
-	    				  break;
-	    			  }
-	    		  }
-	    		  
-	    		  //line is a new feature
-	    		  if (NewFeature){
-
-	    			  //write previous feature
-	    			  if (E != null){
-	    				  if (E.getType() != null){
-		    				  Elements.add(E);
-		    				  
-								//Record counts of types
-								if (Counts.get(E.getType()) != null){
-									int OldCount = Counts.get(E.getType());
-									Counts.put(E.getType(),(OldCount+1));
-								} else {
-									Counts.put(E.getType(), 1);
-								}
-	    				  }
-
-	    			  }
-	    			  
-	    			  //create new feature
-	    			  E = new GenomicElement();
-	    			  NewFeature = false;
-	    			  
-	    			  //reset switches
-	    		      WritingProduct = false;
-	    		      WritingTranslation = false;
-	    			  
-	    			  //type info
-	    			  E.setType(TypeName);
-	    			  E.setContig(ContigName);
-	    			  
-	    			  //fwd or reverse strand
-	    			  if (L[1].contains("complement")){
-	    				  
-	    				  //completely assembled or not
-	    				  if (L[1].contains("join")){
-	    					  
-	    					  //complement(join(729725..730909,730913..731044))
-	    					  String[] X = ((String) L[1].trim().subSequence(16,L[1].length()-2)).split("\\..");
-
-			    			  if (X[0].contains(">") || X[0].contains("<")){
-			    				  X[0] = X[0].substring(1);
-			    			  }
-			    			  
-			    			  if (X[X.length-1].contains(">") || X[1].contains("<")){
-			    				  X[X.length-1] = X[X.length-1].substring(1);
-			    			  }
-			    			  
-			    			  E.setStart(Integer.parseInt(X[0]));
-			    			  E.setStop(Integer.parseInt(X[X.length-1]));
-			    			  E.setStrand(Strand.NEGATIVE);
-	    				
-			    		  //no join	  
-	    				  } else {
-	    					  
-			    			  String[] X = ((String) L[1].trim().subSequence(11,L[1].length()-1)).split("\\..");
-			    			  
-			    			  if (X[0].contains(">") || X[0].contains("<")){
-			    				  X[0] = X[0].substring(1);
-			    			  }
-			    			  
-			    			  if (X[1].contains(">") || X[1].contains("<")){
-			    				  X[1] = X[1].substring(1);
-			    			  }
-			    			  
-			    			  E.setStart(Integer.parseInt(X[0]));
-			    			  E.setStop(Integer.parseInt(X[1]));
-			    			  E.setStrand(Strand.NEGATIVE);
-	    					  
-	    				  }
-
-	    			  } else {
-	    				  
-	    				  //join
-	    				  if (L[1].contains("join")){
-	    					  
-	    					  String[] X = ((String) L[1].trim().subSequence(5,L[1].length()-1)).split("\\..");
-			    			  
-			    			  if (X[0].contains(">") || X[0].contains("<")){
-			    				  X[0] = X[0].substring(1);
-			    			  }
-			    			  
-			    			  if (X[X.length-1].contains(">") || X[X.length-1].contains("<")){
-			    				  X[X.length-1] = X[X.length-1].substring(1);
-			    			  }
-			    			  
-			    			  E.setStart(Integer.parseInt(X[0]));
-			    			  E.setStop(Integer.parseInt(X[X.length-1]));
-			    			  E.setStrand(Strand.POSITIVE);
-	    					  
-	    				  //no join	  
-	    				  } else {
-	    					  
-			    			  String[] X = L[1].trim().split("\\..");
-			    			  
-			    			  if (X[0].contains(">") || X[0].contains("<")){
-			    				  X[0] = X[0].substring(1);
-			    			  }
-			    			  
-			    			  if (X[1].contains(">") || X[1].contains("<")){
-			    				  X[1] = X[X.length-1].substring(1);
-			    			  }
-			    			  
-			    			  E.setStart(Integer.parseInt(X[0]));
-			    			  E.setStop(Integer.parseInt(X[1]));
-			    			  E.setStrand(Strand.POSITIVE);
-			    			  
-	    				  }
-	    				  
-	    			  }
-	    			  
-	    		  //line is not a new feature	  
-	    		  } else {
-	    			  NewFeature = false;
-	    		  }
-	    		  
-	    		  //add to an existing feature
-	    		  if (!NewFeature){
-	    			  
-	    			 //check if currently writing things, first
-	    		     if(WritingProduct){
-	    		    	 
-	    		    	//add the current line.
-	    		    	String UpdatedAnnotation = E.getAnnotation() + " " + Line;
-	    		    	E.setAnnotation(UpdatedAnnotation);
-	    		    	
-	    		    	//if a quotation mark is the last character, this is the end of writing product.
-	    		     	if (Line.substring(Line.length()-1).equals("\"")){
-	    		    		 WritingProduct = false;
-	    		     	}
-	    		    	 
-	    		     } else if (WritingTranslation){
-	    		    	 
-	    		    	 //last line in translation
-	    		    	 if (Line.substring(Line.length()-1).equals("\"")){
-	    		    		 String UpdatedTranslation = E.getTranslation() + Line.substring(0,Line.length()-1);
-	    		    		 E.setTranslation(UpdatedTranslation);
-	    		    		 WritingTranslation = false;
-	    		    	 } else {
-	    		    		 String UpdatedTranslation = E.getTranslation() + Line;
-	    		    		 E.setTranslation(UpdatedTranslation);
-	    		    	 }
-	    		    	 
-	    		     //not writing anything - possibly open things up	 
-	    		     } else {
-	    		    	 
-	    		    	 //start product
-	    		    	 if (L[0].startsWith(GFM.Annotation)){
-	    		    		  
-	    		    		  WritingProduct = true;
-	    		    		  E.setAnnotation(Line.substring(1));
-		    				  
-			    		    	//if a quotation mark is the last character, this is the end of writing product.
-			    		     	if (Line.substring(Line.length()-1).equals("\"")){
-			    		    		 WritingProduct = false;
-			    		     	}
-		    				  
-	    		    		  
-	    		         //start translation
-	    		    	 } else if (GFM.GetTranslation && L[0].startsWith("/translation=")){
-	    		    		 
-	    		    		 WritingTranslation = true;
-	    		    		 
-	    		    		 //short translation - ends in quote
-	    		    		 if (Line.substring(Line.length()-1).equals("\"")){
-	    		    		 
-	    		    			 E.setTranslation((String) Line.substring(14, Line.length()-1));
-	    		    			 WritingTranslation = false;
-	    		    			 
-	    		    	     //normal translation - extends multiple lines
-	    		    		 } else {
-	    		    			 
-	    		    			 E.setTranslation(Line.substring(14));
-	    		    			 WritingTranslation = true;
-	    		    		 }
-	    		    	 
-	    		         //attempt to parse cluster tag
-	    		    	 } else if (GFM.GetCluster && L[0].startsWith(GFM.GetClusterTag)){
-	    		    		 String Info = Line.substring(GFM.GetClusterTag.length());
-	    		    		 Info = Info.replaceAll("\"", "");
-	    		    		 String[] InfoSplit = Info.split("\\s+");
-	    		    		 for (String s : InfoSplit){
-	    		    			 if (s.startsWith("COG")){
-	    		    				 try{
-	    		    					 E.setClusterID(Integer.parseInt(s.substring(3)));
-		    		    				 break;
-	    		    				 }catch (Exception ex){}
-	    		    			 }
-	    		    		 }
-	    		    		 
-	    		         //add gene ID
-	    		    	 } else if (L[0].startsWith(GFM.GeneID)){
-	    		    		 try {
-	    		    			 String GIDNoQuotes = Line.substring(GFM.GeneID.length()).replaceAll("\"", "");
-	    		    			 E.setGeneID(GIDNoQuotes);
-	    		    		 } catch (Exception ex) {}
-	    		    	 }
-	    		    	 
-	    		     }
-
-	    		  }
-	    	  } else {
-	    		  
-	    		  if (DescriptiveInfo){
-		    		  //Add introductory info to the text description.
-		    		  if (!(TextDescription).equals("")){
-		    			  TextDescription = TextDescription + "\n" + Line;
-		    		  } else{
-		    			  TextDescription = Line;
-		    		  }
-	    		  }
-
-	    	  }
-	    	  
-	    	  //turn on feature-reading
-	    	  if (Line.startsWith("FEATURES")){
-	    		  ReadFeatures = true;
-	    	  }
-	    	  
-	    	  //turn off feature-reading
-	    	  if (Line.startsWith("BASE COUNT")){
-	    		  DescriptiveInfo = false;
-	    		  ReadFeatures = false;
-	    	  }
-	    	  
-	      }
-	      
-			//Convert feature counts to string, for display.
-			//Number of contigs / plasmids / chromosomes
-			TextDescription = TextDescription +"\n\nSequences (" + String.valueOf(ContigCount.size()) + "):\n";
-			for (String s : ContigCount){
-				TextDescription = TextDescription + s + "\n";
-			}
-
-			//Feature tabulation
-			TextDescription = TextDescription + "\nFeature Types (" + String.valueOf(Counts.values().size()) + "):\n";
-			for (String s : Counts.keySet()){
-				TextDescription = TextDescription + s + " (" + String.valueOf(Counts.get(s)) + ")\n";
-			}
-			
-			br.close();		
-	      
-	} catch (Exception ex){
+	} catch (Exception ex) {
 		ex.printStackTrace();
 	}
-	
-	//sort elements
-	Collections.sort(Elements, new GenomicElementComparator());
+//	
+//	try {
+//
+//		//Information for statistics - type counts
+//		LinkedHashMap<String, Integer> Counts 
+//			= new LinkedHashMap<String, Integer>();
+//		HashSet<String> ContigCount = new HashSet<String>();
+//		
+//	      //create a buffered reader to read the sequence file specified by args[0]
+//	      BufferedReader br = new BufferedReader(new FileReader(filename));
+//	      String Line = null;
+//	      boolean ReadFeatures = false;
+//	      boolean NewFeature = false;
+//	      boolean DescriptiveInfo = false;
+//
+//	      //Fields for genomic features.
+//	      String ContigName = "";
+//	      String TypeName = "";
+//	      GenomicElement E = new GenomicElement();
+//	      String LocusTag = "";
+//	      boolean WritingProduct = false;
+//	      boolean WritingTranslation = false;
+//	      
+//	      //define types for import.
+//	      LinkedList<String> Types = new LinkedList<String>();
+//	      Types.addAll(FeatureIncludeTypes);
+//	      Types.addAll(FeatureDisplayTypes);
+//	      
+//	      //prepare list for addition
+//	      Elements = new LinkedList<GenomicElement>();
+//	      
+//	      while ((Line = br.readLine()) != null){
+//	    	  
+//	    	  //trim the line to remove white space.
+//	    	  Line = Line.trim();
+//	    	  //System.out.println(Line);
+//	    	  
+//	    	  //System.out.println(Line);
+//    		  String[] L = Line.split("\\s+");
+//	    	  
+//	    	  //new contig
+//	    	  if (Line.startsWith("LOCUS")){
+//	    		  ContigName = L[1];
+//	    		  ContigCount.add(ContigName);
+//	    		  DescriptiveInfo = true;
+//	    	  }
+//	    	  
+//	    	  //read lines for features
+//	    	  if (ReadFeatures){
+//	    		  
+//	    		  //check if line is a new feature
+//	    		  for (String s : Types){
+//	    			  //System.out.println(s);
+//	    			  if (Line.startsWith(s) && !WritingProduct && !WritingTranslation && L[0].equals(s)){
+//	    				  NewFeature = true;
+//	    				  TypeName = s;
+//	    				  break;
+//	    			  }
+//	    		  }
+//	    		  
+//	    		  //line is a new feature
+//	    		  if (NewFeature){
+//
+//	    			  //write previous feature
+//	    			  if (E != null){
+//	    				  if (E.getType() != null){
+//		    				  Elements.add(E);
+//		    				  
+//								//Record counts of types
+//								if (Counts.get(E.getType()) != null){
+//									int OldCount = Counts.get(E.getType());
+//									Counts.put(E.getType(),(OldCount+1));
+//								} else {
+//									Counts.put(E.getType(), 1);
+//								}
+//	    				  }
+//
+//	    			  }
+//	    			  
+//	    			  //create new feature
+//	    			  E = new GenomicElement();
+//	    			  NewFeature = false;
+//	    			  
+//	    			  //reset switches
+//	    		      WritingProduct = false;
+//	    		      WritingTranslation = false;
+//	    			  
+//	    			  //type info
+//	    			  E.setType(TypeName);
+//	    			  E.setContig(ContigName);
+//	    			  
+//	    			  //fwd or reverse strand
+//	    			  if (L[1].contains("complement")){
+//	    				  
+//	    				  //completely assembled or not
+//	    				  if (L[1].contains("join")){
+//	    					  
+//	    					  //complement(join(729725..730909,730913..731044))
+//	    					  String[] X = ((String) L[1].trim().subSequence(16,L[1].length()-2)).split("\\..");
+//
+//			    			  if (X[0].contains(">") || X[0].contains("<")){
+//			    				  X[0] = X[0].substring(1);
+//			    			  }
+//			    			  
+//			    			  if (X[X.length-1].contains(">") || X[1].contains("<")){
+//			    				  X[X.length-1] = X[X.length-1].substring(1);
+//			    			  }
+//			    			  
+//			    			  E.setStart(Integer.parseInt(X[0]));
+//			    			  E.setStop(Integer.parseInt(X[X.length-1]));
+//			    			  E.setStrand(Strand.NEGATIVE);
+//	    				
+//			    		  //no join	  
+//	    				  } else {
+//	    					  
+//			    			  String[] X = ((String) L[1].trim().subSequence(11,L[1].length()-1)).split("\\..");
+//			    			  
+//			    			  if (X[0].contains(">") || X[0].contains("<")){
+//			    				  X[0] = X[0].substring(1);
+//			    			  }
+//			    			  
+//			    			  if (X[1].contains(">") || X[1].contains("<")){
+//			    				  X[1] = X[1].substring(1);
+//			    			  }
+//			    			  
+//			    			  E.setStart(Integer.parseInt(X[0]));
+//			    			  E.setStop(Integer.parseInt(X[1]));
+//			    			  E.setStrand(Strand.NEGATIVE);
+//	    					  
+//	    				  }
+//
+//	    			  } else {
+//	    				  
+//	    				  //join
+//	    				  if (L[1].contains("join")){
+//	    					  
+//	    					  String[] X = ((String) L[1].trim().subSequence(5,L[1].length()-1)).split("\\..");
+//			    			  
+//			    			  if (X[0].contains(">") || X[0].contains("<")){
+//			    				  X[0] = X[0].substring(1);
+//			    			  }
+//			    			  
+//			    			  if (X[X.length-1].contains(">") || X[X.length-1].contains("<")){
+//			    				  X[X.length-1] = X[X.length-1].substring(1);
+//			    			  }
+//			    			  
+//			    			  E.setStart(Integer.parseInt(X[0]));
+//			    			  E.setStop(Integer.parseInt(X[X.length-1]));
+//			    			  E.setStrand(Strand.POSITIVE);
+//	    					  
+//	    				  //no join	  
+//	    				  } else {
+//	    					  
+//			    			  String[] X = L[1].trim().split("\\..");
+//			    			  
+//			    			  if (X[0].contains(">") || X[0].contains("<")){
+//			    				  X[0] = X[0].substring(1);
+//			    			  }
+//			    			  
+//			    			  if (X[1].contains(">") || X[1].contains("<")){
+//			    				  X[1] = X[X.length-1].substring(1);
+//			    			  }
+//			    			  
+//			    			  E.setStart(Integer.parseInt(X[0]));
+//			    			  E.setStop(Integer.parseInt(X[1]));
+//			    			  E.setStrand(Strand.POSITIVE);
+//			    			  
+//	    				  }
+//	    				  
+//	    			  }
+//	    			  
+//	    		  //line is not a new feature	  
+//	    		  } else {
+//	    			  NewFeature = false;
+//	    		  }
+//	    		  
+//	    		  //add to an existing feature
+//	    		  if (!NewFeature){
+//	    			  
+//	    			 //check if currently writing things, first
+//	    		     if(WritingProduct){
+//	    		    	 
+//	    		    	//add the current line.
+//	    		    	String UpdatedAnnotation = E.getAnnotation() + " " + Line;
+//	    		    	E.setAnnotation(UpdatedAnnotation);
+//	    		    	
+//	    		    	//if a quotation mark is the last character, this is the end of writing product.
+//	    		     	if (Line.substring(Line.length()-1).equals("\"")){
+//	    		    		 WritingProduct = false;
+//	    		     	}
+//	    		    	 
+//	    		     } else if (WritingTranslation){
+//	    		    	 
+//	    		    	 //last line in translation
+//	    		    	 if (Line.substring(Line.length()-1).equals("\"")){
+//	    		    		 String UpdatedTranslation = E.getTranslation() + Line.substring(0,Line.length()-1);
+//	    		    		 E.setTranslation(UpdatedTranslation);
+//	    		    		 WritingTranslation = false;
+//	    		    	 } else {
+//	    		    		 String UpdatedTranslation = E.getTranslation() + Line;
+//	    		    		 E.setTranslation(UpdatedTranslation);
+//	    		    	 }
+//	    		    	 
+//	    		     //not writing anything - possibly open things up	 
+//	    		     } else {
+//	    		    	 
+//	    		    	 //start product
+//	    		    	 if (L[0].startsWith(GFM.Annotation)){
+//	    		    		  
+//	    		    		  WritingProduct = true;
+//	    		    		  E.setAnnotation(Line.substring(1));
+//		    				  
+//			    		    	//if a quotation mark is the last character, this is the end of writing product.
+//			    		     	if (Line.substring(Line.length()-1).equals("\"")){
+//			    		    		 WritingProduct = false;
+//			    		     	}
+//		    				  
+//	    		    		  
+//	    		         //start translation
+//	    		    	 } else if (GFM.GetTranslation && L[0].startsWith("/translation=")){
+//	    		    		 
+//	    		    		 WritingTranslation = true;
+//	    		    		 
+//	    		    		 //short translation - ends in quote
+//	    		    		 if (Line.substring(Line.length()-1).equals("\"")){
+//	    		    		 
+//	    		    			 E.setTranslation((String) Line.substring(14, Line.length()-1));
+//	    		    			 WritingTranslation = false;
+//	    		    			 
+//	    		    	     //normal translation - extends multiple lines
+//	    		    		 } else {
+//	    		    			 
+//	    		    			 E.setTranslation(Line.substring(14));
+//	    		    			 WritingTranslation = true;
+//	    		    		 }
+//	    		    	 
+//	    		         //attempt to parse cluster tag
+//	    		    	 } else if (GFM.GetCluster && L[0].startsWith(GFM.GetClusterTag)){
+//	    		    		 String Info = Line.substring(GFM.GetClusterTag.length());
+//	    		    		 Info = Info.replaceAll("\"", "");
+//	    		    		 String[] InfoSplit = Info.split("\\s+");
+//	    		    		 for (String s : InfoSplit){
+//	    		    			 if (s.startsWith("COG")){
+//	    		    				 try{
+//	    		    					 E.setClusterID(Integer.parseInt(s.substring(3)));
+//		    		    				 break;
+//	    		    				 }catch (Exception ex){}
+//	    		    			 }
+//	    		    		 }
+//	    		    		 
+//	    		         //add gene ID
+//	    		    	 } else if (L[0].startsWith(GFM.GeneID)){
+//	    		    		 try {
+//	    		    			 String GIDNoQuotes = Line.substring(GFM.GeneID.length()).replaceAll("\"", "");
+//	    		    			 E.setGeneID(GIDNoQuotes);
+//	    		    		 } catch (Exception ex) {}
+//	    		    	 }
+//	    		    	 
+//	    		     }
+//
+//	    		  }
+//	    	  } else {
+//	    		  
+//	    		  if (DescriptiveInfo){
+//		    		  //Add introductory info to the text description.
+//		    		  if (!(TextDescription).equals("")){
+//		    			  TextDescription = TextDescription + "\n" + Line;
+//		    		  } else{
+//		    			  TextDescription = Line;
+//		    		  }
+//	    		  }
+//
+//	    	  }
+//	    	  
+//	    	  //turn on feature-reading
+//	    	  if (Line.startsWith("FEATURES")){
+//	    		  ReadFeatures = true;
+//	    	  }
+//	    	  
+//	    	  //turn off feature-reading
+//	    	  if (Line.startsWith("BASE COUNT")){
+//	    		  DescriptiveInfo = false;
+//	    		  ReadFeatures = false;
+//	    	  }
+//	    	  
+//	      }
+//	      
+//			//Convert feature counts to string, for display.
+//			//Number of contigs / plasmids / chromosomes
+//			TextDescription = TextDescription +"\n\nSequences (" + String.valueOf(ContigCount.size()) + "):\n";
+//			for (String s : ContigCount){
+//				TextDescription = TextDescription + s + "\n";
+//			}
+//
+//			//Feature tabulation
+//			TextDescription = TextDescription + "\nFeature Types (" + String.valueOf(Counts.values().size()) + "):\n";
+//			for (String s : Counts.keySet()){
+//				TextDescription = TextDescription + s + " (" + String.valueOf(Counts.get(s)) + ")\n";
+//			}
+//			
+//			br.close();		
+//	      
+//	} catch (Exception ex){
+//		ex.printStackTrace();
+//	}
+//	
+//	//sort elements
+//	Collections.sort(Elements, new GenomicElementComparator());
 
 }
 
@@ -534,6 +559,9 @@ public void importFromGBKReader(BufferedReader br){
 			  if (Line.startsWith("LOCUS")){
 				  ContigName = L[1];
 				  ContigCount.add(ContigName);
+				  try {
+					  ContigEnds.put(ContigName, Integer.parseInt(L[2]));
+				  } catch (Exception ex){}
 				  DescriptiveInfo = true;
 			  }
 			  
@@ -2122,7 +2150,6 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 
 //----------------------- Getters and Setters ----------------------//
 
-
 //Getters and Setters
  public String getGenus() {
 	return Genus;
@@ -2223,6 +2250,14 @@ public GBKFieldMapping getGFM() {
 
 public void setGFM(GBKFieldMapping gFM) {
 	GFM = gFM;
+}
+
+public LinkedHashMap<String, Integer> getContigEnds() {
+	return ContigEnds;
+}
+
+public void setContigEnds(LinkedHashMap<String, Integer> contigEnds) {
+	ContigEnds = contigEnds;
 }
 
 //-----------------------Deprecated ----------------------//

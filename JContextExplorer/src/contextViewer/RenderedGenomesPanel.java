@@ -123,6 +123,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	private int WholeWidthBuffer = 30;
 	private int GSWidth;
 	private int CoordinateBarWidth = 1;
+	private int ContigBoundaryWidth = 2;
 	private int ArrowLength = 20;
 	private int ArrowHeight = 10;
 	private int LabelAboveGS = 5;
@@ -924,6 +925,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 					
 					//add information relevant for coloring
 					dg.setBioInfo(e);
+					dg.setSourceSpecies(AG.getSpecies());
 					
 					//determine rendering coordinates of the rectangle
 					boolean TruncatedStart = false;
@@ -1397,16 +1399,49 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 			//store appropriate values
 			GS[i].setBarPositions(barpositions);
 			GS[i].setBarValues(barvalues);
+
+			//initialize list
+			LinkedList<Integer> ContigBoundaries = new LinkedList<Integer>();
+			
+			//contig boundary 1: zero boundary
+			if (GS[i].getStartBeforeBuffer() <= 0){
+				ContigBoundaries.add((int)(GS[i].getBoundingRect().getMinX()+
+						(genome2displayRatio*(-1.0*GS[i].getStartBeforeBuffer()))));
+			}
+			
+			//contig boundary 2: end of contig
+			//retrieve contig end
+			int ContigLimit = -1;
+			if (mf.getFr().getOS().getSpecies().get(GS[i].getDg().get(0).getSourceSpecies()).getContigEnds().get(GS[i].getDg().get(0).getBioInfo().getContig()) != null){
+				ContigLimit = mf.getFr().getOS().getSpecies().get(GS[i].getDg().get(0).getSourceSpecies()).getContigEnds().get(GS[i].getDg().get(0).getBioInfo().getContig());				
+			}
+			
+			//draw a line, if appropriate
+			if (ContigLimit != -1){
+				
+				//add lines, if appropriate
+				if (ContigLimit < GS[i].getEndRange()){
+					ContigBoundaries.add((int)(GS[i].getBoundingRect().getMinX()+
+							(genome2displayRatio*(ContigLimit-GS[i].getStartBeforeBuffer()))));
+				}
+			}
+			
+			//add
+			if (ContigBoundaries.size() > 0){
+				GS[i].setContigBoundaries(ContigBoundaries);
+			}
 			
 			//strand-reversed case
 			if (GS[i].isStrRevFlipGenes() == false){
 				
 				GS[i].setBarPositionsRev(barpositions);
+				GS[i].setContigBoundariesRev(ContigBoundaries);
 				
 			} else {
 				
 				//initialize output
 				LinkedList<Integer> revbarpositions = new LinkedList<Integer>();
+				LinkedList<Integer> revcontigboundaries = new LinkedList<Integer>();
 				
 				for (int j = 0; j < barpositions.size(); j++){
 					
@@ -1431,7 +1466,31 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 
 				//write to output genomic segment
 				GS[i].setBarPositionsRev(revbarpositions);
-
+				
+				for (int j = 0; j < ContigBoundaries.size(); j++){
+					
+					//retrieve original bar x-position
+					int BarX = ContigBoundaries.get(j);
+					
+					//determine dist to center
+					double Dist2Center = Math.abs(BarX - GS[i].getBoundingRect().getCenterX());
+					
+					//determine flipped X-coordinate
+					int BarXFlip;
+					if (BarX > GS[i].getBoundingRect().getCenterX()){
+						BarXFlip = (int) (BarX - 2*Dist2Center - CoordinateBarWidth);
+					} else {
+						BarXFlip = (int) (BarX + 2*Dist2Center - CoordinateBarWidth);
+					}
+					
+					//add to output
+					revcontigboundaries.add(BarXFlip);
+				}
+				
+				//write to output genomic segment
+				if (revcontigboundaries.size() > 0){
+					GS[i].setContigBoundariesRev(revcontigboundaries);
+				}
 			}
 			
 		}
@@ -1742,6 +1801,19 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 					
 				}
 				
+				//write contig boundaries
+				if (GS[i].getContigBoundaries() != null){
+					
+					//change color
+					g.setPaint(Color.RED);
+					
+					//paint boundaries
+					for (int j = 0; j <GS[i].getContigBoundaries().size(); j++){
+						g.fillRect(GS[i].getContigBoundaries().get(j), (int) GS[i].getBoundingRect().getMinY(),
+							ContigBoundaryWidth, GSHeight);
+					}
+				}
+				
 				g.setPaint(Color.BLACK);
 				
 				//paint a forward arrow
@@ -1777,8 +1849,21 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 					//write label to appropriate place
 					TextLayout tl = new TextLayout(GS[i].getBarValues().get(j).toString(),fontStandard,renderContext); 
 					tl.draw(g, GS[i].getBarPositionsRev().get(j), (int) GS[i].getBoundingRect().getMaxY()+5);
-				}
+				}				
 				
+				//write contig boundaries
+				if (GS[i].getContigBoundariesRev() != null){
+					
+					//change color
+					g.setPaint(Color.RED);
+					
+					//paint boundaries
+					for (int j = 0; j <GS[i].getContigBoundariesRev().size(); j++){
+						g.fillRect(GS[i].getContigBoundariesRev().get(j), (int) GS[i].getBoundingRect().getMinY(),
+							ContigBoundaryWidth, GSHeight);
+					}
+				}
+
 				if (GS[i].isStrRevFlipGenes()){
 					
 					//reverse arrows are red
@@ -1835,6 +1920,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		}
 
 	}
+	
 	
 	// ----- Classes + methods related to coloring -----------------------//
 	

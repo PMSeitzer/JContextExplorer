@@ -1,6 +1,5 @@
 package GenomicSetHandling;
 
-import genomeObjects.OSCreationInstructions;
 import genomeObjects.OrganismSet;
 
 import java.awt.BorderLayout;
@@ -15,6 +14,8 @@ import java.awt.Toolkit;
 import java.awt.Dialog.ModalityType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -34,7 +35,7 @@ import javax.swing.RootPaneContainer;
 
 import moduls.frm.FrmPrincipalDesk;
 
-public class CurrentGenomeSet extends JDialog implements ActionListener{
+public class CurrentGenomeSet extends JDialog implements ActionListener, ComponentListener{
 
 	//fields
 	//data/base
@@ -45,7 +46,10 @@ public class CurrentGenomeSet extends JDialog implements ActionListener{
 	private JTextField LblName, TxtName, LblNotes, LblGenomes;
 	private JTextArea OrganismSetNotes, LblInfo;
 	private JComboBox menuGenomes;
+	private JScrollPane ptsscroll, ptsscroll2;
 	private JButton btnOK;
+	private int ScrollPaneInset = 15;
+	private int HeightInset = 160;
 	
 	private String strGenomes = "Genomes";
 	private String strSelectGenome = "Select Genome";
@@ -58,9 +62,12 @@ public class CurrentGenomeSet extends JDialog implements ActionListener{
 		this.getPanel();
 		this.getData();
 		this.pack();
+		this.setMinimumSize(this.getSize());
 		
 		this.setModalityType(ModalityType.DOCUMENT_MODAL);
+		this.addComponentListener(this);
 		this.setVisible(true);
+
 	}
 	
 	//frame
@@ -69,7 +76,7 @@ public class CurrentGenomeSet extends JDialog implements ActionListener{
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		this.setLocationRelativeTo(null);
 		this.setTitle("Current Genome Set");
-		this.setResizable(false);
+		this.setResizable(true);
 	}
 	
 	//panel
@@ -121,7 +128,7 @@ public class CurrentGenomeSet extends JDialog implements ActionListener{
 		c.fill = GridBagConstraints.NONE;
 		OrganismSetNotes = new JTextArea("");
 		OrganismSetNotes.setEditable(true);
-		JScrollPane ptsscroll = new JScrollPane(OrganismSetNotes);
+		ptsscroll = new JScrollPane(OrganismSetNotes);
 		ptsscroll.setPreferredSize(new Dimension(TxtName.getColumns()*12+8, 50));
 		jp.add(ptsscroll, c);
 		gridy++;
@@ -155,7 +162,7 @@ public class CurrentGenomeSet extends JDialog implements ActionListener{
 		c.ipady = 7;
 		LblInfo = new JTextArea("");
 		LblInfo.setEditable(false);
-		JScrollPane ptsscroll2 = new JScrollPane(LblInfo);
+		ptsscroll2 = new JScrollPane(LblInfo);
 		ptsscroll2.setPreferredSize(new Dimension(50, 100));
 		jp.add(ptsscroll2, c);
 		gridy++;
@@ -214,6 +221,9 @@ public class CurrentGenomeSet extends JDialog implements ActionListener{
 			//Update fields
 			f.getOS().setNotes(OrganismSetNotes.getText());
 			
+			//Update GI information
+			f.getGenomeSets().get(f.getOS().getName()).setGSNotes(OrganismSetNotes.getText());
+			
 			//close
 			this.dispose();
 		}
@@ -236,12 +246,42 @@ public class CurrentGenomeSet extends JDialog implements ActionListener{
 		
 	}
 	
-	//TODO: re-work this method, think how to show information intuitively
+	//display per-genome information
 	public void showGenomeInfo(String GenomeName){
 		
 		LblInfo.setText(f.getOS().getGenomeDescriptions().get(GenomeName));
 		
 		//LblInfo.setText(GenomeName);
 		//LblInfo.setText(GenomeName + "\n" + f.getOS().getNotes());
+	}
+
+	@Override
+	//adjust frame for readability
+	public void componentResized(ComponentEvent e) {
+		ptsscroll.setPreferredSize(new Dimension((int) menuGenomes.getSize().getWidth()-5,
+				50));
+
+		ptsscroll2.setPreferredSize(new Dimension((int) this.getWidth()-(ScrollPaneInset*2),
+				(int)(this.getSize().getHeight()) - HeightInset - btnOK.getHeight()));
+
+		this.repaint();
+	}
+
+	@Override
+	public void componentMoved(ComponentEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void componentShown(ComponentEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void componentHidden(ComponentEvent e) {
+		// TODO Auto-generated method stub
+		
 	}
 }

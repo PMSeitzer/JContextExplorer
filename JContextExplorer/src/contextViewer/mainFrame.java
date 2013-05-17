@@ -192,6 +192,9 @@ public class mainFrame extends JFrame implements ComponentListener{
 	public void componentResized(ComponentEvent arg0) {
 		this.scrollPane1.setPreferredSize(new Dimension((int) this.getWidth()-(ScrollPaneInset*2),
 				(int)(this.getSize().getHeight() - op.getOpdim().getHeight())-4*ScrollPaneInset));
+
+		this.repaint();
+//		SwingUtilities.updateComponentTreeUI(getRootPane());
 	}
 
 	@Override

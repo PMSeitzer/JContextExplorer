@@ -27,6 +27,8 @@ public class GenomicSegment {
 	private LinkedList<Integer> BarPositions;		//list of coordinates as to where to draw bars
 	private LinkedList<Integer> BarPositionsRev;	//for strand-reversed case
 	private LinkedList<Integer> BarValues;			//genomic coordinates associated with bars
+	private LinkedList<Integer> ContigBoundaries;	//Coordinates designating start/end of a contig
+	private LinkedList<Integer> ContigBoundariesRev;//Coordinates designating start/end of a contig, reverse
 	
 	//Getters + Setters
 	public LinkedList<DrawGene> getDg() {
@@ -106,6 +108,18 @@ public class GenomicSegment {
 	}
 	public void setDm(LinkedList<DrawMotif> dm) {
 		this.dm = dm;
+	}
+	public LinkedList<Integer> getContigBoundaries() {
+		return ContigBoundaries;
+	}
+	public void setContigBoundaries(LinkedList<Integer> contigBoundaries) {
+		ContigBoundaries = contigBoundaries;
+	}
+	public LinkedList<Integer> getContigBoundariesRev() {
+		return ContigBoundariesRev;
+	}
+	public void setContigBoundariesRev(LinkedList<Integer> contigBoundariesRev) {
+		ContigBoundariesRev = contigBoundariesRev;
 	}
 	
 }
