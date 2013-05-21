@@ -87,6 +87,7 @@ import javax.swing.event.InternalFrameListener;
 
 import operonClustering.CustomDissimilarity;
 
+import ContextForest.CFSettingsWindow;
 import GenomicSetHandling.CurrentGenomeSet;
 import GenomicSetHandling.GSInfo;
 import GenomicSetHandling.ImportGenbankIDs;
@@ -225,6 +226,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenuItem MG_NcbiSettings;
 	private JMenuItem MG_GFF;
 	private JMenuItem MG_Genbank;
+	
+	//public String strCF = "Whole Genome Set Analysis";
+	public String strCF = "Construct a Context Forest";
+	private JMenuItem MG_WholeSet;
 	
 	//popular sets
 	private JMenu MG_PopularSets;
@@ -1131,13 +1136,22 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_PopularSets.add(MG_Staph);
 		MG_PopularSets.add(MG_Salmonella);
 		
+		//Whole genome set analysis / context forest
+		MG_WholeSet = new JMenuItem(strCF);
+		
+		//Browse NCBI genomes by taxonomy
+		KeyStroke Wstroke = KeyStroke.getKeyStroke(KeyEvent.VK_W, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		MG_WholeSet.setAccelerator(Wstroke);
+		MG_WholeSet.addActionListener(this);
+		
 		//Genomes menu - add to menu
 		M_Genomes.add(MG_NewGS);
 		M_Genomes.add(MG_CurrentGS);
 		M_Genomes.add(MG_ManageGS);
 		M_Genomes.addSeparator();
 		M_Genomes.add(MG_ManageCurrentGS);
-		M_Genomes.add(MG_ImportGS);
+		//M_Genomes.add(MG_ImportGS);
 		M_Genomes.add(MG_AddGenomes);
 		M_Genomes.add(MG_ImportSettings);
 		M_Genomes.addSeparator();
@@ -1145,8 +1159,13 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		M_Genomes.add(MG_NcbiTax);
 		M_Genomes.addSeparator();
 		M_Genomes.add(MG_PopularSets);
-			
-		// ====== load non-genomes things ===== //
+		M_Genomes.addSeparator();
+		M_Genomes.add(MG_WholeSet);
+		
+		
+		/*
+		 * LOAD MENU
+		 */
 		M_Load = new JMenu("Load");
 			
 		//Components
@@ -1188,7 +1207,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		M_Load.add(ML_Phylo);
 		M_Load.add(ML_Motifs);
 
-		//Export menu
+		/*
+		 * EXPORT MENU
+		 */
 		M_Export = new JMenu("Export");
 		ME_GWS = new JMenuItem("Genome Set");
 		ME_GFFs = new JMenuItem("Genomes as GFF files");
@@ -1206,7 +1227,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		M_Export.add(ME_Genbanks);
 		M_Export.add(ME_Clusters);
 			
-		//Help menu
+		/*
+		 * HELP MENU
+		 */
 		M_Help = new JMenu("Help");
 		MH_Manual = new JMenuItem("User's Manual");
 		MH_Video = new JMenuItem("Video Tutorials");
@@ -1220,7 +1243,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		M_Help.add(MH_Video);
 		M_Help.add(MH_DataSets);
 			
-		//Add sub-menus to top-level
+		/*
+		 * SUB-MENUS TO TOP-LEVEL
+		 */
 		MB.add(M_Genomes);
 		MB.add(M_Load);
 		MB.add(M_Export);
@@ -1427,6 +1452,17 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		}
 		
 		/*
+		 * WHOLE GENOME SET ANALYSIS
+		 */
+		if (evt.getSource().equals(MG_WholeSet)){
+			if (this.OS != null){
+				new CFSettingsWindow(this);
+			} else {
+				this.NoOS();
+			}
+		}
+		
+		/*
 		 * LOAD
 		 */
 		
@@ -1454,10 +1490,15 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				this.FileChooserSource = GetHC.getCurrentDirectory();
 			}
 			
-			//begin import
-			LoadTagsWorker LTW = new LoadTagsWorker(GetHC.getSelectedFile(), true);
-			LTW.addPropertyChangeListener(panBtn);
-			LTW.execute();
+			//import homology clusters from file.
+			if (GetHC.getSelectedFile() != null){
+				
+				//begin import
+				LoadTagsWorker LTW = new LoadTagsWorker(GetHC.getSelectedFile(), true);
+				LTW.addPropertyChangeListener(panBtn);
+				LTW.execute();
+				
+			}
 			
 		}
 		
@@ -1645,12 +1686,17 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 						"From the Genomes drop-down menu, or by typing ";
 		String invokeNew;
 		if (System.getProperty("os.name").contains("Mac")){
-			invokeNew = "command + N";
+			invokeNew = "command + N.\n";
 		} else {
-			invokeNew = "ctrl + N";
+			invokeNew = "ctrl + N.\n";
 		}
 		
-		String msg = MenuBar + invokeNew;
+		String OrPopular = "\nAlternatively, you may select a popular genome set\n"+
+				"from the Genomes drop-down menu by selecting one from the\n" +
+				"'Retrieve Popular Genome Set' sub-menu.";
+		
+		String msg = MenuBar + invokeNew + OrPopular;
+		
 		JOptionPane.showMessageDialog(null, msg,
 				"No Genome Set Defined", JOptionPane.ERROR_MESSAGE);
 	}

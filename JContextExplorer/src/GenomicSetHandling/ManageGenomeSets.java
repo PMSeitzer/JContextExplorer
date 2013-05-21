@@ -40,6 +40,7 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -359,28 +360,33 @@ public class ManageGenomeSets extends JDialog implements ActionListener, ListSel
 	//OS Data for menu
 	public void getOSData(String OSName){
 		
-		//retrieve GI information
-		GI = f.getGenomeSets().get(OSName);
-		
-		TxtName.setText(OSName);
-		OrganismSetNotes.setText(GI.getGSNotes());
-		
-		//initialize
-		String strGenomesUpdated;
-		
-		//Update genomes
-		strGenomesUpdated = strGenomes + " (" + String.valueOf(GI.getGSGenomeDescriptions().keySet().size()) + "):";
-		LblGenomes.setText(strGenomesUpdated);
-		
-		//add genomes
-		if (GI.getGSGenomeDescriptions().keySet().size() > 0){
-			menuGenomes.removeItemAt(0);
-			menuGenomes.addItem(strSelectGenome);
-			for (String s : GI.getGSGenomeDescriptions().keySet()){
-				menuGenomes.addItem(s);
+		if (OSName != null){
+			
+			//retrieve GI information
+			GI = f.getGenomeSets().get(OSName);
+
+			TxtName.setText(OSName);
+			OrganismSetNotes.setText(GI.getGSNotes());
+			
+			//initialize
+			String strGenomesUpdated;
+			
+			//Update genomes
+			strGenomesUpdated = strGenomes + " (" + String.valueOf(GI.getGSGenomeDescriptions().keySet().size()) + "):";
+			LblGenomes.setText(strGenomesUpdated);
+			
+			//add genomes
+			if (GI.getGSGenomeDescriptions().keySet().size() > 0){
+				menuGenomes.removeItemAt(0);
+				menuGenomes.addItem(strSelectGenome);
+				for (String s : GI.getGSGenomeDescriptions().keySet()){
+					menuGenomes.addItem(s);
+				}
+				menuGenomes.addActionListener(this);
 			}
-			menuGenomes.addActionListener(this);
+			
 		}
+
 	}
 	
 	//reset OS Data
@@ -400,7 +406,43 @@ public class ManageGenomeSets extends JDialog implements ActionListener, ListSel
 		if (e.getSource().equals(btnOK)){
 
 			//Update fields
-			f.getOS().setNotes(OrganismSetNotes.getText());
+			for (int i = 0; i < DisplayOnlyListModel.getSize(); i++){
+				
+				//Key name
+				String GSKey = DisplayOnlyListModel.get(i);
+				
+				//Info to update
+				LinkedList<JCheckBoxMenuItem> UpdatedSet = f.getCurrentItems();
+				LinkedHashMap<String, GSInfo> UpdatedGenomeSets = f.getGenomeSets();
+				JMenu UpdatedGSMenu = f.getMG_CurrentGS();
+				
+				//remove all genome sets that are not available + note loaded
+				for (JCheckBoxMenuItem j : f.getCurrentItems()){
+					
+					//try-catch block is for occasional concurrent modification exception.
+					try {
+						
+						if (!j.isSelected() && j.getName().equals(GSKey)){
+							
+							//remove from menu
+							UpdatedSet.remove(j);
+							
+							//remove from available sets
+							UpdatedGenomeSets.remove(GSKey);
+							
+							//remove from menu
+							UpdatedGSMenu.remove(j);
+						}
+						
+					} catch (Exception ex){}
+				}
+				
+				//update menu
+				f.setCurrentItems(UpdatedSet);
+				f.setGenomeSets(UpdatedGenomeSets);
+				f.setMG_CurrentGS(UpdatedGSMenu);
+
+			}
 			
 			//close
 			this.dispose();
@@ -409,18 +451,26 @@ public class ManageGenomeSets extends JDialog implements ActionListener, ListSel
 		//Show individual genome data for each organism
 		if (e.getSource().equals(menuGenomes)){
 			try {
-			for (String s : GI.getGSGenomeDescriptions().keySet()){
 				
-				//find appropriate species
-				if (menuGenomes.getSelectedItem().equals(s)){
-					showGenomeInfo(s);
+				if (menuGenomes.getSelectedItem() != null) {
+					for (String s : GI.getGSGenomeDescriptions().keySet()){
+						
+						//find appropriate species
+						if (menuGenomes.getSelectedItem().equals(s)){
+							showGenomeInfo(s);
+						}
+					}
+				
+					if (menuGenomes.getSelectedItem().equals(strSelectGenome)){
+						LblInfo.setText("");
+					}
 				}
-			}
+
 			
-			if (menuGenomes.getSelectedItem().equals(strSelectGenome)){
-				LblInfo.setText("");
+			} catch (Exception ex) {
+				System.out.println("MENU GENOMES ERROR!!!!");
+				ex.printStackTrace();
 			}
-			} catch (Exception ex) {}
 			
 		}
 		
@@ -561,15 +611,13 @@ public class ManageGenomeSets extends JDialog implements ActionListener, ListSel
 		//Determine selection
 		String Selection = "";
 		
-		//
+		// Select appropriate value
 		if (e.getSource() == IncludeList){
 			Selection = IncludeList.getSelectedValue();
-			DisplayOnlyList.setSelectedIndices(new int[0]);
 		} 
 		
 		if (e.getSource() == DisplayOnlyList){
 			Selection = DisplayOnlyList.getSelectedValue();
-			IncludeList.setSelectedIndices(new int[0]);
 		}
 				
 		//Update display information
