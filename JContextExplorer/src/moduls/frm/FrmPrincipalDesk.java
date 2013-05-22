@@ -21,6 +21,7 @@ package moduls.frm;
 import genomeObjects.AnnotatedGenome;
 import genomeObjects.CSDisplayData;
 import genomeObjects.ContextSetDescription;
+import genomeObjects.GenomicElement;
 import genomeObjects.OrganismSet;
 import haloGUI.GBKChecker;
 import haloGUI.GBKFieldMapping;
@@ -71,11 +72,13 @@ import javax.swing.JDesktopPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
@@ -85,6 +88,10 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 
+import com.apple.eawt.AboutHandler;
+import com.apple.eawt.AppEvent.AboutEvent;
+import com.apple.eawt.Application;
+
 import operonClustering.CustomDissimilarity;
 
 import ContextForest.CFSettingsWindow;
@@ -93,6 +100,7 @@ import GenomicSetHandling.GSInfo;
 import GenomicSetHandling.ImportGenbankIDs;
 import GenomicSetHandling.ManageGenomeSets;
 import GenomicSetHandling.NewGS;
+import GenomicSetHandling.PopularGenomeSetData;
 
 import moduls.frm.Panels.Jpan_DisplayOptions;
 import moduls.frm.Panels.Jpan_GraphMenu;
@@ -103,6 +111,8 @@ import moduls.frm.Panels.Jpan_TabbedMenu;
 import moduls.frm.Panels.Jpan_btn;
 import moduls.frm.Panels.Jpan_btn_NEW;
 import moduls.frm.Panels.Jpan_genome;
+import moduls.frm.children.AboutBox;
+import moduls.frm.children.AboutJCE;
 import moduls.frm.children.DeviationMeasuresBox;
 import moduls.frm.children.FrmPiz;
 import moduls.frm.children.ManageDissimilarity;
@@ -192,14 +202,16 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private LinkedList<JCheckBoxMenuItem> AvailableOSCheckBoxMenuItems 
 		= new LinkedList<JCheckBoxMenuItem>();
 
-	private LinkedHashMap<JCheckBoxMenuItem, String> PopularGenomeSets =
-			new LinkedHashMap<JCheckBoxMenuItem, String>();
+	private LinkedHashMap<JCheckBoxMenuItem, PopularGenomeSetData> PopularGenomeSets =
+			new LinkedHashMap<JCheckBoxMenuItem, PopularGenomeSetData>();
 	
 	//private ButtonGroup AvailableOSCheckBoxMenuItems = new ButtonGroup();
 	//Import related
 	private LinkedList<String> FeatureIncludeTypes;
 	private LinkedList<String> FeatureDisplayTypes;
 	private GBKFieldMapping GBKFields;
+	
+	// ===== MENU RELATED ====== //
 	
 	//Menu bar related
 	private JMenuBar MB;
@@ -238,7 +250,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JCheckBoxMenuItem MG_Chloroviruses;
 	private JCheckBoxMenuItem MG_Staph;
 	private JCheckBoxMenuItem MG_Salmonella;
-	private String strHalos = "Halophilic Archaea";
+	private String strHalos = "Haloarchaea";
 	private String strMyxo = "Myxococcus";
 	private String strChloroviruses = "Chloroviruses";
 	private String strStaph = "Staphylococcus Aureus";
@@ -262,6 +274,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenuItem MH_Manual;
 	private JMenuItem MH_Video; 
 	private JMenuItem MH_DataSets;
+	
+	// ==== SwingWorkers ===== //
+	private LoadGenomesWorker CurrentLGW;
+	private LoadPopularWorker CurrentLPW;
 	
 	// ===== Classes ===== //
 	
@@ -772,7 +788,101 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		}
 		
 		//Load gene IDs
+		
+		/* TODO: current implementation is only of the form
+		 * species_name		contig		start		stop		geneID
+		 * 
+		 * need to implement other file formats in the future.
+		 */
 		public void LoadGeneIDs(){
+			
+			int LineCounter = 0;
+			int clusterProgress = 0;
+			setProgress(clusterProgress);
+
+			try {
+
+				// First: count lines in the file
+				// import buffered reader
+				BufferedReader br_count = new BufferedReader(
+						new FileReader(SourceFile));
+				int TotalLines = 0;
+
+				// count lines
+				while (br_count.readLine() != null) {
+					TotalLines++;
+				}
+
+				// Second: import/process lines in the file
+				// import buffered reader
+				BufferedReader br = new BufferedReader(new FileReader(
+						SourceFile));
+				String Line = null;
+				int ClusterNumCounter = 0;
+
+				while ((Line = br.readLine()) != null) {
+
+					// import each line
+					String[] ImportedLine = Line.split("\t");
+
+					// increment cluster counter.
+					ClusterNumCounter++;
+
+					// try to parse every line
+					try {
+
+						if (ImportedLine.length == 5) {
+
+							//System.out.println(Line);
+							//recover species into
+							
+							// recover bioinfo
+							int GeneStart = Integer
+									.parseInt(ImportedLine[2]);
+							int GeneStop = Integer
+									.parseInt(ImportedLine[3]);
+
+							// adjust gene ID
+							AnnotatedGenome AG = OS.getSpecies().get(ImportedLine[0]);
+
+							//check all
+							for (GenomicElement E : AG.getElements()){
+								if (E.getContig().equals(ImportedLine[1]) &&
+										E.getStart() == GeneStart &&
+										E.getStop() == GeneStop){
+									E.setGeneID(ImportedLine[4]);
+									//System.out.println(Line);
+									break;
+								}
+							}
+							
+						} 
+						
+					} catch (Exception ex) {
+					}
+
+					// report to SwingWorker
+					LineCounter++;
+
+					// update progress
+					clusterProgress = (int) Math
+							.round(100 * ((double) LineCounter / (double) TotalLines));
+					setProgress(clusterProgress);
+
+				}
+
+			} catch (Exception ex) {
+
+				setProgress(0);
+
+				JOptionPane
+						.showMessageDialog(
+								null,
+								"The file could not be loaded or was improperly formatted.",
+								"Invalid File Format",
+								JOptionPane.ERROR_MESSAGE);
+			}
+
 			
 		}
 		
@@ -1036,7 +1146,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Menu bar
 		this.MB = new JMenuBar();
-
+		
 		/*
 		 * GENOMES MENU
 		 */
@@ -1159,9 +1269,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		M_Genomes.add(MG_NcbiTax);
 		M_Genomes.addSeparator();
 		M_Genomes.add(MG_PopularSets);
-		M_Genomes.addSeparator();
-		M_Genomes.add(MG_WholeSet);
-		
+		//M_Genomes.addSeparator();
+		//M_Genomes.add(MG_WholeSet);
 		
 		/*
 		 * LOAD MENU
@@ -1222,10 +1331,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		ME_GFFs.setAccelerator(Xstroke);
 		ME_GFFs.addActionListener(this);
 		
-		M_Export.add(ME_GWS);
+		//M_Export.add(ME_GWS);
 		M_Export.add(ME_GFFs);
-		M_Export.add(ME_Genbanks);
-		M_Export.add(ME_Clusters);
+		//M_Export.add(ME_Genbanks);
+		//M_Export.add(ME_Clusters);
 			
 		/*
 		 * HELP MENU
@@ -1252,8 +1361,26 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MB.add(M_Help);
 			
 		this.setJMenuBar(MB);
+		
+		//add "about" information, if appropriate.
+		if (System.getProperty("os.name").contains("Mac")){
+			this.AppleOSMenuAdjustments();
+		}
+		
 	}
 		
+	//initialize apple-specific menu components
+	public void AppleOSMenuAdjustments(){
+		Application a = Application.getApplication();
+		a.setAboutHandler(new AboutHandler(){
+
+			@Override
+			public void handleAbout(AboutEvent e) {
+				new AboutJCE();
+			}
+		});
+	}
+	
 	//Initialize data
 	public void InitializeData(){
 		
@@ -1281,12 +1408,49 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_Staph.setName(strStaph);
 		MG_Salmonella.setName(strSalmonella);
 		
-		//add entries - URLs
-		PopularGenomeSets.put(MG_Halos, "http://www.bme.ucdavis.edu/facciotti/files/2013/05/Haloarchaea.txt");
-		PopularGenomeSets.put(MG_Chloroviruses, "http://www.bme.ucdavis.edu/facciotti/files/2013/05/Chloroviruses.txt");
-		PopularGenomeSets.put(MG_Myxo, "http://www.bme.ucdavis.edu/facciotti/files/2013/05/Myxococcus.txt");
-		PopularGenomeSets.put(MG_Staph, "http://www.bme.ucdavis.edu/facciotti/files/2013/05/Staphylococcus_aureus.txt");
-		PopularGenomeSets.put(MG_Salmonella, "http://www.bme.ucdavis.edu/facciotti/files/2013/05/Salmonella_Enterica.txt");
+		//Popular genome set objects (including various options)
+		
+		//Halophiles
+		PopularGenomeSetData PGD_halos = new PopularGenomeSetData();
+		PGD_halos.setName(strHalos);
+		PGD_halos.setChkBox(MG_Halos);
+		PGD_halos.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/05/Haloarchaea.txt");
+		PGD_halos.setPasswordProtected(false);
+		PopularGenomeSets.put(MG_Halos, PGD_halos);
+		
+		//Chloroviruses
+		PopularGenomeSetData PGD_chloros = new PopularGenomeSetData();
+		PGD_chloros.setName(strChloroviruses);
+		PGD_chloros.setChkBox(MG_Chloroviruses);
+		PGD_chloros.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/05/Chloroviruses.txt");
+		PGD_chloros.setPasswordProtected(false);
+		PopularGenomeSets.put(MG_Chloroviruses, PGD_chloros);
+		
+		//Myxococcus
+		PopularGenomeSetData PGD_myxo = new PopularGenomeSetData();
+		PGD_myxo.setName(strMyxo);
+		PGD_myxo.setChkBox(MG_Myxo);
+		PGD_myxo.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/05/Myxococcus.txt");
+		PGD_myxo.setPasswordProtected(false);
+		PopularGenomeSets.put(MG_Myxo, PGD_myxo);
+		
+		//Staphylococcus
+		PopularGenomeSetData PGD_staph = new PopularGenomeSetData();
+		PGD_staph.setName(strStaph);
+		PGD_staph.setChkBox(MG_Staph);
+		PGD_staph.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/05/Staphylococcus_aureus.txt");
+		PGD_staph.setPasswordProtected(true);
+		PGD_staph.setPassword("nenegoose");
+		PopularGenomeSets.put(MG_Staph, PGD_staph);
+		
+		//Salmonella
+		PopularGenomeSetData PGD_salmonella = new PopularGenomeSetData();
+		PGD_salmonella.setName(strSalmonella);
+		PGD_salmonella.setChkBox(MG_Salmonella);
+		PGD_salmonella.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/05/Salmonella_Enterica.txt");
+		PGD_salmonella.setPasswordProtected(true);
+		PGD_salmonella.setPassword("fugufish");
+		PopularGenomeSets.put(MG_Salmonella, PGD_salmonella);
 		
 		//add action listener
 		for (JMenuItem j : PopularGenomeSets.keySet()){
@@ -1330,11 +1494,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 		}
 		
-		//Import from .GS file
-		if (evt.getSource().equals(MG_ImportGS)){
-			System.out.println("TODO: Import Genome Set from .GS File");
-		}
-		
 		//Edit GFF file type processing settings
 		if (evt.getSource().equals(MG_GFF)){
 			new GFFChecker(this);
@@ -1368,7 +1527,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			// note current directory for next time
 			if (GetGenomes.getCurrentDirectory() != null) {
 				
-				//TODO: not quite working aaaah
 				if (this.OS == null){
 					MakeDefaultGenomeSet("Default Genome Set");
 				}
@@ -1379,8 +1537,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			//begin import
 			File[] files = GetGenomes.getSelectedFiles();
 			LoadGenomesWorker LGW = new LoadGenomesWorker(files);
+			//CurrentLGW = LGW;
 			LGW.addPropertyChangeListener(panBtn);
 			LGW.execute();
+			//CurrentLGW = null;
 		
 		}
 		
@@ -1440,9 +1600,56 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			if (j.equals(evt.getSource())){
 				if (j.isSelected()){
 
-					LoadPopularWorker LPW = new LoadPopularWorker(j);
-					LPW.addPropertyChangeListener(panBtn);
-					LPW.execute();
+					//only import if publically available, or correct password input
+					boolean ContinueLoading = false;
+					PopularGenomeSetData PDG = PopularGenomeSets.get(j);
+					
+					if (PDG.isPasswordProtected()){
+						
+						JPanel panel = new JPanel();
+						JLabel label = new JLabel("Please enter the password:");
+						JPasswordField pass = new JPasswordField(15);
+						panel.add(label);
+						panel.add(pass);
+						
+						String[] options = new String[]{"OK","Cancel"};
+						int Option = JOptionPane.showOptionDialog(null, panel, "Password Required",
+								JOptionPane.NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+						
+						if (JOptionPane.YES_OPTION == Option){
+							char[] pchar = pass.getPassword();
+							String password = new String(pchar);
+
+							if (password.equals(PDG.getPassword())){
+								ContinueLoading = true;
+							} else {
+								JOptionPane.showMessageDialog(null, "The password entered is not correct.\n" +
+										"The data could not be loaded.",
+										"Incorrect Password",JOptionPane.ERROR_MESSAGE);
+								j.setSelected(false);
+							}
+						}
+						
+					} else {
+						ContinueLoading = true;
+					}
+					
+					if (ContinueLoading){
+						LoadPopularWorker LPW = new LoadPopularWorker(j);
+						//CurrentLPW = LPW;
+						LPW.addPropertyChangeListener(panBtn);
+						LPW.execute();
+						//CurrentLPW = null;
+						
+						if (PDG.isPasswordProtected()){
+							//update the GUI to enable components.
+							OSMenuComponentsEnabled(true);
+							SwingUtilities.updateComponentTreeUI(getRootPane());
+							this.repaint();
+						}
+
+					}
+					
 					
 					break;
 				} else {
@@ -1466,7 +1673,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		 * LOAD
 		 */
 		
-		//load homology clusters or gene IDs
+		//load homology clusters
 		if (evt.getSource().equals(ML_HomologyClusterMenu)){
 			
 			// initialize output
@@ -1495,6 +1702,42 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				
 				//begin import
 				LoadTagsWorker LTW = new LoadTagsWorker(GetHC.getSelectedFile(), true);
+				LTW.addPropertyChangeListener(panBtn);
+				LTW.execute();
+				
+			}
+			
+		}
+		
+		//load gene IDs
+		if (evt.getSource().equals(ML_GeneIDs)){
+			
+			// initialize output
+			JFileChooser GetHC = new JFileChooser();
+			
+			GetHC.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			GetHC
+					.setDialogTitle("Select Gene IDs File");
+
+			//retrieve directory
+			if (this.FileChooserSource != null) {
+				GetHC.setCurrentDirectory(FileChooserSource);
+			} else {
+				GetHC.setCurrentDirectory(new File("."));
+			}
+		
+			GetHC.showOpenDialog(GetHC);
+			
+			// note current directory for next time
+			if (GetHC.getCurrentDirectory() != null) {
+				this.FileChooserSource = GetHC.getCurrentDirectory();
+			}
+			
+			//import homology clusters from file.
+			if (GetHC.getSelectedFile() != null){
+				
+				//begin import
+				LoadTagsWorker LTW = new LoadTagsWorker(GetHC.getSelectedFile(), false);
 				LTW.addPropertyChangeListener(panBtn);
 				LTW.execute();
 				
@@ -1774,7 +2017,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Retrieve info		
 		File f = new File(m.getName());
-		String strURL = PopularGenomeSets.get(m);
+		String strURL = PopularGenomeSets.get(m).getURL();
 		GenomeSetFiles.put(m.getName(), f);
 		
 		//Import!
@@ -2499,6 +2742,22 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	public void setGenomeSets(LinkedHashMap<String, GSInfo> genomeSets) {
 		GenomeSets = genomeSets;
+	}
+
+	public LoadGenomesWorker getCurrentLGW() {
+		return CurrentLGW;
+	}
+
+	public void setCurrentLGW(LoadGenomesWorker currentLGW) {
+		CurrentLGW = currentLGW;
+	}
+
+	public LoadPopularWorker getCurrentLPW() {
+		return CurrentLPW;
+	}
+
+	public void setCurrentLPW(LoadPopularWorker currentLPW) {
+		CurrentLPW = currentLPW;
 	}
 
 }

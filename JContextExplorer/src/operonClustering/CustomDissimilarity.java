@@ -19,6 +19,10 @@ import moduls.frm.children.GapPointMapping;
 
 public class CustomDissimilarity implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 629102024437887278L;
 	//Fields
 	//General
 	private String Name;

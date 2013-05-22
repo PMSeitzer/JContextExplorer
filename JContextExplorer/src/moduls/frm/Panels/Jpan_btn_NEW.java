@@ -1618,10 +1618,31 @@ import definicions.MatriuDistancies;
 						CurrentSearch = null;
 						de = null;
 					}
+					
+//					if (fr.getCurrentLGW() != null){
+//						fr.getCurrentLGW().cancel(true);
+//						fr.setCurrentLGW(null);
+//					}
+//					
+//					if (fr.getCurrentLPW() != null){
+//						fr.getCurrentLPW().cancel(true);
+//						fr.setCurrentLPW(null);
+//					}
 
 					//message to console
 //					System.out.println("Search successfully cancelled.");
 				}
+//			} else if (fr.getCurrentLPW() != null){
+//				System.out.println("Meeerh!");
+//				if (evt.getSource().equals(btnCancel)){
+//					if (fr.getCurrentLPW() != null){
+//						fr.getCurrentLPW().cancel(true);
+//						fr.setCurrentLPW(null);
+//						progressBar.setIndeterminate(false);
+//						progressBar.setValue(0);
+//						fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+//					}
+//				}
 			} else {
 				fr.NoOS();
 			}

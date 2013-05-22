@@ -143,6 +143,11 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 	private LinkedList<Component> CSGenesBetween_group;
 	private JRadioButton CSGenesBetween;
 	private String strCSGenesBetween = "Group all genes between two queries together";
+	private JCheckBox chkLimitDistance;
+	private String strchkLimitDistance = "Max distance between query genes:";
+	private JTextField DistanceLimit;
+	private JTextField LblDistanceLimit;
+	private String strLblDistanceLimit = "nt After";
 	
 	//CSType (5) - CSMultipleQuery
 	private LinkedList<Component> CSMultipleQuery_group;
@@ -210,7 +215,8 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		
 		//frame settings
 		//this.setSize(new Dimension(400, 350));
-		this.setSize(700,650);
+		//this.setSize(900,750);
+		this.setSize(700,750);
 					//width, height
 		
 		this.setTitle("Add or Remove Context Sets");
@@ -797,6 +803,42 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		CSGenesBetween.addActionListener(this);
 		gridy++;
 		
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,20,1,1);
+		chkLimitDistance = new JCheckBox(strchkLimitDistance);
+		chkLimitDistance.setSelected(true);
+		chkLimitDistance.addActionListener(this);
+		//jp.add(chkLimitDistance, c);
+		CSGenesBetween_group.add(chkLimitDistance);
+		
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,1,1,1);
+		DistanceLimit = new JTextField("10000");
+		DistanceLimit.setEditable(true);
+		DistanceLimit.setHorizontalAlignment(JTextField.LEFT);
+		//jp.add(DistanceLimit, c);
+		CSGenesBetween_group.add(DistanceLimit);
+		
+		c.gridx = 2;
+		c.gridy = gridy;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,1,1,1);
+		LblDistanceLimit = new JTextField(strLblDistanceLimit);
+		LblDistanceLimit.setEditable(false);
+		//jp.add(LblDistanceLimit, c);
+		CSGenesBetween_group.add(LblDistanceLimit);
+		
+		//gridy++;
+		
+		//private JTextField DistanceLimit;
+		
 		//add this mapping to hash map.
 		RadioButtonComponents.put(CSGenesBetween.getModel(), CSGenesBetween_group);
 		
@@ -1138,6 +1180,16 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 			
 		} 
 		
+		if (evt.getSource().equals(chkLimitDistance)){
+			if (chkLimitDistance.isSelected()){
+				DistanceLimit.setEnabled(true);
+				LblDistanceLimit.setEnabled(true);
+			} else {
+				DistanceLimit.setEnabled(false);
+				LblDistanceLimit.setEnabled(false);
+			}
+		}
+		
 		//ADD BUTTON
 		if (evt.getSource().equals(btnAddCS) || evt.getSource().equals(GenesAfter) || evt.getSource().equals(ntAfter)){
 			
@@ -1310,6 +1362,13 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 				for (Component c : LL){
 					c.setEnabled(true);
 				}
+				
+				//case: between range limiter
+				if (LL.equals(CSGenesBetween_group) && !chkLimitDistance.isSelected()){
+					DistanceLimit.setEnabled(false);
+					LblDistanceLimit.setEnabled(false);
+				}
+				
 			} else {
 				for (Component c : LL){
 					c.setEnabled(false);
