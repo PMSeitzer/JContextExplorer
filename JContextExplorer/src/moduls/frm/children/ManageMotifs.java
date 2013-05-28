@@ -64,6 +64,8 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 	//File import
 	private File ReferenceDirectory = null;
 	private File[] MotifFiles;
+	private boolean isFile = false;
+	private File SingleFile = null;
 	
 	//GUI
 	//general use
@@ -183,23 +185,37 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		private int OrganismsMapped;
 		private int SearchBubbleRange = 10000;		//Start looking for motifs only at 10K
 		private boolean isFimo;
+		private boolean isDir;
 		
 		//constructor
-		public btnLoadFiles(boolean isFimo){
+		public btnLoadFiles(boolean isFimo, boolean isFile){
 			this.isFimo = isFimo;
+			this.isDir = !isFile;
 		}
 		
 		//Fields
 		@Override
 		protected Void doInBackground() throws Exception {
-			
+	
 			//wait cursor
 			f.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			
+			if (isDir){
+				importFromDir();
+			} else {
+				importFromSingleFile();
+			}
+			
+			return null;
+		}
+		
+		//import from a directory
+		protected void importFromDir(){
 			
 			//re-initialize loading
 			MotifFilesLoaded = false;
 			
-			//initialize context set description
+			//initialize motif group description
 			ToAdd = new MotifGroupDescription();
 			ToAdd.setName(MSName.getText());
 			LinkedList<String> SpeciesNames = new LinkedList<String>();
@@ -319,205 +335,210 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 								//add to list
 								MG.getMotifInstances().add(SM);
 								
-								//option: associate with an annotated genome
-								if (chkAssociate.isSelected()){
-									AnnotatedGenome AG = f.getOS().getSpecies().get(SpeciesName);
-									int DistE_SM;
-									GenomicElement TempE = null;
-									
-									//Center of motif
-									double value = 0.5 * ( (double) SM.getStart() + (double) SM.getStop() );
-									long Center = Math.round(value);
-									
-									for (GenomicElement E : AG.getElements()){
-										if (radNextDownstream.isSelected()){
-											if (E.getContig().contentEquals(SM.getContig())){ // same contig
-
-												//same strand check
-												if (chkStrandMatchingDownStream.isSelected()){
-													
-													if (E.getStrand().equals(SM.getStrand())){ //same strand
-														
-														if (SM.getStrand().equals(Strand.POSITIVE)){
-															
-															//case: internal motif
-															if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
-																E.addAMotif(SM);
-																break;
-
-															//case: partially overlapping
-															} else if (SM.getStart() < E.getStart() && SM.getStop() > E.getStart()){
-																E.addAMotif(SM);
-																break;
-																
-															//case: distance from source
-															} else {
-																DistE_SM = E.getStart() - SM.getStop();
-																if (DistE_SM > 0){
-																	E.addAMotif(SM);
-																	break;
-																}
-															}
-															
-														} else {
-															
-															//case: internal motif
-															if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
-																E.addAMotif(SM);
-																break;
-
-															//case: partially overlapping
-															} else if (SM.getStart() < E.getStop() && SM.getStop() > E.getStop()){
-																E.addAMotif(SM);
-																break;
-																
-															//case: distance from source
-															} else {
-																DistE_SM =  E.getStart() - SM.getStop();
-																if (DistE_SM > 0){
-																	if (TempE != null){
-																		TempE.addAMotif(SM);
-																		TempE = null;
-																		break;
-																	}
-																} else {
-																	//store value, in case it is needed.
-																	TempE = E;
-																}
-															}
-														}
-
-													}
-													
-												} else {
-													
-													//case: internal motif
-													if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
-														E.addAMotif(SM);
-														break;
-
-													//case: partially overlapping
-													} else if (SM.getStart() < E.getStart() && SM.getStop() > E.getStart()){
-														E.addAMotif(SM);
-														break;
-														
-													//case: distance from source
-													} else {
-														DistE_SM = E.getStart() - SM.getStop();
-														if (DistE_SM > 0){
-															E.addAMotif(SM);
-															break;
-														}
-													}
-													
-												}
-												
-											}
-											
-										//just search for nearby	
-										} else if (radWithinRange.isSelected()) {
-											if (E.getContig().contentEquals(SM.getContig())){ // same contig
-
-												//Center of motif
-												double valueofE = 0.5 * ( (double) E.getStart() + (double) E.getStop() );
-												long CenterofE = Math.round(valueofE);
-												
-												//Once passed through the search bubble, stop searching - E will only get larger.
-												if (CenterofE - Center > SearchBubbleRange){
-													break;
-												}
-												
-												//don't even consider the motif if it's out of the search bubble range
-												if (Math.abs(Center - CenterofE) < SearchBubbleRange){
-												     
-													//don't look if a strand-agreement condition is violated.
-													if ((chkStrandMatching.isSelected() && SM.getStrand().equals(E.getStrand())) ||
-															chkStrandMatching.isSelected() == false){
-														
-														//positive stranded case
-														if (E.getStrand().equals(Strand.POSITIVE)){
-															
-															//upstream case
-															if (Integer.parseInt(TxtUpstream.getText()) >= 0){
-																if (E.getStart() - Center <= Integer.parseInt(TxtUpstream.getText()) &&
-																		E.getStart() - Center >= 0){
-																	E.addAMotif(SM);
-																}
-															}
-															
-															//downstream case
-															if (Integer.parseInt(TxtDownstream.getText()) >= 0){
-																if (Center - E.getStop() <= Integer.parseInt(TxtDownstream.getText()) &&
-																		Center - E.getStop() >= 0){
-																	E.addAMotif(SM);
-																}
-															}
-															
-															//internal motif case
-															if (radAllInternal.isSelected()){
-																if (E.getStop() > Center && Center > E.getStart()){
-																	E.addAMotif(SM);
-																}
-															} else {
-																if (Integer.parseInt(IntTxtDownstream.getText()) >= 0){
-																	if (Center - E.getStart() <= Integer.parseInt(IntTxtDownstream.getText()) &&
-																			Center - E.getStart() >= 0){
-																		E.addAMotif(SM);
-																	}
-																}
-																if (Integer.parseInt(IntTxtUpstream.getText()) >= 0){
-																	if (E.getStop() - Center <= Integer.parseInt(IntTxtUpstream.getText()) &&
-																			E.getStop() - Center >= 0){
-																		E.addAMotif(SM);
-																	}
-																}
-															}
-
-															
-														} else {
-															
-															//upstream case
-															if (Integer.parseInt(TxtUpstream.getText()) >= 0){
-																if (Center - E.getStop() <= Integer.parseInt(TxtUpstream.getText()) &&
-																		Center - E.getStop() >= 0){
-																	E.addAMotif(SM);
-																}
-															}
-															
-															//downstream case
-															if (Integer.parseInt(TxtDownstream.getText()) >= 0){
-																if (E.getStart() - Center <= Integer.parseInt(TxtDownstream.getText()) &&
-																		E.getStart() - Center >= 0){
-																	E.addAMotif(SM);
-																}
-															}
-															
-															//internal motif case
-															if (radAllInternal.isSelected()){
-																if (E.getStop() > Center && Center > E.getStart()){
-																	E.addAMotif(SM);
-																}
-															} else {
-																if (Integer.parseInt(IntTxtDownstream.getText()) >= 0){
-																	if (E.getStop() - Center <= Integer.parseInt(IntTxtDownstream.getText()) &&
-																			E.getStop() - Center >= 0){
-																		E.addAMotif(SM);
-																	}
-																}
-																if (Integer.parseInt(IntTxtUpstream.getText()) >= 0){
-																	if (Center - E.getStart() <= Integer.parseInt(IntTxtUpstream.getText()) &&
-																			Center - E.getStart() >= 0){
-																		E.addAMotif(SM);
-																	}
-																}
-															}
-														}
-													}
-												}
-											}
-										}
-									}	
-								}
+								//Add associations
+								addAssociation(SpeciesName, SM);
+//								
+//CUTPOINT								
+//								//option: associate with an annotated genome
+//								if (chkAssociate.isSelected()){
+//									AnnotatedGenome AG = f.getOS().getSpecies().get(SpeciesName);
+//									int DistE_SM;
+//									GenomicElement TempE = null;
+//									
+//									//Center of motif
+//									double value = 0.5 * ( (double) SM.getStart() + (double) SM.getStop() );
+//									long Center = Math.round(value);
+//									
+//									for (GenomicElement E : AG.getElements()){
+//										if (radNextDownstream.isSelected()){
+//											if (E.getContig().contentEquals(SM.getContig())){ // same contig
+//
+//												//same strand check
+//												if (chkStrandMatchingDownStream.isSelected()){
+//													
+//													if (E.getStrand().equals(SM.getStrand())){ //same strand
+//														
+//														if (SM.getStrand().equals(Strand.POSITIVE)){
+//															
+//															//case: internal motif
+//															if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
+//																E.addAMotif(SM);
+//																break;
+//
+//															//case: partially overlapping
+//															} else if (SM.getStart() < E.getStart() && SM.getStop() > E.getStart()){
+//																E.addAMotif(SM);
+//																break;
+//																
+//															//case: distance from source
+//															} else {
+//																DistE_SM = E.getStart() - SM.getStop();
+//																if (DistE_SM > 0){
+//																	E.addAMotif(SM);
+//																	break;
+//																}
+//															}
+//															
+//														} else {
+//															
+//															//case: internal motif
+//															if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
+//																E.addAMotif(SM);
+//																break;
+//
+//															//case: partially overlapping
+//															} else if (SM.getStart() < E.getStop() && SM.getStop() > E.getStop()){
+//																E.addAMotif(SM);
+//																break;
+//																
+//															//case: distance from source
+//															} else {
+//																DistE_SM =  E.getStart() - SM.getStop();
+//																if (DistE_SM > 0){
+//																	if (TempE != null){
+//																		TempE.addAMotif(SM);
+//																		TempE = null;
+//																		break;
+//																	}
+//																} else {
+//																	//store value, in case it is needed.
+//																	TempE = E;
+//																}
+//															}
+//														}
+//
+//													}
+//													
+//												} else {
+//													
+//													//case: internal motif
+//													if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
+//														E.addAMotif(SM);
+//														break;
+//
+//													//case: partially overlapping
+//													} else if (SM.getStart() < E.getStart() && SM.getStop() > E.getStart()){
+//														E.addAMotif(SM);
+//														break;
+//														
+//													//case: distance from source
+//													} else {
+//														DistE_SM = E.getStart() - SM.getStop();
+//														if (DistE_SM > 0){
+//															E.addAMotif(SM);
+//															break;
+//														}
+//													}
+//													
+//												}
+//												
+//											}
+//											
+//										//just search for nearby	
+//										} else if (radWithinRange.isSelected()) {
+//											if (E.getContig().contentEquals(SM.getContig())){ // same contig
+//
+//												//Center of motif
+//												double valueofE = 0.5 * ( (double) E.getStart() + (double) E.getStop() );
+//												long CenterofE = Math.round(valueofE);
+//												
+//												//Once passed through the search bubble, stop searching - E will only get larger.
+//												if (CenterofE - Center > SearchBubbleRange){
+//													break;
+//												}
+//												
+//												//don't even consider the motif if it's out of the search bubble range
+//												if (Math.abs(Center - CenterofE) < SearchBubbleRange){
+//												     
+//													//don't look if a strand-agreement condition is violated.
+//													if ((chkStrandMatching.isSelected() && SM.getStrand().equals(E.getStrand())) ||
+//															chkStrandMatching.isSelected() == false){
+//														
+//														//positive stranded case
+//														if (E.getStrand().equals(Strand.POSITIVE)){
+//															
+//															//upstream case
+//															if (Integer.parseInt(TxtUpstream.getText()) >= 0){
+//																if (E.getStart() - Center <= Integer.parseInt(TxtUpstream.getText()) &&
+//																		E.getStart() - Center >= 0){
+//																	E.addAMotif(SM);
+//																}
+//															}
+//															
+//															//downstream case
+//															if (Integer.parseInt(TxtDownstream.getText()) >= 0){
+//																if (Center - E.getStop() <= Integer.parseInt(TxtDownstream.getText()) &&
+//																		Center - E.getStop() >= 0){
+//																	E.addAMotif(SM);
+//																}
+//															}
+//															
+//															//internal motif case
+//															if (radAllInternal.isSelected()){
+//																if (E.getStop() > Center && Center > E.getStart()){
+//																	E.addAMotif(SM);
+//																}
+//															} else {
+//																if (Integer.parseInt(IntTxtDownstream.getText()) >= 0){
+//																	if (Center - E.getStart() <= Integer.parseInt(IntTxtDownstream.getText()) &&
+//																			Center - E.getStart() >= 0){
+//																		E.addAMotif(SM);
+//																	}
+//																}
+//																if (Integer.parseInt(IntTxtUpstream.getText()) >= 0){
+//																	if (E.getStop() - Center <= Integer.parseInt(IntTxtUpstream.getText()) &&
+//																			E.getStop() - Center >= 0){
+//																		E.addAMotif(SM);
+//																	}
+//																}
+//															}
+//
+//															
+//														} else {
+//															
+//															//upstream case
+//															if (Integer.parseInt(TxtUpstream.getText()) >= 0){
+//																if (Center - E.getStop() <= Integer.parseInt(TxtUpstream.getText()) &&
+//																		Center - E.getStop() >= 0){
+//																	E.addAMotif(SM);
+//																}
+//															}
+//															
+//															//downstream case
+//															if (Integer.parseInt(TxtDownstream.getText()) >= 0){
+//																if (E.getStart() - Center <= Integer.parseInt(TxtDownstream.getText()) &&
+//																		E.getStart() - Center >= 0){
+//																	E.addAMotif(SM);
+//																}
+//															}
+//															
+//															//internal motif case
+//															if (radAllInternal.isSelected()){
+//																if (E.getStop() > Center && Center > E.getStart()){
+//																	E.addAMotif(SM);
+//																}
+//															} else {
+//																if (Integer.parseInt(IntTxtDownstream.getText()) >= 0){
+//																	if (E.getStop() - Center <= Integer.parseInt(IntTxtDownstream.getText()) &&
+//																			E.getStop() - Center >= 0){
+//																		E.addAMotif(SM);
+//																	}
+//																}
+//																if (Integer.parseInt(IntTxtUpstream.getText()) >= 0){
+//																	if (Center - E.getStart() <= Integer.parseInt(IntTxtUpstream.getText()) &&
+//																			Center - E.getStart() >= 0){
+//																		E.addAMotif(SM);
+//																	}
+//																}
+//															}
+//														}
+//													}
+//												}
+//											}
+//										}
+//									}	
+//								}
+//CUTPOINT
 							}
 
 						}
@@ -549,9 +570,328 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			} else {
 				ToAdd.setSource("Custom");
 			}
-
 			
-			return null;
+		}
+		
+		//import from a single file
+		protected void importFromSingleFile(){
+			
+			//Initialize progress bar type things
+			MSName.setEditable(false);
+			progressBar.setValue(0);
+			progressBar.setVisible(true);
+			int LinesCompleted = 0;
+			this.OrganismsMapped = 0;
+			int ComputeProgress = 0;
+			
+			//re-initialize loading
+			MotifFilesLoaded = false;
+			
+			//initialize motif group description
+			ToAdd = new MotifGroupDescription();
+			ToAdd.setName(MSName.getText());
+			LinkedList<String> SpeciesNames = new LinkedList<String>();
+			
+			try {
+				//new input file stream
+				BufferedReader br = new BufferedReader(new FileReader(SingleFile));
+				
+				//get total number of lines in file
+				String Line = null;
+				int LineCounter = 0;
+				while ((Line = br.readLine()) != null){
+					LineCounter++;
+				}
+				br.close();
+				
+				//new input file stream to parse file
+				BufferedReader br2 = new BufferedReader(new FileReader(SingleFile));
+				Line = null;
+				while ((Line = br2.readLine()) != null){
+					LinesCompleted++;
+					String[] L = Line.split("\t");
+					
+					//retrieve species
+					AnnotatedGenome AG = f.getOS().getSpecies().get(L[0]);
+					
+					if (AG != null){
+						
+						//find an original
+						boolean AlreadyThere = false;
+						MotifGroup MG = null;
+						
+						for (MotifGroup MGt : AG.getMotifs()){
+							if (MGt.getName().equals(MSName.getText())){
+								MG = MGt;
+								AlreadyThere = true;
+							}
+						}
+						
+						//remove the original
+						if (AlreadyThere){
+							AG.getMotifs().remove(MG);
+						}
+						
+						//if no current MotifGroup exists, initialize a new one
+						if (MG == null){
+							MG = new MotifGroup();
+							MG.setName(MSName.getText());
+							MG.setFileName(SingleFile.getAbsolutePath());
+						}
+						
+						//build sequence motif
+						SequenceMotif SM = new SequenceMotif();
+						SM.setContig(L[1]);
+						SM.setStart(Integer.parseInt(L[2]));
+						SM.setStop(Integer.parseInt(L[3]));
+						SM.setMotifName(MSName.getText());
+						SM.setNotes(L[4]);
+						SM.setSource("Custom");
+						
+						//strandedness
+						if (SM.getStart() > SM.getStop()){
+							SM.setStrand(Strand.NEGATIVE);
+						} else {
+							SM.setStrand(Strand.POSITIVE);
+						}
+						
+						//add associations
+						this.addAssociation(L[0], SM);
+						
+						//add sequence motif to list
+						MG.getMotifInstances().add(SM);
+
+						//add this motif grouping to the species list.
+						AG.getMotifs().add(MG);
+						
+						//increment counter
+						OrganismsMapped++;
+						SpeciesNames.add(L[0]);
+						
+						//update progress bar
+						ComputeProgress = (int) Math.round(100*((double)LinesCompleted/(double)LineCounter));
+						this.setProgress(ComputeProgress);
+					}
+				}
+			} catch (Exception ex){
+				ex.printStackTrace();
+				JOptionPane.showMessageDialog(null, "One or more fields incorrectly formatted, or the input file is not correctly formatted.",
+						"Format Error",JOptionPane.ERROR_MESSAGE);
+				this.setProgress(0);
+			}
+			
+			//Update final info
+			ToAdd.setSpecies(SpeciesNames);
+			if (isFimo){
+				ToAdd.setSource("FIMO");
+			} else {
+				ToAdd.setSource("Custom");
+			}
+
+		}
+		
+		//Associate a particular motif with one or more genomic elements
+		protected void addAssociation(String SpeciesName, SequenceMotif SM){
+			
+			//option: associate with an annotated genome
+			if (chkAssociate.isSelected()){
+				AnnotatedGenome AG = f.getOS().getSpecies().get(SpeciesName);
+				int DistE_SM;
+				GenomicElement TempE = null;
+				
+				//Center of motif
+				double value = 0.5 * ( (double) SM.getStart() + (double) SM.getStop() );
+				long Center = Math.round(value);
+				
+				for (GenomicElement E : AG.getElements()){
+					if (radNextDownstream.isSelected()){
+						if (E.getContig().contentEquals(SM.getContig())){ // same contig
+
+							//same strand check
+							if (chkStrandMatchingDownStream.isSelected()){
+								
+								if (E.getStrand().equals(SM.getStrand())){ //same strand
+									
+									if (SM.getStrand().equals(Strand.POSITIVE)){
+										
+										//case: internal motif
+										if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
+											E.addAMotif(SM);
+											break;
+
+										//case: partially overlapping
+										} else if (SM.getStart() < E.getStart() && SM.getStop() > E.getStart()){
+											E.addAMotif(SM);
+											break;
+											
+										//case: distance from source
+										} else {
+											DistE_SM = E.getStart() - SM.getStop();
+											if (DistE_SM > 0){
+												E.addAMotif(SM);
+												break;
+											}
+										}
+										
+									} else {
+										
+										//case: internal motif
+										if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
+											E.addAMotif(SM);
+											break;
+
+										//case: partially overlapping
+										} else if (SM.getStart() < E.getStop() && SM.getStop() > E.getStop()){
+											E.addAMotif(SM);
+											break;
+											
+										//case: distance from source
+										} else {
+											DistE_SM =  E.getStart() - SM.getStop();
+											if (DistE_SM > 0){
+												if (TempE != null){
+													TempE.addAMotif(SM);
+													TempE = null;
+													break;
+												}
+											} else {
+												//store value, in case it is needed.
+												TempE = E;
+											}
+										}
+									}
+
+								}
+								
+							} else {
+								
+								//case: internal motif
+								if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
+									E.addAMotif(SM);
+									break;
+
+								//case: partially overlapping
+								} else if (SM.getStart() < E.getStart() && SM.getStop() > E.getStart()){
+									E.addAMotif(SM);
+									break;
+									
+								//case: distance from source
+								} else {
+									DistE_SM = E.getStart() - SM.getStop();
+									if (DistE_SM > 0){
+										E.addAMotif(SM);
+										break;
+									}
+								}
+								
+							}
+							
+						}
+						
+					//just search for nearby	
+					} else if (radWithinRange.isSelected()) {
+						if (E.getContig().contentEquals(SM.getContig())){ // same contig
+
+							//Center of motif
+							double valueofE = 0.5 * ( (double) E.getStart() + (double) E.getStop() );
+							long CenterofE = Math.round(valueofE);
+							
+							//Once passed through the search bubble, stop searching - E will only get larger.
+							if (CenterofE - Center > SearchBubbleRange){
+								break;
+							}
+							
+							//don't even consider the motif if it's out of the search bubble range
+							if (Math.abs(Center - CenterofE) < SearchBubbleRange){
+							     
+								//don't look if a strand-agreement condition is violated.
+								if ((chkStrandMatching.isSelected() && SM.getStrand().equals(E.getStrand())) ||
+										chkStrandMatching.isSelected() == false){
+									
+									//positive stranded case
+									if (E.getStrand().equals(Strand.POSITIVE)){
+										
+										//upstream case
+										if (Integer.parseInt(TxtUpstream.getText()) >= 0){
+											if (E.getStart() - Center <= Integer.parseInt(TxtUpstream.getText()) &&
+													E.getStart() - Center >= 0){
+												E.addAMotif(SM);
+											}
+										}
+										
+										//downstream case
+										if (Integer.parseInt(TxtDownstream.getText()) >= 0){
+											if (Center - E.getStop() <= Integer.parseInt(TxtDownstream.getText()) &&
+													Center - E.getStop() >= 0){
+												E.addAMotif(SM);
+											}
+										}
+										
+										//internal motif case
+										if (radAllInternal.isSelected()){
+											if (E.getStop() > Center && Center > E.getStart()){
+												E.addAMotif(SM);
+											}
+										} else {
+											if (Integer.parseInt(IntTxtDownstream.getText()) >= 0){
+												if (Center - E.getStart() <= Integer.parseInt(IntTxtDownstream.getText()) &&
+														Center - E.getStart() >= 0){
+													E.addAMotif(SM);
+												}
+											}
+											if (Integer.parseInt(IntTxtUpstream.getText()) >= 0){
+												if (E.getStop() - Center <= Integer.parseInt(IntTxtUpstream.getText()) &&
+														E.getStop() - Center >= 0){
+													E.addAMotif(SM);
+												}
+											}
+										}
+
+										
+									} else {
+										
+										//upstream case
+										if (Integer.parseInt(TxtUpstream.getText()) >= 0){
+											if (Center - E.getStop() <= Integer.parseInt(TxtUpstream.getText()) &&
+													Center - E.getStop() >= 0){
+												E.addAMotif(SM);
+											}
+										}
+										
+										//downstream case
+										if (Integer.parseInt(TxtDownstream.getText()) >= 0){
+											if (E.getStart() - Center <= Integer.parseInt(TxtDownstream.getText()) &&
+													E.getStart() - Center >= 0){
+												E.addAMotif(SM);
+											}
+										}
+										
+										//internal motif case
+										if (radAllInternal.isSelected()){
+											if (E.getStop() > Center && Center > E.getStart()){
+												E.addAMotif(SM);
+											}
+										} else {
+											if (Integer.parseInt(IntTxtDownstream.getText()) >= 0){
+												if (E.getStop() - Center <= Integer.parseInt(IntTxtDownstream.getText()) &&
+														E.getStop() - Center >= 0){
+													E.addAMotif(SM);
+												}
+											}
+											if (Integer.parseInt(IntTxtUpstream.getText()) >= 0){
+												if (Center - E.getStart() <= Integer.parseInt(IntTxtUpstream.getText()) &&
+														Center - E.getStart() >= 0){
+													E.addAMotif(SM);
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}	
+			}
 		}
 		
 		//conclude all processes
@@ -560,8 +900,14 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 			//SequenceMotifsAsList.add(MSName.getText());
 			MotifFilesLoaded = true;
 			progressBar.setVisible(false);
-			LoadedFileName.setText("Sequence motif \"" + MSName.getText() 
-					+ "\" successfully mapped to " + this.OrganismsMapped + " organisms.");
+			if (isDir){
+				LoadedFileName.setText("Sequence motif \"" + MSName.getText() 
+						+ "\" successfully mapped to " + this.OrganismsMapped + " organisms.");
+			} else {
+				LoadedFileName.setText("Sequence motif \"" + MSName.getText() 
+						+ "\" successfully mapped " + this.OrganismsMapped + " times.");
+			}
+			
 			btnAddMS.setEnabled(true);
 			MSName.setEditable(true);
 			
@@ -1097,8 +1443,8 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		} catch (Exception ex){
 			
 		}
-		GetMotifFiles.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		GetMotifFiles.setDialogTitle("Select directory containing FIMO output files (or directories)");
+		GetMotifFiles.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+		GetMotifFiles.setDialogTitle("Select directory containing FIMO output or custom motif files (or directories)");
 
 		if (this.ReferenceDirectory != null){
 			GetMotifFiles.setCurrentDirectory(ReferenceDirectory);
@@ -1114,13 +1460,25 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		//check if file could be received
 		if (ParentDirectory != null){
 		
-			//retrieve directory
-			this.MotifFiles = ParentDirectory.listFiles();
+			if (ParentDirectory.isDirectory()){
+				
+				//retrieve directory
+				this.MotifFiles = ParentDirectory.listFiles();
+				this.isFile = false;
+				
+			} else {
+				
+				//retrieve single file
+				this.isFile = true;
+				SingleFile = ParentDirectory;
+			}
+		
 
 		} else {
 			
 			//no files are currently loaded.
 			this.MotifFiles = null;
+			this.isFile = false;
 		}
 
 	}
@@ -1158,7 +1516,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 				getMotifFiles();
 				
 				//create a new swing worker
-				btnLoadFiles LF = new btnLoadFiles(true);
+				btnLoadFiles LF = new btnLoadFiles(true, isFile);
 				LF.addPropertyChangeListener(this);
 				LF.execute();
 			} 
@@ -1177,7 +1535,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 				getMotifFiles();
 				
 				//create a new swing worker
-				btnLoadFiles LF = new btnLoadFiles(false);
+				btnLoadFiles LF = new btnLoadFiles(false, isFile);
 				LF.addPropertyChangeListener(this);
 				LF.execute();
 			}
