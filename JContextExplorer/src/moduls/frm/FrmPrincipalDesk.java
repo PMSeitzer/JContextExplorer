@@ -220,6 +220,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenu M_Genomes;
 	private JMenu M_Load;
 	private JMenu M_Export;
+	private JMenu M_Process;
 	private JMenu M_Help;
 	
 	//Genomes components
@@ -270,10 +271,25 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenuItem ME_Genbanks;
 	private JMenuItem ME_Clusters;
 	
+	//process components (version 3)
+	private JMenuItem MP_NewQuery;
+	private JMenuItem MP_ManageQueries;
+	private JMenu MP_QuerySet;
+	private JMenuItem MP_ContextForest;
+	private JMenuItem MP_Similarity;
+	private JMenuItem MP_NewPheno;
+	private JMenuItem MP_ManagePheno;
+	private JMenu MP_PhenotypeData;
+	private JMenuItem MP_PhenotypeCompare;
+	
+	//default sub-menus
+	private JCheckBoxMenuItem MP_NoQuerySets;
+	private JCheckBoxMenuItem MP_NoPhenotypeData;
+	
 	//help components
 	private JMenuItem MH_Manual;
 	private JMenuItem MH_Video; 
-	private JMenuItem MH_DataSets;
+	private JMenuItem MH_Publication;
 	
 	// ==== SwingWorkers ===== //
 	private LoadGenomesWorker CurrentLGW;
@@ -1337,20 +1353,61 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//M_Export.add(ME_Clusters);
 			
 		/*
+		 * PROCESS MENU
+		 */
+		//Top-level
+		M_Process = new JMenu("Process");
+		
+		//Components
+		MP_NewQuery = new JMenuItem("Create a new Query Set");
+		MP_ManageQueries = new JMenuItem("Manage Query Sets");
+		MP_QuerySet = new JMenu("Available Query Sets");
+		MP_ContextForest = new JMenuItem("Create a Context Forest");
+		MP_Similarity = new JMenuItem("Perform Context Tree Similarity Scan");
+		MP_NewPheno = new JMenuItem("Load Phenotypic Data");
+		MP_ManagePheno = new JMenuItem("Manage Phenotypic Data");
+		MP_PhenotypeData = new JMenu("Available Phenotypic Data Sets");
+		MP_PhenotypeCompare = new JMenuItem("Correlate Tree with Phenotype Data");
+		
+		//default sub-menus
+		MP_NoQuerySets = new JCheckBoxMenuItem("None Available");
+		MP_NoQuerySets.setSelected(false);
+		MP_NoQuerySets.setEnabled(false);
+		MP_NoPhenotypeData = new JCheckBoxMenuItem("None Available");
+		MP_NoPhenotypeData.setSelected(false);
+		MP_NoPhenotypeData.setEnabled(false);
+		MP_QuerySet.add(MP_NoQuerySets);
+		MP_PhenotypeData.add(MP_NoPhenotypeData);
+		
+		//Build menu
+		M_Process.add(MP_NewQuery);
+		M_Process.add(MP_QuerySet);
+		M_Process.add(MP_ManageQueries);
+		M_Process.addSeparator();
+		M_Process.add(MP_ContextForest);
+		M_Process.add(MP_Similarity);
+		M_Process.addSeparator();
+		M_Process.add(MP_NewPheno);
+		M_Process.add(MP_PhenotypeData);
+		M_Process.add(MP_ManagePheno);
+		M_Process.add(MP_PhenotypeCompare);
+		
+		/*
 		 * HELP MENU
 		 */
 		M_Help = new JMenu("Help");
 		MH_Manual = new JMenuItem("User's Manual");
 		MH_Video = new JMenuItem("Video Tutorials");
-		MH_DataSets = new JMenuItem("Existing Datasets");
+		MH_Publication = new JMenuItem("Publication");
 			
 		MH_Manual.addActionListener(this);
 		MH_Video.addActionListener(this);
+		MH_Publication.addActionListener(this);
 		
 		M_Help.addSeparator();
 		M_Help.add(MH_Manual);
 		M_Help.add(MH_Video);
-		M_Help.add(MH_DataSets);
+		M_Help.add(MH_Publication);
 			
 		/*
 		 * SUB-MENUS TO TOP-LEVEL
@@ -1358,6 +1415,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MB.add(M_Genomes);
 		MB.add(M_Load);
 		MB.add(M_Export);
+		MB.add(M_Process);
 		MB.add(M_Help);
 			
 		this.setJMenuBar(MB);
@@ -1779,7 +1837,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			LaunchWebsite("http://www.ncbi.nlm.nih.gov/genomes/MICROBES/microbial_taxtree.html");
 		}
 
-		
+		if (evt.getSource().equals(MH_Publication)){
+			LaunchWebsite("http://www.biomedcentral.com/1471-2105/14/18");
+		}
 		/*
 		 * EXPORT
 		 */
