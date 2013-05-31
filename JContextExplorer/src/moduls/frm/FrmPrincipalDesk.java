@@ -95,6 +95,7 @@ import com.apple.eawt.Application;
 import operonClustering.CustomDissimilarity;
 
 import ContextForest.CFSettingsWindow;
+import ContextForest.NewQS;
 import GenomicSetHandling.CurrentGenomeSet;
 import GenomicSetHandling.GSInfo;
 import GenomicSetHandling.ImportGenbankIDs;
@@ -189,21 +190,18 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private int InternalFrameID = 0;	//for debugging
 	
 
-	// ----- New Fields (1.2) ------------------------------------------//
+	// ----- New Fields (2.0x) ------------------------------------------//
 	
 	//Multiple OS
-//	private LinkedHashMap<String, OSCreationInstructions> GenomeSets 
-//		= new LinkedHashMap<String, OSCreationInstructions>();
-	private LinkedHashMap<String, GSInfo> GenomeSets 
-	= new LinkedHashMap<String, GSInfo>();	
+	private LinkedHashMap<String, GSInfo> GenomeSets = new LinkedHashMap<String, GSInfo>();	
+	private LinkedHashMap<String, File> GenomeSetFiles = new LinkedHashMap<String, File>();
+	private LinkedList<JCheckBoxMenuItem> AvailableOSCheckBoxMenuItems = new LinkedList<JCheckBoxMenuItem>();
 	
-	private LinkedHashMap<String, File> GenomeSetFiles = 
-			new LinkedHashMap<String, File>();
-	private LinkedList<JCheckBoxMenuItem> AvailableOSCheckBoxMenuItems 
-		= new LinkedList<JCheckBoxMenuItem>();
+	//Available Query Sets
+	private LinkedList<JCheckBoxMenuItem> AvailableQuerySets = new LinkedList<JCheckBoxMenuItem>();
 
-	private LinkedHashMap<JCheckBoxMenuItem, PopularGenomeSetData> PopularGenomeSets =
-			new LinkedHashMap<JCheckBoxMenuItem, PopularGenomeSetData>();
+	//Popular genome sets, with data
+	private LinkedHashMap<JCheckBoxMenuItem, PopularGenomeSetData> PopularGenomeSets = new LinkedHashMap<JCheckBoxMenuItem, PopularGenomeSetData>();
 	
 	//private ButtonGroup AvailableOSCheckBoxMenuItems = new ButtonGroup();
 	//Import related
@@ -1359,7 +1357,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		M_Process = new JMenu("Process");
 		
 		//Components
-		MP_NewQuery = new JMenuItem("Create a new Query Set");
+		MP_NewQuery = new JMenuItem("New Query Set");
 		MP_ManageQueries = new JMenuItem("Manage Query Sets");
 		MP_QuerySet = new JMenu("Available Query Sets");
 		MP_ContextForest = new JMenuItem("Create a Context Forest");
@@ -1378,6 +1376,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MP_NoPhenotypeData.setEnabled(false);
 		MP_QuerySet.add(MP_NoQuerySets);
 		MP_PhenotypeData.add(MP_NoPhenotypeData);
+		
+		//Action listeners
+		MP_NewQuery.addActionListener(this);
 		
 		//Build menu
 		M_Process.add(MP_NewQuery);
@@ -1880,6 +1881,45 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			
 		}
 		
+		/*
+		 * PROCESS
+		 */
+		
+		//Create a new Query Set
+		if (evt.getSource().equals(MP_NewQuery)){
+			if (this.OS != null){
+				new NewQS(this);
+			} else {
+				this.NoOS();
+			}
+
+		}
+		
+		//Switch menu to active query set
+		if (this.AvailableQuerySets.contains(evt.getSource())){
+		
+			//don't do anything if only one item in the list.
+			if (this.AvailableQuerySets.size() > 1){
+				
+				//selection process
+				for (JCheckBoxMenuItem b : AvailableQuerySets){
+					if (b.equals(evt.getSource())){
+						b.setSelected(true);
+					} else {
+						b.setSelected(false);
+					}
+				}
+				
+			} else {
+				
+				//item remains enabled.
+				for (JCheckBoxMenuItem b : AvailableQuerySets){
+					b.setSelected(true);
+				}
+				
+			}
+			
+		}
 		
 		/*
 		 * HELP
@@ -2818,6 +2858,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	public void setCurrentLPW(LoadPopularWorker currentLPW) {
 		CurrentLPW = currentLPW;
+	}
+
+	public LinkedList<JCheckBoxMenuItem> getAvailableQuerySets() {
+		return AvailableQuerySets;
+	}
+
+	public void setAvailableQuerySets(LinkedList<JCheckBoxMenuItem> availableQuerySets) {
+		AvailableQuerySets = availableQuerySets;
 	}
 
 }

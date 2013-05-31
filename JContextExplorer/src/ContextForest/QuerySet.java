@@ -14,6 +14,12 @@ public class QuerySet {
 	// ======= Fields ===================================//
 	// ==================================================//
 	
+	//Logistics
+	private String Name;									//Name of this Query Set
+	private String OSName;								//Name of source OS
+	
+	//Processing
+	
 	//Context Trees (all data is in QueryData structure)
 	private LinkedHashSet<QueryData> ContextTrees;		//Component Trees
 	
@@ -105,6 +111,14 @@ public class QuerySet {
 
 	public void setCPParams(ComparePhenotypeDataParameters cPParams) {
 		CPParams = cPParams;
+	}
+
+	public String getOSName() {
+		return OSName;
+	}
+
+	public void setOSName(String oSName) {
+		OSName = oSName;
 	}
 	
 	
