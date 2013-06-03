@@ -35,7 +35,7 @@ import javax.swing.RootPaneContainer;
 
 import moduls.frm.FrmPrincipalDesk;
 
-public class NewQS extends JDialog implements ActionListener{
+public class SelectQS extends JDialog implements ActionListener{
 
 	//fields
 	//data/base
@@ -48,7 +48,7 @@ public class NewQS extends JDialog implements ActionListener{
 	private JButton btnOK;
 	
 	//Constructor
-	public NewQS(FrmPrincipalDesk f){
+	public SelectQS(FrmPrincipalDesk f){
 		this.f = f;
 		this.getFrame();
 		this.getPanel();
@@ -63,7 +63,7 @@ public class NewQS extends JDialog implements ActionListener{
 		this.setSize(400,400);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		this.setLocationRelativeTo(null);
-		this.setTitle("Create New Query Set");
+		this.setTitle("Select Appropriate Query Set");
 		this.setResizable(false);
 	}
 	

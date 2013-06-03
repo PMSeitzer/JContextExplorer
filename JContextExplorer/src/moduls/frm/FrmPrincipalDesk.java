@@ -95,7 +95,9 @@ import com.apple.eawt.Application;
 import operonClustering.CustomDissimilarity;
 
 import ContextForest.CFSettingsWindow;
-import ContextForest.NewQS;
+import ContextForest.ChooseCompareTree;
+import ContextForest.ManageQuerySets;
+import ContextForest.SelectQS;
 import GenomicSetHandling.CurrentGenomeSet;
 import GenomicSetHandling.GSInfo;
 import GenomicSetHandling.ImportGenbankIDs;
@@ -262,6 +264,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenuItem ML_Motifs;
 	private JMenuItem ML_HomologyClusterMenu;
 	private JMenuItem ML_GeneIDs;
+	private JMenuItem ML_QuerySet;
+	private JMenuItem ML_PhenoDataSet;
 	
 	//export components
 	private JMenuItem ME_GWS;
@@ -278,7 +282,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenuItem MP_NewPheno;
 	private JMenuItem MP_ManagePheno;
 	private JMenu MP_PhenotypeData;
-	private JMenuItem MP_PhenotypeCompare;
+	private JMenuItem MP_TreeDataCorr;
 	
 	//default sub-menus
 	private JCheckBoxMenuItem MP_NoQuerySets;
@@ -1298,9 +1302,13 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		ML_DissMeas = new JMenuItem("Dissimilarity Measure");
 		ML_Phylo = new JMenuItem("Phylogenetic Tree");
 		ML_Motifs = new JMenuItem("Sequence Motifs");
-
+		ML_QuerySet = new JMenuItem("Query Set");
+		ML_PhenoDataSet = new JMenuItem("Supplemental Dataset");
+		
 		ML_ContextSet.addActionListener(this);
 		ML_DissMeas.addActionListener(this);
+		ML_QuerySet.addActionListener(this);
+		ML_PhenoDataSet.addActionListener(this);
 		
 		//Load homology clusters
 		KeyStroke Hstroke = KeyStroke.getKeyStroke(KeyEvent.VK_U, 
@@ -1322,6 +1330,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	
 		ML_Motifs.addActionListener(this);
 		
+		//Load Query Set
+		
+		//Load Phenotypic Data Set
+		
 		//add to menu
 		M_Load.add(ML_HomologyClusterMenu);
 		M_Load.add(ML_GeneIDs);
@@ -1329,6 +1341,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		M_Load.add(ML_DissMeas);
 		M_Load.add(ML_Phylo);
 		M_Load.add(ML_Motifs);
+		
+		M_Load.addSeparator();
+		M_Load.add(ML_QuerySet);
+		M_Load.add(ML_PhenoDataSet);
 
 		/*
 		 * EXPORT MENU
@@ -1360,12 +1376,12 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MP_NewQuery = new JMenuItem("New Query Set");
 		MP_ManageQueries = new JMenuItem("Manage Query Sets");
 		MP_QuerySet = new JMenu("Available Query Sets");
-		MP_ContextForest = new JMenuItem("Create a Context Forest");
-		MP_Similarity = new JMenuItem("Perform Context Tree Similarity Scan");
+		MP_ContextForest = new JMenuItem("New Context Forest Window");
+		MP_Similarity = new JMenuItem("Tree Similarity Scan");
 		MP_NewPheno = new JMenuItem("Load Phenotypic Data");
 		MP_ManagePheno = new JMenuItem("Manage Phenotypic Data");
 		MP_PhenotypeData = new JMenu("Available Phenotypic Data Sets");
-		MP_PhenotypeCompare = new JMenuItem("Correlate Tree with Phenotype Data");
+		MP_TreeDataCorr = new JMenuItem("Tree - Data Correlation");
 		
 		//default sub-menus
 		MP_NoQuerySets = new JCheckBoxMenuItem("None Available");
@@ -1380,18 +1396,31 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//Action listeners
 		MP_NewQuery.addActionListener(this);
 		
+//		//Build menu
+//		M_Process.add(MP_NewQuery);
+//		M_Process.add(MP_QuerySet);
+//		M_Process.add(MP_ManageQueries);
+//		M_Process.addSeparator();
+//		M_Process.add(MP_ContextForest);
+//		M_Process.add(MP_Similarity);
+//		M_Process.addSeparator();
+//		M_Process.add(MP_NewPheno);
+//		M_Process.add(MP_PhenotypeData);
+//		M_Process.add(MP_ManagePheno);
+//		M_Process.add(MP_PhenotypeCompare);
+		
+
+		//Action listeners
+		MP_Similarity.addActionListener(this);
+		MP_TreeDataCorr.addActionListener(this);
+		MP_ContextForest.addActionListener(this);
+		
 		//Build menu
-		M_Process.add(MP_NewQuery);
-		M_Process.add(MP_QuerySet);
-		M_Process.add(MP_ManageQueries);
+		M_Process.add(MP_Similarity);
+		M_Process.add(MP_TreeDataCorr);
 		M_Process.addSeparator();
 		M_Process.add(MP_ContextForest);
-		M_Process.add(MP_Similarity);
-		M_Process.addSeparator();
-		M_Process.add(MP_NewPheno);
-		M_Process.add(MP_PhenotypeData);
-		M_Process.add(MP_ManagePheno);
-		M_Process.add(MP_PhenotypeCompare);
+
 		
 		/*
 		 * HELP MENU
@@ -1550,7 +1579,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			} else {
 				this.NoOS();
 			}
-
 		}
 		
 		//Edit GFF file type processing settings
@@ -1824,6 +1852,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			new ManageMotifs(this);
 		}
 		
+		if (evt.getSource().equals(ML_QuerySet)){
+			new ManageQuerySets(this);
+		}
+		
+		if (evt.getSource().equals(ML_PhenoDataSet)){
+			System.out.println("TODO: Load Phenotypic Data Set");
+		}
+
 		/*
 		 * WEB-RELATED
 		 */
@@ -1885,40 +1921,31 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		 * PROCESS
 		 */
 		
-		//Create a new Query Set
-		if (evt.getSource().equals(MP_NewQuery)){
-			if (this.OS != null){
-				new NewQS(this);
+		//Tree Similarity Scan
+		if (evt.getSource().equals(MP_Similarity)){
+			if (getOS() != null){
+				new ChooseCompareTree(this);
 			} else {
 				this.NoOS();
 			}
-
 		}
 		
-		//Switch menu to active query set
-		if (this.AvailableQuerySets.contains(evt.getSource())){
-		
-			//don't do anything if only one item in the list.
-			if (this.AvailableQuerySets.size() > 1){
-				
-				//selection process
-				for (JCheckBoxMenuItem b : AvailableQuerySets){
-					if (b.equals(evt.getSource())){
-						b.setSelected(true);
-					} else {
-						b.setSelected(false);
-					}
-				}
-				
+		//Phenotype Comparison
+		if (evt.getSource().equals(MP_TreeDataCorr)){
+			if (getOS() != null){
+				System.out.println("TODO: Tree - Data Correlation");
 			} else {
-				
-				//item remains enabled.
-				for (JCheckBoxMenuItem b : AvailableQuerySets){
-					b.setSelected(true);
-				}
-				
+				this.NoOS();
 			}
-			
+		}
+
+		//Launch Context Forest Window
+		if (evt.getSource().equals(MP_ContextForest)){
+			if (getOS() != null){
+				System.out.println("TODO: Context Forest Window");
+			} else {
+				this.NoOS();
+			}
 		}
 		
 		/*

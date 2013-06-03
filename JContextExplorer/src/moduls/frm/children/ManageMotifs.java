@@ -917,6 +917,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		
 	}
 
+	//Panel
 	private void getPanel(){
 		
 		//initial GridBagLayout parameters
