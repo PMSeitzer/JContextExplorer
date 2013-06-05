@@ -1,5 +1,6 @@
 package ContextForest;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
@@ -22,6 +23,9 @@ public class QuerySet {
 	
 	//Context Trees (all data is in QueryData structure)
 	private LinkedList<QueryData> ContextTrees;		//Component Trees
+	
+	//comparisons
+	private LinkedHashMap<String, LinkedList<TreeCompareReport>> TreeComparisons;	//Comparisons with various trees 
 	
 	//Context Forest-related data
 	private ContextForestParameters CFParams;			//Parameters for Context Forest computation
@@ -66,7 +70,7 @@ public class QuerySet {
 		
 	//Constructor
 	public QuerySet(){
-		
+		setTreeComparisons(new LinkedHashMap<String, LinkedList<TreeCompareReport>>());
 	}
 
 	// ==================================================//
@@ -119,6 +123,14 @@ public class QuerySet {
 
 	public void setName(String name) {
 		Name = name;
+	}
+
+	public LinkedHashMap<String, LinkedList<TreeCompareReport>> getTreeComparisons() {
+		return TreeComparisons;
+	}
+
+	public void setTreeComparisons(LinkedHashMap<String, LinkedList<TreeCompareReport>> treeComparisons) {
+		TreeComparisons = treeComparisons;
 	}
 	
 	

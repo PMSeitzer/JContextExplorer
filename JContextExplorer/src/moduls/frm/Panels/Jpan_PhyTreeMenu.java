@@ -329,6 +329,8 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 		
 		return t;
 	}
+	
+	
 	@Override
 	public void actionPerformed(ActionEvent evt) {
 		
@@ -361,6 +363,7 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 				for (Tree t : ParsedPhyTrees){
 					if (t.getName().equals((String) menuLoadedPhyTrees.getSelectedItem())){
 						ParsedPhyTrees.remove(t);
+						f.getOS().getParsedPhyTrees().remove(t);
 						break;
 					}
 				}
@@ -372,6 +375,7 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 						break;
 					}
 				}
+				
 				
 				//remake the menu
 				menuLoadedPhyTrees.removeAllItems();

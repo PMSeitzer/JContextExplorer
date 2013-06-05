@@ -1066,7 +1066,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			//switch cursor
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			glassPane.setVisible(false);
-			
 			getPanBtn().getProgressBar().setIndeterminate(false);
 			
 			return null;
@@ -1924,7 +1923,15 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//Tree Similarity Scan
 		if (evt.getSource().equals(MP_Similarity)){
 			if (getOS() != null){
-				new ChooseCompareTree(this);
+				if (OS.getQuerySets().size() > 0){
+					new ChooseCompareTree(this);
+				} else {
+					String str = "Please create one or more Query Sets before continuing.\n"
+							+ "Query Sets can be created by selecting 'Query Set' from the Load drop-down menu.";
+					JOptionPane.showMessageDialog(null, str,
+							"No Query Sets", JOptionPane.ERROR_MESSAGE);
+				}
+
 			} else {
 				this.NoOS();
 			}
@@ -2076,6 +2083,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 		M_Load.setEnabled(SwitchPos);
 		M_Export.setEnabled(SwitchPos);
+		M_Process.setEnabled(SwitchPos);
 
 	}
 	
