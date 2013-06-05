@@ -25,6 +25,8 @@ import newickTreeParsing.Tree;
 
 import org.biojava3.core.sequence.Strand;
 
+import ContextForest.QuerySet;
+
 import operonClustering.CustomDissimilarity;
 
 import definicions.MatriuDistancies;
@@ -36,57 +38,60 @@ public class OrganismSet implements Serializable{
 	 */
 	private static final long serialVersionUID = 1L;
 
-	//fields
-	//Genome-related
-	
-	//Actively loaded genomes
-	private LinkedHashMap<String, AnnotatedGenome> Species 
-		= new LinkedHashMap<String, AnnotatedGenome>();		//-Species-information--------
-	private LinkedHashMap<String, Boolean> AGLoaded = 
-			new LinkedHashMap<String, Boolean>();	
-	private LinkedHashMap<String, File> CachedAG =
-			new LinkedHashMap<String, File>();
-	private LinkedHashMap<String, String> GenomeDescriptions =
-			new LinkedHashMap<String, String>();
-	
-	//Genome Name, instructions to retrieve
-	private LinkedHashMap<String, RetrieveGenomeInstructions> InstructionsToRetrieve
-		= new LinkedHashMap<String, RetrieveGenomeInstructions>();
+	//==== FIELDS ====== //
 
+	//Administrative and storage-related
+	private LinkedList<String> SpeciesNames;						//-Species-Names--------------//
+	private LinkedHashMap<String, AnnotatedGenome> Species; 		//-Species-information--------//
+	private String Notes;											//-Meta-Data------------------//
+	private String Name;
+	private LinkedHashMap<String, Boolean> AGLoaded;				//-Storage-Related------------//
+	private LinkedHashMap<String, File> CachedAG;
+	private LinkedHashMap<String, String> GenomeDescriptions;
+
+	//Add-ons
+	private LinkedList<ContextSetDescription> CSDs;					//-Info-about-Context-Sets----//
+	private LinkedList<MotifGroupDescription> MGDescriptions;		//-Motifs---------------------//
+	private LinkedList<String> MotifNames;
+	private LinkedList<CustomDissimilarity> CustomDissimilarities;	//-Dissimilarities------------//
+	private LinkedList<Tree> ParsedPhyTrees;						//-Phylogenies----------------//
+	private LinkedList<File> LoadedPhyTrees;
+	private LinkedList<QuerySet> QuerySets;							//-Query-Sets-----------------//
 	
-	private LinkedList<String> SpeciesNames
-		= new LinkedList<String>();					//-Species-Names--------------
-	private LinkedList<ContextSetDescription> CSDs
-		= new LinkedList<ContextSetDescription>();				//-Info-about-Context-Sets----
-	private LinkedList<MotifGroupDescription> MGDescriptions;
-	private LinkedList<CustomDissimilarity> CustomDissimilarities
-		= new LinkedList<CustomDissimilarity>();
-	private boolean GeneClustersLoaded = false;					//-Gene-Clusters--------------
+	//Internal
+	private boolean GeneClustersLoaded = false;						//-Gene-Clusters--------------//
 	public int LargestCluster = 0;
 	private boolean ContinueImportingOperons = true;			
-	private LinkedList<String> IncludeTypes;					//-Types of data worth importing/processing
+	private LinkedList<String> IncludeTypes;						//-Feature-Processing-Settings-//
 	private LinkedList<String> DisplayOnlyTypes;
-	private String Notes;
-	private String Name;
-	
-	//phylogeny
-	private LinkedList<Tree> ParsedPhyTrees = new LinkedList<Tree>();
-	private LinkedList<File> LoadedPhyTrees = new LinkedList<File>();
-	
-	//motifs
-	private LinkedList<String> MotifNames = new LinkedList<String>();
-	
-	//Analysis-type data
-							//Motifs
-							//Context Sets					OK
-							//Dissimilarity metrics			OK
-							//Phylogeny info
 	
 	// ----------------------- Construction ------------------------//
 	 	
 	//constructor
 	public OrganismSet() {
 		super();
+		
+		//Administrative and storage-related
+		SpeciesNames = new LinkedList<String>();
+		Species = new LinkedHashMap<String, AnnotatedGenome>();	
+		AGLoaded = new LinkedHashMap<String, Boolean>();
+		CachedAG = new LinkedHashMap<String, File>();
+		GenomeDescriptions = new LinkedHashMap<String, String>();
+		
+		//Context Set Descriptions
+		CSDs = new LinkedList<ContextSetDescription>();
+		
+		//Dissimilarity
+		CustomDissimilarities = new LinkedList<CustomDissimilarity>();
+		
+		//Phylogeny
+		ParsedPhyTrees = new LinkedList<Tree>();
+		LoadedPhyTrees = new LinkedList<File>();
+		MotifNames = new LinkedList<String>();
+		
+		//Query Set
+		QuerySets = new LinkedList<QuerySet>();
+		
 	}
 
 	//import species
@@ -905,14 +910,6 @@ public class OrganismSet implements Serializable{
 		Name = name;
 	}
 
-	public LinkedHashMap<String, RetrieveGenomeInstructions> getInstructionsToRetrieve() {
-		return InstructionsToRetrieve;
-	}
-
-	public void setInstructionsToRetrieve(LinkedHashMap<String, RetrieveGenomeInstructions> instructionsToRetrieve) {
-		InstructionsToRetrieve = instructionsToRetrieve;
-	}
-
 	public LinkedList<Tree> getParsedPhyTrees() {
 		return ParsedPhyTrees;
 	}
@@ -960,6 +957,14 @@ public class OrganismSet implements Serializable{
 	public void setGenomeDescriptions(
 			LinkedHashMap<String, String> genomeDescriptions) {
 		GenomeDescriptions = genomeDescriptions;
+	}
+
+	public LinkedList<QuerySet> getQuerySets() {
+		return QuerySets;
+	}
+
+	public void setQuerySets(LinkedList<QuerySet> querySets) {
+		QuerySets = querySets;
 	}
 
 } //completes classbody

@@ -1,6 +1,7 @@
 package ContextForest;
 
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 
 import javax.swing.SwingWorker;
 
@@ -15,13 +16,12 @@ public class QuerySet {
 	// ==================================================//
 	
 	//Logistics
-	private String Name;									//Name of this Query Set
-	private String OSName;								//Name of source OS
+	private String Name;								//Name of this Query Set
 	
 	//Processing
 	
 	//Context Trees (all data is in QueryData structure)
-	private LinkedHashSet<QueryData> ContextTrees;		//Component Trees
+	private LinkedList<QueryData> ContextTrees;		//Component Trees
 	
 	//Context Forest-related data
 	private ContextForestParameters CFParams;			//Parameters for Context Forest computation
@@ -73,11 +73,11 @@ public class QuerySet {
 	// ======= Getters and Setters ======================//
 	// ==================================================//
 	
-	public LinkedHashSet<QueryData> getContextTrees() {
+	public LinkedList<QueryData> getContextTrees() {
 		return ContextTrees;
 	}
 
-	public void setContextTrees(LinkedHashSet<QueryData> contextTrees) {
+	public void setContextTrees(LinkedList<QueryData> contextTrees) {
 		ContextTrees = contextTrees;
 	}
 
@@ -113,12 +113,12 @@ public class QuerySet {
 		CPParams = cPParams;
 	}
 
-	public String getOSName() {
-		return OSName;
+	public String getName() {
+		return Name;
 	}
 
-	public void setOSName(String oSName) {
-		OSName = oSName;
+	public void setName(String name) {
+		Name = name;
 	}
 	
 	

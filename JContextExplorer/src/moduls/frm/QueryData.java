@@ -11,9 +11,17 @@ public class QueryData {
 	private String Name;
 	private String ContextSetName;
 	private String DissimilarityType;
+	private String ClusteringType;
 	private PostSearchAnalyses AnalysesList;
 	private CSDisplayData CSD;
 	private String OSName;
+	
+	//Constructor
+	public QueryData(){
+		
+	}
+
+	//=== SETTERS AND GETTERS ==========//
 	
 	public String getOSName() {
 		return OSName;
@@ -22,12 +30,7 @@ public class QueryData {
 	public void setOSName(String oSName) {
 		OSName = oSName;
 	}
-
-	//Constructor
-	public QueryData(){
-		
-	}
-
+	
 	public boolean isAnnotationSearch() {
 		return AnnotationSearch;
 	}
@@ -90,5 +93,13 @@ public class QueryData {
 
 	public void setCSD(CSDisplayData cSD) {
 		CSD = cSD;
+	}
+
+	public String getClusteringType() {
+		return ClusteringType;
+	}
+
+	public void setClusteringType(String clusteringType) {
+		ClusteringType = clusteringType;
 	}
 }

@@ -138,7 +138,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 	private String strInterpolation = "Linear Interpolation";
 	private JTextField EnterPointsLabel;
 	private JTextArea EnterPointsTxt;
-	private String strEnterPointsLabel = "Enter points as:       gap_size dissimilarity;";
+	private String strEnterPointsLabel = "Enter points as:       gap_size dissimilarity";
 	private JButton btnLoadFromFile;
 	private String strLoad = "Load points from file";
 

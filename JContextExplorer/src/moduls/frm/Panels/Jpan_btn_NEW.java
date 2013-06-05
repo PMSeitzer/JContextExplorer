@@ -2096,5 +2096,21 @@ import definicions.MatriuDistancies;
 			this.progressBar = progressBar;
 		}
 
+		public JRadioButton getAnnotationSearch() {
+			return annotationSearch;
+		}
+
+		public void setAnnotationSearch(JRadioButton annotationSearch) {
+			this.annotationSearch = annotationSearch;
+		}
+
+		public JRadioButton getClusterSearch() {
+			return clusterSearch;
+		}
+
+		public void setClusterSearch(JRadioButton clusterSearch) {
+			this.clusterSearch = clusterSearch;
+		}
+
 
 	}

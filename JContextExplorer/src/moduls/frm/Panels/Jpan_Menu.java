@@ -1495,4 +1495,12 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener{
 		Jpan_Menu.chkAxisLabels = chkAxisLabels;
 	}
 	
+
+	public static JComboBox getCbMethod() {
+		return cbMethod;
+	}
+
+	public static void setCbMethod(JComboBox cbMethod) {
+		Jpan_Menu.cbMethod = cbMethod;
+	}
 }

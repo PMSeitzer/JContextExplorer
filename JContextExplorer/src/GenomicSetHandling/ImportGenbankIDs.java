@@ -744,7 +744,7 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 		
 		GetGenbankIDs.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		GetGenbankIDs
-				.setDialogTitle("Select A File Containig Genbank IDs and Organism Names");
+				.setDialogTitle("Select A File Containing Genbank IDs and Organism Names");
 
 		//retrieve directory
 		if (f.getFileChooserSource() != null) {
