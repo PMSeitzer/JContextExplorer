@@ -7,37 +7,46 @@ import javax.swing.JFrame;
 
 import moduls.frm.FrmPrincipalDesk;
 
-public class CFSettingsWindow extends JFrame implements ActionListener {
+public class TreeSimilarityScanWindow extends JFrame implements ActionListener {
 
-	//fields
+	//Fields
 	private FrmPrincipalDesk f;
+	private QuerySet QS;
 	
 	//Constructor
-	public CFSettingsWindow(FrmPrincipalDesk f){
-		this.f = f;
-		this.getFrame();
+	public TreeSimilarityScanWindow(FrmPrincipalDesk f, QuerySet QS){
 		
-		//adjust appearance prior to display
-		this.setLocationRelativeTo(null);
+		//Initializations
+		this.f = f;
+		this.QS = QS;
+		
+		//Methods
+		getFrame();
+		
+		//final step - show visibility
 		this.setVisible(true);
 	}
+	
 	
 	// ===== GUI- related ======= //
 	
 	//Frame
 	public void getFrame(){
 		
-		this.setSize(800,700);
+		this.setSize(700,550);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		this.setTitle("Context Forest Window");
+		this.setTitle("Tree Similarity Scan Results");
 		this.setResizable(true);
+		this.setLocationRelativeTo(null);
 
 	}
 
-	// ===== Action-listener ===== //
-	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-
+		// TODO Auto-generated method stub
+		
 	}
+	
 }
+
+

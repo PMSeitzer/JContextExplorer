@@ -96,6 +96,7 @@ import operonClustering.CustomDissimilarity;
 
 import ContextForest.CFSettingsWindow;
 import ContextForest.ChooseCompareTree;
+import ContextForest.ContextForestWindow;
 import ContextForest.ManageQuerySets;
 import ContextForest.SelectQS;
 import GenomicSetHandling.CurrentGenomeSet;
@@ -1306,8 +1307,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		ML_ContextSet.addActionListener(this);
 		ML_DissMeas.addActionListener(this);
-		ML_QuerySet.addActionListener(this);
-		ML_PhenoDataSet.addActionListener(this);
 		
 		//Load homology clusters
 		KeyStroke Hstroke = KeyStroke.getKeyStroke(KeyEvent.VK_U, 
@@ -1330,8 +1329,13 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		ML_Motifs.addActionListener(this);
 		
 		//Load Query Set
+		ML_QuerySet.addActionListener(this);
+		KeyStroke Lstroke = KeyStroke.getKeyStroke(KeyEvent.VK_L, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		ML_QuerySet.setAccelerator(Lstroke);
 		
-		//Load Phenotypic Data Set
+		//Load Supplemental Data Set
+		ML_PhenoDataSet.addActionListener(this);
 		
 		//add to menu
 		M_Load.add(ML_HomologyClusterMenu);
@@ -1394,6 +1398,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Action listeners
 		MP_NewQuery.addActionListener(this);
+
 		
 //		//Build menu
 //		M_Process.add(MP_NewQuery);
@@ -1926,12 +1931,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				if (OS.getQuerySets().size() > 0){
 					new ChooseCompareTree(this);
 				} else {
-					String str = "Please create one or more Query Sets before continuing.\n"
-							+ "Query Sets can be created by selecting 'Query Set' from the Load drop-down menu.";
-					JOptionPane.showMessageDialog(null, str,
-							"No Query Sets", JOptionPane.ERROR_MESSAGE);
+					this.NoQS();
 				}
-
 			} else {
 				this.NoOS();
 			}
@@ -1949,7 +1950,11 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//Launch Context Forest Window
 		if (evt.getSource().equals(MP_ContextForest)){
 			if (getOS() != null){
-				System.out.println("TODO: Context Forest Window");
+				if (OS.getQuerySets().size() > 0){
+					new ContextForestWindow(this);
+				} else {
+					this.NoQS();
+				}
 			} else {
 				this.NoOS();
 			}
@@ -2053,7 +2058,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 	}
 	
-	//when No OS loaded
+	//When No OS loaded
 	public void NoOS(){
 		
 		//TODO: indicate menu bar?
@@ -2078,6 +2083,25 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				"No Genome Set Defined", JOptionPane.ERROR_MESSAGE);
 	}
 
+	//When no QS loaded
+	public void NoQS(){
+	
+		String str = "Please create one or more Query Sets before continuing.\n"
+				+ "Query Sets can be created by selecting 'Query Set' from \nthe Load drop-down menu, " +
+				"or by typing ";
+		String invokeNew;
+		if (System.getProperty("os.name").contains("Mac")){
+			invokeNew = "command + L.\n";
+		} else {
+			invokeNew = "ctrl + L.\n";
+		}
+		str = str + invokeNew;
+		
+		JOptionPane.showMessageDialog(null, str,
+				"No Query Sets", JOptionPane.ERROR_MESSAGE);
+		
+	}
+	
 	//activate/deactivate
 	public void OSMenuComponentsEnabled(boolean SwitchPos){
 

@@ -7,18 +7,21 @@ import javax.swing.JFrame;
 
 import moduls.frm.FrmPrincipalDesk;
 
-public class CFSettingsWindow extends JFrame implements ActionListener {
+public class ContextForestWindow extends JFrame implements ActionListener{
 
-	//fields
+	//Fields
 	private FrmPrincipalDesk f;
 	
 	//Constructor
-	public CFSettingsWindow(FrmPrincipalDesk f){
-		this.f = f;
-		this.getFrame();
+	public ContextForestWindow(FrmPrincipalDesk f){
 		
-		//adjust appearance prior to display
-		this.setLocationRelativeTo(null);
+		//Initializations
+		this.f = f;
+		
+		//Methods
+		getFrame();
+		
+		//final step - show visibility
 		this.setVisible(true);
 	}
 	
@@ -27,17 +30,33 @@ public class CFSettingsWindow extends JFrame implements ActionListener {
 	//Frame
 	public void getFrame(){
 		
-		this.setSize(800,700);
+		this.setSize(600,500);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		this.setTitle("Context Forest Window");
 		this.setResizable(true);
+		this.setLocationRelativeTo(null);
 
 	}
-
-	// ===== Action-listener ===== //
 	
+	//Actions
 	@Override
 	public void actionPerformed(ActionEvent e) {
-
+		// TODO Auto-generated method stub
+		
 	}
+
+
+
+	public FrmPrincipalDesk getF() {
+		return f;
+	}
+
+
+
+	public void setF(FrmPrincipalDesk f) {
+		this.f = f;
+	}
+	
+	//Setters and Getters
+
 }

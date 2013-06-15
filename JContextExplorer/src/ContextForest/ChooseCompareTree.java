@@ -55,6 +55,10 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 	private JButton btnExecuteScan;
 	private String strScan = "Excecute Scan";
 	private JProgressBar progressbar;
+	private JTextField LblSegValue, TxtSegValue;
+	private String strLblSegValue = "Segmentation Point:";
+	private String strTxtSegValue = "0.5";
+	
 	
 	//Insets
 	private Insets lblIns = new Insets(3,3,3,3);
@@ -80,6 +84,9 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 	// ======= Classes ===========//
 	public class TreeCompareWorker extends SwingWorker<Void, Void>{
 
+		//Fields
+		public QuerySet TQ = null;
+		
 		//constructor
 		public TreeCompareWorker(){
 			
@@ -98,7 +105,6 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 			LinkedList<TreeCompareReport> Reports = new LinkedList<TreeCompareReport>();
 			
 			//Retrieve appropriate Query Set
-			QuerySet TQ = null;
 			for (QuerySet QS : f.getOS().getQuerySets()){
 				if (QS.getName().equals((String) QSMenu.getSelectedItem())){
 					TQ = QS;
@@ -232,7 +238,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 			progressbar.setValue(0);
 			
 			//launch new window
-			//TODO
+			new TreeSimilarityScanWindow(f, TQ);
 			
 			//close window
 			dispose();
@@ -390,9 +396,28 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		jp.add(ComparisonMenu, c);
 		gridy++;
 		
+		//Segmentation label + field
+		c.gridx = 1; 
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		LblSegValue = new JTextField(strLblSegValue);
+		LblSegValue.setEditable(false);
+		jp.add(LblSegValue, c);
+		
+		c.gridx = 2;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		TxtSegValue = new JTextField(strTxtSegValue);
+		TxtSegValue.setEditable(true);
+		jp.add(TxtSegValue, c);
+		gridy++;
+		
 		/*
 		 * EXECUTE
 		 */
+		
 		jp2 = new JPanel();
 		jp2.setLayout(new GridBagLayout());
 		c.anchor = GridBagConstraints.CENTER;
@@ -444,7 +469,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 	
 	//frame
 	public void getFrame(){
-		this.setSize(600,300);
+		this.setSize(600,350);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		this.setLocationRelativeTo(null);
 		this.setTitle("Select Tree and Query Set");
