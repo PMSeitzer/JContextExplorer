@@ -122,6 +122,7 @@ public class Fig_Pizarra {
 		this.ComputedRootCluster = c;
 
 	}
+
 	
 	//method to convert between data types
 	private Cluster ConvertTree2Cluster(Tree T) {

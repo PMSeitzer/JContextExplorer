@@ -212,6 +212,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private LinkedList<String> FeatureDisplayTypes;
 	private GBKFieldMapping GBKFields;
 	
+	private ChooseCompareTree CurrentCCTWindow = null;
+	
 	// ===== MENU RELATED ====== //
 	
 	//Menu bar related
@@ -2925,6 +2927,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	public void setAvailableQuerySets(LinkedList<JCheckBoxMenuItem> availableQuerySets) {
 		AvailableQuerySets = availableQuerySets;
+	}
+
+	public ChooseCompareTree getCurrentCCTWindow() {
+		return CurrentCCTWindow;
+	}
+
+	public void setCurrentCCTWindow(ChooseCompareTree currentCCTWindow) {
+		CurrentCCTWindow = currentCCTWindow;
 	}
 
 }

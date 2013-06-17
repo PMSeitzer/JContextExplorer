@@ -1,5 +1,10 @@
 package ContextForest;
 
+import genomeObjects.CSDisplayData;
+import genomeObjects.ExtendedCRON;
+
+import importExport.DadesExternes;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -19,16 +24,28 @@ import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 
-import definicions.Cluster;
+import parser.Fig_Pizarra;
 
+import newickTreeParsing.Tree;
+
+import definicions.Cluster;
+import definicions.Config;
+import definicions.MatriuDistancies;
+
+import methods.Reagrupa;
 import moduls.frm.FrmPrincipalDesk;
+import moduls.frm.PostSearchAnalyses;
 import moduls.frm.QueryData;
+import moduls.frm.Panels.Jpan_Menu;
+import moduls.frm.Panels.Jpan_btn_NEW;
+import moduls.frm.Panels.Jpan_btn_NEW.SearchWorker;
 
 public class ChooseCompareTree extends JDialog implements ActionListener, PropertyChangeListener{
 	
@@ -36,6 +53,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 	
 	//master
 	private FrmPrincipalDesk f;
+	private ChooseCompareTree CCT;
 	
 	//GUI
 	private JPanel jp, jp2, jpEnclosing;
@@ -76,6 +94,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		this.getPanel();
 		this.getFrame();
 		
+		this.CCT = this;
 		
 		//Last step: make window visible
 		this.setVisible(true);
@@ -115,15 +134,31 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 			//Retrieve tree and cluster
 			String TreeName = "";
 			Cluster cm = null;
+			boolean ReferenceTreeReady = true;
 			
 			if (rbLoadedTree.isSelected()){
 				
-				//retrieve name
+				//retrieve phy tree
 				TreeName = (String) PhyloMenu.getSelectedItem();
+				Tree TheTree = null;
 				
-				//Retrieve tree
-				//TODO: work out names / tree / clusters various data structures
+				for (Tree t : f.getOS().getParsedPhyTrees()){
+					if (t.getName().equals(TreeName)){
+						TheTree = t;
+						break;
+					}
+				}
 				
+				//retrieve tree as cluster
+				Config cfgp;
+				if (f.getCfgPhylo() != null){
+					cfgp = f.getCfgPhylo();
+				} else {
+					cfgp = f.getConfig();
+				}
+				Fig_Pizarra fig_p = new Fig_Pizarra(TheTree, cfgp);
+				cm = fig_p.ComputedRootCluster;
+
 			} else {
 				
 				//invent name
@@ -132,56 +167,120 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 				//Assemble appropriate query data set
 				QueryData Q = new QueryData();
 				
-//				//TODO: Add Parameters
-//				Q.setAnnotationSearch(AnnotationSearch);
-//				Q.setQueries(Queries);
-//				Q.setClusters(Clusters);
-//				Q.setName(Name);
-//				Q.setContextSetName(ContextSetName);
-//				Q.setDissimilarityType(DissimilarityType);
-//				Q.setClusteringType(ClusteringType);
-//				Q.setAnalysesList(P);
-//				Q.setCSD(CSD);
-//				Q.setOSName(OSName);
+				//Parameters for each Query Set
+				boolean AnnotationSearch;
+				String[] Queries = null;
+				int[] Clusters = null;
 				
-				//convert to cluster
-				cm = GenerateClusterFromQuery(Q);
+				//Parameters from FrmPrincipalDesk
+				String ContextSetName = (String) f.getPanBtn().getContextSetMenu().getSelectedItem();
+				String DissimilarityType = (String) f.getPan_Menu().getCbDissimilarity().getSelectedItem();
+				String ClusteringType = (String) f.getPan_Menu().getCbMethod().getSelectedItem();
+				PostSearchAnalyses P = new PostSearchAnalyses(false, true, false, false);
+				CSDisplayData CSD = f.getCSD();
+				String OSName = f.getOS().getName();
 				
-			}
-
-			//Initialize counter, prepare progress bar
-			int Counter = 0;
-			
-			//Scan each individual query 
-			for (QueryData QD : TQ.getContextTrees()){
-				
-				//Initialize output
-				TreeCompareReport TCR = null;
-				
-				//generate cluster from every test query
-				Cluster cq = GenerateClusterFromQuery(QD);
-				
-				//Generate report for every cluster
-				String Method = (String) ComparisonMenu.getSelectedItem();
-				if (Method.equals("Fowlkes-Mallows")){
-					TCR = FowlkesMallows(cm, cq);
-				} else if (Method.equals("Robinson-Foulds")) {
-					TCR = RobinsonFoulds(cm, cq);
+				//Set query type
+				if (f.getPanBtn().getAnnotationSearch().isSelected()){
+					AnnotationSearch = true;
+				} else {
+					AnnotationSearch = false;
 				}
 				
-				//Add to list
-				Reports.add(TCR);
+				//Split each query by delimiter (semicolon)
+				String SplitList[] = txtQueryField.getText().split(";");
 				
-				//Increment counter + update progress bar
-				Counter++;
-				int progress = (int) (100.0 *((double) Counter )/((double) TQ.getContextTrees().size())); 
-				setProgress(progress);
+				//build search points
+				if (AnnotationSearch){
+					Queries = SplitList;
+				} else {
+					
+					//Linked list, for variable size
+					LinkedList<Integer> NumQueriesList = new LinkedList<Integer>();
+					for (int i = 0; i < SplitList.length; i++){
+						try {
+							NumQueriesList.add(Integer.parseInt(SplitList[i].trim()));
+						} catch (Exception ex){}
+					}
+					
+					//Final - array
+					Clusters = new int[NumQueriesList.size()];
+					for (int i = 0; i < NumQueriesList.size(); i++){
+						Clusters[i] = NumQueriesList.get(i);
+					}
+					
+					//No need to retain cases where no valid clusters were found.
+					if (Clusters.length == 0){
+						ReferenceTreeReady = false;
+					}
+				}
+				
+				//Prepare extended CRON
+				ExtendedCRON EC = new ExtendedCRON();
+				
+				//proceed
+				if (ReferenceTreeReady){
+					
+					//Add Parameters
+					Q.setAnnotationSearch(AnnotationSearch);
+					Q.setQueries(Queries);
+					Q.setClusters(Clusters);
+					Q.setName(TreeName);
+					Q.setContextSetName(ContextSetName);
+					Q.setDissimilarityType(DissimilarityType);
+					Q.setClusteringType(ClusteringType);
+					Q.setAnalysesList(P);
+					Q.setCSD(CSD);
+					Q.setOSName(OSName);
 
+					//convert to cluster
+					cm = GenerateClusterFromQuery(Q);
+
+				}
+			
 			}
-			
-			//Finally, store this set of reports appropriately
-			TQ.getTreeComparisons().put(TreeName, Reports);
-			
+
+			//proceed
+			if (ReferenceTreeReady){
+				
+				//Initialize counter, prepare progress bar
+				int Counter = 0;
+				
+				//Scan each individual query 
+				for (QueryData QD : TQ.getContextTrees()){
+					
+					//Initialize output
+					TreeCompareReport TCR = null;
+					
+					//generate cluster from every test query
+					Cluster cq = GenerateClusterFromQuery(QD);
+					
+					//Generate report for every cluster
+					String Method = (String) ComparisonMenu.getSelectedItem();
+					if (Method.equals("Fowlkes-Mallows")){
+						TCR = FowlkesMallows(cm, cq);
+					} else if (Method.equals("Robinson-Foulds")) {
+						TCR = RobinsonFoulds(cm, cq);
+					}
+					
+					//Add to list
+					Reports.add(TCR);
+					
+					//Increment counter + update progress bar
+					Counter++;
+					int progress = (int) (100.0 *((double) Counter )/((double) TQ.getContextTrees().size())); 
+					setProgress(progress);
+
+				}
+				
+				//Finally, store this set of reports appropriately
+				TQ.getTreeComparisons().put(TreeName, Reports);
+				
+			} else {
+				JOptionPane.showMessageDialog(null, "Unable to Create or Load Reference Tree.",
+						"Reference Tree Format Error.",JOptionPane.ERROR_MESSAGE);
+			}
+		
 			//switch cursor
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			glassPane.setVisible(false);
@@ -193,14 +292,24 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		
 		//TODO Generate cluster from query
 		protected Cluster GenerateClusterFromQuery(QueryData QD){
-			
+
 			//Initialize output
 			Cluster c = null;
+			SearchWorker SW = f.getPanBtn().new SearchWorker(QD,
+					"Load", Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
+					Jpan_Menu.getPrecision(), false);
+			SW.addPropertyChangeListener(CCT);
+			SW.execute();
 			
+			//TODO: some kind of thread synchronization
+			
+			//stop waiting!
+			c = SW.RootCluster;
+
 			return c;
 		}
 		
-		//TODO Tree comparison method: Fowlkes Mallows
+		//TODO Tree comparison method: Fowlkes-Mallows
 		protected TreeCompareReport FowlkesMallows(Cluster Master, Cluster Query){
 			
 			//Initialize output
@@ -208,7 +317,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 			
 			int Counter = 0;
 			while (Counter< 10000){
-				System.out.println(Counter);
+				//System.out.println(Counter);
 				Counter++;
 			}
 			
@@ -481,15 +590,25 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 	//Action headquarters
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		
-		//launch listener
-		TreeCompareWorker TCW = new TreeCompareWorker();
-		TCW.addPropertyChangeListener(this);
-		TCW.execute();
+
+		//Error catching
+		if ((rbQueryTree.isSelected() && !txtQueryField.getText().equals("")) || rbLoadedTree.isSelected()) {
+			
+			//launch listener
+			TreeCompareWorker TCW = new TreeCompareWorker();
+			TCW.addPropertyChangeListener(this);
+			TCW.execute();
+			
+		} else {
+			JOptionPane.showMessageDialog(null, "Please Enter a Query to generate the reference Context Tree.",
+					"No Reference Query Defined",JOptionPane.ERROR_MESSAGE);
+		}
+
 		
 		//finally, close window
 		//this.dispose();
 	}
+	
 
 	//Build Menus
 	public void BuildMenus(){

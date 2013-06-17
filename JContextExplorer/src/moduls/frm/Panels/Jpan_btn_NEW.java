@@ -177,7 +177,7 @@ import definicions.MatriuDistancies;
 		// ---- Thread Workers for Searches ------------------------//
 
 		//Unified SwingWorker for searches + multidendrogram computations
-		class SearchWorker extends SwingWorker<Void, Void>{
+		public class SearchWorker extends SwingWorker<Void, Void>{
 
 			//fields
 			//search-related
@@ -201,9 +201,15 @@ import definicions.MatriuDistancies;
 			private int nbElements;
 			private double minBase;
 			
+			//display related
+			private boolean DisplayOutput;
+			
+			//final
+			public Cluster RootCluster;
+			
 			//constructor
 			public SearchWorker(final QueryData QD, final String action,
-					final tipusDades typeData, final metodo method, final int precision){
+					final tipusDades typeData, final metodo method, final int precision, boolean DisplayOutput){
 
 				//Query Data (QD)
 				this.WorkerQD = QD;
@@ -222,20 +228,29 @@ import definicions.MatriuDistancies;
 				this.typeData = typeData;
 				this.method = method;
 				this.precision = precision;
+				
+				//display-related
+				this.DisplayOutput = DisplayOutput;
 
 			}
 			
 			@Override
 			protected Void doInBackground() throws Exception {
 
+			//System.out.println("In Background!");	
+				
 			try {	
 				
-				//visualization-related things
-				fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				progressBar.setBorderPainted(true);
-				progressBar.setString(null);
-				multiDendro = null;
-				de = null;
+				if (DisplayOutput){
+					
+					//visualization-related things
+					fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+					progressBar.setBorderPainted(true);
+					progressBar.setString(null);
+					multiDendro = null;
+					de = null;
+					
+				}
 				
 				//Search organisms
 				if (AnnotationSearch){
@@ -243,10 +258,13 @@ import definicions.MatriuDistancies;
 				} else {
 					SearchOrganismsbyCluster();
 				}
-				if (this.WorkerQD.getCSD().getEC().getNumberOfEntries() == 1){
-					System.out.println("Search Completed. " + this.WorkerQD.getCSD().getEC().getNumberOfEntries() + " Gene Grouping Recovered.");					
-				} else {
-					System.out.println("Search Completed. " + this.WorkerQD.getCSD().getEC().getNumberOfEntries() + " Gene Groupings Recovered.");					
+				
+				if (DisplayOutput){
+					if (this.WorkerQD.getCSD().getEC().getNumberOfEntries() == 1){
+						System.out.println("Search Completed. " + this.WorkerQD.getCSD().getEC().getNumberOfEntries() + " Gene Grouping Recovered.");					
+					} else {
+						System.out.println("Search Completed. " + this.WorkerQD.getCSD().getEC().getNumberOfEntries() + " Gene Groupings Recovered.");					
+					}
 				}
 
 				//adjust analyses options based on number of matches.
@@ -1001,15 +1019,23 @@ import definicions.MatriuDistancies;
 							minBase = b;
 						}
 						
-						progress = 50 + 50
-								* (nbElements - multiDendro.getCardinalitat())
-								/ (nbElements - 1);
-						setProgress(progress);
+						//if (DisplayOutput){ 
+							
+							progress = 50 + 50
+									* (nbElements - multiDendro.getCardinalitat())
+									/ (nbElements - 1);
+							setProgress(progress);
+						//}
+
 					} catch (final Exception e) {
 						//showError(e.getMessage());
 						showError("problems in calculating dendrogram.");
 					}
 				}
+				
+				//set field
+				this.RootCluster = multiDendro.getArrel();
+				
 				return null;
 			}
 			
@@ -1027,7 +1053,8 @@ import definicions.MatriuDistancies;
 			
 			//following search + dendrogram computation
 			public void done(){
-				
+			
+			if (DisplayOutput){
 				//re-set cursor, progress bar
 				fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				progressBar.setString("");
@@ -1045,6 +1072,7 @@ import definicions.MatriuDistancies;
 					
 				}
 
+			}
 			}
 				
 		}
@@ -1526,7 +1554,7 @@ import definicions.MatriuDistancies;
 								//single, interruptable Swing Worker
 								CurrentSearch = new SearchWorker(QD,action,
 										Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
-										Jpan_Menu.getPrecision());
+										Jpan_Menu.getPrecision(), true);
 								CurrentSearch.addPropertyChangeListener(this);
 								CurrentSearch.execute();
 
@@ -1551,7 +1579,7 @@ import definicions.MatriuDistancies;
 							//try: unified swingworker approach
 							CurrentSearch = new SearchWorker(QD,action,
 									Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
-									Jpan_Menu.getPrecision());//phylogeny
+									Jpan_Menu.getPrecision(), true);//phylogeny
 							CurrentSearch.addPropertyChangeListener(this);
 							CurrentSearch.execute();
 						}
@@ -1588,13 +1616,13 @@ import definicions.MatriuDistancies;
 					if (SelectedFrame.isAnnotationSearch()){
 						CurrentSearch = new SearchWorker(SelectedFrame,action,
 								Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
-								Jpan_Menu.getPrecision());//phylogeny
+								Jpan_Menu.getPrecision(), true);//phylogeny
 						CurrentSearch.addPropertyChangeListener(this);
 						CurrentSearch.execute();
 					} else {
 						CurrentSearch = new SearchWorker(SelectedFrame,action,
 								Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
-								Jpan_Menu.getPrecision());//phylogeny
+								Jpan_Menu.getPrecision(), true);//phylogeny
 						CurrentSearch.addPropertyChangeListener(this);
 						CurrentSearch.execute();
 					}
