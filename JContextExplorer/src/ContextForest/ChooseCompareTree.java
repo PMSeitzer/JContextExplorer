@@ -107,10 +107,11 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 
 		//Fields
 		public QuerySet TQ = null;
+		public double segvalue;
 		
 		//constructor
-		public TreeCompareWorker(){
-			
+ 		public TreeCompareWorker(double segValue){
+			segvalue = segValue;
 		}
 		
 		//Central processing
@@ -234,9 +235,8 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 					Q.setOSName(OSName);
 					
 					//convert to cluster
-					cm = GenerateClusterFromQuery(Q);
+					cm = GenerateClusterFromQuery(Q,true);
 					
-					System.out.println("Master: " + cm.getLst());
 				}
 			
 			}
@@ -255,7 +255,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 					TreeCompareReport TCR = null;
 					
 					//generate cluster from every test query
-					Cluster cq = GenerateClusterFromQuery(QD);
+					Cluster cq = GenerateClusterFromQuery(QD,false);
 					
 					//Generate report for every cluster
 					String Method = (String) ComparisonMenu.getSelectedItem();
@@ -290,51 +290,6 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 			return null;
 		}
 		
-		// ======= Supplemental Methods ====== //
-		
-		//TODO Generate cluster from query
-		protected Cluster GenerateClusterFromQuery(QueryData QD){
-
-			//Initialize output
-			SearchWorker SW = f.getPanBtn().new SearchWorker(QD,
-					"Load", Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
-					Jpan_Menu.getPrecision(), false);
-			SW.addPropertyChangeListener(CCT);
-			SW.execute();
-
-			//empty while loop - implicit waiting
-			while(!SW.isDone()){}
-			
-			return SW.RootCluster;
-			
-		}
-		
-		//TODO Tree comparison method: Fowlkes-Mallows
-		protected TreeCompareReport FowlkesMallows(Cluster Master, Cluster Query){
-			
-			//Initialize output
-			TreeCompareReport TCR = new TreeCompareReport();
-			
-			int Counter = 0;
-			while (Counter< 10000){
-				//System.out.println(Counter);
-				Counter++;
-			}
-			
-			//return
-			return TCR;
-		}
-		
-		//TODO Tree comparison method: Robinson Foulds
-		protected TreeCompareReport RobinsonFoulds(Cluster Master, Cluster Query){
-			
-			//Initialize output
-			TreeCompareReport TCR = new TreeCompareReport();
-			
-			//return
-			return TCR;
-		}
-		
 		//post processing
 		public void done(){
 			
@@ -352,6 +307,154 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 			//close window
 			dispose();
 		}
+		
+		// ======= Supplemental Methods ====== //
+		
+		//Generate cluster from query
+		protected Cluster GenerateClusterFromQuery(QueryData QD, boolean AddListener){
+
+			//Initialize output
+			SearchWorker SW = f.getPanBtn().new SearchWorker(QD,
+					"Load", Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
+					Jpan_Menu.getPrecision(), false);
+			if (AddListener){
+				SW.addPropertyChangeListener(CCT);
+			}
+
+			SW.execute();
+
+			//empty while loop - implicit waiting
+			while(!SW.isDone()){}
+			
+			return SW.RootCluster;
+			
+		}
+		
+		//Segregate a cluster into smaller clusters based on segmentation value.
+		protected LinkedList<Cluster> SegregateCluster(Cluster c){
+			
+			//Initialize output
+			LinkedList<Cluster> CutSet = new LinkedList<Cluster>();
+			
+			//Initialize seed, to begin analysis.
+			LinkedList<Cluster> Seed = new LinkedList<Cluster>();
+			Seed.add(c);
+			
+			//Define initial children set - children of root
+			ClusterGroup CG = SegmentCluster(Seed);
+			CutSet.addAll(CG.getRetainGroup());
+			LinkedList<Cluster> Children = CG.getSegGroup();
+			
+			while (Children.size() != 0){
+				CG = SegmentCluster(Children);
+				Children = CG.getSegGroup();
+				CutSet.addAll(CG.getRetainGroup());
+			}
+
+			return CutSet;
+		}
+		
+		//Translate sets into string
+		protected LinkedList<LinkedList<String>> SegregatedLeaves(LinkedList<Cluster> C){
+			
+			//Initialize output
+			LinkedList<LinkedList<String>> LeafList = new LinkedList<LinkedList<String>>();
+			
+			//Process
+			for (Cluster c : C){
+				
+				//Retrieve data
+				LinkedList<String> Leaves = c.getLeafNames();
+				LinkedList<String> NewList = new LinkedList<String>();
+				
+				//remove tags
+				for (String s : Leaves){
+
+					String[] L = s.split("-");
+					String strRebuild = null;
+					boolean First = true;
+					for (int i = 0; i < L.length-1; i++){
+						if (First){
+							strRebuild = L[i];
+							First = false;
+						} else {
+							strRebuild = strRebuild + "-" + L[i];
+						}
+					}
+					NewList.add(strRebuild);
+				}
+				
+				//add List
+				LeafList.add(NewList);
+			}
+			
+			//output
+			return LeafList;
+		}
+		
+		//Return which children need to be further processed.
+		protected ClusterGroup SegmentCluster(LinkedList<Cluster> ParentCluster){
+
+			//Initialize
+			ClusterGroup CG = new ClusterGroup();
+			LinkedList<Cluster> SegChildren = new LinkedList<Cluster>();
+			LinkedList<Cluster> RetainChildren = new LinkedList<Cluster>();
+			
+			//build based on segmentation point
+			for (Cluster c : ParentCluster){
+				if (c.getAlcada() > segvalue){
+					SegChildren.addAll(c.getLst());
+				} else {
+					RetainChildren.add(c);
+				}
+			}
+			
+			//Add lists to output data structure
+			CG.setRetainGroup(RetainChildren);
+			CG.setSegGroup(SegChildren);
+			
+			return CG;
+		}
+		
+		//TODO Tree comparison method: Fowlkes-Mallows
+		protected TreeCompareReport FowlkesMallows(Cluster Master, Cluster Query){
+			
+			//Initialize output
+			TreeCompareReport TCR = new TreeCompareReport();
+			
+			//Generate lists
+			LinkedList<LinkedList<String>> MasterList = SegregatedLeaves(SegregateCluster(Master));
+			LinkedList<LinkedList<String>> QueryList = SegregatedLeaves(SegregateCluster(Query));
+			
+			//create FowlkesMallow object + compute
+			FowlkesMallows FM = new FowlkesMallows(MasterList, QueryList);
+			TCR.setDissimilarity(FM.ComputeB());
+			
+			System.out.println(TCR.getDissimilarity());
+			
+//			//DEBUGGING
+//			for (LinkedList<String> L : QueryList){
+//				System.out.println("----Cluster-----");
+//				for (String s : L){
+//					System.out.println(s);
+//				}
+//			}
+			
+			//return
+			return TCR;
+		}
+		
+		//TODO Tree comparison method: Robinson Foulds
+		protected TreeCompareReport RobinsonFoulds(Cluster Master, Cluster Query){
+			
+			//Initialize output
+			TreeCompareReport TCR = new TreeCompareReport();
+			
+			//return
+			return TCR;
+		}
+		
+
 		
 	}
 	
@@ -594,10 +697,26 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		//Error catching
 		if ((rbQueryTree.isSelected() && !txtQueryField.getText().equals("")) || rbLoadedTree.isSelected()) {
 			
-			//launch listener
-			TreeCompareWorker TCW = new TreeCompareWorker();
-			TCW.addPropertyChangeListener(this);
-			TCW.execute();
+			//determine segregation point
+			
+			try {
+				
+				//seg value parsing
+				double segvalue = Double.parseDouble(TxtSegValue.getText());
+				if (segvalue < 0.0 || segvalue > 1.0){
+					throw new Exception();
+				}
+				
+				//launch listener
+				TreeCompareWorker TCW = new TreeCompareWorker(segvalue);
+				TCW.addPropertyChangeListener(this);
+				TCW.execute();
+				
+			} catch (Exception ex) {
+				JOptionPane.showMessageDialog(null, "The Segmentation Point value must be numerical value from 0 to 1.",
+						"No Reference Query Defined",JOptionPane.ERROR_MESSAGE);
+			}
+
 			
 		} else {
 			JOptionPane.showMessageDialog(null, "Please Enter a Query to generate the reference Context Tree.",

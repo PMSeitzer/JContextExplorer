@@ -218,6 +218,24 @@ public class Cluster {
 	public LinkedList<Cluster> getLstFills() {
 		return this.lstFills;
 	}
+	
+	//custom method!
+	public LinkedList<String> getLeafNames(){
+		
+		//Initialize
+		LinkedList<String> Names = new LinkedList<String>();
+		
+		//case: cluster with leaves
+		if (fills > 0){
+			for (Cluster c : lstFills){
+				Names.add(c.getNom());
+			}
+		} else {//case: single leaf
+			Names.add(nom);
+		}
+
+		return Names;
+	}
 
 	public void setBase(double base) {
 		this.base = base;

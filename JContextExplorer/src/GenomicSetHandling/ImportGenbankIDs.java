@@ -82,13 +82,14 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 	private JTextField LblSearch, TxtSearch, LblGenbankIDs;
 	private JTextArea GenbankInfo;
 	private JProgressBar progressBar;
-	private JButton btnSearchNCBI, btnAddIDsFromFile, btnImport, btnOK;
+	private JButton btnSearchNCBI, btnAddIDsFromFile, btnImport, btnOK, btnExportGenbanksToTxt;
 	
 	private String strSearch = "Search NCBI Genomes:";
 	private String strIDs = "Organism and Genbank IDs:";
 	private String strbtnLoad = "Load Genbank IDs from file";
 	private String strbtnImport = "Add genomes to current genome set";
 	private String strTextAreaTxt = "";
+	private String strExport = "Export Genbank Files";
 	
 	private String strGenbankInfoInitial = "Organism1\tGenbank_ID1\nOrganism2\tGenbank_ID2";
 	private String strSearchInitial = "Enter genus, species, or strain information.";
@@ -311,6 +312,16 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 	//Import data from 
 	public class ImportGBKWorker extends SwingWorker<Void, Void>{
 
+		//fields
+		protected boolean LoadGenomes;
+		protected String ExportDir;
+		
+		//Constructor
+		protected ImportGBKWorker(boolean loadGenomes, String exportDir){
+			LoadGenomes = loadGenomes;
+			ExportDir = exportDir;
+		}
+		
 		//do in background
 		@Override
 		protected Void doInBackground() throws Exception {
@@ -329,16 +340,26 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 			//import genomes
 			for (String s : GenBanks.keySet()){
 				
-				//Retrieve Genome
-				AnnotatedGenome AG = RetrieveGenomeFromNCBI(s, GenBanks.get(s));
-				
-				// add to hash map
-				f.getOS().getSpecies().put(AG.getSpecies(), AG);
+				if (LoadGenomes){
+					
+					//Retrieve Genome
+					AnnotatedGenome AG = RetrieveGenomeFromNCBI(s, GenBanks.get(s));
+					
+					// add to hash map
+					f.getOS().getSpecies().put(AG.getSpecies(), AG);
 
-				// add name to array of species
-				f.getOS().getSpeciesNames().add(AG.getSpecies());
-				f.getOS().getAGLoaded().put(AG.getSpecies(), true);
-				f.getOS().getGenomeDescriptions().put(AG.getSpecies(), AG.getTextDescription());
+					// add name to array of species
+					f.getOS().getSpeciesNames().add(AG.getSpecies());
+					f.getOS().getAGLoaded().put(AG.getSpecies(), true);
+					f.getOS().getGenomeDescriptions().put(AG.getSpecies(), AG.getTextDescription());
+
+				} else {	//just export
+					
+					//Define file name and export
+					String FileName = ExportDir + "/" + GenBanks.get(s).replace(" ","_") + ".gb";
+					RetrieveGenbankFromNCBI(s, FileName);
+					
+				}
 
 				//increment counter
 				Counter++;
@@ -389,9 +410,15 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 			//re-enable okay button
 			btnOK.setEnabled(true);
 			
+			String msg = "";
+			if (LoadGenomes){
+				msg = "All Genomes have been successfully imported into the current Genome Set.";
+			} else {
+				msg = "All Genomes have been successfully exported in genbank format into the directory\n"
+						+ ExportDir + ".";
+			}
 			//helpful message
-			JOptionPane.showMessageDialog(null,
-					"All Genomes have been successfully imported into the current Genome Set! Hooray!",
+			JOptionPane.showMessageDialog(null,msg,
 					"Import Complete", JOptionPane.INFORMATION_MESSAGE);
 		}
 		
@@ -435,7 +462,7 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 1;
+		c.gridwidth = 2;
 		LblSearch = new JTextField(strSearch);
 		LblSearch.setEditable(false);
 		jp.add(LblSearch, c);
@@ -446,7 +473,7 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 1;
+		c.gridwidth = 2;
 		c.ipady = 10;
 		TxtSearch = new JTextField(strSearchInitial);
 		TxtSearch.setForeground(Color.GRAY);
@@ -477,7 +504,7 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 1;
+		c.gridwidth = 2;
 		c.insets = new Insets(20,0,0,0);
 		LblGenbankIDs = new JTextField(strIDs);
 		LblGenbankIDs.setEditable(false);
@@ -487,7 +514,7 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 		//Actual enter points form
 		c.gridx = 0;
 		c.gridy = gridy;
-		c.gridwidth = 1;
+		c.gridwidth = 2;
 		c.gridheight = 1;
 		c.insets = new Insets(2,3,2,3);
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -515,7 +542,7 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 		//progress bar
 		c.gridx = 0;
 		c.gridy = gridy;
-		c.gridwidth = 1;
+		c.gridwidth = 2;
 		c.gridheight = 1;
 		c.insets = new Insets(2,5,0,5);
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -531,19 +558,29 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 		c.gridheight = 1;
 		c.insets = new Insets(2,0,0,0);
 		c.fill = GridBagConstraints.NONE;
-		c.anchor = GridBagConstraints.CENTER;
 		btnImport = new JButton(strbtnImport);
 		btnImport.addActionListener(this);
 		jp.add(btnImport, c);
+		
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.insets = new Insets(1,1,1,1);
+		c.fill = GridBagConstraints.NONE;
+		btnExportGenbanksToTxt = new JButton(strExport);
+		btnExportGenbanksToTxt.addActionListener(this);
+		jp.add(btnExportGenbanksToTxt, c);		
 		gridy++;
 		
 		//Close frame button
 		c.gridx = 0;
 		c.gridy = gridy;
-		c.gridwidth = 1;
+		c.gridwidth = 2;
 		c.gridheight = 1;
 		c.insets = new Insets(20,0,0,0);
 		c.fill = GridBagConstraints.NONE;
+		c.anchor = GridBagConstraints.CENTER;
 		btnOK = new JButton("OK");
 		btnOK.addActionListener(this);
 		jp.add(btnOK, c);
@@ -556,7 +593,7 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 	}
 	
 	//===== Entrez Queries =====//
-	//retrieve genome from NCBI
+	//retrieve genome from NCBI + load to data structure
 	public AnnotatedGenome RetrieveGenomeFromNCBI(String AccessionID, String SpeciesName){
 		
 		//Initialize
@@ -639,6 +676,80 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 		return AG;
 	}
 	
+	//retrieve genomes from NCBI + print to files
+	public void RetrieveGenbankFromNCBI(String AccessionID, String FileName){
+		
+		//Initialize
+		String FetchURL = GenbankIDSearchBase + AccessionID + "&usehistory=y";
+		
+		try {
+			
+			// ======== Retrieve key parameter information ======== //
+			
+			URL inputURL = new URL(FetchURL);
+			HttpURLConnection c = (HttpURLConnection) inputURL.openConnection();
+			BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream()));
+			String Line = null;
+			String QueryResults = "";
+			while((Line = br.readLine()) != null){
+				//System.out.println(Line);
+				QueryResults = QueryResults + Line;
+			}
+			
+			br.close();
+			c.disconnect();
+
+			// ======= Retrieve Query Key and WebEnv ======= //
+			
+			Pattern QK = Pattern.compile("<QueryKey>.*</QueryKey>");
+			Matcher QKm = QK.matcher(QueryResults);
+
+			while (QKm.find()){
+				query_key = (String) QKm.group().subSequence(10, QKm.group().length()-11);
+				//System.out.println(query_key);
+			}
+			
+			Pattern WE = Pattern.compile("<WebEnv>.*</WebEnv>");
+			Matcher WEm = WE.matcher(QueryResults);
+			while (WEm.find()){
+				WebEnv = (String) WEm.group().subSequence(8, WEm.group().length()-9);
+				//System.out.println(WebEnv);
+			}
+			
+			// ======== Define Output Stream ======== //
+			BufferedWriter bw = new BufferedWriter(new FileWriter(FileName));
+			
+			// ======== Retrieve Genbank File ======== //
+			
+			String GetGenbankURL = GenbankIDwParametersBase + WebEnv + "&query_key=" + query_key;
+			//System.out.println(GetGenbankURL);
+
+			URL GbURL = new URL(GetGenbankURL);
+			InputStream is = GbURL.openStream();
+			BufferedReader br2 = new BufferedReader(new InputStreamReader(is));
+			String Line2 = null;
+			
+			//write URL stream to output stream
+			while ((Line2 = br2.readLine())!= null){
+				bw.write(Line2);
+				bw.write("\n");
+				bw.flush();
+			}
+			
+			//close file streams
+			br2.close();
+			bw.close();
+			
+		} catch (MalformedURLException e) {
+			String msgID = "The Genbank ID " + AccessionID + " could not be found.";
+			JOptionPane.showMessageDialog(null, msgID, "Genbank ID Not Found", JOptionPane.ERROR_MESSAGE);
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(null, "Unable to import genbank data from file.", 
+					"Import Genbank Error", JOptionPane.ERROR_MESSAGE);
+		}
+
+	}
+	
 	//Query NCBI for various things
 	public void QueryNCBI(String Query){
 		
@@ -707,7 +818,7 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 			ImportFileList();
 		}
 		
-		//Import Genbank files
+		//Import Genbank files + add to set
 		if (e.getSource().equals(btnImport)){
 			if (!GenbankInfo.getText().equals("") &&
 					!GenbankInfo.getText().equals(strGenbankInfoInitial)){
@@ -721,9 +832,52 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 				}
 				
 				//invoke SwingWorker
-				ImportGBKWorker I = new ImportGBKWorker();
+				ImportGBKWorker I = new ImportGBKWorker(true,null);
 				I.addPropertyChangeListener(this);
 				I.execute();
+				
+			} else {
+				JOptionPane.showMessageDialog(null, "Please type one or more Species - GenBank Accession ID pairs in the text window.",
+						"No Organisms Entered",JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		
+		if (e.getSource().equals(btnExportGenbanksToTxt)){
+			if (!GenbankInfo.getText().equals("") &&
+					!GenbankInfo.getText().equals(strGenbankInfoInitial)){
+				
+				// initialize output
+				JFileChooser GetGenomes = new JFileChooser();
+				
+				GetGenomes.setMultiSelectionEnabled(true);
+				GetGenomes.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				GetGenomes
+						.setDialogTitle("Select Output Directory for Genbank Files");
+
+				//retrieve directory
+				if (f.getFileChooserSource() != null) {
+					GetGenomes.setCurrentDirectory(f.getFileChooserSource());
+				} else {
+					GetGenomes.setCurrentDirectory(new File("."));
+				}
+			
+				GetGenomes.showOpenDialog(GetGenomes);
+				
+				// set directory + proceed
+				if (GetGenomes.getSelectedFile() != null) {
+							
+					//set directory for next time
+					f.setFileChooserSource(GetGenomes.getCurrentDirectory());
+					
+					//parse contents
+					ParseGenBankTextArea();
+					
+					//invoke SwingWorker
+					ImportGBKWorker I = new ImportGBKWorker(false,GetGenomes.getSelectedFile().getAbsolutePath());
+					I.addPropertyChangeListener(this);
+					I.execute();
+					
+				}
 				
 			} else {
 				JOptionPane.showMessageDialog(null, "Please type one or more Species - GenBank Accession ID pairs in the text window.",

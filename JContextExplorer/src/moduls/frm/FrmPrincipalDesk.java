@@ -1387,7 +1387,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MP_NewPheno = new JMenuItem("Load Phenotypic Data");
 		MP_ManagePheno = new JMenuItem("Manage Phenotypic Data");
 		MP_PhenotypeData = new JMenu("Available Phenotypic Data Sets");
-		MP_TreeDataCorr = new JMenuItem("Tree - Data Correlation");
+		MP_TreeDataCorr = new JMenuItem("Data Grouping Correlation");
 		
 		//default sub-menus
 		MP_NoQuerySets = new JCheckBoxMenuItem("None Available");
@@ -1402,7 +1402,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//Action listeners
 		MP_NewQuery.addActionListener(this);
 
-		
 //		//Build menu
 //		M_Process.add(MP_NewQuery);
 //		M_Process.add(MP_QuerySet);
