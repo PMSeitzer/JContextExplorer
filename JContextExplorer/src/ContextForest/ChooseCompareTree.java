@@ -17,6 +17,7 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.LinkedList;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -29,6 +30,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
 import parser.Fig_Pizarra;
@@ -135,6 +137,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 			String TreeName = "";
 			Cluster cm = null;
 			boolean ReferenceTreeReady = true;
+			QueryData Q = null;
 			
 			if (rbLoadedTree.isSelected()){
 				
@@ -165,7 +168,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 				TreeName = "Query: " + txtQueryField.getText();
 				
 				//Assemble appropriate query data set
-				QueryData Q = new QueryData();
+				Q = new QueryData();
 				
 				//Parameters for each Query Set
 				boolean AnnotationSearch;
@@ -214,10 +217,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 						ReferenceTreeReady = false;
 					}
 				}
-				
-				//Prepare extended CRON
-				ExtendedCRON EC = new ExtendedCRON();
-				
+
 				//proceed
 				if (ReferenceTreeReady){
 					
@@ -232,19 +232,21 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 					Q.setAnalysesList(P);
 					Q.setCSD(CSD);
 					Q.setOSName(OSName);
-
+					
 					//convert to cluster
 					cm = GenerateClusterFromQuery(Q);
-
+					
+					System.out.println("Master: " + cm.getLst());
 				}
 			
 			}
-
+			
 			//proceed
 			if (ReferenceTreeReady){
 				
 				//Initialize counter, prepare progress bar
 				int Counter = 0;
+				setProgress(0);
 				
 				//Scan each individual query 
 				for (QueryData QD : TQ.getContextTrees()){
@@ -294,19 +296,17 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		protected Cluster GenerateClusterFromQuery(QueryData QD){
 
 			//Initialize output
-			Cluster c = null;
 			SearchWorker SW = f.getPanBtn().new SearchWorker(QD,
 					"Load", Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
 					Jpan_Menu.getPrecision(), false);
 			SW.addPropertyChangeListener(CCT);
 			SW.execute();
-			
-			//TODO: some kind of thread synchronization
-			
-			//stop waiting!
-			c = SW.RootCluster;
 
-			return c;
+			//empty while loop - implicit waiting
+			while(!SW.isDone()){}
+			
+			return SW.RootCluster;
+			
 		}
 		
 		//TODO Tree comparison method: Fowlkes-Mallows

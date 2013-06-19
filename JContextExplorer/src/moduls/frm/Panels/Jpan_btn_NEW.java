@@ -206,6 +206,7 @@ import definicions.MatriuDistancies;
 			
 			//final
 			public Cluster RootCluster;
+			public boolean ProcessCompleted = false;
 			
 			//constructor
 			public SearchWorker(final QueryData QD, final String action,
@@ -1054,13 +1055,23 @@ import definicions.MatriuDistancies;
 			//following search + dendrogram computation
 			public void done(){
 			
-			if (DisplayOutput){
-				//re-set cursor, progress bar
-				fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-				progressBar.setString("");
-				progressBar.setBorderPainted(false);
-				progressBar.setValue(0);
+			//re-set cursor, progress bar
+			fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			setProgress(0);
+			progressBar.setString("");
+			progressBar.setBorderPainted(false);
+				
+			//process completed!
+			ProcessCompleted = true;
+			fr.setTmpCluster(RootCluster);
+			
+//			synchronized (this){
+//				this.notifyAll();
+//			}
 
+			
+			if (DisplayOutput){
+				
 				//try to update values
 				try {
 					//update values for display

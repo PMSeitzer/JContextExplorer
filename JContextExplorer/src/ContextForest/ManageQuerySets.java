@@ -469,7 +469,7 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 		String ContextSetName = (String) f.getPanBtn().getContextSetMenu().getSelectedItem();
 		String DissimilarityType = (String) f.getPan_Menu().getCbDissimilarity().getSelectedItem();
 		String ClusteringType = (String) f.getPan_Menu().getCbMethod().getSelectedItem();
-		PostSearchAnalyses P = new PostSearchAnalyses(false, false, false, false);
+		PostSearchAnalyses P = new PostSearchAnalyses(false, true, false, false);
 		CSDisplayData CSD = f.getCSD();
 		String OSName = f.getOS().getName();
 

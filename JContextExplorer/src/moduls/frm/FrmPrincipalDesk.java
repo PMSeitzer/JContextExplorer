@@ -213,6 +213,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private GBKFieldMapping GBKFields;
 	
 	private ChooseCompareTree CurrentCCTWindow = null;
+	private Cluster TmpCluster = null;
 	
 	// ===== MENU RELATED ====== //
 	
@@ -2935,6 +2936,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	public void setCurrentCCTWindow(ChooseCompareTree currentCCTWindow) {
 		CurrentCCTWindow = currentCCTWindow;
+	}
+
+	public Cluster getTmpCluster() {
+		return TmpCluster;
+	}
+
+	public void setTmpCluster(Cluster tmpCluster) {
+		TmpCluster = tmpCluster;
 	}
 
 }
