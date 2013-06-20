@@ -259,7 +259,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 					
 					//Generate report for every cluster
 					String Method = (String) ComparisonMenu.getSelectedItem();
-					if (Method.equals("Fowlkes-Mallows")){
+					if (Method.equals("Adjusted Fowlkes-Mallows")){
 						TCR = FowlkesMallows(cm, cq);
 					} else if (Method.equals("Robinson-Foulds")) {
 						TCR = RobinsonFoulds(cm, cq);
@@ -748,7 +748,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		
 		//Comparison Approaches
 		ComparisonApproaches = new String[2];
-		ComparisonApproaches[0] = "Fowlkes-Mallows";
+		ComparisonApproaches[0] = "Adjusted Fowlkes-Mallows";
 		ComparisonApproaches[1] = "Robinson-Foulds";
 	}
 	

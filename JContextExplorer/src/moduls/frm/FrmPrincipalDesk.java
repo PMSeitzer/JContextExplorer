@@ -45,6 +45,7 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -96,6 +97,7 @@ import operonClustering.CustomDissimilarity;
 
 import ContextForest.CFSettingsWindow;
 import ContextForest.ChooseCompareTree;
+import ContextForest.ChooseDataGrouping;
 import ContextForest.ContextForestWindow;
 import ContextForest.ManageQuerySets;
 import ContextForest.SelectQS;
@@ -269,7 +271,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenuItem ML_HomologyClusterMenu;
 	private JMenuItem ML_GeneIDs;
 	private JMenuItem ML_QuerySet;
-	private JMenuItem ML_PhenoDataSet;
+	private JMenuItem ML_DataGrouping;
 	
 	//export components
 	private JMenuItem ME_GWS;
@@ -1305,8 +1307,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		ML_DissMeas = new JMenuItem("Dissimilarity Measure");
 		ML_Phylo = new JMenuItem("Phylogenetic Tree");
 		ML_Motifs = new JMenuItem("Sequence Motifs");
-		ML_QuerySet = new JMenuItem("Query Set");
-		ML_PhenoDataSet = new JMenuItem("Supplemental Dataset");
+		ML_QuerySet = new JMenuItem("Load Query Set");
+		ML_DataGrouping = new JMenuItem("Load Data Grouping");
 		
 		ML_ContextSet.addActionListener(this);
 		ML_DissMeas.addActionListener(this);
@@ -1338,7 +1340,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		ML_QuerySet.setAccelerator(Lstroke);
 		
 		//Load Supplemental Data Set
-		ML_PhenoDataSet.addActionListener(this);
+		ML_DataGrouping.addActionListener(this);
 		
 		//add to menu
 		M_Load.add(ML_HomologyClusterMenu);
@@ -1347,10 +1349,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		M_Load.add(ML_DissMeas);
 		M_Load.add(ML_Phylo);
 		M_Load.add(ML_Motifs);
-		
-		M_Load.addSeparator();
-		M_Load.add(ML_QuerySet);
-		M_Load.add(ML_PhenoDataSet);
 
 		/*
 		 * EXPORT MENU
@@ -1422,12 +1420,16 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MP_ContextForest.addActionListener(this);
 		
 		//Build menu
+		M_Process.add(ML_QuerySet);
+		M_Process.add(ML_DataGrouping);
+		M_Process.addSeparator();
 		M_Process.add(MP_Similarity);
 		M_Process.add(MP_TreeDataCorr);
 		M_Process.addSeparator();
 		M_Process.add(MP_ContextForest);
 
 		
+
 		/*
 		 * HELP MENU
 		 */
@@ -1462,7 +1464,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		}
 		
 	}
-		
+
 	//initialize apple-specific menu components
 	public void AppleOSMenuAdjustments(){
 		Application a = Application.getApplication();
@@ -1857,14 +1859,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		if (evt.getSource().equals(ML_Motifs)){
 			new ManageMotifs(this);
 		}
-		
-		if (evt.getSource().equals(ML_QuerySet)){
-			new ManageQuerySets(this);
-		}
-		
-		if (evt.getSource().equals(ML_PhenoDataSet)){
-			System.out.println("TODO: Load Phenotypic Data Set");
-		}
 
 		/*
 		 * WEB-RELATED
@@ -1883,6 +1877,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		if (evt.getSource().equals(MH_Publication)){
 			LaunchWebsite("http://www.biomedcentral.com/1471-2105/14/18");
 		}
+		
 		/*
 		 * EXPORT
 		 */
@@ -1927,6 +1922,16 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		 * PROCESS
 		 */
 		
+		//Add Query Set
+		if (evt.getSource().equals(ML_QuerySet)){
+			new ManageQuerySets(this);
+		}
+		
+		//Add Data Grouping
+		if (evt.getSource().equals(ML_DataGrouping)){
+			NewDataGrouping();
+		}
+		
 		//Tree Similarity Scan
 		if (evt.getSource().equals(MP_Similarity)){
 			if (getOS() != null){
@@ -1940,10 +1945,26 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			}
 		}
 		
-		//Phenotype Comparison
+		//Data Grouping comparison
 		if (evt.getSource().equals(MP_TreeDataCorr)){
 			if (getOS() != null){
-				System.out.println("TODO: Tree - Data Correlation");
+				if (OS.getQuerySets().size() > 0){
+					new ChooseDataGrouping(this);
+				} else {
+					this.NoQS();
+				}
+				
+				for (String s : OS.getDataGroups().keySet()){
+					System.out.println("Key: " + s);
+					LinkedList<String[]> clust = OS.getDataGroups().get(s);
+					for (String[] s1 : clust){
+						String str = "Cluster: ";
+						for (String s2 : s1){
+							str = str + " " + s2;
+						}
+						System.out.println(str);
+					}
+				}
 			} else {
 				this.NoOS();
 			}
@@ -2060,6 +2081,63 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 	}
 	
+	//Create a new data grou
+	public void NewDataGrouping(){
+		
+		// initialize output
+		JFileChooser GetGrouping = new JFileChooser();
+		
+		GetGrouping.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		GetGrouping
+				.setDialogTitle("Select A File Containing Data Groupings.");
+
+		//retrieve directory
+		if (this.FileChooserSource != null) {
+			GetGrouping.setCurrentDirectory(FileChooserSource);
+		} else {
+			GetGrouping.setCurrentDirectory(new File("."));
+		}
+	
+		GetGrouping.showOpenDialog(GetGrouping);
+		
+		// note current directory for next time
+		if (GetGrouping.getSelectedFile() != null) {
+			
+			//re-set file chooser source
+			this.FileChooserSource = GetGrouping.getCurrentDirectory();
+			
+			RetrieveDataGrouping(GetGrouping.getSelectedFile());
+		}
+		
+	}
+	
+	//Retrieve data grouping file
+	public void RetrieveDataGrouping(File f){
+		try {
+			//retrieve from file
+			BufferedReader br = new BufferedReader(new FileReader(f));
+			String Line = null;
+			LinkedList<String[]> Groupings = new LinkedList<String[]>();
+			while ((Line = br.readLine()) != null){
+				String[] L = Line.split("\t");
+				Groupings.add(L);
+			}
+			
+			//create name
+			String DGName = f.getName().replaceFirst("[.][^.]+$", "");
+			
+			//key= file name, no extension, value = groupings
+			OS.getDataGroups().put(DGName, Groupings);
+		
+			//message
+			String msg = "The Data Grouping \"" + DGName + "\" was successfully imported.";
+			JOptionPane.showMessageDialog(null, msg,
+					"Successful Data Grouping Import", JOptionPane.INFORMATION_MESSAGE);
+		} catch (Exception e) {
+			ImproperFormat();
+		}
+	}
+	
 	//When No OS loaded
 	public void NoOS(){
 		
@@ -2089,7 +2167,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	public void NoQS(){
 	
 		String str = "Please create one or more Query Sets before continuing.\n"
-				+ "Query Sets can be created by selecting 'Query Set' from \nthe Load drop-down menu, " +
+				+ "Query Sets can be created by selecting 'Load Query Set' from \nthe Process drop-down menu, " +
 				"or by typing ";
 		String invokeNew;
 		if (System.getProperty("os.name").contains("Mac")){
@@ -2102,6 +2180,12 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		JOptionPane.showMessageDialog(null, str,
 				"No Query Sets", JOptionPane.ERROR_MESSAGE);
 		
+	}
+	
+	//when File improperly formatted
+	public void ImproperFormat(){
+		JOptionPane.showMessageDialog(null, "File Not Correctly Formatted.",
+				"File Format Error",JOptionPane.ERROR_MESSAGE);
 	}
 	
 	//activate/deactivate

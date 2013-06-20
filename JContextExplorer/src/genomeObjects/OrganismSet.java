@@ -57,6 +57,7 @@ public class OrganismSet implements Serializable{
 	private LinkedList<Tree> ParsedPhyTrees;						//-Phylogenies----------------//
 	private LinkedList<File> LoadedPhyTrees;
 	private LinkedList<QuerySet> QuerySets;							//-Query-Sets-----------------//
+	private LinkedHashMap<String, LinkedList<String[]>> DataGroups; //-Data-Groupings-----------//
 	
 	//Internal
 	private boolean GeneClustersLoaded = false;						//-Gene-Clusters--------------//
@@ -89,8 +90,9 @@ public class OrganismSet implements Serializable{
 		LoadedPhyTrees = new LinkedList<File>();
 		MotifNames = new LinkedList<String>();
 		
-		//Query Set
+		//Process-related add-ons
 		QuerySets = new LinkedList<QuerySet>();
+		setDataGroups(new LinkedHashMap<String, LinkedList<String[]>>());
 		
 	}
 
@@ -965,6 +967,14 @@ public class OrganismSet implements Serializable{
 
 	public void setQuerySets(LinkedList<QuerySet> querySets) {
 		QuerySets = querySets;
+	}
+
+	public LinkedHashMap<String, LinkedList<String[]>> getDataGroups() {
+		return DataGroups;
+	}
+
+	public void setDataGroups(LinkedHashMap<String, LinkedList<String[]>> dataGroups) {
+		DataGroups = dataGroups;
 	}
 
 } //completes classbody

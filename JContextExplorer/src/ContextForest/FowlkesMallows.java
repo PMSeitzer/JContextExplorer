@@ -42,7 +42,6 @@ public class FowlkesMallows {
 		Combined.addAll(Set2LS);
 		this.CombinedHash = new HashSet<String>(Combined);
 		
-		
 	}
 	
 
