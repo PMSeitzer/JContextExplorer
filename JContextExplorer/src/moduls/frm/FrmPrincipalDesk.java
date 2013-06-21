@@ -1333,15 +1333,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	
 		ML_Motifs.addActionListener(this);
 		
-		//Load Query Set
-		ML_QuerySet.addActionListener(this);
-		KeyStroke Lstroke = KeyStroke.getKeyStroke(KeyEvent.VK_L, 
-				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-		ML_QuerySet.setAccelerator(Lstroke);
-		
-		//Load Supplemental Data Set
-		ML_DataGrouping.addActionListener(this);
-		
 		//add to menu
 		M_Load.add(ML_HomologyClusterMenu);
 		M_Load.add(ML_GeneIDs);
@@ -1380,7 +1371,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MP_NewQuery = new JMenuItem("New Query Set");
 		MP_ManageQueries = new JMenuItem("Manage Query Sets");
 		MP_QuerySet = new JMenu("Available Query Sets");
-		MP_ContextForest = new JMenuItem("New Context Forest Window");
+		MP_ContextForest = new JMenuItem("Create Context Forest");
 		MP_Similarity = new JMenuItem("Tree Similarity Scan");
 		MP_NewPheno = new JMenuItem("Load Phenotypic Data");
 		MP_ManagePheno = new JMenuItem("Manage Phenotypic Data");
@@ -1413,6 +1404,18 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 //		M_Process.add(MP_ManagePheno);
 //		M_Process.add(MP_PhenotypeCompare);
 		
+		
+		//Load Query Set
+		ML_QuerySet.addActionListener(this);
+		KeyStroke Lstroke = KeyStroke.getKeyStroke(KeyEvent.VK_L, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		ML_QuerySet.setAccelerator(Lstroke);
+		
+		//Load Supplemental Data Set
+		ML_DataGrouping.addActionListener(this);
+		KeyStroke Kstroke = KeyStroke.getKeyStroke(KeyEvent.VK_K, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		ML_DataGrouping.setAccelerator(Kstroke);
 
 		//Action listeners
 		MP_Similarity.addActionListener(this);
@@ -1423,12 +1426,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		M_Process.add(ML_QuerySet);
 		M_Process.add(ML_DataGrouping);
 		M_Process.addSeparator();
-		M_Process.add(MP_Similarity);
 		M_Process.add(MP_TreeDataCorr);
-		M_Process.addSeparator();
+		M_Process.add(MP_Similarity);
 		M_Process.add(MP_ContextForest);
-
-		
 
 		/*
 		 * HELP MENU
@@ -1949,22 +1949,26 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		if (evt.getSource().equals(MP_TreeDataCorr)){
 			if (getOS() != null){
 				if (OS.getQuerySets().size() > 0){
-					new ChooseDataGrouping(this);
+					if (OS.getDataGroups().size() > 0){
+						new ChooseDataGrouping(this);
+					} else{
+						this.NoDG();
+					}
 				} else {
 					this.NoQS();
 				}
 				
-				for (String s : OS.getDataGroups().keySet()){
-					System.out.println("Key: " + s);
-					LinkedList<String[]> clust = OS.getDataGroups().get(s);
-					for (String[] s1 : clust){
-						String str = "Cluster: ";
-						for (String s2 : s1){
-							str = str + " " + s2;
-						}
-						System.out.println(str);
-					}
-				}
+//				for (String s : OS.getDataGroups().keySet()){
+//					System.out.println("Key: " + s);
+//					LinkedList<String[]> clust = OS.getDataGroups().get(s);
+//					for (String[] s1 : clust){
+//						String str = "Cluster: ";
+//						for (String s2 : s1){
+//							str = str + " " + s2;
+//						}
+//						System.out.println(str);
+//					}
+//				}
 			} else {
 				this.NoOS();
 			}
@@ -2138,7 +2142,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		}
 	}
 	
-	//When No OS loaded
+	//When No OS (Organism Sets) loaded
 	public void NoOS(){
 		
 		//TODO: indicate menu bar?
@@ -2163,7 +2167,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				"No Genome Set Defined", JOptionPane.ERROR_MESSAGE);
 	}
 
-	//When no QS loaded
+	//When no QS (Query Sets) loaded
 	public void NoQS(){
 	
 		String str = "Please create one or more Query Sets before continuing.\n"
@@ -2180,6 +2184,24 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		JOptionPane.showMessageDialog(null, str,
 				"No Query Sets", JOptionPane.ERROR_MESSAGE);
 		
+	}
+	
+	//When no DG (Data Groupings) loaded
+	public void NoDG(){
+		String msg = "No Data Groupings are loaded.\n" +
+				"To load a Data Grouping, select 'Load Data Grouping'\n" +
+				"from the Process drop-down menu, or type ";
+		
+		String invokeNew;
+		if (System.getProperty("os.name").contains("Mac")){
+			invokeNew = "command + K.\n";
+		} else {
+			invokeNew = "ctrl + K.\n";
+		}
+		msg = msg + invokeNew;
+		
+		JOptionPane.showMessageDialog(null, msg,
+				"No Data Groupings Loaded",JOptionPane.ERROR_MESSAGE);
 	}
 	
 	//when File improperly formatted

@@ -78,8 +78,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 	private JTextField LblSegValue, TxtSegValue;
 	private String strLblSegValue = "Segmentation Point:";
 	private String strTxtSegValue = "0.5";
-	
-	
+		
 	//Insets
 	private Insets lblIns = new Insets(3,3,3,3);
 	private Insets downIns = new Insets(5,5,20,1);
@@ -675,7 +674,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		jpEnclosing.setLayout(new BorderLayout());
 		jpEnclosing.add(jp, BorderLayout.NORTH);
 		jpEnclosing.add(jp2, BorderLayout.SOUTH);
-		this.add(jpEnclosing);;
+		this.add(jpEnclosing);
 		
 	}
 	
