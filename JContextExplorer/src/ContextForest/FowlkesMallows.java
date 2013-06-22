@@ -16,6 +16,17 @@ public class FowlkesMallows {
 	private HashSet<String> Set2HS;
 	private HashSet<String> CombinedHash;
 	
+	//Adjustment options
+	
+	//Summed mismatch
+	private boolean SummedMismatchPenalty;
+	private boolean FreeMismatches;
+	private int NumberOfFreeMatches;
+	private double PenaltyperMismatch;
+	
+	//Dice/Jaccard scale factor
+	private boolean DicePenalty;
+	
 	//Matching statistics
 	private int Set1Only;
 	private int Set2Only;
@@ -48,14 +59,30 @@ public class FowlkesMallows {
 	// ------ Dissimilarity Processing -----------//
 
 	//Compute dissimilarity
-	public double ComputeB(){
+	public double Compute(){
 		
 		//determine elements counts (for scale factor)
 		ElementCounts();
 		
+		//determine adjustment factor
+		double AdjustmentFactor;
+		if (SummedMismatchPenalty){
+			AdjustmentFactor = SummedMismatchPenalty();
+		} else {
+			AdjustmentFactor = DiceOrJaccardPenalty();
+		}
+		
+		//retrieve original value
+		double OriginalFowlkesMallows = OriginalFowlkesMallows();
+		
+		//adjust value
+		B = OriginalFowlkesMallows * AdjustmentFactor;
+		
+		//return value
 		return B;
 	}
-	
+
+	// --- Preprocessing ------ //
 	
 	//Determine number of elements intersecting, matching, etc
 	public void ElementCounts(){
@@ -118,7 +145,64 @@ public class FowlkesMallows {
 
 	}
 	
-	// ------ CONVERSTIONS --------------//
+	// ---- AdjustmentStep ----- //
+	
+	//Summed mismatch penalty
+	public double SummedMismatchPenalty(){
+		
+		//Initialize output
+		double penalty = 0.0;
+		
+		//Compute mismatches, and adjust
+		int TotalMismatches = Set1Only + Set2Only;
+		
+		//Adjust for free matches
+		if (FreeMismatches){
+			TotalMismatches = TotalMismatches - NumberOfFreeMatches;
+		}
+		
+		//adjust accordingly
+		penalty = (double) TotalMismatches * PenaltyperMismatch;
+		
+		//adjust penalty value into scale factor
+		if (penalty < 0){
+			penalty = 1;
+		} else {
+			penalty = 1 - penalty;
+		}
+		
+		//return computed penalty
+		return penalty;
+	}
+	
+	//Dice Or Jaccard penalty
+	public double DiceOrJaccardPenalty(){
+		
+		//Initialize output
+		double penalty = 0.0;
+		
+		//determine appropriate value
+		if (DicePenalty){	//Dice penalty
+			penalty = 1 - (2.0 * (double) Intersection /
+					((double) Set1LS.size() + (double) Set2LS.size()));
+		} else { 	//Jaccard penalty
+			penalty = 1 - ((double) Intersection / (double) Union);
+		}
+		
+		//return value
+		return penalty;
+	}
+	
+	//---- Processing ------ //
+	public double OriginalFowlkesMallows(){
+		
+		
+		double dissimilarity = 0.0;
+		
+		return 0.0;
+	}
+	
+	// ------ CONVERSIONS --------------//
 	
 	//Convert each cluster set into a linked list
 	public LinkedList<String> Set2List(LinkedList<LinkedList<String>> L){
@@ -134,7 +218,6 @@ public class FowlkesMallows {
 		return Output;
 	}
 	
-
 	//------ SETTERS AND GETTERS -------//
 
 	public LinkedList<LinkedList<String>> getSet1() {

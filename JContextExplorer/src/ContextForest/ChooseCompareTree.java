@@ -427,7 +427,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 			
 			//create FowlkesMallow object + compute
 			FowlkesMallows FM = new FowlkesMallows(MasterList, QueryList);
-			TCR.setDissimilarity(FM.ComputeB());
+			TCR.setDissimilarity(FM.Compute());
 			
 			System.out.println(TCR.getDissimilarity());
 			
@@ -616,6 +616,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		LblSegValue.setEditable(false);
 		jp.add(LblSegValue, c);
 		
+		//segmentation value
 		c.gridx = 2;
 		c.gridy = gridy;
 		c.gridheight = 1;
@@ -697,7 +698,6 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		if ((rbQueryTree.isSelected() && !txtQueryField.getText().equals("")) || rbLoadedTree.isSelected()) {
 			
 			//determine segregation point
-			
 			try {
 				
 				//seg value parsing

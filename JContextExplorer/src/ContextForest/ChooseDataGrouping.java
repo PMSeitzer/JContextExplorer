@@ -3,6 +3,7 @@ package ContextForest;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -20,10 +21,12 @@ import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+import javax.swing.SwingWorker;
 
 import moduls.frm.FrmPrincipalDesk;
 
@@ -32,6 +35,11 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 	//Fields
 	//baseline
 	private FrmPrincipalDesk f;
+	
+	//Data results
+	private int NumMismatches;
+	private double PenaltyPerMismatch;
+	private double SegmentationValue;
 	
 	//GUI
 	private JPanel jp, jp2, jpEnclosing;
@@ -82,7 +90,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 	private Insets basIns = new Insets(1,1,1,1);
 	private Insets downIns = new Insets(5,5,20,1);
 	
-	//constructor
+	//CONSTRUCTOR
 	public ChooseDataGrouping(FrmPrincipalDesk f){
 		
 		//Initialization-type steps
@@ -101,6 +109,51 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 		this.setVisible(true);
 	}
 
+	// ======= Classes ===========//
+	public class DataGroupingWorker extends SwingWorker<Void, Void>{
+
+		//Fields
+		
+		//constructor
+		public DataGroupingWorker(){
+			
+		}
+		
+		@Override
+		protected Void doInBackground() throws Exception {
+			
+			//switch cursor
+			Component glassPane = getRootPane().getGlassPane();
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			glassPane.setVisible(true);
+			
+			
+			//switch cursor
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			glassPane.setVisible(false);
+			
+			return null;
+		}
+		
+		//post-processing
+		public void done(){
+			
+			//switch cursor to normal
+			Component glassPane = getRootPane().getGlassPane();
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			glassPane.setVisible(false);
+			
+			//re-set progress bar
+			progressBar.setValue(0);
+
+			//close window
+			dispose();
+			
+		}
+		
+	}
+	
+	
 	//Panel components
 	public void getPanel(){
 		
@@ -371,7 +424,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 		c.insets = lblIns;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 1;
-		rbJaccard.setSelected(true);
+		rbJaccard.setSelected(false);
 		ScaleFactorGroup.add(rbJaccard);
 		jp.add(rbJaccard, c);
 		gridy++;
@@ -527,6 +580,49 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 		if (e.getSource().equals(cbAllowMM)){
 			EnableComponents(NoMMPenaltySubGroup,cbAllowMM.isSelected());
 		}
+		
+		/*
+		 * EXECUTE SCAN
+		 */
+		if (e.getSource().equals(btnOK)){
+			
+			try {
+				
+				//retrieve parameters
+				SegmentationValue = Double.parseDouble(TxtSegmentationValue.getText());
+				
+				//Optional parameters (when appropriate), w appropriat exceptions
+				if (rbMisMatch.getModel().isSelected()){
+					PenaltyPerMismatch = Double.parseDouble(TxtPenaltyperMM.getText());
+					if (PenaltyPerMismatch > 1.0 || PenaltyPerMismatch < 0.0){
+						throw new Exception();
+					}
+					if (cbAllowMM.isSelected()){
+						NumMismatches = Integer.parseInt(TxtFreeMisMatches.getText());
+						if (NumMismatches < 0) {
+							throw new Exception();
+						}
+					}
+				}
+				
+				//throw exceptions, if necessary
+				if (SegmentationValue > 1.0 || SegmentationValue < 0.0){
+					throw new Exception();
+				}
+				
+				//new data groupings worker, to compute Adjusted Fowlkes-Mallows index.
+				DataGroupingWorker DGW = new DataGroupingWorker();
+				DGW.addPropertyChangeListener(this);
+				DGW.execute();
+						
+			} catch (Exception ex){
+				JOptionPane.showMessageDialog(null, "Numerical value format or out of bounds error.\n" +
+						"Change numerical fields and try again.",
+						"Number Format Error",JOptionPane.ERROR_MESSAGE);
+			}
+			//TODO
+			
+		}
 
 	}
 	
@@ -539,11 +635,11 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 	
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
-		// TODO Auto-generated method stub
-		
+		if (evt.getPropertyName() == "progress") {
+			int progress = (Integer) evt.getNewValue();
+			progressBar.setValue(progress);
+		}
 	}
-
-	
 	
 	// Getters and Setters
 	
