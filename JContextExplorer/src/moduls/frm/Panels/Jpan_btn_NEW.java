@@ -201,8 +201,9 @@ import definicions.MatriuDistancies;
 			private int nbElements;
 			private double minBase;
 			
-			//display related
+			//display /process related
 			private boolean DisplayOutput;
+			private boolean ExceptionThrown = false;
 			
 			//final
 			public Cluster RootCluster;
@@ -210,7 +211,8 @@ import definicions.MatriuDistancies;
 			
 			//constructor
 			public SearchWorker(final QueryData QD, final String action,
-					final tipusDades typeData, final metodo method, final int precision, boolean DisplayOutput){
+					final tipusDades typeData, final metodo method,
+					final int precision, boolean DisplayOutput){
 
 				//Query Data (QD)
 				this.WorkerQD = QD;
@@ -275,28 +277,39 @@ import definicions.MatriuDistancies;
 					if (this.WorkerQD.getCSD().getEC().getNumberOfEntries() == 0){
 						String errMsg = "There were no matches to the query (or queries).";
 						SearchResultsFrame = new FrmSearchResults();
-						showError(errMsg);
+						if (DisplayOutput){
+							showError(errMsg);
+						}
+						ExceptionThrown = true;
+
 					}
 				}
 				
 				//Analyses options
 				//=================================//
 				
-				//(1) Construct search pane
-				if (AnalysesList.isOptionDisplaySearches()){
-					CreateSearchPanel();
+				if (!ExceptionThrown){
+					
+					//(1) Construct search pane
+					if (AnalysesList.isOptionDisplaySearches()){
+						CreateSearchPanel();
+						
+					}
+
+					//(2) Compute dendrogram
+					if (AnalysesList.isOptionComputeDendrogram()){
+						ComputeDendrogram();
+					}
 					
 				}
 
-				//(2) Compute dendrogram
-				if (AnalysesList.isOptionComputeDendrogram()){
-					ComputeDendrogram();
-				}
 				
 			} catch (Exception ex) {
-				
-				showError("There were no matches to the query (or queries).");
-				//ex.printStackTrace();
+				if (DisplayOutput){
+					showError("There were no matches to the query (or queries).");
+				}
+				ExceptionThrown = true;
+				ex.printStackTrace();
 			}
 			
 				return null;
@@ -1060,30 +1073,30 @@ import definicions.MatriuDistancies;
 			setProgress(0);
 			progressBar.setString("");
 			progressBar.setBorderPainted(false);
-				
-			//process completed!
-			ProcessCompleted = true;
-			fr.setTmpCluster(RootCluster);
 			
-//			synchronized (this){
-//				this.notifyAll();
-//			}
-
-			
-			if (DisplayOutput){
+			//proceed if exception thrown
+			if (!ExceptionThrown){
 				
-				//try to update values
-				try {
-					//update values for display
-					if (AnalysesList.isOptionComputeDendrogram()){
-						multiDendro.getArrel().setBase(minBase);
-					}
-					showCalls(action, this.WorkerQD); //pass on the QD + display options
-				} catch (Exception ex) {
+				//process completed!
+				ProcessCompleted = true;
+				fr.setTmpCluster(RootCluster);
+				
+				if (DisplayOutput){
 					
-				}
+					//try to update values
+					try {
+						//update values for display
+						if (AnalysesList.isOptionComputeDendrogram()){
+							multiDendro.getArrel().setBase(minBase);
+						}
+						showCalls(action, this.WorkerQD); //pass on the QD + display options
+					} catch (Exception ex) {
+						
+					}
 
+				}
 			}
+
 			}
 				
 		}

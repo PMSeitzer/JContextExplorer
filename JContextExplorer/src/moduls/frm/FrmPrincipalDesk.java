@@ -2093,7 +2093,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		GetGrouping.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		GetGrouping
-				.setDialogTitle("Select A File Containing Data Groupings.");
+				.setDialogTitle("Select A File Containing Data Groupings");
 
 		//retrieve directory
 		if (this.FileChooserSource != null) {

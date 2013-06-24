@@ -24,8 +24,8 @@ public class FowlkesMallows {
 	private int NumberOfFreeMatches;
 	private double PenaltyperMismatch;
 	
-	//Dice/Jaccard scale factor
-	private boolean DicePenalty;
+	//Exactly penalty
+	private boolean AdjustmentPenalty;
 	
 	//Matching statistics
 	private int Set1Only;
@@ -67,10 +67,10 @@ public class FowlkesMallows {
 		ElementCounts();
 		
 		//determine adjustment factor
-		if (SummedMismatchPenalty){
+		if (AdjustmentPenalty){
 			AdjustmentFactor = SummedMismatchPenalty();
 		} else {
-			AdjustmentFactor = DiceOrJaccardPenalty();
+			AdjustmentFactor = 1;
 		}
 		
 		//retrieve original value
@@ -138,6 +138,13 @@ public class FowlkesMallows {
 		//dissimilarity
 		double D = (double) T / (Math.sqrt(((double) P * (double) Q)));
 		
+		//NaN case - P or Q are 0, so dividing by 0.
+		if (Double.isNaN(D) || D < 0){
+			D = 0.0;
+		} else if (D > 1.0){
+			D = 1.0;
+		}
+
 //		//debugging
 //		System.out.println("Matrix:");
 //		for (int i = 0; i < Set1.size(); i++){
@@ -297,7 +304,7 @@ public class FowlkesMallows {
 		double penalty = 0.0;
 		
 		//determine appropriate value
-		if (DicePenalty){	//Dice penalty
+		if (AdjustmentPenalty){	//Dice penalty
 			penalty = (2.0 * (double) Intersection /
 					((double) Set1LS.size() + (double) Set2LS.size()));
 		} else { 	//Jaccard penalty
@@ -425,12 +432,12 @@ public class FowlkesMallows {
 		PenaltyperMismatch = penaltyperMismatch;
 	}
 
-	public boolean isDicePenalty() {
-		return DicePenalty;
+	public boolean isAdjustmentPenalty() {
+		return AdjustmentPenalty;
 	}
 
-	public void setDicePenalty(boolean dicePenalty) {
-		DicePenalty = dicePenalty;
+	public void setAdjustmentPenalty(boolean dicePenalty) {
+		AdjustmentPenalty = dicePenalty;
 	}
 	
 }

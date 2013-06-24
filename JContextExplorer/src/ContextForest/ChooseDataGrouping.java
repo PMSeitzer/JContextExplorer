@@ -74,8 +74,9 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 	private LinkedList<Component> MisMatchGroup;
 	private LinkedList<Component> NoMMPenaltySubGroup;
 	private LinkedList<Component> ScaleFactorGroup;
-	private JCheckBox cbAllowMM;
+	private JCheckBox cbAllowMM, cbMisMatchPenalty;
 	private String strcbAllowMM = "Permit some number of mismatches without penalty";
+	private String strcbMisMatchPenalty = "Exact a summed mismatch penalty";
 	private String strLblFreeMisMatches = "Number of free mismatches: ";
 	private String strTxtFreeMisMatches = "2";
 	private String strLblPenaltyperMM = "Penalty per mismatch:";
@@ -168,37 +169,38 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 				
 				//generate cluster from every test query
 				Cluster Query = GenerateClusterFromQuery(QD,false);
-				LinkedList<LinkedList<String>> QueryList = SegregatedLeaves(SegregateCluster(Query));
-
-				//Create new Fowlkes-Mallows objects
-				FowlkesMallows FM = new FowlkesMallows(MasterList, QueryList);
 				
-				//Set Adjustment parameters
-				if (rbMisMatch.getModel().isSelected()){
-					FM.setSummedMismatchPenalty(true);
+				//null cluster - context tree is empty.
+				if (Query != null){
+					
+					LinkedList<LinkedList<String>> QueryList = SegregatedLeaves(SegregateCluster(Query));
+
+					//Create new Fowlkes-Mallows objects
+					FowlkesMallows FM = new FowlkesMallows(MasterList, QueryList);
+					
+					//Set Adjustment parameters
+					FM.setAdjustmentPenalty(cbMisMatchPenalty.isSelected());
 					FM.setFreeMismatches(cbAllowMM.isSelected());
 					FM.setNumberOfFreeMatches(NumMismatches);
 					FM.setPenaltyperMismatch(PenaltyPerMismatch);
-				} else {
-					FM.setSummedMismatchPenalty(false);
-					FM.setDicePenalty(rbDice.getModel().isSelected());
+					
+					//Compute dissimilarity
+					FM.Compute();
+					
+					//Set values
+					TCR.setDissimilarity(FM.getB());
+					TCR.setAdjustmentFactor(FM.getAdjustmentFactor());
+					TCR.setPreAdjustedDissimilarity(FM.getOriginalFowlkesMallows());
+					if (FM.getB() == FM.getOriginalFowlkesMallows()){
+						TCR.setAdjusted(false);
+					} else {
+						TCR.setAdjusted(true);
+					}
+					
+					//Add to list
+					Reports.add(TCR);
+					
 				}
-				
-				//Compute dissimilarity
-				FM.Compute();
-				
-				//Set values
-				TCR.setDissimilarity(FM.getB());
-				TCR.setAdjustmentFactor(FM.getAdjustmentFactor());
-				TCR.setPreAdjustedDissimilarity(FM.getOriginalFowlkesMallows());
-				if (FM.getB() == FM.getOriginalFowlkesMallows()){
-					TCR.setAdjusted(false);
-				} else {
-					TCR.setAdjusted(true);
-				}
-				
-				//Add to list
-				Reports.add(TCR);
 				
 				//Increment counter + update progress bar
 				Counter++;
@@ -361,8 +363,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 		}
 		
 	}
-	
-	
+		
 	//Panel components
 	public void getPanel(){
 		
@@ -436,42 +437,42 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 		jp.add(DGMenu, c);
 		gridy++;
 		
-		//Label - select Data Grouping Type
-		c.gridx = 0;
-		c.gridy = gridy;
-		c.gridheight = 1;
-		c.insets = lblIns;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 1;
-		LblSelectDGType = new JTextField(strLblSelectDGType);
-		LblSelectDGType.setEditable(false);
-		jp.add(LblSelectDGType, c);
-		
-		//Initialize Radio buttons
-		rbSpecies = new JRadioButton(strrbSpecies);
-		rbGene = new JRadioButton(strrbGene);
-		BG = new ButtonGroup();
-		BG.add(rbSpecies);
-		BG.add(rbGene);
-		
-		//rb species option
-		c.gridx = 1;
-		c.gridy = gridy;
-		c.gridheight = 1;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 1;
-		rbSpecies.setSelected(true);
-		jp.add(rbSpecies, c);
-		
-		//rb gene option
-		c.gridx = 2;
-		c.gridy = gridy;
-		c.gridheight = 1;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 1;
-		rbGene.setSelected(false);
-		jp.add(rbGene, c);
-		gridy++;
+//		//Label - select Data Grouping Type
+//		c.gridx = 0;
+//		c.gridy = gridy;
+//		c.gridheight = 1;
+//		c.insets = lblIns;
+//		c.fill = GridBagConstraints.HORIZONTAL;
+//		c.gridwidth = 1;
+//		LblSelectDGType = new JTextField(strLblSelectDGType);
+//		LblSelectDGType.setEditable(false);
+//		jp.add(LblSelectDGType, c);
+//		
+//		//Initialize Radio buttons
+//		rbSpecies = new JRadioButton(strrbSpecies);
+//		rbGene = new JRadioButton(strrbGene);
+//		BG = new ButtonGroup();
+//		BG.add(rbSpecies);
+//		BG.add(rbGene);
+//		
+//		//rb species option
+//		c.gridx = 1;
+//		c.gridy = gridy;
+//		c.gridheight = 1;
+//		c.fill = GridBagConstraints.HORIZONTAL;
+//		c.gridwidth = 1;
+//		rbSpecies.setSelected(true);
+//		jp.add(rbSpecies, c);
+//		
+//		//rb gene option
+//		c.gridx = 2;
+//		c.gridy = gridy;
+//		c.gridheight = 1;
+//		c.fill = GridBagConstraints.HORIZONTAL;
+//		c.gridwidth = 1;
+//		rbGene.setSelected(false);
+//		jp.add(rbGene, c);
+//		gridy++;
 		
 		/*
 		 * RUN PARAMETER SETTINGS
@@ -516,16 +517,53 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 		 * MISMATCH GROUP
 		 */
 		
-		//Mismatch radio button group
+//		//Mismatch radio button group
+//		c.gridx = 0;
+//		c.gridy = gridy;
+//		c.gridheight = 1;
+//		c.insets =Ind1Ins;
+//		c.fill = GridBagConstraints.HORIZONTAL;
+//		c.gridwidth = 3;
+//		rbMisMatch.setSelected(true);
+//		rbMisMatch.addActionListener(this);
+//		jp.add(rbMisMatch, c);
+//		gridy++;
+		
+		//Mismatch check box
 		c.gridx = 0;
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.insets =Ind1Ins;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 3;
-		rbMisMatch.setSelected(true);
-		rbMisMatch.addActionListener(this);
-		jp.add(rbMisMatch, c);
+		cbMisMatchPenalty = new JCheckBox(strcbMisMatchPenalty);
+		cbMisMatchPenalty.setSelected(true);
+		cbMisMatchPenalty.addActionListener(this);
+		jp.add(cbMisMatchPenalty, c);
+		gridy++;
+		
+		//Lbl - mismatch penalty
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.insets = Ind1Ins;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		LblPenaltyperMM = new JTextField(strLblPenaltyperMM);
+		LblPenaltyperMM.setEditable(false);
+		MisMatchGroup.add(LblPenaltyperMM);
+		jp.add(LblPenaltyperMM, c);
+		
+		//Txt - mismatch penalty
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.insets = lblIns;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		TxtPenaltyperMM = new JTextField(strTxtPenaltyperMM);
+		TxtPenaltyperMM.setEditable(true);
+		MisMatchGroup.add(TxtPenaltyperMM);
+		jp.add(TxtPenaltyperMM, c);
 		gridy++;
 		
 		//check box - enable free mismatches
@@ -568,75 +606,53 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 		NoMMPenaltySubGroup.add(TxtFreeMisMatches);
 		jp.add(TxtFreeMisMatches, c);
 		gridy++;
+
 		
-		//Lbl - mismatch penalty
-		c.gridx = 0;
-		c.gridy = gridy;
-		c.gridheight = 1;
-		c.insets = Ind2Ins;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 1;
-		LblPenaltyperMM = new JTextField(strLblPenaltyperMM);
-		LblPenaltyperMM.setEditable(false);
-		MisMatchGroup.add(LblPenaltyperMM);
-		jp.add(LblPenaltyperMM, c);
-		
-		c.gridx = 1;
-		c.gridy = gridy;
-		c.gridheight = 1;
-		c.insets = lblIns;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		TxtPenaltyperMM = new JTextField(strTxtPenaltyperMM);
-		TxtPenaltyperMM.setEditable(true);
-		MisMatchGroup.add(TxtPenaltyperMM);
-		jp.add(TxtPenaltyperMM, c);
-		gridy++;
-		
-		/*
-		 * SCALE FACTOR GROUP
-		 */
-		
-		//Radio buttons
-		BGDiceJaccard = new ButtonGroup();
-		rbDice = new JRadioButton(strrbDice);
-		rbJaccard = new JRadioButton(strrbJaccard);
-		BGDiceJaccard.add(rbDice);
-		BGDiceJaccard.add(rbJaccard);
-		
-		//Scale Factor group
-		c.gridx = 0;
-		c.gridy = gridy;
-		c.gridheight = 1;
-		c.insets = Ind1Ins;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 3;
-		rbScaleFactor.setSelected(false);
-		rbScaleFactor.addActionListener(this);
-		jp.add(rbScaleFactor, c);
-		gridy++;
-		
-		//Dice radio button
-		c.gridx = 0;
-		c.gridy = gridy;
-		c.gridheight = 1;
-		c.insets = Ind2Ins;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 1;
-		rbDice.setSelected(true);
-		ScaleFactorGroup.add(rbDice);
-		jp.add(rbDice, c);
-		
-		//Jaccard radio button
-		c.gridx = 1;
-		c.gridy = gridy;
-		c.gridheight = 1;
-		c.insets = lblIns;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 1;
-		rbJaccard.setSelected(false);
-		ScaleFactorGroup.add(rbJaccard);
-		jp.add(rbJaccard, c);
-		gridy++;
+//		/*
+//		 * SCALE FACTOR GROUP
+//		 */
+//		
+//		//Radio buttons
+//		BGDiceJaccard = new ButtonGroup();
+//		rbDice = new JRadioButton(strrbDice);
+//		rbJaccard = new JRadioButton(strrbJaccard);
+//		BGDiceJaccard.add(rbDice);
+//		BGDiceJaccard.add(rbJaccard);
+//		
+//		//Scale Factor group
+//		c.gridx = 0;
+//		c.gridy = gridy;
+//		c.gridheight = 1;
+//		c.insets = Ind1Ins;
+//		c.fill = GridBagConstraints.HORIZONTAL;
+//		c.gridwidth = 3;
+//		rbScaleFactor.setSelected(false);
+//		rbScaleFactor.addActionListener(this);
+//		jp.add(rbScaleFactor, c);
+//		gridy++;
+//		
+//		//Dice radio button
+//		c.gridx = 0;
+//		c.gridy = gridy;
+//		c.gridheight = 1;
+//		c.insets = Ind2Ins;
+//		c.fill = GridBagConstraints.HORIZONTAL;
+//		c.gridwidth = 1;
+//		rbDice.setSelected(true);
+//		ScaleFactorGroup.add(rbDice);
+//		jp.add(rbDice, c);
+//		
+//		//Jaccard radio button
+//		c.gridx = 1;
+//		c.gridy = gridy;
+//		c.gridheight = 1;
+//		c.insets = lblIns;
+//		c.fill = GridBagConstraints.HORIZONTAL;
+//		c.gridwidth = 1;
+//		rbJaccard.setSelected(false);
+//		ScaleFactorGroup.add(rbJaccard);
+//		jp.add(rbJaccard, c);
+//		gridy++;
 		
 		/*
 		 * SEGMENTATION VALUE
@@ -738,7 +754,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 	
 	//Whole Frame
 	public void getFrame(){
-		this.setSize(820,530);
+		this.setSize(620,450);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		this.setLocationRelativeTo(null);
 		this.setTitle("Select Data Grouping and Analysis Parameters");
@@ -776,11 +792,12 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 		 */
 		
 		//mismatch penalty radio button
-		if (e.getSource().equals(rbMisMatch) || e.getSource().equals(rbScaleFactor)){
+		if (e.getSource().equals(rbMisMatch) || e.getSource().equals(rbScaleFactor) || e.getSource().equals(cbMisMatchPenalty)){
 			EnableComponents(MisMatchGroup,rbMisMatch.getModel().isSelected());
+			EnableComponents(MisMatchGroup, cbMisMatchPenalty.isSelected());
 			EnableComponents(NoMMPenaltySubGroup,cbAllowMM.isSelected());
-			EnableComponents(ScaleFactorGroup,rbScaleFactor.getModel().isSelected());
-			if (rbScaleFactor.getModel().isSelected()){
+			//EnableComponents(ScaleFactorGroup,rbScaleFactor.getModel().isSelected());
+			if (!cbMisMatchPenalty.isSelected()){
 				EnableComponents(NoMMPenaltySubGroup,false);
 			}
 		}
@@ -801,7 +818,8 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 				SegmentationValue = Double.parseDouble(TxtSegmentationValue.getText());
 				
 				//Optional parameters (when appropriate), w appropriat exceptions
-				if (rbMisMatch.getModel().isSelected()){
+				//if (rbMisMatch.getModel().isSelected()){
+				if (cbMisMatchPenalty.isSelected()){
 					PenaltyPerMismatch = Double.parseDouble(TxtPenaltyperMM.getText());
 					if (PenaltyPerMismatch > 1.0 || PenaltyPerMismatch < 0.0){
 						throw new Exception();
