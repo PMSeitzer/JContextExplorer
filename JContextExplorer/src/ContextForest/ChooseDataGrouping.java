@@ -28,16 +28,22 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 
+import definicions.Cluster;
+
 import moduls.frm.FrmPrincipalDesk;
+import moduls.frm.QueryData;
+import moduls.frm.Panels.Jpan_Menu;
+import moduls.frm.Panels.Jpan_btn_NEW.SearchWorker;
 
 public class ChooseDataGrouping extends JDialog implements ActionListener, PropertyChangeListener{
 
 	//Fields
 	//baseline
 	private FrmPrincipalDesk f;
+	private ChooseDataGrouping CDG;
 	
 	//Data results
-	private int NumMismatches;
+	private int NumMismatches = 0;
 	private double PenaltyPerMismatch;
 	private double SegmentationValue;
 	
@@ -95,6 +101,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 		
 		//Initialization-type steps
 		this.f = f;
+		this.CDG = this;
 		BuildMenus();
 		
 		//get panel and frame
@@ -113,10 +120,12 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 	public class DataGroupingWorker extends SwingWorker<Void, Void>{
 
 		//Fields
+		public QuerySet TQ = null;
+		public double segvalue;
 		
 		//constructor
-		public DataGroupingWorker(){
-			
+		public DataGroupingWorker(double segValue){
+			this.segvalue = segValue;
 		}
 		
 		@Override
@@ -127,6 +136,79 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			glassPane.setVisible(true);
 			
+			//set counter
+			int Counter = 0;
+			
+			//Initialize output
+			LinkedList<TreeCompareReport> Reports = new LinkedList<TreeCompareReport>();
+			
+			//Retrieve appropriate Query Set
+			for (QuerySet QS : f.getOS().getQuerySets()){
+				if (QS.getName().equals((String) QSMenu.getSelectedItem())){
+					TQ = QS;
+					break;
+				}
+			}
+			
+			//Set Name
+			String DGName = (String) DGMenu.getSelectedItem();
+			String ComparisonName = TQ.getName() + "_" + DGName;
+			
+			//Retrieve data grouping and reformat
+			LinkedList<String[]> MasterListArray = f.getOS().getDataGroups().get(DGName);
+			LinkedList<LinkedList<String>> MasterList = MasterListReformat(MasterListArray);
+			
+			//Iterate through Query lists
+			//Scan each individual query 
+			for (QueryData QD : TQ.getContextTrees()){
+				
+				//Initialize output
+				TreeCompareReport TCR = new TreeCompareReport();
+				TCR.setQueryName(QD.getName());
+				
+				//generate cluster from every test query
+				Cluster Query = GenerateClusterFromQuery(QD,false);
+				LinkedList<LinkedList<String>> QueryList = SegregatedLeaves(SegregateCluster(Query));
+
+				//Create new Fowlkes-Mallows objects
+				FowlkesMallows FM = new FowlkesMallows(MasterList, QueryList);
+				
+				//Set Adjustment parameters
+				if (rbMisMatch.getModel().isSelected()){
+					FM.setSummedMismatchPenalty(true);
+					FM.setFreeMismatches(cbAllowMM.isSelected());
+					FM.setNumberOfFreeMatches(NumMismatches);
+					FM.setPenaltyperMismatch(PenaltyPerMismatch);
+				} else {
+					FM.setSummedMismatchPenalty(false);
+					FM.setDicePenalty(rbDice.getModel().isSelected());
+				}
+				
+				//Compute dissimilarity
+				FM.Compute();
+				
+				//Set values
+				TCR.setDissimilarity(FM.getB());
+				TCR.setAdjustmentFactor(FM.getAdjustmentFactor());
+				TCR.setPreAdjustedDissimilarity(FM.getOriginalFowlkesMallows());
+				if (FM.getB() == FM.getOriginalFowlkesMallows()){
+					TCR.setAdjusted(false);
+				} else {
+					TCR.setAdjusted(true);
+				}
+				
+				//Add to list
+				Reports.add(TCR);
+				
+				//Increment counter + update progress bar
+				Counter++;
+				int progress = (int) (100.0 *((double) Counter )/((double) TQ.getContextTrees().size())); 
+				setProgress(progress);
+
+			}
+			
+			//Finally, store this set of reports appropriately
+			TQ.getTreeComparisons().put(ComparisonName, Reports);
 			
 			//switch cursor
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -134,6 +216,130 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 			
 			return null;
 		}
+		
+		// ------ Supplemental methods ------- //
+		
+		//Reformat array
+		protected LinkedList<LinkedList<String>> MasterListReformat(LinkedList<String[]> Input){
+			LinkedList<LinkedList<String>> Output = new LinkedList<LinkedList<String>>();
+			for (String[] L : Input){
+				LinkedList<String> Component = new LinkedList<String>();
+				for (String s : L){
+					Component.add(s);
+				}
+				Output.add(Component);
+			}
+			
+			return Output;
+		}
+		
+		//Translate sets into string
+		protected LinkedList<LinkedList<String>> SegregatedLeaves(LinkedList<Cluster> C){
+			
+			//Initialize output
+			LinkedList<LinkedList<String>> LeafList = new LinkedList<LinkedList<String>>();
+			
+			//Process
+			for (Cluster c : C){
+				
+				//Retrieve data
+				LinkedList<String> Leaves = c.getLeafNames();
+				LinkedList<String> NewList = new LinkedList<String>();
+				
+				//remove tags
+				for (String s : Leaves){
+
+					String[] L = s.split("-");
+					String strRebuild = null;
+					boolean First = true;
+					for (int i = 0; i < L.length-1; i++){
+						if (First){
+							strRebuild = L[i];
+							First = false;
+						} else {
+							strRebuild = strRebuild + "-" + L[i];
+						}
+					}
+					NewList.add(strRebuild);
+				}
+				
+				//add List
+				LeafList.add(NewList);
+			}
+			
+			//output
+			return LeafList;
+		}
+		
+		//Segregate a cluster into smaller clusters based on segmentation value.
+		protected LinkedList<Cluster> SegregateCluster(Cluster c){
+			
+			//Initialize output
+			LinkedList<Cluster> CutSet = new LinkedList<Cluster>();
+			
+			//Initialize seed, to begin analysis.
+			LinkedList<Cluster> Seed = new LinkedList<Cluster>();
+			Seed.add(c);
+			
+			//Define initial children set - children of root
+			ClusterGroup CG = SegmentCluster(Seed);
+			CutSet.addAll(CG.getRetainGroup());
+			LinkedList<Cluster> Children = CG.getSegGroup();
+			
+			while (Children.size() != 0){
+				CG = SegmentCluster(Children);
+				Children = CG.getSegGroup();
+				CutSet.addAll(CG.getRetainGroup());
+			}
+
+			return CutSet;
+		}
+		
+		//Return which children need to be further processed.
+		protected ClusterGroup SegmentCluster(LinkedList<Cluster> ParentCluster){
+
+			//Initialize
+			ClusterGroup CG = new ClusterGroup();
+			LinkedList<Cluster> SegChildren = new LinkedList<Cluster>();
+			LinkedList<Cluster> RetainChildren = new LinkedList<Cluster>();
+			
+			//build based on segmentation point
+			for (Cluster c : ParentCluster){
+				if (c.getAlcada() > segvalue){
+					SegChildren.addAll(c.getLst());
+				} else {
+					RetainChildren.add(c);
+				}
+			}
+			
+			//Add lists to output data structure
+			CG.setRetainGroup(RetainChildren);
+			CG.setSegGroup(SegChildren);
+			
+			return CG;
+		}
+		
+		//Generate cluster from query
+		protected Cluster GenerateClusterFromQuery(QueryData QD, boolean AddListener){
+
+			//Initialize output
+			SearchWorker SW = f.getPanBtn().new SearchWorker(QD,
+					"Load", Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
+					Jpan_Menu.getPrecision(), false);
+			if (AddListener){
+				SW.addPropertyChangeListener(CDG);
+			}
+
+			SW.execute();
+
+			//empty while loop - implicit waiting
+			while(!SW.isDone()){}
+			
+			return SW.RootCluster;
+			
+		}
+		
+		// ----- post-processing----------- //
 		
 		//post-processing
 		public void done(){
@@ -146,6 +352,9 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 			//re-set progress bar
 			progressBar.setValue(0);
 
+			//launch new window
+			new TreeSimilarityScanWindow(f, TQ);
+			
 			//close window
 			dispose();
 			
@@ -611,7 +820,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 				}
 				
 				//new data groupings worker, to compute Adjusted Fowlkes-Mallows index.
-				DataGroupingWorker DGW = new DataGroupingWorker();
+				DataGroupingWorker DGW = new DataGroupingWorker(SegmentationValue);
 				DGW.addPropertyChangeListener(this);
 				DGW.execute();
 						

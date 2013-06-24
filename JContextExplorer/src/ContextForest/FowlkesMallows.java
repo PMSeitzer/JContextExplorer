@@ -34,6 +34,9 @@ public class FowlkesMallows {
 	private int Union;
 	
 	//computation
+	private int[][] Matrix;
+	private double OriginalFowlkesMallows;
+	private double AdjustmentFactor;
 	private double B;
 	
 	//Constructor
@@ -55,17 +58,15 @@ public class FowlkesMallows {
 		
 	}
 	
-
 	// ------ Dissimilarity Processing -----------//
 
-	//Compute dissimilarity
+	//Whole process
 	public double Compute(){
 		
 		//determine elements counts (for scale factor)
 		ElementCounts();
 		
 		//determine adjustment factor
-		double AdjustmentFactor;
 		if (SummedMismatchPenalty){
 			AdjustmentFactor = SummedMismatchPenalty();
 		} else {
@@ -73,7 +74,7 @@ public class FowlkesMallows {
 		}
 		
 		//retrieve original value
-		double OriginalFowlkesMallows = OriginalFowlkesMallows();
+		OriginalFowlkesMallows = OriginalFowlkesMallows();
 		
 		//adjust value
 		B = OriginalFowlkesMallows * AdjustmentFactor;
@@ -82,6 +83,120 @@ public class FowlkesMallows {
 		return B;
 	}
 
+	//Original Fowlkes-Mallow, with clusters / k determined
+	public double OriginalFowlkesMallows(){
+		
+		//Fill out matrix (Set1 = I     Set 2 = j)
+		Matrix = new int[Set1.size()][Set2.size()];
+		for (int i = 0; i < Set1.size(); i++){
+			for (int j = 0; j <Set2.size(); j++){
+				Matrix[i][j] = CommonCounts(Set1.get(i),Set2.get(j));
+			}
+		}
+		
+		//compute components
+		int P = 0,Q = 0,T = 0;
+		int sumI,sumJ = 0;
+		int n = Union;			//This value considers repeated elements.
+		
+		for (int i = 0; i <Set1.size(); i++){
+			
+			//re-initialize the sum of Js
+			sumJ = 0;
+			
+			for (int j = 0; j < Set2.size(); j++){
+				
+				//increment T
+				T = T + (Matrix[i][j]*Matrix[i][j]);
+				
+				//increment sum J
+				sumJ = sumJ + Matrix[i][j];
+			}
+			
+			//increment P
+			P = P + sumJ*sumJ;
+		}
+		
+		for (int j = 0; j < Set2.size(); j++){
+			
+			//re-initialize the sum of Is.
+			sumI = 0;
+			
+			for (int i = 0; i <Set1.size(); i++){
+				sumI = sumI + Matrix[i][j];
+			}
+			
+			//increment Q
+			Q = Q + sumI*sumI;
+		}
+		
+		//final adjustments for P,Q, and T
+		Q = Q - n;
+		P = P - n;
+		T = T - n;
+		
+		//dissimilarity
+		double D = (double) T / (Math.sqrt(((double) P * (double) Q)));
+		
+//		//debugging
+//		System.out.println("Matrix:");
+//		for (int i = 0; i < Set1.size(); i++){
+//			String str = "";
+//			for (int j = 0; j < Set2.size(); j++){
+//				str = str + " " + String.valueOf(Matrix[i][j]);
+//			}
+//			System.out.println(str);
+//		}
+//		System.out.println("P: " + P + " Q: " + Q + " T: " + T);
+//		System.out.println("D: " + D);
+
+		return D;
+	}
+	
+	//Return common counts.  Accounts for instances of identical elements.
+	public int CommonCounts(LinkedList<String> A, LinkedList<String> B){
+		
+		//Initialize output
+		int Counts = 0;
+		
+		//Aggregate all candidate Strings
+		LinkedList<String> C = new LinkedList<String>();
+		C.addAll(A);
+		C.addAll(B);
+		HashSet<String> HS = new HashSet<String>(C);
+		
+		//Count intersections, with number of intersecting identical elements
+		for (String s : HS){
+			
+			//re-initialize individual counts for each String
+			int Count1 = 0;
+			int Count2 = 0;
+			
+			//determine 1 counts
+			for (String s1: A){
+				if (s.equals(s1)){
+					Count1++;
+				}
+			}
+			
+			//determine 2 counts
+			for (String s2: B){
+				if (s.equals(s2)){
+					Count2++;
+				}
+			}
+			
+			//If an intersection, add appropriate number of intersecting elements
+			if (Count1 > 0 && Count2 > 0){
+				Counts = Counts + Math.min(Count1, Count2);
+			}
+			
+		}
+		
+		//return counts
+		return Counts;
+	}
+	
 	// --- Preprocessing ------ //
 	
 	//Determine number of elements intersecting, matching, etc
@@ -183,24 +298,16 @@ public class FowlkesMallows {
 		
 		//determine appropriate value
 		if (DicePenalty){	//Dice penalty
-			penalty = 1 - (2.0 * (double) Intersection /
+			penalty = (2.0 * (double) Intersection /
 					((double) Set1LS.size() + (double) Set2LS.size()));
 		} else { 	//Jaccard penalty
-			penalty = 1 - ((double) Intersection / (double) Union);
+			penalty = ((double) Intersection / (double) Union);
 		}
 		
 		//return value
 		return penalty;
 	}
-	
-	//---- Processing ------ //
-	public double OriginalFowlkesMallows(){
-		
-		
-		double dissimilarity = 0.0;
-		
-		return 0.0;
-	}
+
 	
 	// ------ CONVERSIONS --------------//
 	
@@ -258,6 +365,72 @@ public class FowlkesMallows {
 
 	public void setSet2LS(LinkedList<String> set2LS) {
 		Set2LS = set2LS;
+	}
+
+
+	public int[][] getMatrix() {
+		return Matrix;
+	}
+
+
+	public void setMatrix(int[][] matrix) {
+		Matrix = matrix;
+	}
+
+	public double getOriginalFowlkesMallows() {
+		return OriginalFowlkesMallows;
+	}
+
+	public void setOriginalFowlkesMallows(double originalFowlkesMallows) {
+		OriginalFowlkesMallows = originalFowlkesMallows;
+	}
+
+	public double getAdjustmentFactor() {
+		return AdjustmentFactor;
+	}
+
+	public void setAdjustmentFactor(double adjustmentFactor) {
+		AdjustmentFactor = adjustmentFactor;
+	}
+
+	public boolean isSummedMismatchPenalty() {
+		return SummedMismatchPenalty;
+	}
+
+	public void setSummedMismatchPenalty(boolean summedMismatchPenalty) {
+		SummedMismatchPenalty = summedMismatchPenalty;
+	}
+
+	public boolean isFreeMismatches() {
+		return FreeMismatches;
+	}
+
+	public void setFreeMismatches(boolean freeMismatches) {
+		FreeMismatches = freeMismatches;
+	}
+
+	public int getNumberOfFreeMatches() {
+		return NumberOfFreeMatches;
+	}
+
+	public void setNumberOfFreeMatches(int numberOfFreeMatches) {
+		NumberOfFreeMatches = numberOfFreeMatches;
+	}
+
+	public double getPenaltyperMismatch() {
+		return PenaltyperMismatch;
+	}
+
+	public void setPenaltyperMismatch(double penaltyperMismatch) {
+		PenaltyperMismatch = penaltyperMismatch;
+	}
+
+	public boolean isDicePenalty() {
+		return DicePenalty;
+	}
+
+	public void setDicePenalty(boolean dicePenalty) {
+		DicePenalty = dicePenalty;
 	}
 	
 }

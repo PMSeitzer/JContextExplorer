@@ -491,7 +491,8 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 		for (String s : StartingSet){
 
 			//update name
-			Name = "Query " + String.valueOf(Counter);
+			//Name = "Query " + String.valueOf(Counter);
+			Name = s;
 			Counter++;
 			
 			//Split each query by delimiter (semicolon)

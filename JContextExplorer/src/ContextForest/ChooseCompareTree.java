@@ -452,9 +452,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 			//return
 			return TCR;
 		}
-		
-
-		
+	
 	}
 	
 	// ======= GUI Methods ====== //
