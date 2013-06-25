@@ -39,6 +39,10 @@ public class FowlkesMallows {
 	private double AdjustmentFactor;
 	private double B;
 	
+	//sizes
+	private int QueryLeafCount;
+	private boolean IdenticalDataSets;
+	
 	//Constructor
 	public FowlkesMallows(LinkedList<LinkedList<String>> Set1, LinkedList<LinkedList<String>> Set2){
 		
@@ -264,6 +268,16 @@ public class FowlkesMallows {
 		Intersection = Intersect;
 		Union = Only1 + Only2 + Intersect;
 		
+		//Query Leaves
+		QueryLeafCount = Intersect + Only2;
+		
+		//Identical data sets if no objects only in one set or only in another set
+		if (Only1 == 0 && Only2 == 0){
+			IdenticalDataSets = true;
+		} else {
+			IdenticalDataSets = false;
+		}
+		
 
 	}
 	
@@ -438,6 +452,22 @@ public class FowlkesMallows {
 
 	public void setAdjustmentPenalty(boolean dicePenalty) {
 		AdjustmentPenalty = dicePenalty;
+	}
+
+	public int getQueryLeaves() {
+		return QueryLeafCount;
+	}
+
+	public void setQueryLeaves(int queryLeaves) {
+		QueryLeafCount = queryLeaves;
+	}
+
+	public boolean isIdenticalDataSets() {
+		return IdenticalDataSets;
+	}
+
+	public void setIdenticalDataSets(boolean identicalDataSets) {
+		IdenticalDataSets = identicalDataSets;
 	}
 	
 }

@@ -191,11 +191,12 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 					TCR.setDissimilarity(FM.getB());
 					TCR.setAdjustmentFactor(FM.getAdjustmentFactor());
 					TCR.setPreAdjustedDissimilarity(FM.getOriginalFowlkesMallows());
-					if (FM.getB() == FM.getOriginalFowlkesMallows()){
-						TCR.setAdjusted(false);
+					if (FM.isIdenticalDataSets()){
+						TCR.setIdenticalDataSet(true);
 					} else {
-						TCR.setAdjusted(true);
+						TCR.setIdenticalDataSet(false);
 					}
+					TCR.setTotalLeaves(FM.getQueryLeaves());
 					
 					//Add to list
 					Reports.add(TCR);

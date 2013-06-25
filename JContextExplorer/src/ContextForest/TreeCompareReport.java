@@ -9,9 +9,10 @@ public class TreeCompareReport {
 	
 	//Scan-results
 	private double Dissimilarity;
-	private boolean Adjusted;
+	private boolean IdenticalDataSet;
 	private double AdjustmentFactor;
 	private double PreAdjustedDissimilarity;
+	private int TotalLeaves;
 	
 	
 	// GETTERS AND SETTERS
@@ -24,12 +25,12 @@ public class TreeCompareReport {
 		Dissimilarity = dissimilarity;
 	}
 
-	public boolean isAdjusted() {
-		return Adjusted;
+	public boolean isIdenticalDataSet() {
+		return IdenticalDataSet;
 	}
 
-	public void setAdjusted(boolean adjusted) {
-		Adjusted = adjusted;
+	public void setIdenticalDataSet(boolean adjusted) {
+		IdenticalDataSet = adjusted;
 	}
 
 	public double getAdjustmentFactor() {
@@ -54,6 +55,14 @@ public class TreeCompareReport {
 
 	public void setQueryName(String queryName) {
 		QueryName = queryName;
+	}
+
+	public int getTotalLeaves() {
+		return TotalLeaves;
+	}
+
+	public void setTotalLeaves(int totalLeaves) {
+		TotalLeaves = totalLeaves;
 	}
 	
 	
