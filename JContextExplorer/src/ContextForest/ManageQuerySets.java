@@ -455,6 +455,7 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 		
 		//Initialize output
 		LinkedList<QueryData> QueryList = new LinkedList<QueryData>();
+		LinkedList<String> QueryNames = new LinkedList<String>();
 		
 		//Fix entries
 		strTextAreaTxt = txtQueries.getText();
@@ -543,8 +544,11 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 				QD.setCSD(CSD);
 				QD.setOSName(OSName);
 				
-				//Add to output
-				QueryList.add(QD);
+				//Add query to output, unless already added.
+				if (!QueryNames.contains(QD.getName())){
+					QueryNames.add(QD.getName());
+					QueryList.add(QD);
+				}
 				
 			}
 

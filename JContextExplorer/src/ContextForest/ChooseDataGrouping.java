@@ -80,10 +80,10 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 	private String strLblFreeMisMatches = "Number of free mismatches: ";
 	private String strTxtFreeMisMatches = "2";
 	private String strLblPenaltyperMM = "Penalty per mismatch:";
-	private String strTxtPenaltyperMM = ".05";
+	private String strTxtPenaltyperMM = "0.01";
 	private String strLblSegmentationValue = "Context Tree Segmentation Point";
 	private String strLblSegValueInner = "Value:";
-	private String strTxtSegmentationValue = "0.5";
+	private String strTxtSegmentationValue = "0.05";
 	private String strrbDice = "Dice's Coefficient";
 	private String strrbJaccard = "Jaccard Index";
 	private JButton btnOK;
@@ -123,6 +123,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 		//Fields
 		public QuerySet TQ = null;
 		public double segvalue;
+		public String ComparisonName;
 		
 		//constructor
 		public DataGroupingWorker(double segValue){
@@ -153,7 +154,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 			
 			//Set Name
 			String DGName = (String) DGMenu.getSelectedItem();
-			String ComparisonName = TQ.getName() + "_" + DGName;
+			ComparisonName = TQ.getName() + "_" + DGName;
 			
 			//Retrieve data grouping and reformat
 			LinkedList<String[]> MasterListArray = f.getOS().getDataGroups().get(DGName);
@@ -356,7 +357,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 			progressBar.setValue(0);
 
 			//launch new window
-			new TreeSimilarityScanWindow(f, TQ);
+			new FrmScanOutputWindow(f, TQ, ComparisonName, false);
 			
 			//close window
 			dispose();

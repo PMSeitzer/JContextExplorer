@@ -301,7 +301,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 			progressbar.setValue(0);
 			
 			//launch new window
-			new TreeSimilarityScanWindow(f, TQ);
+			new FrmScanOutputWindow(f, TQ, "TODO",false);
 			
 			//close window
 			dispose();

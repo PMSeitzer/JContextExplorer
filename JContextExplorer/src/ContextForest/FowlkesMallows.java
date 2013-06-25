@@ -101,7 +101,8 @@ public class FowlkesMallows {
 		//compute components
 		int P = 0,Q = 0,T = 0;
 		int sumI,sumJ = 0;
-		int n = Union;			//This value considers repeated elements.
+		//int n = Union;			//This value considers repeated elements.
+		int n = Intersection;		//When the data sets are identical, Intersection/Union are the same.
 		
 		for (int i = 0; i <Set1.size(); i++){
 			

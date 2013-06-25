@@ -87,6 +87,7 @@ public class Jpan_genome extends JPanel implements ActionListener,
 	}
 
 	private void getPanel() {
+		
 		//initialize panel
 		this.setLayout(new GridBagLayout());
 		this.setBorder(BorderFactory.createTitledBorder("Multiple Genome Browser Tool"));

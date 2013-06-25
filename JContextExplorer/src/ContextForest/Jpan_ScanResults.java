@@ -3,6 +3,7 @@ package ContextForest;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.event.MouseAdapter;
@@ -11,6 +12,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.Locale;
 
 import javax.swing.Icon;
@@ -24,12 +26,16 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
 
-public class ScanResultsPanel extends JPanel{
+import moduls.frm.QueryData;
+
+public class Jpan_ScanResults extends JPanel{
 
 	//Fields
 	
 	//Data
+	private FrmScanOutputWindow fsow;
 	private QuerySet QS;
+	private String TCRKey;
 
 	//GUI
 	
@@ -44,12 +50,22 @@ public class ScanResultsPanel extends JPanel{
 	private SortButtonRenderer renderer;
 	private JTableHeader header;
 	
+	//Table dimensions
+	private int TotalWidth = 800;
+	
 	//Constructor
-	public ScanResultsPanel(QuerySet QS){
+	public Jpan_ScanResults(FrmScanOutputWindow fsow, QuerySet QS, String TCRKey){
 		
 		//Retrieve +format data
 		this.QS = QS;
+		this.TCRKey = TCRKey;
+		this.fsow = fsow;
+		
+		//Parse + format scan resutls data
 		FormatTableData();
+		
+		//panel-related
+		setLayout(new BorderLayout());
 		
 		//Build table
 		CreateTable();
@@ -61,23 +77,37 @@ public class ScanResultsPanel extends JPanel{
 	//Convert data from QS to GUI-appropriate table data
 	public void FormatTableData(){
 		
-		// TEMPORARY
-
-        Object[][] TableDataTmp = {
-                { "b", getDate("98/12/02"), new Integer(14),
-                    new Boolean(false) },
-                { "a", getDate("99/01/01"), new Integer(67),
-                    new Boolean(false) },
-                { "d", getDate("99/02/11"), new Integer(2),
-                    new Boolean(false) },
-                { "c", getDate("99/02/27"), new Integer(7),
-                    new Boolean(false) },
-                { "foo", new Date(), new Integer(5),
-                    new Boolean(true) },
-                { "bar", new Date(), new Integer(10),
-                    new Boolean(true) } };
-                    
-		TableData = TableDataTmp;
+		Object[][] TblData = new Object[QS.getContextTrees().size()][6];
+		LinkedList<TreeCompareReport> Reps = QS.getTreeComparisons().get(TCRKey);
+		
+		for (int i = 0; i < Reps.size(); i++){
+			TreeCompareReport TCR = Reps.get(i);
+			Object[] Obj = {TCR.getQueryName(), TCR.getDissimilarity(),
+					String.valueOf(TCR.isIdenticalDataSet()), TCR.getAdjustmentFactor(),
+					TCR.getPreAdjustedDissimilarity(), TCR.getTotalLeaves()
+					};
+			TblData[i] = Obj;
+		}
+		
+		TableData = TblData;
+//		
+//		// TEMPORARY
+//
+//        Object[][] TableDataTmp = {
+//                { "b", getDate("98/12/02"), new Integer(14),
+//                    new Boolean(false) },
+//                { "a", getDate("99/01/01"), new Integer(67),
+//                    new Boolean(false) },
+//                { "d", getDate("99/02/11"), new Integer(2),
+//                    new Boolean(false) },
+//                { "c", getDate("99/02/27"), new Integer(7),
+//                    new Boolean(false) },
+//                { "foo", new Date(), new Integer(5),
+//                    new Boolean(true) },
+//                { "bar", new Date(), new Integer(10),
+//                    new Boolean(true) } };
+//                    
+//		TableData = TableDataTmp;
 	}
 	
 	private static DateFormat dateFormat = DateFormat.getDateInstance(
@@ -98,7 +128,10 @@ public class ScanResultsPanel extends JPanel{
 		
 		//Initialize table model + fill with data
 		dm = new SortableTableModel();
-		String[] headerStr = { "Name", "Date", "Size", "Dir" };
+		//String[] headerStr = { "Name", "Date", "Size", "Dir" };
+		String[] headerStr = {"Query","Dissimilarity",
+				"Identical Sets","Adjustment Factor","Unadj. Dissimilarity",
+				"Total Leaves"};
 		dm.setDataVector(TableData, headerStr);
 		
 		//Create table and display appropriately
@@ -108,12 +141,16 @@ public class ScanResultsPanel extends JPanel{
 		table.setShowGrid(true);
 		table.setShowVerticalLines(true);
 		table.setShowHorizontalLines(true);
+		//table.setPreferredSize(new Dimension(900,400));
 		
 		//Initialize renderer
 		renderer = new SortButtonRenderer();
 		
 		//Adjust column widths
-		int[] columnWidth = { 100, 150, 100, 50 };
+		//int[] columnWidth = { 100, 150, 100, 50 };
+		int[] columnWidth = {(int) .375*TotalWidth, (int) .125*TotalWidth,
+				(int) .125*TotalWidth, (int) .125*TotalWidth, 
+				(int) .125*TotalWidth, (int) .125*TotalWidth };
 		TableColumnModel model = table.getColumnModel();
 		int n = headerStr.length;
 		for (int i = 0; i < n; i++) {
@@ -216,6 +253,10 @@ public class ScanResultsPanel extends JPanel{
 		 }
 		}
 
+		public int compare(String s1, String s2){
+			return (s1.compareTo(s2));
+		}
+		
 		public int compare(Boolean o1, Boolean o2) {
 		 boolean b1 = o1.booleanValue();
 		 boolean b2 = o2.booleanValue();
@@ -259,7 +300,7 @@ public class ScanResultsPanel extends JPanel{
 		
 		public void setValueAt(Object obj, int row, int col) {
 		switch (col) {
-			     case 2:
+			     case 5:
 			       super.setValueAt(new Integer(obj.toString()), row, col);
 			       return;
 			     default:
@@ -290,16 +331,21 @@ public class ScanResultsPanel extends JPanel{
 		 return indexes;
 		}
 		
+		//EDITED - different columns have different classes
 		public Class getColumnClass(int col) {
 		     switch (col) {
 		     case 0:
-		       return String.class;
+		    	 return String.class;
 		     case 1:
-		       return Date.class;
+		    	 return Double.class;
 		     case 2:
-		       return Integer.class;
+		    	 return String.class;
 		     case 3:
-		       return Boolean.class;
+		    	 return Double.class;
+		     case 4:
+		    	 return Double.class;
+		     case 5:
+		    	 return Integer.class;
 		     default:
 		       return Object.class;
 		     }

@@ -1700,7 +1700,7 @@ import definicions.MatriuDistancies;
 			}
 		}
 		
-		private void showCalls(final String action, QueryData qD) {
+		public void showCalls(final String action, QueryData qD) {
 			try {
 				fr.setCfgPhylo(null);	//for re-drawing.
 				if (action.equals("Reload") || action.equals("Redraw")) {
