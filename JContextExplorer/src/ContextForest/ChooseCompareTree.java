@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutionException;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -60,8 +61,8 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 	//GUI
 	private JPanel jp, jp2, jpEnclosing;
 	private JLabel LblTree, LblParameters, LblRun;
-	private String strLblTree = " REFERENCE TREE";
-	private String strLblParameters = " SCANNING PARAMETERS";
+	private String strLblTree = " SELECT QUERY SET AND REFERENCE TREE";
+	private String strLblParameters = " TREE SCAN CORRELATION SETTINGS";
 	private String strLblRun = " EXECUTE SCAN";
 	private JRadioButton rbLoadedTree, rbQueryTree;
 	private String strLoadedTree = "Loaded Phylogenetic Tree:";
@@ -78,11 +79,51 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 	private JTextField LblSegValue, TxtSegValue;
 	private String strLblSegValue = "Segmentation Point:";
 	private String strTxtSegValue = "0.5";
-		
+	
+	//JTextFields from ChooseDataGrouping
+	private JTextField LblSelectDG, LblSelectDGType, 
+	LblAdjustmentPenalty, LblFreeMisMatches, TxtFreeMisMatches,
+	LblPenaltyperMM, TxtPenaltyperMM, LblSegmentationValue, 
+	LblSegValueInner, TxtSegmentationValue;
+	
+	//Associated Strings
+	private String strLblQuerySet = "Query Set:";
+	private String strLblSelectDG = "Data Grouping:";
+	private String strLblSelectDGType = "Data Grouping Type:";
+	private String strcbAllowMM = "Permit some number of mismatches without penalty";
+	private String strcbMisMatchPenalty = "Exact a summed mismatch penalty";
+	private String strLblFreeMisMatches = "Number of free mismatches: ";
+	private String strTxtFreeMisMatches = "2";
+	private String strLblPenaltyperMM = "Penalty per mismatch:";
+	private String strTxtPenaltyperMM = "0.01";
+	private String strLblSegmentationValue = "Context Tree Segmentation Point";
+	private String strLblSegValueInner = "Value:";
+	private String strTxtSegmentationValue = "0.05";
+	private String strrbDice = "Dice's Coefficient";
+	private String strrbJaccard = "Jaccard Index";
+	private String strrbSpecies = "Species Grouping";
+	private String strrbGene = "Gene Grouping";
+	private String strLblAdjustmentPenalty = "Non-Identical Dataset Adjustment";
+	private String strrbMisMatch = "Summed Mismatch Penalty";
+	private String strrbScaleFactor = "Dice or Jaccard Scale Factor Penalty";
+	
+	//Checkboxes + component lists
+	private JCheckBox cbAllowMM, cbMisMatchPenalty;
+	private LinkedList<Component> MisMatchGroup;
+	private LinkedList<Component> NoMMPenaltySubGroup;
+	
 	//Insets
-	private Insets lblIns = new Insets(3,3,3,3);
-	private Insets downIns = new Insets(5,5,20,1);
+	private Insets lblIns = new Insets(1,1,1,1);
+	private Insets Ind1Ins = new Insets(3,20,3,3);
+	private Insets Ind2Ins = new Insets(3,40,3,3);
 	private Insets basIns = new Insets(1,1,1,1);
+	private Insets downIns = new Insets(5,5,20,1);
+	
+	//Data Parameters
+	private int NumMismatches = 0;
+	private double PenaltyPerMismatch;
+	private double SegmentationValue;
+	
 	
 	//CONSTRUCTOR
 	public ChooseCompareTree(FrmPrincipalDesk f){
@@ -107,6 +148,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		//Fields
 		public QuerySet TQ = null;
 		public double segvalue;
+		public String ComparisonName;
 		
 		//constructor
  		public TreeCompareWorker(double segValue){
@@ -247,25 +289,63 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 				int Counter = 0;
 				setProgress(0);
 				
+				//Prepare Master list
+				LinkedList<LinkedList<String>> MasterList = SegregatedLeaves(SegregateCluster(cm), !rbLoadedTree.isSelected());
+				
 				//Scan each individual query 
 				for (QueryData QD : TQ.getContextTrees()){
 					
 					//Initialize output
-					TreeCompareReport TCR = null;
+					TreeCompareReport TCR = new TreeCompareReport();
+					TCR.setQueryName(QD.getName());
 					
 					//generate cluster from every test query
-					Cluster cq = GenerateClusterFromQuery(QD,false);
+					Cluster Query = GenerateClusterFromQuery(QD,false);
 					
-					//Generate report for every cluster
-					String Method = (String) ComparisonMenu.getSelectedItem();
-					if (Method.equals("Adjusted Fowlkes-Mallows")){
-						TCR = FowlkesMallows(cm, cq);
-					} else if (Method.equals("Robinson-Foulds")) {
-						TCR = RobinsonFoulds(cm, cq);
+					//null cluster - context tree is empty.
+					if (Query != null){
+						
+						//Retrieve Leaves in appropriate format from cluster
+						LinkedList<LinkedList<String>> QueryList = SegregatedLeaves(SegregateCluster(Query),true);
+
+						//Create new Fowlkes-Mallows objects
+						FowlkesMallows FM = new FowlkesMallows(MasterList, QueryList);
+						
+						//Set Adjustment parameters
+						FM.setAdjustmentPenalty(cbMisMatchPenalty.isSelected());
+						FM.setFreeMismatches(cbAllowMM.isSelected());
+						FM.setNumberOfFreeMatches(NumMismatches);
+						FM.setPenaltyperMismatch(PenaltyPerMismatch);
+						
+						//Compute dissimilarity
+						FM.Compute();
+						
+						//Set values
+						TCR.setDissimilarity(FM.getB());
+						TCR.setAdjustmentFactor(FM.getAdjustmentFactor());
+						TCR.setPreAdjustedDissimilarity(FM.getOriginalFowlkesMallows());
+						if (FM.isIdenticalDataSets()){
+							TCR.setIdenticalDataSet(true);
+						} else {
+							TCR.setIdenticalDataSet(false);
+						}
+						TCR.setTotalLeaves(FM.getQueryLeaves());
+						
+						//Add to list
+						Reports.add(TCR);
+						
 					}
-					
-					//Add to list
-					Reports.add(TCR);
+				
+//					//Generate report for every cluster
+//					String Method = (String) ComparisonMenu.getSelectedItem();
+//					if (Method.equals("Adjusted Fowlkes-Mallows")){
+//						TCR = FowlkesMallows(cm, cq);
+//					} else if (Method.equals("Robinson-Foulds")) {
+//						TCR = RobinsonFoulds(cm, cq);
+//					}
+//					
+//					//Add to list
+//					Reports.add(TCR);
 					
 					//Increment counter + update progress bar
 					Counter++;
@@ -275,7 +355,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 				}
 				
 				//Finally, store this set of reports appropriately
-				TQ.getTreeComparisons().put(TreeName, Reports);
+				TQ.getTreeComparisons().put(ComparisonName, Reports);
 				
 			} else {
 				JOptionPane.showMessageDialog(null, "Unable to Create or Load Reference Tree.",
@@ -301,7 +381,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 			progressbar.setValue(0);
 			
 			//launch new window
-			new FrmScanOutputWindow(f, TQ, "TODO",false);
+			new FrmScanOutputWindow(f, TQ, ComparisonName, false);
 			
 			//close window
 			dispose();
@@ -354,7 +434,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		}
 		
 		//Translate sets into string
-		protected LinkedList<LinkedList<String>> SegregatedLeaves(LinkedList<Cluster> C){
+		protected LinkedList<LinkedList<String>> SegregatedLeaves(LinkedList<Cluster> C, boolean isJCE){
 			
 			//Initialize output
 			LinkedList<LinkedList<String>> LeafList = new LinkedList<LinkedList<String>>();
@@ -364,27 +444,38 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 				
 				//Retrieve data
 				LinkedList<String> Leaves = c.getLeafNames();
-				LinkedList<String> NewList = new LinkedList<String>();
 				
-				//remove tags
-				for (String s : Leaves){
+				if (isJCE){
+					
+					LinkedList<String> NewList = new LinkedList<String>();
+					
+					//remove tags
+					for (String s : Leaves){
 
-					String[] L = s.split("-");
-					String strRebuild = null;
-					boolean First = true;
-					for (int i = 0; i < L.length-1; i++){
-						if (First){
-							strRebuild = L[i];
-							First = false;
-						} else {
-							strRebuild = strRebuild + "-" + L[i];
+						String[] L = s.split("-");
+						String strRebuild = null;
+						boolean First = true;
+						for (int i = 0; i < L.length-1; i++){
+							if (First){
+								strRebuild = L[i];
+								First = false;
+							} else {
+								strRebuild = strRebuild + "-" + L[i];
+							}
 						}
+						NewList.add(strRebuild);
 					}
-					NewList.add(strRebuild);
-				}
+					
+					//add List
+					LeafList.add(NewList);
 				
-				//add List
-				LeafList.add(NewList);
+				} else {	//externally loaded phylogenetic tree
+					
+					//Add leaves directly
+					LeafList.add(Leaves);
+					
+				}
+
 			}
 			
 			//output
@@ -415,33 +506,33 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 			return CG;
 		}
 		
-		//TODO Tree comparison method: Fowlkes-Mallows
-		protected TreeCompareReport FowlkesMallows(Cluster Master, Cluster Query){
-			
-			//Initialize output
-			TreeCompareReport TCR = new TreeCompareReport();
-			
-			//Generate lists
-			LinkedList<LinkedList<String>> MasterList = SegregatedLeaves(SegregateCluster(Master));
-			LinkedList<LinkedList<String>> QueryList = SegregatedLeaves(SegregateCluster(Query));
-			
-			//create FowlkesMallow object + compute
-			FowlkesMallows FM = new FowlkesMallows(MasterList, QueryList);
-			TCR.setDissimilarity(FM.Compute());
-			
-			System.out.println(TCR.getDissimilarity());
-			
-//			//DEBUGGING
-//			for (LinkedList<String> L : QueryList){
-//				System.out.println("----Cluster-----");
-//				for (String s : L){
-//					System.out.println(s);
-//				}
-//			}
-			
-			//return
-			return TCR;
-		}
+//		//TODO OLD Tree comparison method: Fowlkes-Mallows
+//		protected TreeCompareReport FowlkesMallows(Cluster Master, Cluster Query){
+//			
+//			//Initialize output
+//			TreeCompareReport TCR = new TreeCompareReport();
+//			
+//			//Generate lists
+//			LinkedList<LinkedList<String>> MasterList = SegregatedLeaves(SegregateCluster(Master));
+//			LinkedList<LinkedList<String>> QueryList = SegregatedLeaves(SegregateCluster(Query));
+//			
+//			//create FowlkesMallow object + compute
+//			FowlkesMallows FM = new FowlkesMallows(MasterList, QueryList);
+//			TCR.setDissimilarity(FM.Compute());
+//			
+//			System.out.println(TCR.getDissimilarity());
+//			
+////			//DEBUGGING
+////			for (LinkedList<String> L : QueryList){
+////				System.out.println("----Cluster-----");
+////				for (String s : L){
+////					System.out.println(s);
+////				}
+////			}
+//			
+//			//return
+//			return TCR;
+//		}
 		
 		//TODO Tree comparison method: Robinson Foulds
 		protected TreeCompareReport RobinsonFoulds(Cluster Master, Cluster Query){
@@ -479,7 +570,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		c.gridheight = 1;
 		c.insets = lblIns;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 3;
+		c.gridwidth = 2;
 		LblTree = new JLabel(strLblTree);
 		LblTree.setBackground(Color.GRAY);
 		LblTree.setOpaque(true);
@@ -499,11 +590,11 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		c.gridheight = 1;
 		c.insets = basIns;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 2;
+		c.gridwidth = 1;
 		jp.add(rbLoadedTree, c);
 		
 		//Select from drop-down menu
-		c.gridx = 2;
+		c.gridx = 1;
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.insets = basIns;
@@ -528,12 +619,12 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		c.gridheight = 1;
 		c.insets = basIns;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 2;
+		c.gridwidth = 1;
 		jp.add(rbQueryTree, c);
 		
 		//Enter Query box
 		c.ipady = 7;
-		c.gridx = 2;
+		c.gridx = 1;
 		c.gridy = gridy;
 		c.gridwidth = 1;
 		c.gridheight = 1;
@@ -545,24 +636,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		jp.add(txtQueryField, c);
 		c.ipady = 0;
 		gridy++;
-		
-		/*
-		 * SCANNING PARAMETERS
-		 */
-		
-		//Label
-		c.gridx = 0;
-		c.gridy = gridy;
-		c.gridheight = 1;
-		c.insets = lblIns;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 3;
-		LblParameters = new JLabel(strLblParameters);
-		LblParameters.setBackground(Color.GRAY);
-		LblParameters.setOpaque(true);
-		jp.add(LblParameters,c);
-		gridy++;
-		
+
 		//Select Query Set
 		c.gridx = 0;
 		c.gridy = gridy;
@@ -573,9 +647,9 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		LblQuerySet.setHorizontalAlignment(JTextField.LEFT);
 		LblQuerySet.setEditable(false);
 		jp.add(LblQuerySet, c);
-		
+	
 		//Query Set Drop-down menu
-		c.gridx = 2;
+		c.gridx = 1;
 		c.gridy = gridy;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -584,45 +658,213 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		jp.add(QSMenu, c);
 		gridy++;
 		
-		//Select comparison approach
+		/*
+		 * REFERENCE TREE SCAN CORRELATION ANALYSIS PARAMETERS
+		 */
+		
+		//Initialize component lists
+		MisMatchGroup = new LinkedList<Component>();
+		NoMMPenaltySubGroup = new  LinkedList<Component>();
+		
+		//Label
 		c.gridx = 0;
 		c.gridy = gridy;
 		c.gridheight = 1;
-		c.fill = GridBagConstraints.NONE;
-		c.gridwidth = 1;
-		LblComparisonApproach = new JTextField(strComparisonApproach);
-		LblComparisonApproach.setHorizontalAlignment(JTextField.LEFT);
-		LblComparisonApproach.setEditable(false);
-		jp.add(LblComparisonApproach, c);
-		
-		//Comparison Approach drop-down menu
-		c.gridx = 2;
-		c.gridy = gridy;
-		c.gridheight = 1;
+		c.insets = lblIns;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 1;
-		ComparisonMenu = new JComboBox<String>(ComparisonApproaches);
-		jp.add(ComparisonMenu, c);
+		c.gridwidth = 2;
+		LblParameters = new JLabel(strLblParameters);
+		LblParameters.setBackground(Color.GRAY);
+		LblParameters.setOpaque(true);
+		jp.add(LblParameters,c);
 		gridy++;
 		
-		//Segmentation label + field
-		c.gridx = 1; 
+		//Penalty step
+		c.gridx = 0;
 		c.gridy = gridy;
 		c.gridheight = 1;
+		c.insets = lblIns;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		LblSegValue = new JTextField(strLblSegValue);
-		LblSegValue.setEditable(false);
-		jp.add(LblSegValue, c);
-		
-		//segmentation value
-		c.gridx = 2;
-		c.gridy = gridy;
-		c.gridheight = 1;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		TxtSegValue = new JTextField(strTxtSegValue);
-		TxtSegValue.setEditable(true);
-		jp.add(TxtSegValue, c);
+		c.gridwidth = 2;
+		LblAdjustmentPenalty = new JTextField(strLblAdjustmentPenalty);
+		LblAdjustmentPenalty.setEditable(false);
+		jp.add(LblAdjustmentPenalty, c);
 		gridy++;
+			
+		//Mismatch check box
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.insets =Ind1Ins;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 2;
+		cbMisMatchPenalty = new JCheckBox(strcbMisMatchPenalty);
+		cbMisMatchPenalty.setSelected(true);
+		cbMisMatchPenalty.addActionListener(this);
+		jp.add(cbMisMatchPenalty, c);
+		gridy++;
+		
+		//Lbl - mismatch penalty
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.insets = Ind1Ins;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		LblPenaltyperMM = new JTextField(strLblPenaltyperMM);
+		LblPenaltyperMM.setEditable(false);
+		MisMatchGroup.add(LblPenaltyperMM);
+		jp.add(LblPenaltyperMM, c);
+		
+		//Txt - mismatch penalty
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.insets = lblIns;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		TxtPenaltyperMM = new JTextField(strTxtPenaltyperMM);
+		TxtPenaltyperMM.setEditable(true);
+		MisMatchGroup.add(TxtPenaltyperMM);
+		jp.add(TxtPenaltyperMM, c);
+		gridy++;
+		
+		//check box - enable free mismatches
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.insets = Ind2Ins;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 2;
+		cbAllowMM = new JCheckBox(strcbAllowMM);
+		cbAllowMM.setSelected(true);
+		cbAllowMM.addActionListener(this);
+		MisMatchGroup.add(cbAllowMM);
+		jp.add(cbAllowMM, c);
+		gridy++;
+		
+		//Lbl - free mismatches
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.insets = Ind2Ins;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		LblFreeMisMatches = new JTextField(strLblFreeMisMatches);
+		LblFreeMisMatches.setEditable(false);
+		MisMatchGroup.add(LblFreeMisMatches);
+		NoMMPenaltySubGroup.add(LblFreeMisMatches);
+		jp.add(LblFreeMisMatches, c);
+		
+		//value - specify number of free mismatches
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.insets = lblIns;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		TxtFreeMisMatches = new JTextField(strTxtFreeMisMatches);
+		TxtFreeMisMatches.setEditable(true);
+		MisMatchGroup.add(TxtFreeMisMatches);
+		NoMMPenaltySubGroup.add(TxtFreeMisMatches);
+		jp.add(TxtFreeMisMatches, c);
+		gridy++;
+		
+		/*
+		 * SEGMENTATION VALUE
+		 */
+		
+		//Label
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.insets = lblIns;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 2;
+		LblSegmentationValue = new JTextField(strLblSegmentationValue);
+		LblSegmentationValue.setEditable(false);
+		jp.add(LblSegmentationValue, c);
+		gridy++;
+		
+		//Value label
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.insets = Ind1Ins;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		LblSegValueInner = new JTextField(strLblSegValueInner);
+		LblSegValueInner.setEditable(false);
+		jp.add(LblSegValueInner, c);
+		
+		//value text
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.insets = lblIns;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		TxtSegmentationValue = new JTextField(strTxtSegmentationValue);
+		TxtSegmentationValue.setEditable(true);
+		jp.add(TxtSegmentationValue, c);
+		gridy++;
+		
+//		/*
+//		 * SCANNING PARAMETERS
+//		 */
+//		
+//		//Label
+//		c.gridx = 0;
+//		c.gridy = gridy;
+//		c.gridheight = 1;
+//		c.insets = lblIns;
+//		c.fill = GridBagConstraints.HORIZONTAL;
+//		c.gridwidth = 2;
+//		LblParameters = new JLabel(strLblParameters);
+//		LblParameters.setBackground(Color.GRAY);
+//		LblParameters.setOpaque(true);
+//		jp.add(LblParameters,c);
+//		gridy++;
+//
+//		//Select comparison approach
+//		c.gridx = 0;
+//		c.gridy = gridy;
+//		c.gridheight = 1;
+//		c.fill = GridBagConstraints.NONE;
+//		c.gridwidth = 1;
+//		LblComparisonApproach = new JTextField(strComparisonApproach);
+//		LblComparisonApproach.setHorizontalAlignment(JTextField.LEFT);
+//		LblComparisonApproach.setEditable(false);
+//		jp.add(LblComparisonApproach, c);
+//		
+//		//Comparison Approach drop-down menu
+//		c.gridx = 2;
+//		c.gridy = gridy;
+//		c.gridheight = 1;
+//		c.fill = GridBagConstraints.HORIZONTAL;
+//		c.gridwidth = 1;
+//		ComparisonMenu = new JComboBox<String>(ComparisonApproaches);
+//		jp.add(ComparisonMenu, c);
+//		gridy++;
+//		
+//		//Segmentation label + field
+//		c.gridx = 1; 
+//		c.gridy = gridy;
+//		c.gridheight = 1;
+//		c.fill = GridBagConstraints.HORIZONTAL;
+//		LblSegValue = new JTextField(strLblSegValue);
+//		LblSegValue.setEditable(false);
+//		jp.add(LblSegValue, c);
+//		
+//		//segmentation value
+//		c.gridx = 2;
+//		c.gridy = gridy;
+//		c.gridheight = 1;
+//		c.fill = GridBagConstraints.HORIZONTAL;
+//		TxtSegValue = new JTextField(strTxtSegValue);
+//		TxtSegValue.setEditable(true);
+//		jp.add(TxtSegValue, c);
+//		gridy++;
 		
 		/*
 		 * EXECUTE
@@ -638,7 +880,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		c.gridheight = 1;
 		c.insets = lblIns;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 3;
+		c.gridwidth = 2;
 		LblRun = new JLabel(strLblRun);
 		LblRun.setBackground(Color.GRAY);
 		LblRun.setOpaque(true);
@@ -660,7 +902,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		//progressbar
 		c.gridx = 0;
 		c.gridy = gridy;
-		c.gridwidth = 3;
+		c.gridwidth = 2;
 		c.gridheight = 1;
 		c.insets = downIns;
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -679,7 +921,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 	
 	//frame
 	public void getFrame(){
-		this.setSize(600,350);
+		this.setSize(620,480);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		this.setLocationRelativeTo(null);
 		this.setTitle("Select Tree and Query Set");
@@ -688,44 +930,88 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 	
 	// ======= Listeners + Action Methods ====== //
 
+	//component selection
+	public void EnableComponents(LinkedList<Component> C, boolean value){
+		for (Component c : C){
+			c.setEnabled(value);
+		}
+	}
+	
 	//Action headquarters
 	@Override
 	public void actionPerformed(ActionEvent e) {
 
+		/*
+		 * ENABLING / DISABLING COMPONENTS
+		 */
+		
+		//mismatch penalty radio button
+		if (e.getSource().equals(cbMisMatchPenalty)){
+			EnableComponents(MisMatchGroup, cbMisMatchPenalty.isSelected());
+			EnableComponents(NoMMPenaltySubGroup,cbAllowMM.isSelected());
+			//EnableComponents(ScaleFactorGroup,rbScaleFactor.getModel().isSelected());
+			if (!cbMisMatchPenalty.isSelected()){
+				EnableComponents(NoMMPenaltySubGroup,false);
+			}
+		}
+		
+		//penalty component enabling
+		if (e.getSource().equals(cbAllowMM)){
+			EnableComponents(NoMMPenaltySubGroup,cbAllowMM.isSelected());
+		}
+		
 		//Error catching
-		if ((rbQueryTree.isSelected() && !txtQueryField.getText().equals("")) || rbLoadedTree.isSelected()) {
+		if (e.getSource().equals(btnExecuteScan)){
 			
-			//determine segregation point
-			try {
+			if ((rbQueryTree.isSelected() && !txtQueryField.getText().equals("")) || rbLoadedTree.isSelected()) {
 				
-				//seg value parsing
-				double segvalue = Double.parseDouble(TxtSegValue.getText());
-				if (segvalue < 0.0 || segvalue > 1.0){
-					throw new Exception();
+				//determine segregation point
+				try {
+					
+					//retrieve parameters
+					SegmentationValue = Double.parseDouble(TxtSegmentationValue.getText());
+					
+					//Optional parameters (when appropriate), w appropriat exceptions
+					//if (rbMisMatch.getModel().isSelected()){
+					if (cbMisMatchPenalty.isSelected()){
+						PenaltyPerMismatch = Double.parseDouble(TxtPenaltyperMM.getText());
+						if (PenaltyPerMismatch > 1.0 || PenaltyPerMismatch < 0.0){
+							throw new Exception();
+						}
+						if (cbAllowMM.isSelected()){
+							NumMismatches = Integer.parseInt(TxtFreeMisMatches.getText());
+							if (NumMismatches < 0) {
+								throw new Exception();
+							}
+						}
+					}
+					
+					
+					//throw exceptions, if necessary
+					if (SegmentationValue > 1.0 || SegmentationValue < 0.0){
+						throw new Exception();
+					}
+					
+					//launch listener
+					TreeCompareWorker TCW = new TreeCompareWorker(SegmentationValue);
+					TCW.addPropertyChangeListener(this);
+					TCW.execute();
+					
+				} catch (Exception ex){
+					JOptionPane.showMessageDialog(null, "Numerical value format or out of bounds error.\n" +
+							"Change numerical fields and try again.",
+							"Number Format Error",JOptionPane.ERROR_MESSAGE);
 				}
 				
-				//launch listener
-				TreeCompareWorker TCW = new TreeCompareWorker(segvalue);
-				TCW.addPropertyChangeListener(this);
-				TCW.execute();
-				
-			} catch (Exception ex) {
-				JOptionPane.showMessageDialog(null, "The Segmentation Point value must be numerical value from 0 to 1.",
+			} else {
+				JOptionPane.showMessageDialog(null, "Please Enter a Query to generate the reference Context Tree.",
 						"No Reference Query Defined",JOptionPane.ERROR_MESSAGE);
 			}
-
 			
-		} else {
-			JOptionPane.showMessageDialog(null, "Please Enter a Query to generate the reference Context Tree.",
-					"No Reference Query Defined",JOptionPane.ERROR_MESSAGE);
 		}
 
-		
-		//finally, close window
-		//this.dispose();
 	}
 	
-
 	//Build Menus
 	public void BuildMenus(){
 		

@@ -42,7 +42,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 	private FrmPrincipalDesk f;
 	private ChooseDataGrouping CDG;
 	
-	//Data results
+	//Data Parameters
 	private int NumMismatches = 0;
 	private double PenaltyPerMismatch;
 	private double SegmentationValue;
@@ -174,6 +174,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 				//null cluster - context tree is empty.
 				if (Query != null){
 					
+					//Retrieve Leaves in appropriate format from cluster
 					LinkedList<LinkedList<String>> QueryList = SegregatedLeaves(SegregateCluster(Query));
 
 					//Create new Fowlkes-Mallows objects

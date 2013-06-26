@@ -57,6 +57,7 @@ public class CSDisplayData implements Serializable {
 	}
 	
 	public void setECandInitializeTreeLeaves(ExtendedCRON eC) {
+		
 		//set ec value
 		EC = eC;
 		
@@ -71,8 +72,15 @@ public class CSDisplayData implements Serializable {
 			String Species = "";
 			
 			String[] ParsedLine = s.split("-");
+			boolean FirstLine = true;
 			for (int i = 0 ; i < ParsedLine.length-1; i++){
-				Species = Species + ParsedLine[i];
+				if (FirstLine){
+					Species = ParsedLine[i];
+					FirstLine = false;
+				} else{
+					Species = Species + "-" + ParsedLine[i];
+				}
+
 			}
 			
 			CL.setSourceSpecies(Species);

@@ -17,6 +17,7 @@ import java.util.Locale;
 
 import javax.swing.Icon;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -61,14 +62,24 @@ public class Jpan_ScanResults extends JPanel{
 		this.TCRKey = TCRKey;
 		this.fsow = fsow;
 		
-		//Parse + format scan resutls data
-		FormatTableData();
-		
-		//panel-related
-		setLayout(new BorderLayout());
-		
-		//Build table
-		CreateTable();
+		try {
+			
+			//Parse + format scan results data
+			FormatTableData();
+			
+			//panel-related
+			setLayout(new BorderLayout());
+			
+			//Build table
+			CreateTable();
+			
+		} catch (Exception ex) {
+			
+			JOptionPane.showMessageDialog(null, "No comparisons could be evaluated from the queries in the Query Set.\nPlease try with an alternative Query Set.",
+					"Invalid Query Set",JOptionPane.ERROR_MESSAGE);
+			
+		}
+
 		
 	}
 	
@@ -90,24 +101,6 @@ public class Jpan_ScanResults extends JPanel{
 		}
 		
 		TableData = TblData;
-//		
-//		// TEMPORARY
-//
-//        Object[][] TableDataTmp = {
-//                { "b", getDate("98/12/02"), new Integer(14),
-//                    new Boolean(false) },
-//                { "a", getDate("99/01/01"), new Integer(67),
-//                    new Boolean(false) },
-//                { "d", getDate("99/02/11"), new Integer(2),
-//                    new Boolean(false) },
-//                { "c", getDate("99/02/27"), new Integer(7),
-//                    new Boolean(false) },
-//                { "foo", new Date(), new Integer(5),
-//                    new Boolean(true) },
-//                { "bar", new Date(), new Integer(10),
-//                    new Boolean(true) } };
-//                    
-//		TableData = TableDataTmp;
 	}
 	
 	private static DateFormat dateFormat = DateFormat.getDateInstance(
@@ -129,8 +122,8 @@ public class Jpan_ScanResults extends JPanel{
 		//Initialize table model + fill with data
 		dm = new SortableTableModel();
 		//String[] headerStr = { "Name", "Date", "Size", "Dir" };
-		String[] headerStr = {"Query","Dissimilarity",
-				"Identical Sets","Adjustment Factor","Unadj. Dissimilarity",
+		String[] headerStr = {"Query","Similarity",
+				"Identical Sets","Adjustment Factor","Unadj. Similarity",
 				"Total Leaves"};
 		dm.setDataVector(TableData, headerStr);
 		

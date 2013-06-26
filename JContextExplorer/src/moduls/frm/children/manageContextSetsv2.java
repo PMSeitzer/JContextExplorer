@@ -232,6 +232,9 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		this.setContentPane(jp);
 		//this.pack(); //to pack or not to pack?
 		
+		//final modification
+		btnAddCS.setEnabled(false);
+		
 		//modality settings
 		this.setModal(true);
 		this.setLocationRelativeTo(null);
@@ -541,6 +544,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		CSType = new ButtonGroup(); CSType.add(CSIntergenicDist); CSType.add(CSRange); CSType.add(CSGenesAround);
 		CSType.add(CSGenesBetween); CSType.add(CSMultipleQuery); CSType.add(CSLoaded); CSType.add(CSCassette);
 		CSType.add(CSCombination);
+		
 		//CSType.setSelected(CSIntergenicDist.getModel(), true);
 		/*
 		 * ADD COMPONENTS TO PANEL!!!
@@ -1122,6 +1126,16 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		
 		//update appropriate message box
 		UpdateMessageBox();
+		
+		//enable adding a CS once a radio button is selected.
+		Enumeration E = CSType.getElements();
+		while (E.hasMoreElements()){
+			Object o = E.nextElement();
+			if (evt.getSource().equals(o)){
+				btnAddCS.setEnabled(true);
+				break;
+			}
+		}
 		
 		//CSType (1) - Intergenic Distance
 		if (evt.getSource().equals(computeIntergenic)){

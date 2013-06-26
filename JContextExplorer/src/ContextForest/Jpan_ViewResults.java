@@ -1,5 +1,7 @@
 package ContextForest;
 
+import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -175,6 +177,11 @@ public class Jpan_ViewResults extends JPanel implements ActionListener{
 	//draw a bunch of context trees from selected queries
 	public void DrawContextTrees(LinkedList<QueryData> L){
 		
+		//switch cursor
+		Component glassPane = getRootPane().getGlassPane();
+		glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		glassPane.setVisible(true);
+		
 		//Turn view context trees to on
 		fsow.getF().getPanMenuTab().getJpo().getDrawContextTree().setSelected(true);
 		fsow.getF().getPanDisplayOptions().getDrawContextTree().setSelected(true);
@@ -200,5 +207,9 @@ public class Jpan_ViewResults extends JPanel implements ActionListener{
 			//draw trees
 			fsow.getF().getPanBtn().showCalls("Load", QD);
 		}
+		
+		//switch cursor to normal
+		glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+		glassPane.setVisible(false);
 	}
 }

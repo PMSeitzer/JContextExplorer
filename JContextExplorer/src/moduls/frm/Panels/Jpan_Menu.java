@@ -1224,7 +1224,6 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener{
 		setLabelsEvery(1);
 		setLabelsDecimals(cfg.getPrecision());
 		
-
 	}
 	
 	public static void adjustValuesPhylo(final Config cfg){

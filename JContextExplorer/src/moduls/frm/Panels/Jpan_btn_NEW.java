@@ -1814,6 +1814,12 @@ import definicions.MatriuDistancies;
 						Jpan_Menu.ajustaValors(cfg);
 					}
 //					
+					//System.out.println("Breakpoint!");
+					
+					//These did not work. keep this in mind for later!
+//					cfg.getConfigMenu().setIncrement(0.1);
+//					cfg.getConfigMenu().setAxisDecimals(2);
+					
 					// Convert tree into figures
 					figPizarra = new Fig_Pizarra(multiDendro.getArrel(), cfg);
 					
@@ -1893,7 +1899,10 @@ import definicions.MatriuDistancies;
 						PhyloCfgPanel.setTipusDades(tipusDades.DISTANCIA);
 						cfgp.setConfigMenu(PhyloCfgPanel);
 						cfgp.setHtNoms(figPhylo.getHtNoms());
-						PhyloCfgPanel.setValMax(figPhylo.getLongestBranch());
+						
+						//TEST - try changing this - it works
+						//PhyloCfgPanel.setValMax(figPhylo.getLongestBranch());
+						
 						PhyloCfgPanel.setValMin(0);
 						cfgp.setConfigMenu(PhyloCfgPanel);
 						
