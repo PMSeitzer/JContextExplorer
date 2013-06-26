@@ -168,7 +168,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private final Jpan_MotifOptions panMotifOptions;
 	private final Jpan_PhyTreeMenu panPhyTreeMenu;
 
-	private final Jpan_DisplayOptions panDisplayOptions;
+	private Jpan_DisplayOptions panDisplayOptions;
 	
 	private final Jpan_genome panGenome; // genome-viewing frame
 
@@ -2719,7 +2719,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	
 		FrmInternalFrame CurrentFrame = (FrmInternalFrame) e.getSource();
 		this.setCurrentFrame(CurrentFrame);
-		System.out.println(CurrentFrame.getInternalFrameData().getQD().getName());
+		//System.out.println(CurrentFrame.getInternalFrameData().getQD().getName());
 		
 	}
 
@@ -3049,6 +3049,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	public void setTmpCluster(Cluster tmpCluster) {
 		TmpCluster = tmpCluster;
+	}
+
+	public Jpan_DisplayOptions getPanDisplayOptions() {
+		return panDisplayOptions;
+	}
+
+	public void setPanDisplayOptions(Jpan_DisplayOptions panDisplayOptions) {
+		this.panDisplayOptions = panDisplayOptions;
 	}
 
 }

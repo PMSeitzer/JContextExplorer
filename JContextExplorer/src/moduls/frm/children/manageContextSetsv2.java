@@ -67,6 +67,8 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 	private FrmPrincipalDesk fr;
 	private Jpan_btn_NEW jb;
 	
+	private String MostRecentlyAddedContextSet;
+	
 	//Loaded operon file + related booleans
 	private String strNoOperons = "Gene groupings could not be loaded or computed successfully.";
 	private String OperonStringToDisplay = strNoOperons;
@@ -1257,8 +1259,10 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 					fr.getOS().getCSDs().add(ToAdd);
 				
 					//insert item into the menu
+					MostRecentlyAddedContextSet = CSName.getText();
 					contextSetMenu.insertItemAt(CSName.getText(), 0);
 					contextSetMenuforCassette.insertItemAt(CSName.getText(), 0);
+					contextSetMenu.setSelectedItem(CSName.getText());
 					
 					//pre-processed sets are reset
 					ComputedGrouping = false;
@@ -1340,6 +1344,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 			for (int i = 0; i < fr.getOS().getCSDs().size(); i++){
 				this.fr.getPanBtn().getContextSetMenu().addItem(fr.getOS().getCSDs().get(i).getName());
 			}
+			this.fr.getPanBtn().getContextSetMenu().setSelectedItem(MostRecentlyAddedContextSet);
 			
 //			this.fr.getPanBtn().setContextSetMenu(contextSetMenu);
 //			this.fr.getPanBtn().revalidate();

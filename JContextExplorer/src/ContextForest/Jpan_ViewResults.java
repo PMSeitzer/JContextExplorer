@@ -14,6 +14,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import moduls.frm.PostSearchAnalyses;
 import moduls.frm.QueryData;
@@ -107,13 +108,42 @@ public class Jpan_ViewResults extends JPanel implements ActionListener{
 
 		//Select Query Results
 		if (e.getSource().equals(btnSelectQR) || e.getSource().equals(selectQueryResults)){
-			System.out.println("Select Results!");
+
+			//recover query, split by semicolon, comma, or white space
+			String Query = selectQueryResults.getText();
+			String[] Queries = Query.split(";");
+			if (Queries.length == 1){
+				Queries = Query.split(",");
+			}
+			if (Queries.length == 1) {
+				Queries = Query.split("\\s+");
+			}
+			
+			//Determine queries to select
+			LinkedList<String> SelectedQS = new LinkedList<String>();
+			for (String s : Queries){
+				for (QueryData QD : fsow.getQS().getContextTrees()){
+					if (QD.getName().contains(s)){
+						SelectedQS.add(QD.getName());
+					}
+				}
+			}
+			
+			//Deselect all
+			fsow.getPan_ScanResults().getTable().clearSelection();
+			
+			//Select queries
+			for (int i = 0; i < fsow.getPan_ScanResults().getTable().getRowCount(); i++){
+				if (SelectedQS.contains(fsow.getPan_ScanResults().getTable().getValueAt(i,0))){
+					fsow.getPan_ScanResults().getTable().addRowSelectionInterval(i,i);
+				}
+			}
+			
 		}
 		
 		//Draw Context Trees
 		if (e.getSource().equals(btnDrawCT)){
 			DrawContextTrees(RetrieveSelectedQueryResults());
-			//System.out.println("Draw Context Trees!");
 		}
 	}
 	
@@ -142,8 +172,13 @@ public class Jpan_ViewResults extends JPanel implements ActionListener{
 		return SelectedQS;
 	}
 	
-	//draw a bunch of queries
+	//draw a bunch of context trees from selected queries
 	public void DrawContextTrees(LinkedList<QueryData> L){
+		
+		//Turn view context trees to on
+		fsow.getF().getPanMenuTab().getJpo().getDrawContextTree().setSelected(true);
+		fsow.getF().getPanDisplayOptions().getDrawContextTree().setSelected(true);
+		
 		for (QueryData QD : L){
 			
 			//Adjust search analyses

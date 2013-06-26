@@ -1399,11 +1399,8 @@ import definicions.MatriuDistancies;
 		}
 
 		public MatriuDistancies getMatriu() {
-			//System.out.println(de);
-			//System.out.println("tried to return");
 
 			return de.getMatriuDistancies();
-
 
 		}
 
@@ -1450,15 +1447,23 @@ import definicions.MatriuDistancies;
 							));
 				}
 				
-				//check: if none selected, show search results only.
-				if (!fr.getPanMenuTab().getJpo().getDrawSearchResults().isSelected() &&
-						!fr.getPanMenuTab().getJpo().getDrawContextTree().isSelected() &&
-						!fr.getPanMenuTab().getJpo().getDrawContextGraph().isSelected() &&
-						!fr.getPanMenuTab().getJpo().getDrawPhylogeneticTree().isSelected()){
-					System.out.println("No analyses were specified. Switching 'Print Search Results' on.");
-					QD.getAnalysesList().setOptionDisplaySearches(true);
-					fr.getPanMenuTab().getJpo().getDrawSearchResults().setSelected(true);
+				//turn on search results, if nothing else turned on.
+				if (evt.getSource().equals(searchField) || 
+						evt.getSource().equals(btnSubmit) ||
+						evt.getSource().equals(btnUpdate)){
+					
+					//check: if none selected, show search results only.
+					if (!fr.getPanMenuTab().getJpo().getDrawSearchResults().isSelected() &&
+							!fr.getPanMenuTab().getJpo().getDrawContextTree().isSelected() &&
+							!fr.getPanMenuTab().getJpo().getDrawContextGraph().isSelected() &&
+							!fr.getPanMenuTab().getJpo().getDrawPhylogeneticTree().isSelected()){
+						System.out.println("No analyses were specified. Switching 'Print Search Results' on.");
+						QD.getAnalysesList().setOptionDisplaySearches(true);
+						fr.getPanMenuTab().getJpo().getDrawSearchResults().setSelected(true);
+					}
+					
 				}
+
 
 				//Search Query
 				if (evt.getSource().equals(searchField) || evt.getSource().equals(btnSubmit)){
@@ -1542,8 +1547,6 @@ import definicions.MatriuDistancies;
 					String TheName = searchField.getText() + " [" + contextSetMenu.getSelectedItem() + "]";
 					QD.setName(TheName);
 					try {
-						
-
 						
 						//parse into candidates
 						String[] Queries = searchField.getText().split(";");
@@ -1705,16 +1708,18 @@ import definicions.MatriuDistancies;
 			}
 		}
 		
-		public void showCalls(final String action, QueryData qD) {
+		public void showCalls(String action, QueryData qD) {
+
 			try {
 				fr.setCfgPhylo(null);	//for re-drawing.
 				if (action.equals("Reload") || action.equals("Redraw")) {
 					currentInternalFrame.doDefaultCloseAction();
 				}
-				show(action, Jpan_Menu.getMethod(), Jpan_Menu.getPrecision(), qD);
-				//currentInternalFrame.setVisible(true);
-				//System.out.println(currentInternalFrame);
-				currentInternalFrame.doDefaultCloseAction();
+
+				//CHANGE: commented out these two lines needed for mass-selection.
+				//show(action, Jpan_Menu.getMethod(), Jpan_Menu.getPrecision(), qD);
+				//currentInternalFrame.doDefaultCloseAction();
+				
 				show(action, Jpan_Menu.getMethod(), Jpan_Menu.getPrecision(), qD);
 				btnUpdate.setEnabled(true);
 				buttonClicked = false;
@@ -1930,7 +1935,8 @@ import definicions.MatriuDistancies;
 				
 				//INTERNAL FRAME DATA
 				qD.setCSD(CSD);
-				ifd = new InternalFrameData(de, multiDendro);
+				//ifd = new InternalFrameData(de, multiDendro);
+				ifd = new InternalFrameData(qD.getDe(), qD.getMultiDendro());
 				ifd.setQD(qD);
 				ifd.setContextGraphPanel(fGraph);
 				ifd.setContextTreePanel(fPiz);
@@ -1958,6 +1964,8 @@ import definicions.MatriuDistancies;
 				//CONTAINER OWNERSHIP
 				pizarra.setInternalPanel(fPiz);
 				pizarra.setVisible(true);
+				
+				//both Jpan_btn_NEW and fr
 				this.currentInternalFrame = pizarra;
 				fr.setCurrentFrame(pizarra);
 		
