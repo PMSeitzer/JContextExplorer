@@ -112,13 +112,34 @@ public class Jpan_ViewResults extends JPanel implements ActionListener{
 		
 		//Draw Context Trees
 		if (e.getSource().equals(btnDrawCT)){
-			System.out.println("Draw Context Trees!");
+			DrawContextTrees(RetrieveSelectedQueryResults());
+			//System.out.println("Draw Context Trees!");
 		}
 	}
 	
 	//retrieve selected query sets
-	public void RetriveSelectedQueryResults(){
+	public LinkedList<QueryData> RetrieveSelectedQueryResults(){
 		
+		//Initialize output
+		LinkedList<QueryData> SelectedQS = new LinkedList<QueryData>();
+		LinkedList<String> SelectedQSNames = new LinkedList<String>();
+		
+		//Retrieve names from table
+		int[] SelectedRows = fsow.getPan_ScanResults().getTable().getSelectedRows();
+		for (int i = 0; i < SelectedRows.length; i++){
+			String query 
+				= (String) fsow.getPan_ScanResults().getTable().getValueAt(SelectedRows[i], 0);
+			SelectedQSNames.add(query);
+		}
+		
+		//Retrieve queries by name from QuerySet object
+		for (QueryData QD : fsow.getQS().getContextTrees()){
+			if (SelectedQSNames.contains(QD.getName())){
+				SelectedQS.add(QD);
+			}
+		}
+				
+		return SelectedQS;
 	}
 	
 	//draw a bunch of queries
@@ -135,6 +156,11 @@ public class Jpan_ViewResults extends JPanel implements ActionListener{
 			
 			//update query list
 			QD.setAnalysesList(P);
+			
+			//Update aspects of drawing frame
+			fsow.getF().getPanBtn().setSearchResultsFrame(QD.getSRF());
+			fsow.getF().getPanBtn().setMultiDendro(QD.getMultiDendro());
+			fsow.getF().getPanBtn().setDe(QD.getDe());
 			
 			//draw trees
 			fsow.getF().getPanBtn().showCalls("Load", QD);

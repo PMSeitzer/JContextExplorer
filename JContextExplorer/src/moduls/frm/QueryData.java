@@ -1,5 +1,8 @@
 package moduls.frm;
 
+import importExport.DadesExternes;
+import moduls.frm.children.FrmSearchResults;
+import definicions.MatriuDistancies;
 import genomeObjects.CSDisplayData;
 
 public class QueryData {
@@ -7,7 +10,6 @@ public class QueryData {
 	//Fields
 	private boolean AnnotationSearch;
 	private String[] Queries = null;
-	private int[] Clusters = null;
 	private String Name;
 	private String ContextSetName;
 	private String DissimilarityType;
@@ -15,6 +17,12 @@ public class QueryData {
 	private PostSearchAnalyses AnalysesList;
 	private CSDisplayData CSD;
 	private String OSName;
+	
+	//Output- type fields
+	private int[] Clusters = null;
+	private MatriuDistancies multiDendro;
+	private FrmSearchResults SRF;
+	private DadesExternes de;
 	
 	//Constructor
 	public QueryData(){
@@ -101,5 +109,29 @@ public class QueryData {
 
 	public void setClusteringType(String clusteringType) {
 		ClusteringType = clusteringType;
+	}
+
+	public MatriuDistancies getMultiDendro() {
+		return multiDendro;
+	}
+
+	public void setMultiDendro(MatriuDistancies multiDendro) {
+		this.multiDendro = multiDendro;
+	}
+
+	public FrmSearchResults getSRF() {
+		return SRF;
+	}
+
+	public void setSRF(FrmSearchResults sRF) {
+		SRF = sRF;
+	}
+
+	public DadesExternes getDe() {
+		return de;
+	}
+
+	public void setDe(DadesExternes de) {
+		this.de = de;
 	}
 }

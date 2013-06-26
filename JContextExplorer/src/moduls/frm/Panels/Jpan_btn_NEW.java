@@ -980,6 +980,7 @@ import definicions.MatriuDistancies;
 				//update search results frame
 				SearchResultsFrame = new FrmSearchResults(fr,WorkerQD.getCSD());
 				WorkerQD.setCSD(SearchResultsFrame.getCSD());
+				WorkerQD.setSRF(SearchResultsFrame);
 				return null;
 			}
 			
@@ -1002,6 +1003,7 @@ import definicions.MatriuDistancies;
 					
 					//replace EC
 					this.WorkerQD.getCSD().setEC(EC);
+					this.WorkerQD.setDe(de);
 					
 				} catch (Exception e1) {
 					e1.printStackTrace();
@@ -1027,6 +1029,7 @@ import definicions.MatriuDistancies;
 						
 						//SET THE CURRENT MULTIDENDROGRAM TO THE RESULT FROM RG.RECALCULA()
 						multiDendro = mdNew;
+						this.WorkerQD.setMultiDendro(mdNew);
 						
 						b = multiDendro.getArrel().getBase();
 						if ((b < minBase) && (b != 0)) {
@@ -1108,6 +1111,11 @@ import definicions.MatriuDistancies;
 			this.getPanel();
 			this.searchFieldSize = searchField.getPreferredSize();
 			this.setVisible(true);
+			
+			//DATA SOURCE - initialize
+			fitx = new FitxerDades();	
+			fitx.setNom("");
+			fitx.setPath("");
 
 		}
 
@@ -1535,10 +1543,7 @@ import definicions.MatriuDistancies;
 					QD.setName(TheName);
 					try {
 						
-						//DATA SOURCE
-						fitx = new FitxerDades();	
-						fitx.setNom("");
-						fitx.setPath("");
+
 						
 						//parse into candidates
 						String[] Queries = searchField.getText().split(";");
@@ -1944,16 +1949,8 @@ import definicions.MatriuDistancies;
 				FrmTabbed AnalysisResults = new FrmTabbed(fPizSP,fGraphSP,fSearchSP,fPhyloSP,
 						qD.getAnalysesList(), fr);
 				
-				//AnalysisResults.setSelectedIndex(SelectedTabbedPane);
-				//System.out.println("Jpan_btn: " + AnalysisResults.getSelectedIndex());
-				
 				TabbedWrapper.add(AnalysisResults, BorderLayout.CENTER);
 				fr.getPanGenome().setCSD(CSD);
-				
-				//set Jpan_genome
-				//if (!isUpdate){
-					
-				//} 
 				
 				//ADD TABBED PANEL TO FRAME
 				pizarra.add(TabbedWrapper);	//Tabbed menu component with panel
@@ -2162,6 +2159,30 @@ import definicions.MatriuDistancies;
 
 		public void setClusterSearch(JRadioButton clusterSearch) {
 			this.clusterSearch = clusterSearch;
+		}
+
+		public FrmSearchResults getSearchResultsFrame() {
+			return SearchResultsFrame;
+		}
+
+		public void setSearchResultsFrame(FrmSearchResults searchResultsFrame) {
+			SearchResultsFrame = searchResultsFrame;
+		}
+
+		public MatriuDistancies getMultiDendro() {
+			return multiDendro;
+		}
+
+		public void setMultiDendro(MatriuDistancies multiDendro) {
+			this.multiDendro = multiDendro;
+		}
+
+		public DadesExternes getDe() {
+			return de;
+		}
+
+		public void setDe(DadesExternes de) {
+			this.de = de;
 		}
 
 

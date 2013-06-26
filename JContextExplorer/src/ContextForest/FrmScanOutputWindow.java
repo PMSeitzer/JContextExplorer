@@ -130,6 +130,7 @@ public class FrmScanOutputWindow extends JFrame implements ActionListener {
 		
 	}
 
+	// --- GETTERS AND SETTERS ---- //
 
 	public FrmPrincipalDesk getF() {
 		return f;
@@ -148,6 +149,36 @@ public class FrmScanOutputWindow extends JFrame implements ActionListener {
 
 	public void setFsow(FrmScanOutputWindow fsow) {
 		this.fsow = fsow;
+	}
+
+
+	public Jpan_ScanResults getPan_ScanResults() {
+		return pan_ScanResults;
+	}
+
+
+	public void setPan_ScanResults(Jpan_ScanResults pan_ScanResults) {
+		this.pan_ScanResults = pan_ScanResults;
+	}
+
+
+	public QuerySet getQS() {
+		return QS;
+	}
+
+
+	public void setQS(QuerySet qS) {
+		QS = qS;
+	}
+
+
+	public String getTCRKey() {
+		return TCRKey;
+	}
+
+
+	public void setTCRKey(String tCRKey) {
+		TCRKey = tCRKey;
 	}
 	
 }

@@ -672,4 +672,12 @@ public class Jpan_ScanResults extends JPanel{
 		   header.repaint();
 		 }
 		}
+
+	public JTable getTable() {
+		return table;
+	}
+
+	public void setTable(JTable table) {
+		this.table = table;
+	}
 }
