@@ -59,7 +59,7 @@ public class FowlkesMallows {
 		Combined.addAll(Set1LS);
 		Combined.addAll(Set2LS);
 		this.CombinedHash = new HashSet<String>(Combined);
-		
+				
 	}
 	
 	// ------ Dissimilarity Processing -----------//
@@ -299,13 +299,11 @@ public class FowlkesMallows {
 		}
 		
 		//adjust accordingly
-		penalty = (double) TotalMismatches * PenaltyperMismatch;
+		penalty = 1.0 - (double) TotalMismatches * PenaltyperMismatch;
 		
 		//adjust penalty value into scale factor
 		if (penalty < 0){
-			penalty = 1;
-		} else {
-			penalty = 1 - penalty;
+			penalty = 0;
 		}
 		
 		//return computed penalty

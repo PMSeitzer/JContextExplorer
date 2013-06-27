@@ -449,7 +449,6 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 		
 	}
 
-	
 	//Transfer text in window to queries
 	public LinkedList<QueryData> BuildQueries(){
 		
@@ -475,7 +474,7 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 		String OSName = f.getOS().getName();
 
 		//Red flag parameter
-		boolean IgnoreClusterSet = false;
+		boolean AddQuery = true;
 		
 		//Set query type
 		if (f.getPanBtn().getAnnotationSearch().isSelected()){
@@ -491,6 +490,9 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 		//Each line is a query, add appropriately to set!
 		for (String s : StartingSet){
 
+			//default - try to add the query
+			AddQuery = true;
+			
 			//update name
 			//Name = "Query " + String.valueOf(Counter);
 			Name = s;
@@ -502,6 +504,9 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 			//build search points
 			if (AnnotationSearch){
 				Queries = SplitList;
+				if (s.equals("")){
+					AddQuery = false;		//empty string
+				}
 			} else {
 				
 				//Linked list, for variable size
@@ -520,14 +525,14 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 				
 				//No need to retain cases where no valid clusters were found.
 				if (Clusters.length == 0){
-					IgnoreClusterSet = true;
+					AddQuery = false;
 				} else {
-					IgnoreClusterSet = false;
+					AddQuery = true;
 				}
 			}
 			
 			//If there are clusters to be querying
-			if (!IgnoreClusterSet){
+			if (AddQuery){
 				
 				//Initialize new query
 				QueryData QD = new QueryData();

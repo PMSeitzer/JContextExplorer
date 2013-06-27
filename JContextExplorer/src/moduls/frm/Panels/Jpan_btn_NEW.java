@@ -206,7 +206,7 @@ import definicions.MatriuDistancies;
 			private boolean ExceptionThrown = false;
 			
 			//final
-			public Cluster RootCluster;
+			public Cluster RootCluster = null;
 			public boolean ProcessCompleted = false;
 			
 			//constructor
@@ -281,6 +281,7 @@ import definicions.MatriuDistancies;
 							showError(errMsg);
 						}
 						ExceptionThrown = true;
+						RootCluster = null;
 
 					}
 				}
@@ -1052,6 +1053,9 @@ import definicions.MatriuDistancies;
 				
 				//set field
 				this.RootCluster = multiDendro.getArrel();
+				
+				//debugging
+				//System.out.println("Root cluster determined to be " + this.RootCluster);
 				
 				return null;
 			}

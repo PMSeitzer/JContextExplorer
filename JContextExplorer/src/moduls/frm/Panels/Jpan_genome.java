@@ -248,7 +248,7 @@ public class Jpan_genome extends JPanel implements ActionListener,
 				} catch (Exception e1){
 					JOptionPane.showMessageDialog(null,"Please enter a query in the search bar (top left-hand corner).",
 							"Submit Query",JOptionPane.INFORMATION_MESSAGE);
-					e1.printStackTrace();
+					//e1.printStackTrace();
 				}
 			}
 			

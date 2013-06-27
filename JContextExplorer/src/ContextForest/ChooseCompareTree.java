@@ -295,15 +295,15 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 				//Scan each individual query 
 				for (QueryData QD : TQ.getContextTrees()){
 					
-					//Initialize output
-					TreeCompareReport TCR = new TreeCompareReport();
-					TCR.setQueryName(QD.getName());
-					
 					//generate cluster from every test query
 					Cluster Query = GenerateClusterFromQuery(QD,false);
 					
 					//null cluster - context tree is empty.
 					if (Query != null){
+						
+						//Initialize output
+						TreeCompareReport TCR = new TreeCompareReport();
+						TCR.setQueryName(QD.getName());
 						
 						//Retrieve Leaves in appropriate format from cluster
 						LinkedList<LinkedList<String>> QueryList = SegregatedLeaves(SegregateCluster(Query),true);
@@ -412,6 +412,9 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		//Segregate a cluster into smaller clusters based on segmentation value.
 		protected LinkedList<Cluster> SegregateCluster(Cluster c){
 			
+			//for debugging
+			//int TotalChildren = c.getLeafNames().size();
+			
 			//Initialize output
 			LinkedList<Cluster> CutSet = new LinkedList<Cluster>();
 			
@@ -430,6 +433,12 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 				CutSet.addAll(CG.getRetainGroup());
 			}
 
+			//for debugging
+			int CutSetCounter = 0;
+			for (Cluster c1 : CutSet){
+				CutSetCounter = CutSetCounter + c1.getLeafNames().size();
+			}
+			
 			return CutSet;
 		}
 		
@@ -438,6 +447,8 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 			
 			//Initialize output
 			LinkedList<LinkedList<String>> LeafList = new LinkedList<LinkedList<String>>();
+			
+			int LeafCounter = 0;
 			
 			//Process
 			for (Cluster c : C){
@@ -473,11 +484,11 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 					
 					//Add leaves directly
 					LeafList.add(Leaves);
+					LeafCounter = LeafCounter + Leaves.size();
 					
 				}
 
 			}
-			
 			//output
 			return LeafList;
 		}
@@ -492,7 +503,8 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 			
 			//build based on segmentation point
 			for (Cluster c : ParentCluster){
-				if (c.getAlcada() > segvalue){
+				//if (c.getAlcada() > segvalue){
+				if (c.getAlcada() > segvalue && !c.getLst().isEmpty()){
 					SegChildren.addAll(c.getLst());
 				} else {
 					RetainChildren.add(c);

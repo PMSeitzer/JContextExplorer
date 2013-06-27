@@ -87,9 +87,11 @@ public class Jpan_ScanResults extends JPanel{
 	
 	//Convert data from QS to GUI-appropriate table data
 	public void FormatTableData(){
-		
-		Object[][] TblData = new Object[QS.getContextTrees().size()][6];
+
+		//Retrieve valid reports, and initialize data
 		LinkedList<TreeCompareReport> Reps = QS.getTreeComparisons().get(TCRKey);
+		Object[][] TblData = new Object[Reps.size()][6];
+
 		
 		for (int i = 0; i < Reps.size(); i++){
 			TreeCompareReport TCR = Reps.get(i);

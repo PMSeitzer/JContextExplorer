@@ -160,19 +160,22 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 			LinkedList<String[]> MasterListArray = f.getOS().getDataGroups().get(DGName);
 			LinkedList<LinkedList<String>> MasterList = MasterListReformat(MasterListArray);
 			
+			//initialize to null
+			Cluster Query = null;
+			
 			//Iterate through Query lists
 			//Scan each individual query 
 			for (QueryData QD : TQ.getContextTrees()){
 				
-				//Initialize output
-				TreeCompareReport TCR = new TreeCompareReport();
-				TCR.setQueryName(QD.getName());
-				
 				//generate cluster from every test query
-				Cluster Query = GenerateClusterFromQuery(QD,false);
+				Query = GenerateClusterFromQuery(QD,false);
 				
 				//null cluster - context tree is empty.
 				if (Query != null){
+					
+					//Initialize output
+					TreeCompareReport TCR = new TreeCompareReport();
+					TCR.setQueryName(QD.getName());
 					
 					//Retrieve Leaves in appropriate format from cluster
 					LinkedList<LinkedList<String>> QueryList = SegregatedLeaves(SegregateCluster(Query));
@@ -203,6 +206,8 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 					//Add to list
 					Reports.add(TCR);
 					
+				} else {
+					//System.out.println("Null: " + QD.getName());
 				}
 				
 				//Increment counter + update progress bar
@@ -327,7 +332,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 		//Generate cluster from query
 		protected Cluster GenerateClusterFromQuery(QueryData QD, boolean AddListener){
 
-			//Initialize output
+			//Create a new SearchWorker.
 			SearchWorker SW = f.getPanBtn().new SearchWorker(QD,
 					"Load", Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
 					Jpan_Menu.getPrecision(), false);
