@@ -302,6 +302,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	// ==== SwingWorkers ===== //
 	private LoadGenomesWorker CurrentLGW;
 	private LoadPopularWorker CurrentLPW;
+	private boolean SearchWorkerRunning = false;
 	
 	// ===== Classes ===== //
 	
@@ -1310,7 +1311,16 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		ML_QuerySet = new JMenuItem("Load Query Set");
 		ML_DataGrouping = new JMenuItem("Load Data Grouping");
 		
+		//Load context Set
+		KeyStroke OneStroke = KeyStroke.getKeyStroke(KeyEvent.VK_1,
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		ML_ContextSet.setAccelerator(OneStroke);
 		ML_ContextSet.addActionListener(this);
+		
+		//Load dissimilarity measure
+		KeyStroke TwoStroke  = KeyStroke.getKeyStroke(KeyEvent.VK_2,
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		ML_DissMeas.setAccelerator(TwoStroke);
 		ML_DissMeas.addActionListener(this);
 		
 		//Load homology clusters
@@ -1331,6 +1341,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		ML_Phylo.setAccelerator(Pstroke);
 		ML_Phylo.addActionListener(this);
 	
+		//Load sequence motifs
+		KeyStroke Estroke = KeyStroke.getKeyStroke(KeyEvent.VK_E,
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		ML_Motifs.setAccelerator(Estroke);
 		ML_Motifs.addActionListener(this);
 		
 		//add to menu
@@ -3057,6 +3071,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	public void setPanDisplayOptions(Jpan_DisplayOptions panDisplayOptions) {
 		this.panDisplayOptions = panDisplayOptions;
+	}
+
+	public boolean isSearchWorkerRunning() {
+		return SearchWorkerRunning;
+	}
+
+	public void setSearchWorkerRunning(boolean searchWorkerRunning) {
+		SearchWorkerRunning = searchWorkerRunning;
 	}
 
 }

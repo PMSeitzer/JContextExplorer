@@ -11,6 +11,10 @@ public class ContextSetDescription implements Serializable{
 	private boolean isCassette = false;
 	
 	//optional fields
+	
+	//ALL
+	private boolean SingleOrganismAmalgamation;
+	
 	//distance
 	private int IntGenSpacing;
 	private boolean NeedSameStrand;
@@ -23,6 +27,10 @@ public class ContextSetDescription implements Serializable{
 	private int GenesBefore;
 	private int GenesAfter;
 	private boolean RelativeBeforeAfter;
+	
+	//genes between
+	private boolean GapLimit;
+	private int GapLimitSize;
 	
 	//cassette
 	private String CassetteOf; 		//Name of another ContextSetDescription
@@ -127,5 +135,29 @@ public class ContextSetDescription implements Serializable{
 
 	public void setNeedSameStrand(boolean needSameStrand) {
 		NeedSameStrand = needSameStrand;
+	}
+
+	public boolean isSingleOrganismAmalgamation() {
+		return SingleOrganismAmalgamation;
+	}
+
+	public void setSingleOrganismAmalgamation(boolean singleOrganismAmalgamation) {
+		SingleOrganismAmalgamation = singleOrganismAmalgamation;
+	}
+
+	public boolean isGapLimit() {
+		return GapLimit;
+	}
+
+	public void setGapLimit(boolean gapLimit) {
+		GapLimit = gapLimit;
+	}
+
+	public int getGapLimitSize() {
+		return GapLimitSize;
+	}
+
+	public void setGapLimitSize(int gapLimitSize) {
+		GapLimitSize = gapLimitSize;
 	}
 }

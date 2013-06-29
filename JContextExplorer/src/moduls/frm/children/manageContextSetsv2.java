@@ -93,7 +93,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 	 * 
 	 */
 	private JPanel jp;
-	private JPanel NorthPanel;
+	private JScrollPane EnclosingPane;
 	
 	//dummy components (for spacing)
 	private JLabel d1, d2, d3, d4, d5;
@@ -145,11 +145,11 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 	private LinkedList<Component> CSGenesBetween_group;
 	private JRadioButton CSGenesBetween;
 	private String strCSGenesBetween = "Group all genes between two queries together";
-	private JCheckBox chkLimitDistance;
+	private JCheckBox cbLimitDistance;
 	private String strchkLimitDistance = "Max distance between query genes:";
-	private JTextField DistanceLimit;
+	private JTextField TxtDistanceLimit;
 	private JTextField LblDistanceLimit;
-	private String strLblDistanceLimit = "nt After";
+	private String strLblDistanceLimit = "nt Span";
 	
 	//CSType (5) - CSMultipleQuery
 	private LinkedList<Component> CSMultipleQuery_group;
@@ -176,6 +176,10 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 	private JButton btnLaunchCombiner;
 	private String strLaunchCombiner = "Launch Context Set Combiner Tool";
 	
+	//Single organism amalgamation option
+	private JCheckBox cbAmalg;
+	private String strcbAmalg = "Single Organism Amalgamation";
+	
 	//Add panel
 	private JButton btnAddCS;
 	private JLabel Add;
@@ -194,6 +198,9 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 	//okay - close panel
 	private JButton btnOK;
 	private String strbtnOK = "OK";
+	
+									//width, height
+	private Dimension D = new Dimension(800, 600);
 
 	/*
 	 * 
@@ -213,31 +220,15 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		this.jb = jbn;
 		this.ReferenceDirectory = fr.getFileChooserSource();
 		
-		//this.ContextList = currentList;
-		
-		//frame settings
-		//this.setSize(new Dimension(400, 350));
-		//this.setSize(900,750);
-		this.setSize(700,750);
-					//width, height
-		
-		this.setTitle("Add or Remove Context Sets");
-		this.setLocationRelativeTo(null);
-		this.setModalityType(ModalityType.DOCUMENT_MODAL);
-		
-		//add panel components
-		//attempt - add nested panel structure for inherent organization
+		//panel + framecomponents
 		this.getPanel();
-		this.DisableComponents();
-		this.setContentPane(jp);
-		//this.pack(); //to pack or not to pack?
+		this.getFrame();
 		
-		//final modification
+		//Data motifications
+		this.DisableComponents();
 		btnAddCS.setEnabled(false);
 		
-		//modality settings
-		this.setModal(true);
-		this.setLocationRelativeTo(null);
+		//final step - turn on visibility
 		this.setVisible(true);
 	}
 
@@ -814,22 +805,22 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 1;
 		c.insets = new Insets(1,20,1,1);
-		chkLimitDistance = new JCheckBox(strchkLimitDistance);
-		chkLimitDistance.setSelected(true);
-		chkLimitDistance.addActionListener(this);
-		//jp.add(chkLimitDistance, c);
-		CSGenesBetween_group.add(chkLimitDistance);
+		cbLimitDistance = new JCheckBox(strchkLimitDistance);
+		cbLimitDistance.setSelected(true);
+		cbLimitDistance.addActionListener(this);
+		jp.add(cbLimitDistance, c);
+		CSGenesBetween_group.add(cbLimitDistance);
 		
 		c.gridx = 1;
 		c.gridy = gridy;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 1;
 		c.insets = new Insets(1,1,1,1);
-		DistanceLimit = new JTextField("10000");
-		DistanceLimit.setEditable(true);
-		DistanceLimit.setHorizontalAlignment(JTextField.LEFT);
-		//jp.add(DistanceLimit, c);
-		CSGenesBetween_group.add(DistanceLimit);
+		TxtDistanceLimit = new JTextField("10000");
+		TxtDistanceLimit.setEditable(true);
+		TxtDistanceLimit.setHorizontalAlignment(JTextField.LEFT);
+		jp.add(TxtDistanceLimit, c);
+		CSGenesBetween_group.add(TxtDistanceLimit);
 		
 		c.gridx = 2;
 		c.gridy = gridy;
@@ -838,10 +829,10 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		c.insets = new Insets(1,1,1,1);
 		LblDistanceLimit = new JTextField(strLblDistanceLimit);
 		LblDistanceLimit.setEditable(false);
-		//jp.add(LblDistanceLimit, c);
+		jp.add(LblDistanceLimit, c);
 		CSGenesBetween_group.add(LblDistanceLimit);
 		
-		//gridy++;
+		gridy++;
 		
 		//private JTextField DistanceLimit;
 		
@@ -984,6 +975,17 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		//add this mapping to hash map.
 		RadioButtonComponents.put(CSCombination.getModel(), CSCombination_group);
 
+		// Single organism amalgamation option
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 5;
+		c.insets = new Insets(10,1,1,1);
+		cbAmalg = new JCheckBox(strcbAmalg);
+		cbAmalg.setSelected(false);
+		jp.add(cbAmalg, c);
+		gridy++;
+		
 		// ADD CONTEXT SET
 		
 		// progress bar
@@ -1105,7 +1107,23 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 //		JScrollPane PanelScroll = new JScrollPane(NorthPanel);
 //		this.getContentPane().add(PanelScroll);
 		
-		this.getContentPane().add(jp, BorderLayout.NORTH);
+		EnclosingPane = new JScrollPane(jp);
+		//EnclosingPane.setPreferredSize(D);
+		this.getContentPane().add(EnclosingPane, BorderLayout.CENTER);
+	}
+	
+	//add frame components
+	private void getFrame(){
+		
+		//frame-type settings
+		this.setTitle("Add or Remove Context Sets");
+		this.setSize(D);
+		this.setLocationRelativeTo(null);
+		
+		//modality settings
+		this.setModalityType(ModalityType.DOCUMENT_MODAL);
+		this.setModal(true);
+
 	}
 	
 	//disable all components
@@ -1196,12 +1214,12 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 			
 		} 
 		
-		if (evt.getSource().equals(chkLimitDistance)){
-			if (chkLimitDistance.isSelected()){
-				DistanceLimit.setEnabled(true);
+		if (evt.getSource().equals(cbLimitDistance)){
+			if (cbLimitDistance.isSelected()){
+				TxtDistanceLimit.setEnabled(true);
 				LblDistanceLimit.setEnabled(true);
 			} else {
-				DistanceLimit.setEnabled(false);
+				TxtDistanceLimit.setEnabled(false);
 				LblDistanceLimit.setEnabled(false);
 			}
 		}
@@ -1255,6 +1273,16 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 						
 					} else if (CSType.isSelected(CSGenesBetween.getModel())) {  //CSType (4) - CSGenesBetween
 						ToAdd.setType("GenesBetween");	ToAdd.setPreprocessed(false);
+						if (cbLimitDistance.isSelected()){
+							ToAdd.setGapLimit(true);
+							int Value = 10000;	//default: 10000
+							try {
+								Value = Integer.parseInt(TxtDistanceLimit.getText());
+							} catch (Exception ex){}
+							ToAdd.setGapLimitSize(Value);
+						} else {
+							ToAdd.setGapLimit(false);
+						}
 						
 					} else if (CSType.isSelected(CSMultipleQuery.getModel())){  //CSType (5) - CSMultipleQuery
 						ToAdd.setType("MultipleQuery");	ToAdd.setPreprocessed(false);
@@ -1268,6 +1296,9 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 						ToAdd.setCassetteOf(CassetteOf);
 					} 
 
+					//Add single string amalgamation
+					ToAdd.setSingleOrganismAmalgamation(cbAmalg.isSelected());
+					
 					//add description to the OS
 					ToAdd.setName(CSName.getText());
 					fr.getOS().getCSDs().add(ToAdd);
@@ -1383,8 +1414,8 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 				}
 				
 				//case: between range limiter
-				if (LL.equals(CSGenesBetween_group) && !chkLimitDistance.isSelected()){
-					DistanceLimit.setEnabled(false);
+				if (LL.equals(CSGenesBetween_group) && !cbLimitDistance.isSelected()){
+					TxtDistanceLimit.setEnabled(false);
 					LblDistanceLimit.setEnabled(false);
 				}
 				

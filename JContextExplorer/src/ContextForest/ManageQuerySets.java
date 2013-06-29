@@ -54,7 +54,7 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 	private String strLblAdd = " ADD A QUERY SET";
 	private JTextField QSName, QSNameLabel;
 	private String strQSNameLabel = "Enter Name: ";
-	private JButton btnLoadFromFile, btnAdd, btnRemoveQS, btnOK;
+	private JButton btnLoadFromFile, btnAdd, btnRemoveQS, btnOK, btnAddNumbers;
 	private String strLoad = "Load from file";
 	private String strbtnAdd = "Add Query Set";
 	private JTextArea txtQueries;

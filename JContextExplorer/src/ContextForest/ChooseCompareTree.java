@@ -392,6 +392,10 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 		//Generate cluster from query
 		protected Cluster GenerateClusterFromQuery(QueryData QD, boolean AddListener){
 
+			//For null cluster results, these values somehow are set to off
+			QD.getAnalysesList().setOptionComputeDendrogram(true);
+			QD.getAnalysesList().setOptionDisplaySearches(true);
+			
 			//Initialize output
 			SearchWorker SW = f.getPanBtn().new SearchWorker(QD,
 					"Load", Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),

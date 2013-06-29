@@ -332,6 +332,10 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 		//Generate cluster from query
 		protected Cluster GenerateClusterFromQuery(QueryData QD, boolean AddListener){
 
+			//For null cluster results, these values somehow are set to off
+			QD.getAnalysesList().setOptionComputeDendrogram(true);
+			QD.getAnalysesList().setOptionDisplaySearches(true);
+			
 			//Create a new SearchWorker.
 			SearchWorker SW = f.getPanBtn().new SearchWorker(QD,
 					"Load", Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
@@ -339,7 +343,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 			if (AddListener){
 				SW.addPropertyChangeListener(CDG);
 			}
-
+			
 			SW.execute();
 
 			//empty while loop - implicit waiting

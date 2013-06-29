@@ -98,6 +98,17 @@ public class FowlkesMallows {
 			}
 		}
 		
+//		//display matrix - debugging
+//		for (int i = 0; i < Set1.size(); i++){
+//			String str = "";
+//			for (int j = 0; j < Set2.size(); j++){
+//				str = str + String.valueOf(Matrix[i][j] + " ");
+//			}
+//			System.out.println(str);
+//		}
+//		
+//		System.out.println("Breakpoint!");
+//		
 		//compute components
 		int P = 0,Q = 0,T = 0;
 		int sumI,sumJ = 0;
@@ -304,6 +315,8 @@ public class FowlkesMallows {
 		//adjust penalty value into scale factor
 		if (penalty < 0){
 			penalty = 0;
+		} else if (penalty > 1){
+			penalty = 1;
 		}
 		
 		//return computed penalty

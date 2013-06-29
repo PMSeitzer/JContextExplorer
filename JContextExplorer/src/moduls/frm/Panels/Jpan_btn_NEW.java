@@ -239,9 +239,7 @@ import definicions.MatriuDistancies;
 			
 			@Override
 			protected Void doInBackground() throws Exception {
-
-			//System.out.println("In Background!");	
-				
+	
 			try {	
 				
 				if (DisplayOutput){
@@ -409,9 +407,14 @@ import definicions.MatriuDistancies;
 
 					}
 					
+					//option: condense into single list + update matches
+					if (!Matches.isEmpty()){
+						Matches = Amalgamate(CurrentCSD.isSingleOrganismAmalgamation(), Matches);
+					}
+					
 					//create an iterator for the HashSet
 					Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
-					 
+										
 					//iterate through HashSet, with string-based keys
 					int OperonCounter = 0; //reset operon counter
 					while(it.hasNext()){
@@ -736,6 +739,11 @@ import definicions.MatriuDistancies;
 
 					}
 					
+					//option: condense into single list + update matches
+					if (!Matches.isEmpty()){
+						Matches = Amalgamate(CurrentCSD.isSingleOrganismAmalgamation(), Matches);
+					}
+					
 					//create an iterator for the HashSet
 					Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
 					
@@ -972,6 +980,38 @@ import definicions.MatriuDistancies;
 				return null;
 			}
 			
+			//both
+			protected HashSet<LinkedList<GenomicElementAndQueryMatch>> Amalgamate(boolean Amalgamate, HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches){
+				
+				//option: condense into single list + update matches
+				if (Amalgamate){
+					
+					//Initialize holding cell
+					LinkedList<GenomicElementAndQueryMatch> CondensedList = new LinkedList<GenomicElementAndQueryMatch>();
+					
+					//create another iterator
+					Iterator<LinkedList<GenomicElementAndQueryMatch>> itp = Matches.iterator();
+					
+					//march through entries, condense
+					while (itp.hasNext()){
+						CondensedList.addAll(itp.next());
+					}
+					
+					//Initialize new output + write condensed
+					HashSet<LinkedList<GenomicElementAndQueryMatch>> UpdatedMatches =
+							new HashSet<LinkedList<GenomicElementAndQueryMatch>>();
+					UpdatedMatches.add(CondensedList);
+					
+					//reset
+					return UpdatedMatches;
+					
+				} else {
+					
+					//just return original value
+					return Matches;
+				}
+			}
+			
 			//Optional Operations
 			
 			//(1) Create a tree panel of search results
@@ -1103,6 +1143,9 @@ import definicions.MatriuDistancies;
 
 				}
 			}
+			
+			//no search worker is running, any more
+			//fr.setSearchWorkerRunning(false);
 
 			}
 				

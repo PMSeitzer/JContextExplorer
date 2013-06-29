@@ -1725,6 +1725,10 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 				StoppingE = temp;
 			}
 			
+			//compute stats about starting element
+			double StartingECenter = this.Elements.get(StartingE).getStart() 
+					+ (0.5*(this.Elements.get(StartingE).getStop() - this.Elements.get(StartingE).getStart()));
+			
 			//add all intermediate elements
 			GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
 			GandE.setE(this.Elements.get(StartingE)); GandE.setQueryMatch(true); LL.add(GandE);
@@ -1753,8 +1757,19 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 			GandE = new GenomicElementAndQueryMatch();
 			GandE.setE(this.Elements.get(StoppingE)); GandE.setQueryMatch(true); LL.add(GandE);
 			
-			//add this list to the hash map.
-			Hits.add(LL);
+			//compute stats about stopping element
+			double StoppingECenter = this.Elements.get(StoppingE).getStart() 
+					+ (0.5*(this.Elements.get(StoppingE).getStop() - this.Elements.get(StoppingE).getStart()));
+			
+			//add list to hash map.  Check for inappropriate cases.
+			if (CSD.isGapLimit()){
+				//System.out.println("Starting: " + StartingECenter + " Stopping: " + StoppingECenter);
+				if (Math.abs(StoppingECenter - StartingECenter) <= CSD.getGapLimitSize()){
+					Hits.add(LL);
+				}
+			} else {
+				Hits.add(LL);
+			}
 		}
 
 	
