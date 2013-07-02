@@ -1665,9 +1665,11 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 					
 					//insert item into the menu
 					MenuDM.insertItemAt(Name, 0);
+					MenuDM.setSelectedItem(Name);
 					
 					//insert item into parent panel
 					f.getPanMenu().getCbDissimilarity().insertItemAt(Name, 0);
+					f.getPan_Menu().getCbDissimilarity().setSelectedItem(Name);
 					
 					
 				} catch (Exception ex){
@@ -1697,7 +1699,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 				for (int i = 0; i < f.getPan_Menu().getCbDissimilarity().getItemCount(); i++){
 					if (f.getPan_Menu().getCbDissimilarity().getItemAt(i).equals(Item)){
 						f.getPan_Menu().getCbDissimilarity().removeItem(Item);
-						System.out.println("I tried to remove it!");
+						//System.out.println("I tried to remove it!");
 						break;
 					}
 				}

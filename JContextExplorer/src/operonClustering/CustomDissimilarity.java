@@ -692,6 +692,14 @@ public class CustomDissimilarity implements Serializable {
 	//Gene Gaps
 	public double GGDissimilarity(LinkedList<GenomicElementAndQueryMatch> O1, LinkedList<GenomicElementAndQueryMatch> O2, String Type){
 		
+//		//breakpoint!
+//		for (GenomicElementAndQueryMatch GandE : O1){
+//			if (GandE.getE().getStart() == 192504 &&
+//					GandE.getE().getStop() == 193139){
+//				System.out.println("breakpoint!");
+//			}
+//		}
+		
 		//re-sizing - O1 Values must always be larger
 		if (O1.size() < O2.size()){
 			LinkedList<GenomicElementAndQueryMatch> Temp = O1;
@@ -864,7 +872,8 @@ public class CustomDissimilarity implements Serializable {
 		
 		//debugging
 		//System.out.println("Dissimilarity: " + Dissimilarity);
-//		System.out.println("breakpoint!");
+
+
 		
 		return Dissimilarity;
 	}
@@ -1140,7 +1149,6 @@ public class CustomDissimilarity implements Serializable {
 	public void setImportanceFraction(Double importanceFraction) {
 		ImportanceFraction = importanceFraction;
 	}
-	
 	
 	//new class
 	public class ImportanceMapping {

@@ -470,7 +470,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 					// Annotation information
 					AG.importFromGFFFile(f.getAbsolutePath());
-
+					
 					// reference to genome file
 					AG.setGenomeFile(f);
 
@@ -543,6 +543,13 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				// Annotation information
 				AG.importFromGFFFile(f.getAbsolutePath());
 
+				//update cluster IDs, if appropriate
+				if (AG.getLargestCluster() > -1){
+					if (OS.LargestCluster < AG.getLargestCluster()){
+						OS.LargestCluster = AG.getLargestCluster();
+					}
+				}
+				
 				// reference to genome file
 				AG.setGenomeFile(f);
 
@@ -554,7 +561,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				String[] Genus = SpeciesName[0].split("_");
 				String TheGenus = Genus[0];
 				AG.setGenus(TheGenus);
-
+				
+				//System.out.println(TheName + ":\t" + OS.LargestCluster);
+				
+				
 				// add Context set
 				//AG.MakeSingleGeneContextSet("SingleGene");
 

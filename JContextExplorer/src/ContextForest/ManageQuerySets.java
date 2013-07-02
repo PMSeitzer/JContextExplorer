@@ -59,6 +59,7 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 	private String strbtnAdd = "Add Query Set";
 	private JTextArea txtQueries;
 	private String strTextAreaTxt = "";
+	private String strbtnAddNumbers = "Add All Clusters";
 	private String strLblRemove = " REMOVE A QUERY SET";
 	private JTextField QSToRemove;
 	private String strQSToRemove = "Query Set:";
@@ -167,6 +168,17 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 		btnLoadFromFile.addActionListener(this);
 		jp.add(btnLoadFromFile, c);
 		
+		//Add cluster numbers
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = basIns;
+		btnAddNumbers = new JButton(strbtnAddNumbers);
+		btnAddNumbers.addActionListener(this);
+		jp.add(btnAddNumbers, c);
+		
 		//add button
 		c.gridx = 2;
 		c.gridy = gridy;
@@ -265,6 +277,11 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 		//load from file
 		if (evt.getSource().equals(btnLoadFromFile)){
 			ImportFileList();
+		}
+		
+		//add a bunch of cluster numbers
+		if (evt.getSource().equals(btnAddNumbers)){
+			AddClusterNumbers();
 		}
 		
 		//Add a Query Set to the current collection
@@ -390,6 +407,28 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 			AddFiles2QueryList(GetQueryList.getSelectedFile());
 		}
 
+	}
+	
+	//add all cluster numbers
+	public void AddClusterNumbers(){
+		
+		//System.out.println("Cluster Numbers! " + f.getOS().LargestCluster);
+		
+		//Retrieve current text
+		strTextAreaTxt =  txtQueries.getText();
+		
+		//Adjust, if necessary
+		if (!strTextAreaTxt.trim().equals("") && !strTextAreaTxt.endsWith("\n")){
+			strTextAreaTxt = strTextAreaTxt + "\n";
+		}
+		
+		//Load cluster numbers
+		for (int i = 1; i <= f.getOS().LargestCluster; i++){
+			strTextAreaTxt = strTextAreaTxt + String.valueOf(i) + "\n";
+		}
+		
+		//update frame
+		txtQueries.setText(strTextAreaTxt);
 	}
 	
 	//Retrieve Query set

@@ -29,6 +29,7 @@ public class AnnotatedGenome implements Serializable {
 	private boolean AGClustersLoaded = false;
 	private String TextDescription = "";								//-Info about the genome
 	private String GenbankID;
+	private Integer LargestCluster = 0;
 	private GBKFieldMapping GFM;
 	private LinkedHashMap<String, Integer> ContigEnds
 		= new LinkedHashMap<String, Integer>();
@@ -124,13 +125,19 @@ public void importFromGFFFile(String filename){
 						
 							//add gene IDs + homology clusters, if available
 							if (ImportedLine.length > 9){
-								E.setClusterID(Integer.parseInt(ImportedLine[9]));
+								int ClustID = Integer.parseInt(ImportedLine[9]);
+								E.setClusterID(ClustID);
+								if (ClustID > LargestCluster){
+									LargestCluster = ClustID;
+								}
 								this.AGClustersLoaded = true;
 								
 								//System.out.println("Set!");
 								if (ImportedLine.length > 10){
 									E.setGeneID(ImportedLine[10]);
 								}
+								
+								//System.out.println("Largest: " + LargestCluster);
 							}
 							
 							//add to list
@@ -159,6 +166,7 @@ public void importFromGFFFile(String filename){
 						} catch (Exception ex) {}
 
 					}
+		
 			}
 			
 			//Convert feature counts to string, for display.
@@ -186,6 +194,7 @@ public void importFromGFFFile(String filename){
 		
 		//set elements to the newly parsed elements.
 		this.Elements = Elements;
+		//System.out.println(LargestCluster);
 
 	}
 
@@ -2273,6 +2282,14 @@ public LinkedHashMap<String, Integer> getContigEnds() {
 
 public void setContigEnds(LinkedHashMap<String, Integer> contigEnds) {
 	ContigEnds = contigEnds;
+}
+
+public Integer getLargestCluster() {
+	return LargestCluster;
+}
+
+public void setLargestCluster(Integer largestCluster) {
+	LargestCluster = largestCluster;
 }
 
 //-----------------------Deprecated ----------------------//
