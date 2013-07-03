@@ -283,6 +283,8 @@ public class FowlkesMallows {
 		//Query Leaves
 		QueryLeafCount = Intersect + Only2;
 		
+		//System.out.println("Breakpoint!");
+		
 		//Identical data sets if no objects only in one set or only in another set
 		if (Only1 == 0 && Only2 == 0){
 			IdenticalDataSets = true;
@@ -306,7 +308,7 @@ public class FowlkesMallows {
 		
 		//Adjust for free matches
 		if (FreeMismatches){
-			TotalMismatches = TotalMismatches - NumberOfFreeMatches;
+			TotalMismatches = Math.max((TotalMismatches - NumberOfFreeMatches), 0);
 		}
 		
 		//adjust accordingly

@@ -1428,7 +1428,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 //		M_Process.add(MP_ManagePheno);
 //		M_Process.add(MP_PhenotypeCompare);
 		
-		
 		//Load Query Set
 		ML_QuerySet.addActionListener(this);
 		KeyStroke Lstroke = KeyStroke.getKeyStroke(KeyEvent.VK_L, 
@@ -1441,9 +1440,19 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
 		ML_DataGrouping.setAccelerator(Kstroke);
 
-		//Action listeners
-		MP_Similarity.addActionListener(this);
+		//Data grouping correlation
 		MP_TreeDataCorr.addActionListener(this);
+		KeyStroke Threestroke = KeyStroke.getKeyStroke(KeyEvent.VK_3, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		MP_TreeDataCorr.setAccelerator(Threestroke);
+		
+		//Tree similarity scan
+		MP_Similarity.addActionListener(this);
+		KeyStroke Fourstroke = KeyStroke.getKeyStroke(KeyEvent.VK_4, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		MP_Similarity.setAccelerator(Fourstroke);
+		
+		//Context Forest
 		MP_ContextForest.addActionListener(this);
 		
 		//Build menu
@@ -1633,33 +1642,33 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			GetGenomes.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 			GetGenomes
 					.setDialogTitle("Select An Annotated Genome File or Directory of Annotated Genome Files");
-
+		
 			//retrieve directory
 			if (this.FileChooserSource != null) {
 				GetGenomes.setCurrentDirectory(FileChooserSource);
 			} else {
 				GetGenomes.setCurrentDirectory(new File("."));
 			}
-		
+			
 			GetGenomes.showOpenDialog(GetGenomes);
 			
 			// note current directory for next time
-			if (GetGenomes.getCurrentDirectory() != null) {
+			if (GetGenomes.getSelectedFile() != null) {
 				
 				if (this.OS == null){
 					MakeDefaultGenomeSet("Default Genome Set");
 				}
 				
 				this.FileChooserSource = GetGenomes.getCurrentDirectory();
-			}
-			
-			//begin import
-			File[] files = GetGenomes.getSelectedFiles();
-			LoadGenomesWorker LGW = new LoadGenomesWorker(files);
-			//CurrentLGW = LGW;
-			LGW.addPropertyChangeListener(panBtn);
-			LGW.execute();
-			//CurrentLGW = null;
+				
+				//begin import
+				File[] files = GetGenomes.getSelectedFiles();
+				LoadGenomesWorker LGW = new LoadGenomesWorker(files);
+				//CurrentLGW = LGW;
+				LGW.addPropertyChangeListener(panBtn);
+				LGW.execute();
+				//CurrentLGW = null;
+			} 
 		
 		}
 		

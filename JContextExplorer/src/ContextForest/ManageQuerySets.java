@@ -296,7 +296,7 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 				QS.setContextTrees(BuildQueries());
 				
 				//Finally, store query set + Update menu
-				f.getOS().getQuerySets().add(QS);
+				f.getOS().getQuerySets().add(0, QS);
 				
 				//determine item to remove, if any.
 				boolean RemoveAnItem = false;
@@ -314,7 +314,8 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 				}
 				
 				//add new item.
-				QSMenu.addItem(QS.getName());
+				QSMenu.insertItemAt(QS.getName(), 0);
+				QSMenu.setSelectedItem(QS.getName());
 			}
 		}
 		
@@ -372,6 +373,16 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 				JOptionPane.showMessageDialog(null, "A Query Set of this name already exists.\nPlease choose a different name.",
 						"Name already in use",JOptionPane.ERROR_MESSAGE);
 			}
+			
+			//Empty Queries check
+			if (Proceed){
+				if (txtQueries.getText().equals("")){
+					JOptionPane.showMessageDialog(null, "Please enter one or more queries in the text area.",
+							"No Queries Supplied",JOptionPane.ERROR_MESSAGE);
+					Proceed = false;
+				}
+			}
+
 		} else {
 			JOptionPane.showMessageDialog(null, 
 					"Please Enter a Name for this Query Set in the Name Field.",

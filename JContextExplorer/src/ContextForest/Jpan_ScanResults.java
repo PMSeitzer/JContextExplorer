@@ -37,6 +37,11 @@ public class Jpan_ScanResults extends JPanel{
 	private FrmScanOutputWindow fsow;
 	private QuerySet QS;
 	private String TCRKey;
+	
+	//result sats
+	private int HighCounter;
+	private int DataSize;
+	private double SimilarityThreshold = 0.99;
 
 	//GUI
 	
@@ -73,6 +78,10 @@ public class Jpan_ScanResults extends JPanel{
 			//Build table
 			CreateTable();
 			
+			//Display message
+			System.out.println("Scan Completed. " + HighCounter + "/"
+					+ DataSize + " Similarity >= " + SimilarityThreshold + ".");
+			
 		} catch (Exception ex) {
 			
 			JOptionPane.showMessageDialog(null, "No comparisons could be evaluated from the queries in the Query Set.\nPlease try with an alternative Query Set.",
@@ -88,10 +97,12 @@ public class Jpan_ScanResults extends JPanel{
 	//Convert data from QS to GUI-appropriate table data
 	public void FormatTableData(){
 
+		HighCounter = 0;
+		
 		//Retrieve valid reports, and initialize data
 		LinkedList<TreeCompareReport> Reps = QS.getTreeComparisons().get(TCRKey);
 		Object[][] TblData = new Object[Reps.size()][6];
-
+		DataSize = Reps.size();
 		
 		for (int i = 0; i < Reps.size(); i++){
 			TreeCompareReport TCR = Reps.get(i);
@@ -100,6 +111,10 @@ public class Jpan_ScanResults extends JPanel{
 					TCR.getPreAdjustedDissimilarity(), TCR.getTotalLeaves()
 					};
 			TblData[i] = Obj;
+			//increment counter
+			if (TCR.getDissimilarity() >= SimilarityThreshold){
+				HighCounter++;
+			}
 		}
 		
 		TableData = TblData;
@@ -674,5 +689,21 @@ public class Jpan_ScanResults extends JPanel{
 
 	public void setTable(JTable table) {
 		this.table = table;
+	}
+
+	public int getHighCounter() {
+		return HighCounter;
+	}
+
+	public void setHighCounter(int highCounter) {
+		HighCounter = highCounter;
+	}
+
+	public int getDataSize() {
+		return DataSize;
+	}
+
+	public void setDataSize(int dataSize) {
+		DataSize = dataSize;
 	}
 }

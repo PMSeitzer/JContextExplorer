@@ -880,106 +880,175 @@ public class CustomDissimilarity implements Serializable {
 	
 	//Strandedness
 	public double SSDissimilarity(LinkedList<GenomicElementAndQueryMatch> O1, LinkedList<GenomicElementAndQueryMatch> O2, String Type){
-		
+			
 		//Initialize output
 		double Dissimilarity = 0;
 		double IndividualDissimilarity = 0;
 		double WholeGroupDissimilarity = 0;
-		double TotalRelativeWeights = 0;
+		double TotalRelativeWeights = 0;		
 		
-		LinkedList<HashSet<GenomicElement>> MatchGroups = new LinkedList<HashSet<GenomicElement>>();
+		//Create special sets for counts
+		LinkedList<GenomicElementAndQueryMatch> O1Counts = new LinkedList<GenomicElementAndQueryMatch>();
+		LinkedList<GenomicElementAndQueryMatch> O2Counts = new LinkedList<GenomicElementAndQueryMatch>();
 		
-		for (GenomicElementAndQueryMatch GandE : O1){
-			HashSet<GenomicElement> Match = new HashSet<GenomicElement>();
-			Match.add(GandE.getE());
-			boolean RetainMatchSet = false;
+		//Add elements found in both sets.
+		boolean RetainElement;
+		//from O1
+		for (GenomicElementAndQueryMatch GandE1 : O1){
+			RetainElement = false;
 			for (GenomicElementAndQueryMatch GandE2 : O2){
 				if (Type.equals("annotation")){
-					if (GandE.getE().getAnnotation().toUpperCase().equals(GandE2.getE().getAnnotation().toUpperCase())){
-						Match.add(GandE2.getE());
-						RetainMatchSet = true;
-					}
+					if (GandE1.getE().getAnnotation().toUpperCase().equals(GandE2.getE().getAnnotation().toUpperCase())){
+						RetainElement = true;
+						break;
+					}	
 				} else {
-					if (GandE.getE().getClusterID() == GandE2.getE().getClusterID()){
-						Match.add(GandE2.getE());
-						RetainMatchSet = true;
+					if (GandE1.getE().getClusterID() == GandE2.getE().getClusterID()){
+						RetainElement = true;
+						break;
 					}
 				}
 			}
 			
-			if (RetainMatchSet){
-				
-				//add duplicate matches
-				for (GenomicElementAndQueryMatch GandE_dup : O1){
-					
-					//pre-requisites: not an exact duplicate, not already in a group
-					if (!GandE.equals(GandE_dup)){
-						boolean UniqueElement = true;
-						for (HashSet<GenomicElement> Set : MatchGroups){
-							if (Set.contains(GandE_dup.getE())){
-								UniqueElement = false;
-							}
-						}
-						
-						if (UniqueElement){
-							if (Type.equals("annotation")){
-								if (GandE.getE().getAnnotation().toUpperCase().equals(GandE_dup.getE().getAnnotation().toUpperCase())){
-									Match.add(GandE_dup.getE());
-								}
-							} else {
-								if (GandE.getE().getClusterID() == GandE_dup.getE().getClusterID()){
-									Match.add(GandE_dup.getE());
-								}
-							}
-						}
-
+			//add element elements
+			if (RetainElement){
+				O1Counts.add(GandE1);
+			}
+		}
+		
+		//from O2
+		for (GenomicElementAndQueryMatch GandE2 : O2){
+			RetainElement = false;
+			for (GenomicElementAndQueryMatch GandE1 : O1){
+				if (GandE2.getE().getAnnotation().toUpperCase().equals(GandE1.getE().getAnnotation().toUpperCase())){
+					RetainElement = true;
+					break;
+				} else {
+					if (GandE2.getE().getClusterID() == GandE1.getE().getClusterID()){
+						RetainElement = true;
+						break;
 					}
 				}
-				
-				MatchGroups.add(Match);
+			}
+			
+			//remove elements
+			if (RetainElement){
+				O2Counts.add(GandE2);
 			}
 		}
 		
-		int GroupCounter = 0;
+		boolean MatchingElement;
+		int CommonTotal;
+		int CommonSameStrand = 0;
+		int CommonDiffStrand = 0;
 		
-		for (HashSet<GenomicElement> HS : MatchGroups){
-			boolean FoundForward = false;
-			boolean FoundReverse = false;
-			for (GenomicElement E : HS){
-				if (E.getStrand().equals(Strand.POSITIVE)){
-					FoundForward = true;
-				}
-				if (E.getStrand().equals(Strand.NEGATIVE)){
-					FoundReverse = true;
+		//Create special sets for strand-matching counts
+		LinkedList<GenomicElementAndQueryMatch> O1CountsM = new LinkedList<GenomicElementAndQueryMatch>();
+		LinkedList<GenomicElementAndQueryMatch> O2CountsM = new LinkedList<GenomicElementAndQueryMatch>();
+		LinkedList<GenomicElementAndQueryMatch> O1CountsN = new LinkedList<GenomicElementAndQueryMatch>();
+		LinkedList<GenomicElementAndQueryMatch> O2CountsN = new LinkedList<GenomicElementAndQueryMatch>();
+		
+		
+		//sort O1Counts appropriately
+		for (GenomicElementAndQueryMatch GandE1 : O1Counts){
+			
+			//find a common element in O2Counts that matches, if possible
+			MatchingElement = false;
+			
+			for (GenomicElementAndQueryMatch GandE2 : O2Counts){
+				if (Type.equals("annotation")){
+					if (GandE1.getE().getAnnotation().toUpperCase().equals(GandE2.getE().getAnnotation().toUpperCase()) &&
+							GandE1.getE().getStrand().equals(GandE2.getE().getStrand()) &&
+							!O1CountsM.contains(GandE1)){
+						MatchingElement = true;
+						break;
+					}	
+				} else {
+					if (GandE1.getE().getClusterID() == GandE2.getE().getClusterID() &&
+							GandE1.getE().getStrand().equals(GandE2.getE().getStrand()) &&
+							!O1CountsM.contains(GandE1)){
+						MatchingElement = true;
+						break;
+					}
 				}
 			}
-			if (FoundForward && FoundReverse){
-				GroupCounter++;
+			
+			// Update counts, and remove from list
+			if (MatchingElement){
+				O1CountsM.add(GandE1);
+			} else {
+				O1CountsN.add(GandE1);
 			}
+			
 		}
 		
+		
+		//sort O1Counts appropriately
+		for (GenomicElementAndQueryMatch GandE2 : O2Counts){
+			
+			//find a common element in O2Counts that matches, if possible
+			MatchingElement = false;
+			
+			for (GenomicElementAndQueryMatch GandE1 : O1){
+				if (Type.equals("annotation")){
+					if (GandE2.getE().getAnnotation().toUpperCase().equals(GandE1.getE().getAnnotation().toUpperCase()) &&
+							GandE2.getE().getStrand().equals(GandE1.getE().getStrand()) &&
+							!O2CountsM.contains(GandE2)){
+						MatchingElement = true;
+						break;
+					}	
+				} else {
+					if (GandE2.getE().getClusterID() == GandE1.getE().getClusterID() &&
+							GandE2.getE().getStrand().equals(GandE1.getE().getStrand()) &&
+							!O2CountsM.contains(GandE2)){
+						MatchingElement = true;
+						break;
+					}
+				}
+			}
+			
+			// Update counts, and remove from list
+			if (MatchingElement){
+				O2CountsM.add(GandE2);
+			} else {
+				O2CountsN.add(GandE2);
+			}
+			
+		}
+		
+		//Finalize counts
+		CommonSameStrand = O1CountsM.size();
+		CommonDiffStrand = O1CountsN.size() + O2CountsN.size();
+		CommonTotal = CommonSameStrand + CommonDiffStrand;
+		
+		//Dissimilarity for individual changes in strandedness
 		if (SSIndividualGenes){
-			
-			IndividualDissimilarity = (GroupCounter/MatchGroups.size());
-			
-			//increment total weights contribution
-			TotalRelativeWeights = TotalRelativeWeights + SSRelWeightIndGenes;
-		}
 		
-		if (SSWholeGroup) {
-			
-			//whole group is switched
-			if (GroupCounter >= MatchGroups.size()){
-				WholeGroupDissimilarity = 1;
-			}
+		//Jaccard dissimilarity
+		IndividualDissimilarity = 1.0 - (Math.max((double) CommonSameStrand, (double) CommonDiffStrand)
+										/ (double)CommonTotal);
+		
+		//increment total weights contribution
+		TotalRelativeWeights = TotalRelativeWeights + SSRelWeightIndGenes;
+	}
+	
+	if (SSWholeGroup) {
+		
+		//whole group is switched
+		if (CommonDiffStrand > CommonSameStrand ){
+			WholeGroupDissimilarity = 1.0;
+		} else {
+			WholeGroupDissimilarity = 0.0;
+		}
 
-			//increment total weights contribution
-			TotalRelativeWeights = TotalRelativeWeights + SSRelWeightWholeGroup;
-		}
-		
-		Dissimilarity = (SSRelWeightIndGenes/TotalRelativeWeights) * IndividualDissimilarity +
-						(SSRelWeightWholeGroup/TotalRelativeWeights) * WholeGroupDissimilarity;
-		
+		//increment total weights contribution
+		TotalRelativeWeights = TotalRelativeWeights + SSRelWeightWholeGroup;
+	}
+	
+	//compute overall dissimilarity
+	Dissimilarity = (SSRelWeightIndGenes/TotalRelativeWeights) * IndividualDissimilarity +
+					(SSRelWeightWholeGroup/TotalRelativeWeights) * WholeGroupDissimilarity;
+	
 		//adjust dissimilarity
 		if (Dissimilarity > 1){
 			Dissimilarity = 1;
@@ -988,6 +1057,7 @@ public class CustomDissimilarity implements Serializable {
 		}
 		
 		return Dissimilarity;
+		
 	}
 	
 	//Total Dissimilarity
