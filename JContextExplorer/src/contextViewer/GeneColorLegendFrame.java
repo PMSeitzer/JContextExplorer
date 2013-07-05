@@ -59,6 +59,7 @@ public class GeneColorLegendFrame extends JFrame implements ComponentListener{
 		Dimension scrpDim = new Dimension();
 		scrpDim.setSize(dim.getWidth()-(ScrollPaneInset*2), dim.getHeight()-4*ScrollPaneInset);
 		scrp.setPreferredSize(scrpDim);
+		scrp.getVerticalScrollBar().setUnitIncrement(10);
 		
 		//add northern panel
 		this.pan_North.add(scrp, BorderLayout.CENTER);
