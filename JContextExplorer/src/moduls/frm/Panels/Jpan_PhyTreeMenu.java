@@ -177,7 +177,7 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 		TreeType = new JTextField(strTreeType);
 		TreeType.setFont(fontStandard);
 		TreeType.setEditable(false);
-		add(TreeType,c);
+		//add(TreeType,c);
 		gridy++;
 		
 		//define button group
@@ -195,7 +195,7 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 		c.gridwidth = 1;
 		radSpecies.setSelected(true);
 		radSpecies.addActionListener(this);
-		add(radSpecies, c);
+		//add(radSpecies, c);
 		
 		//Tree option 2: Gene Tree
 		c.gridx = 1;
@@ -206,7 +206,7 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 		c.gridwidth = 1;
 		radGene.setSelected(false);
 		radGene.addActionListener(this);
-		add(radGene, c);
+		//add(radGene, c);
 		gridy++;
 		
 		//Display Options banner

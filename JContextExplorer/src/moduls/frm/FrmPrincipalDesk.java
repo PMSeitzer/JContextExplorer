@@ -89,9 +89,11 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 
-import com.apple.eawt.AboutHandler;
-import com.apple.eawt.AppEvent.AboutEvent;
-import com.apple.eawt.Application;
+//Importing these classes on a non-Mac will cause crash!
+
+//import com.apple.eawt.AboutHandler;
+//import com.apple.eawt.AppEvent.AboutEvent;
+//import com.apple.eawt.Application;
 
 import operonClustering.CustomDissimilarity;
 
@@ -1498,16 +1500,33 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 	}
 
-	//initialize apple-specific menu components
+//	//initialize apple-specific menu components
+	//Method is currently commented out
 	public void AppleOSMenuAdjustments(){
-		Application a = Application.getApplication();
-		a.setAboutHandler(new AboutHandler(){
-
-			@Override
-			public void handleAbout(AboutEvent e) {
-				new AboutJCE();
-			}
-		});
+//		
+//		try {
+//			
+////			//retrieve classes
+//			Class AboutHandlerClass = Class.forName("com.apple.eawt.AboutHandler");
+//			Class ApplicationClass = Class.forName("com.apple.eawt.Application");
+//		
+//			//throws an exception, even on apple.
+//			//Class AboutEventClass = Class.forName("com.apple.eawt.AppEvent.AboutEvent");
+//			
+//			com.apple.eawt.Application a = com.apple.eawt.Application.getApplication();
+//			a.setAboutHandler(new com.apple.eawt.AboutHandler(){
+//
+//				@Override
+//				public void handleAbout(com.apple.eawt.AppEvent.AboutEvent e) {
+//					new AboutJCE();
+//				}
+//			});
+//			
+//		} catch (Exception e1) {
+//			// TODO Auto-generated catch block
+//			//e1.printStackTrace();
+//		}
+//
 	}
 	
 	//Initialize data
@@ -1543,7 +1562,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PopularGenomeSetData PGD_halos = new PopularGenomeSetData();
 		PGD_halos.setName(strHalos);
 		PGD_halos.setChkBox(MG_Halos);
-		PGD_halos.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/05/Haloarchaea.txt");
+		PGD_halos.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/07/Haloarchaea.txt");
 		PGD_halos.setPasswordProtected(false);
 		PopularGenomeSets.put(MG_Halos, PGD_halos);
 		
@@ -1551,7 +1570,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PopularGenomeSetData PGD_chloros = new PopularGenomeSetData();
 		PGD_chloros.setName(strChloroviruses);
 		PGD_chloros.setChkBox(MG_Chloroviruses);
-		PGD_chloros.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/05/Chloroviruses.txt");
+		PGD_chloros.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/07/Chloroviruses.txt");
 		PGD_chloros.setPasswordProtected(false);
 		PopularGenomeSets.put(MG_Chloroviruses, PGD_chloros);
 		
@@ -1559,7 +1578,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PopularGenomeSetData PGD_myxo = new PopularGenomeSetData();
 		PGD_myxo.setName(strMyxo);
 		PGD_myxo.setChkBox(MG_Myxo);
-		PGD_myxo.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/05/Myxococcus.txt");
+		PGD_myxo.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/07/Myxococcus.txt");
 		PGD_myxo.setPasswordProtected(false);
 		PopularGenomeSets.put(MG_Myxo, PGD_myxo);
 		
@@ -1567,7 +1586,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PopularGenomeSetData PGD_staph = new PopularGenomeSetData();
 		PGD_staph.setName(strStaph);
 		PGD_staph.setChkBox(MG_Staph);
-		PGD_staph.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/05/Staphylococcus_aureus.txt");
+		PGD_staph.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/07/Staphylococcus_aureus.txt");
 		PGD_staph.setPasswordProtected(true);
 		PGD_staph.setPassword("nenegoose");
 		PopularGenomeSets.put(MG_Staph, PGD_staph);
@@ -1576,7 +1595,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PopularGenomeSetData PGD_salmonella = new PopularGenomeSetData();
 		PGD_salmonella.setName(strSalmonella);
 		PGD_salmonella.setChkBox(MG_Salmonella);
-		PGD_salmonella.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/05/Salmonella_Enterica.txt");
+		PGD_salmonella.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/07/Salmonella_Enterica.txt");
 		PGD_salmonella.setPasswordProtected(true);
 		PGD_salmonella.setPassword("fugufish");
 		PopularGenomeSets.put(MG_Salmonella, PGD_salmonella);

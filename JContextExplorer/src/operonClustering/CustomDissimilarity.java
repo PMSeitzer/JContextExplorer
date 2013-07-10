@@ -387,6 +387,24 @@ public class CustomDissimilarity implements Serializable {
 		 * the matrix is not very interesting and the Hungarian algorithm just returns the element.
 		 */
 
+//		//debugging
+//		boolean Breakit = false;
+//		for (GenomicElementAndQueryMatch GandE : O1){
+//			if (GandE.getE().getStart() == 348280 &&
+//					GandE.getE().getStop() == 349017){
+//				Breakit = true;
+//			}
+//		}
+//		if (Breakit){
+//			for (GenomicElementAndQueryMatch GandE2 : O2){
+//				if (GandE2.getE().getStart() == 65555 &&
+//						GandE2.getE().getStop() == 66292){
+//					System.out.println("Breakpoint!");
+//				}
+//			}
+//		}
+		
+		
 		if (Type.equals("annotation")){
 			
 			//First, isolate all common types.
