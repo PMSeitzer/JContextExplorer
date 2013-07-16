@@ -97,8 +97,8 @@ import javax.swing.event.InternalFrameListener;
 
 import operonClustering.CustomDissimilarity;
 
-import ContextForest.CFSettingsWindow;
 import ContextForest.ChooseCompareTree;
+import ContextForest.ChooseContextForest;
 import ContextForest.ChooseDataGrouping;
 import ContextForest.ContextForestWindow;
 import ContextForest.ManageQuerySets;
@@ -1372,19 +1372,25 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		 */
 		M_Export = new JMenu("Export");
 		ME_GWS = new JMenuItem("Genome Set");
-		ME_GFFs = new JMenuItem("Genomes as GFF files");
-		ME_Genbanks = new JMenuItem("Genomes as Genbank files");
+		ME_GFFs = new JMenuItem("Genomes as Extended GFF files");
+		ME_Genbanks = new JMenuItem("Genomes as Genbank files from NCBI");
 		ME_Clusters = new JMenuItem("Homology Clusters");
 		
-		//New genome set
+		//Export GFFs
 		KeyStroke Xstroke = KeyStroke.getKeyStroke(KeyEvent.VK_X, 
 				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
 		ME_GFFs.setAccelerator(Xstroke);
 		ME_GFFs.addActionListener(this);
 		
+		//Export Genbanks
+		KeyStroke Ystroke = KeyStroke.getKeyStroke(KeyEvent.VK_Y, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		ME_Genbanks.setAccelerator(Ystroke);
+		ME_Genbanks.addActionListener(this);
+		
 		//M_Export.add(ME_GWS);
 		M_Export.add(ME_GFFs);
-		//M_Export.add(ME_Genbanks);
+		M_Export.add(ME_Genbanks);
 		//M_Export.add(ME_Clusters);
 			
 		/*
@@ -1394,41 +1400,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		M_Process = new JMenu("Process");
 		
 		//Components
-		MP_NewQuery = new JMenuItem("New Query Set");
-		MP_ManageQueries = new JMenuItem("Manage Query Sets");
-		MP_QuerySet = new JMenu("Available Query Sets");
 		MP_ContextForest = new JMenuItem("Create Context Forest");
 		MP_Similarity = new JMenuItem("Tree Similarity Scan");
-		MP_NewPheno = new JMenuItem("Load Phenotypic Data");
-		MP_ManagePheno = new JMenuItem("Manage Phenotypic Data");
-		MP_PhenotypeData = new JMenu("Available Phenotypic Data Sets");
 		MP_TreeDataCorr = new JMenuItem("Data Grouping Correlation");
-		
-		//default sub-menus
-		MP_NoQuerySets = new JCheckBoxMenuItem("None Available");
-		MP_NoQuerySets.setSelected(false);
-		MP_NoQuerySets.setEnabled(false);
-		MP_NoPhenotypeData = new JCheckBoxMenuItem("None Available");
-		MP_NoPhenotypeData.setSelected(false);
-		MP_NoPhenotypeData.setEnabled(false);
-		MP_QuerySet.add(MP_NoQuerySets);
-		MP_PhenotypeData.add(MP_NoPhenotypeData);
-		
-		//Action listeners
-		MP_NewQuery.addActionListener(this);
-
-//		//Build menu
-//		M_Process.add(MP_NewQuery);
-//		M_Process.add(MP_QuerySet);
-//		M_Process.add(MP_ManageQueries);
-//		M_Process.addSeparator();
-//		M_Process.add(MP_ContextForest);
-//		M_Process.add(MP_Similarity);
-//		M_Process.addSeparator();
-//		M_Process.add(MP_NewPheno);
-//		M_Process.add(MP_PhenotypeData);
-//		M_Process.add(MP_ManagePheno);
-//		M_Process.add(MP_PhenotypeCompare);
 		
 		//Load Query Set
 		ML_QuerySet.addActionListener(this);
@@ -1456,6 +1430,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Context Forest
 		MP_ContextForest.addActionListener(this);
+		KeyStroke Fivestroke = KeyStroke.getKeyStroke(KeyEvent.VK_5, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		MP_ContextForest.setAccelerator(Fivestroke);
 		
 		//Build menu
 		M_Process.add(ML_QuerySet);
@@ -1804,18 +1781,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				}
 			}
 		}
-		
-		/*
-		 * WHOLE GENOME SET ANALYSIS
-		 */
-		if (evt.getSource().equals(MG_WholeSet)){
-			if (this.OS != null){
-				new CFSettingsWindow(this);
-			} else {
-				this.NoOS();
-			}
-		}
-		
+				
 		/*
 		 * LOAD
 		 */
@@ -1970,6 +1936,20 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			
 		}
 		
+		//Genbank Export from NCBI
+		if (evt.getSource().equals(ME_Genbanks)){
+			
+			//Announcement/instructions
+			String msg = "To Retrieve one or more Genbank file(s) from NCBI, in the next window,\n" +
+					"under the heading 'Organism and GenbankIDs', on each line type in the name of each genome\n" +
+					"followed by the genbank ID in the provided text area and push the 'Export Genome Files' button.\n\n" +
+					"Please see the User's manual for more information.";
+			JOptionPane.showMessageDialog(null, msg,"",JOptionPane.INFORMATION_MESSAGE);
+			
+			//launch frame
+			new ImportGenbankIDs(this);
+		}
+		
 		/*
 		 * PROCESS
 		 */
@@ -1982,19 +1962,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//Add Data Grouping
 		if (evt.getSource().equals(ML_DataGrouping)){
 			NewDataGrouping();
-		}
-		
-		//Tree Similarity Scan
-		if (evt.getSource().equals(MP_Similarity)){
-			if (getOS() != null){
-				if (OS.getQuerySets().size() > 0){
-					new ChooseCompareTree(this);
-				} else {
-					this.NoQS();
-				}
-			} else {
-				this.NoOS();
-			}
 		}
 		
 		//Data Grouping comparison
@@ -2010,30 +1977,33 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					this.NoQS();
 				}
 				
-//				for (String s : OS.getDataGroups().keySet()){
-//					System.out.println("Key: " + s);
-//					LinkedList<String[]> clust = OS.getDataGroups().get(s);
-//					for (String[] s1 : clust){
-//						String str = "Cluster: ";
-//						for (String s2 : s1){
-//							str = str + " " + s2;
-//						}
-//						System.out.println(str);
-//					}
-//				}
 			} else {
 				this.NoOS();
 			}
 		}
-
-		//Launch Context Forest Window
-		if (evt.getSource().equals(MP_ContextForest)){
+		
+		//Tree Similarity Scan
+		if (evt.getSource().equals(MP_Similarity)){
 			if (getOS() != null){
 				if (OS.getQuerySets().size() > 0){
-					new ContextForestWindow(this);
+					new ChooseCompareTree(this);
 				} else {
 					this.NoQS();
 				}
+			} else {
+				this.NoOS();
+			}
+		}
+		
+		//Context Forest
+		if (evt.getSource().equals(MP_ContextForest)){
+			if (getOS() != null){
+				if (OS.getQuerySets().size() > 0){
+					new ChooseContextForest(this);
+				} else {
+					this.NoQS();
+				}
+				
 			} else {
 				this.NoOS();
 			}

@@ -107,10 +107,10 @@ public class FrmScanOutputWindow extends JFrame implements ActionListener {
 		for (String s : QS.getTreeComparisons().keySet()){
 			
 			System.out.println("Scan: " + s);
-			LinkedList<TreeCompareReport> Reps = QS.getTreeComparisons().get(s);
+			LinkedList<ScanReport> Reps = QS.getTreeComparisons().get(s);
 			System.out.println("Query\tDissimilarity\tIdentical Sets" +
 					"\tAdjustment Factor\tUnadjusted Dissimilarity\tTotal Leaves");
-			for (TreeCompareReport TCR : Reps){
+			for (ScanReport TCR : Reps){
 				System.out.println(TCR.getQueryName() + "\t" 
 						+ TCR.getDissimilarity() + "\t" 
 						+ TCR.isIdenticalDataSet() + "\t"

@@ -2,6 +2,7 @@ package moduls.frm;
 
 import importExport.DadesExternes;
 import moduls.frm.children.FrmSearchResults;
+import definicions.Cluster;
 import definicions.MatriuDistancies;
 import genomeObjects.CSDisplayData;
 
@@ -23,6 +24,7 @@ public class QueryData {
 	private MatriuDistancies multiDendro;
 	private FrmSearchResults SRF;
 	private DadesExternes de;
+	private Cluster OutputCluster = null;
 	
 	//Constructor
 	public QueryData(){
@@ -133,5 +135,13 @@ public class QueryData {
 
 	public void setDe(DadesExternes de) {
 		this.de = de;
+	}
+
+	public Cluster getOutputCluster() {
+		return OutputCluster;
+	}
+
+	public void setOutputCluster(Cluster outputCluster) {
+		OutputCluster = outputCluster;
 	}
 }

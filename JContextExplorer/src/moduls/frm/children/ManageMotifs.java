@@ -92,7 +92,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 	private String strLblUpstream = "Upstream of start:";
 	private String strLblDownstream = "Downstream of stop:";
 	private String strTxtUpstream = "50";
-	private String strTxtDownstream = "-1";
+	private String strTxtDownstream = "none";
 	private JRadioButton radAllInternal, radRangeInternal;
 	private String strAllInternal = "Include all internal motifs";
 	private String strRangeInternal = "Include internal motifs within range";
@@ -101,7 +101,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 	private JTextField IntLblDownstream, IntLblUpstream, IntTxtDownstream, IntTxtUpstream;
 	private String strIntLblDownstream = "Downstream of start:";
 	private String strIntTxtDownstream = "50";
-	private String strIntTxtUpstream = "-1";
+	private String strIntTxtUpstream = "none";
 	private String strIntLblUpstream = "Upstream of stop:";
 	
 	//(1) MSFimo
@@ -138,6 +138,13 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 	//okay button - close panel
 	private JButton btnOK;
 	private String strbtnOK = "OK";
+	
+	//DATA
+	//associate motifs
+	private int NumTxtDownstream = -1;
+	private int NumTxtUpstream = -1;
+	private int NumIntTxtUpstream = -1;
+	private int NumIntTxtDownstream = -1;
 	
 	//Constructor
 	public ManageMotifs(FrmPrincipalDesk f){
@@ -199,6 +206,10 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 	
 			//wait cursor
 			f.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			LoadedFileName.setVisible(false);
+			
+			//prepare parameters for association (if appropriate)
+			determineAssociationRanges();
 			
 			if (isDir){
 				importFromDir();
@@ -337,208 +348,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 								
 								//Add associations
 								addAssociation(SpeciesName, SM);
-//								
-//CUTPOINT								
-//								//option: associate with an annotated genome
-//								if (chkAssociate.isSelected()){
-//									AnnotatedGenome AG = f.getOS().getSpecies().get(SpeciesName);
-//									int DistE_SM;
-//									GenomicElement TempE = null;
-//									
-//									//Center of motif
-//									double value = 0.5 * ( (double) SM.getStart() + (double) SM.getStop() );
-//									long Center = Math.round(value);
-//									
-//									for (GenomicElement E : AG.getElements()){
-//										if (radNextDownstream.isSelected()){
-//											if (E.getContig().contentEquals(SM.getContig())){ // same contig
-//
-//												//same strand check
-//												if (chkStrandMatchingDownStream.isSelected()){
-//													
-//													if (E.getStrand().equals(SM.getStrand())){ //same strand
-//														
-//														if (SM.getStrand().equals(Strand.POSITIVE)){
-//															
-//															//case: internal motif
-//															if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
-//																E.addAMotif(SM);
-//																break;
-//
-//															//case: partially overlapping
-//															} else if (SM.getStart() < E.getStart() && SM.getStop() > E.getStart()){
-//																E.addAMotif(SM);
-//																break;
-//																
-//															//case: distance from source
-//															} else {
-//																DistE_SM = E.getStart() - SM.getStop();
-//																if (DistE_SM > 0){
-//																	E.addAMotif(SM);
-//																	break;
-//																}
-//															}
-//															
-//														} else {
-//															
-//															//case: internal motif
-//															if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
-//																E.addAMotif(SM);
-//																break;
-//
-//															//case: partially overlapping
-//															} else if (SM.getStart() < E.getStop() && SM.getStop() > E.getStop()){
-//																E.addAMotif(SM);
-//																break;
-//																
-//															//case: distance from source
-//															} else {
-//																DistE_SM =  E.getStart() - SM.getStop();
-//																if (DistE_SM > 0){
-//																	if (TempE != null){
-//																		TempE.addAMotif(SM);
-//																		TempE = null;
-//																		break;
-//																	}
-//																} else {
-//																	//store value, in case it is needed.
-//																	TempE = E;
-//																}
-//															}
-//														}
-//
-//													}
-//													
-//												} else {
-//													
-//													//case: internal motif
-//													if (E.getStart() < SM.getStart() && E.getStop() > SM.getStop()){
-//														E.addAMotif(SM);
-//														break;
-//
-//													//case: partially overlapping
-//													} else if (SM.getStart() < E.getStart() && SM.getStop() > E.getStart()){
-//														E.addAMotif(SM);
-//														break;
-//														
-//													//case: distance from source
-//													} else {
-//														DistE_SM = E.getStart() - SM.getStop();
-//														if (DistE_SM > 0){
-//															E.addAMotif(SM);
-//															break;
-//														}
-//													}
-//													
-//												}
-//												
-//											}
-//											
-//										//just search for nearby	
-//										} else if (radWithinRange.isSelected()) {
-//											if (E.getContig().contentEquals(SM.getContig())){ // same contig
-//
-//												//Center of motif
-//												double valueofE = 0.5 * ( (double) E.getStart() + (double) E.getStop() );
-//												long CenterofE = Math.round(valueofE);
-//												
-//												//Once passed through the search bubble, stop searching - E will only get larger.
-//												if (CenterofE - Center > SearchBubbleRange){
-//													break;
-//												}
-//												
-//												//don't even consider the motif if it's out of the search bubble range
-//												if (Math.abs(Center - CenterofE) < SearchBubbleRange){
-//												     
-//													//don't look if a strand-agreement condition is violated.
-//													if ((chkStrandMatching.isSelected() && SM.getStrand().equals(E.getStrand())) ||
-//															chkStrandMatching.isSelected() == false){
-//														
-//														//positive stranded case
-//														if (E.getStrand().equals(Strand.POSITIVE)){
-//															
-//															//upstream case
-//															if (Integer.parseInt(TxtUpstream.getText()) >= 0){
-//																if (E.getStart() - Center <= Integer.parseInt(TxtUpstream.getText()) &&
-//																		E.getStart() - Center >= 0){
-//																	E.addAMotif(SM);
-//																}
-//															}
-//															
-//															//downstream case
-//															if (Integer.parseInt(TxtDownstream.getText()) >= 0){
-//																if (Center - E.getStop() <= Integer.parseInt(TxtDownstream.getText()) &&
-//																		Center - E.getStop() >= 0){
-//																	E.addAMotif(SM);
-//																}
-//															}
-//															
-//															//internal motif case
-//															if (radAllInternal.isSelected()){
-//																if (E.getStop() > Center && Center > E.getStart()){
-//																	E.addAMotif(SM);
-//																}
-//															} else {
-//																if (Integer.parseInt(IntTxtDownstream.getText()) >= 0){
-//																	if (Center - E.getStart() <= Integer.parseInt(IntTxtDownstream.getText()) &&
-//																			Center - E.getStart() >= 0){
-//																		E.addAMotif(SM);
-//																	}
-//																}
-//																if (Integer.parseInt(IntTxtUpstream.getText()) >= 0){
-//																	if (E.getStop() - Center <= Integer.parseInt(IntTxtUpstream.getText()) &&
-//																			E.getStop() - Center >= 0){
-//																		E.addAMotif(SM);
-//																	}
-//																}
-//															}
-//
-//															
-//														} else {
-//															
-//															//upstream case
-//															if (Integer.parseInt(TxtUpstream.getText()) >= 0){
-//																if (Center - E.getStop() <= Integer.parseInt(TxtUpstream.getText()) &&
-//																		Center - E.getStop() >= 0){
-//																	E.addAMotif(SM);
-//																}
-//															}
-//															
-//															//downstream case
-//															if (Integer.parseInt(TxtDownstream.getText()) >= 0){
-//																if (E.getStart() - Center <= Integer.parseInt(TxtDownstream.getText()) &&
-//																		E.getStart() - Center >= 0){
-//																	E.addAMotif(SM);
-//																}
-//															}
-//															
-//															//internal motif case
-//															if (radAllInternal.isSelected()){
-//																if (E.getStop() > Center && Center > E.getStart()){
-//																	E.addAMotif(SM);
-//																}
-//															} else {
-//																if (Integer.parseInt(IntTxtDownstream.getText()) >= 0){
-//																	if (E.getStop() - Center <= Integer.parseInt(IntTxtDownstream.getText()) &&
-//																			E.getStop() - Center >= 0){
-//																		E.addAMotif(SM);
-//																	}
-//																}
-//																if (Integer.parseInt(IntTxtUpstream.getText()) >= 0){
-//																	if (Center - E.getStart() <= Integer.parseInt(IntTxtUpstream.getText()) &&
-//																			Center - E.getStart() >= 0){
-//																		E.addAMotif(SM);
-//																	}
-//																}
-//															}
-//														}
-//													}
-//												}
-//											}
-//										}
-//									}	
-//								}
-//CUTPOINT
+
 							}
 
 						}
@@ -690,6 +500,32 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 
 		}
 		
+		//Determine nucleotide proximity for localization
+		protected void determineAssociationRanges(){
+			
+			//non-integer parses as -1
+			
+			//upstream of gene (external)
+			try {
+				NumTxtUpstream = Integer.parseInt(TxtUpstream.getText());
+			} catch (Exception ex){}
+			
+			//downstream of gene (external)
+			try {
+				NumTxtDownstream = Integer.parseInt(TxtDownstream.getText());
+			} catch (Exception ex) {}
+			
+			//downstream of gene - internal
+			try {
+				NumIntTxtDownstream = Integer.parseInt(IntTxtDownstream.getText());
+			} catch (Exception ex) {}
+			
+			//upstream of gene - internal
+			try {
+				NumIntTxtUpstream = Integer.parseInt(IntTxtUpstream.getText());
+			} catch (Exception ex) {}
+		}
+		
 		//Associate a particular motif with one or more genomic elements
 		protected void addAssociation(String SpeciesName, SequenceMotif SM){
 			
@@ -800,11 +636,11 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 							if (CenterofE - Center > SearchBubbleRange){
 								break;
 							}
-							
+														
 							//don't even consider the motif if it's out of the search bubble range
 							if (Math.abs(Center - CenterofE) < SearchBubbleRange){
 							     
-								//don't look if a strand-agreement condition is violated.
+								//don't look if a strand-agreement condition is violated, when appropriate.
 								if ((chkStrandMatching.isSelected() && SM.getStrand().equals(E.getStrand())) ||
 										chkStrandMatching.isSelected() == false){
 									
@@ -812,16 +648,16 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 									if (E.getStrand().equals(Strand.POSITIVE)){
 										
 										//upstream case
-										if (Integer.parseInt(TxtUpstream.getText()) >= 0){
-											if (E.getStart() - Center <= Integer.parseInt(TxtUpstream.getText()) &&
+										if (NumTxtUpstream >= 0){
+											if (E.getStart() - Center <= NumTxtUpstream &&
 													E.getStart() - Center >= 0){
 												E.addAMotif(SM);
 											}
 										}
 										
 										//downstream case
-										if (Integer.parseInt(TxtDownstream.getText()) >= 0){
-											if (Center - E.getStop() <= Integer.parseInt(TxtDownstream.getText()) &&
+										if (NumTxtDownstream >= 0){
+											if (Center - E.getStop() <= NumTxtDownstream &&
 													Center - E.getStop() >= 0){
 												E.addAMotif(SM);
 											}
@@ -833,14 +669,14 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 												E.addAMotif(SM);
 											}
 										} else {
-											if (Integer.parseInt(IntTxtDownstream.getText()) >= 0){
-												if (Center - E.getStart() <= Integer.parseInt(IntTxtDownstream.getText()) &&
+											if (NumIntTxtDownstream >= 0){
+												if (Center - E.getStart() <= NumIntTxtDownstream &&
 														Center - E.getStart() >= 0){
 													E.addAMotif(SM);
 												}
 											}
-											if (Integer.parseInt(IntTxtUpstream.getText()) >= 0){
-												if (E.getStop() - Center <= Integer.parseInt(IntTxtUpstream.getText()) &&
+											if (NumIntTxtUpstream >= 0){
+												if (E.getStop() - Center <= NumIntTxtUpstream &&
 														E.getStop() - Center >= 0){
 													E.addAMotif(SM);
 												}
@@ -851,16 +687,16 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 									} else {
 										
 										//upstream case
-										if (Integer.parseInt(TxtUpstream.getText()) >= 0){
-											if (Center - E.getStop() <= Integer.parseInt(TxtUpstream.getText()) &&
+										if (NumTxtUpstream >= 0){
+											if (Center - E.getStop() <= NumTxtUpstream &&
 													Center - E.getStop() >= 0){
 												E.addAMotif(SM);
 											}
 										}
 										
 										//downstream case
-										if (Integer.parseInt(TxtDownstream.getText()) >= 0){
-											if (E.getStart() - Center <= Integer.parseInt(TxtDownstream.getText()) &&
+										if (NumTxtDownstream >= 0){
+											if (E.getStart() - Center <= NumTxtDownstream &&
 													E.getStart() - Center >= 0){
 												E.addAMotif(SM);
 											}
@@ -872,14 +708,14 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 												E.addAMotif(SM);
 											}
 										} else {
-											if (Integer.parseInt(IntTxtDownstream.getText()) >= 0){
-												if (E.getStop() - Center <= Integer.parseInt(IntTxtDownstream.getText()) &&
+											if (NumIntTxtDownstream >= 0){
+												if (E.getStop() - Center <= NumIntTxtDownstream &&
 														E.getStop() - Center >= 0){
 													E.addAMotif(SM);
 												}
 											}
-											if (Integer.parseInt(IntTxtUpstream.getText()) >= 0){
-												if (Center - E.getStart() <= Integer.parseInt(IntTxtUpstream.getText()) &&
+											if (NumIntTxtUpstream >= 0){
+												if (Center - E.getStart() <= NumIntTxtUpstream &&
 														Center - E.getStart() >= 0){
 													E.addAMotif(SM);
 												}
@@ -907,7 +743,7 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 				LoadedFileName.setText("Sequence motif \"" + MSName.getText() 
 						+ "\" successfully mapped " + this.OrganismsMapped + " times.");
 			}
-			
+			LoadedFileName.setVisible(true);
 			btnAddMS.setEnabled(true);
 			MSName.setEditable(true);
 			

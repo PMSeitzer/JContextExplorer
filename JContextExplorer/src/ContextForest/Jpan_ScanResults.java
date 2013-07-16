@@ -100,12 +100,12 @@ public class Jpan_ScanResults extends JPanel{
 		HighCounter = 0;
 		
 		//Retrieve valid reports, and initialize data
-		LinkedList<TreeCompareReport> Reps = QS.getTreeComparisons().get(TCRKey);
+		LinkedList<ScanReport> Reps = QS.getTreeComparisons().get(TCRKey);
 		Object[][] TblData = new Object[Reps.size()][6];
 		DataSize = Reps.size();
 		
 		for (int i = 0; i < Reps.size(); i++){
-			TreeCompareReport TCR = Reps.get(i);
+			ScanReport TCR = Reps.get(i);
 			Object[] Obj = {TCR.getQueryName(), TCR.getDissimilarity(),
 					String.valueOf(TCR.isIdenticalDataSet()), TCR.getAdjustmentFactor(),
 					TCR.getPreAdjustedDissimilarity(), TCR.getTotalLeaves()

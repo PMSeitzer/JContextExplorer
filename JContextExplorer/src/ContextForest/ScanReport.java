@@ -1,6 +1,6 @@
 package ContextForest;
 
-public class TreeCompareReport {
+public class ScanReport {
 
 	//Fields
 	

@@ -29,18 +29,19 @@ import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 
 import definicions.Cluster;
+import definicions.MatriuDistancies;
 
 import moduls.frm.FrmPrincipalDesk;
 import moduls.frm.QueryData;
 import moduls.frm.Panels.Jpan_Menu;
 import moduls.frm.Panels.Jpan_btn_NEW.SearchWorker;
 
-public class ChooseDataGrouping extends JDialog implements ActionListener, PropertyChangeListener{
+public class ChooseContextForest extends JDialog implements ActionListener, PropertyChangeListener{
 
 	//Fields
 	//baseline
 	private FrmPrincipalDesk f;
-	private ChooseDataGrouping CDG;
+	private ChooseContextForest CCF;
 	
 	//Data Parameters
 	private int NumMismatches = 0;
@@ -50,19 +51,19 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 	//GUI
 	private JPanel jp, jp2, jpEnclosing;
 	private JLabel LblDGSettings, LblRunSettings, LblSubmit;
-	private String strLblDGSettings = " SELECT QUERY SET AND DATA GROUPING";
-	private String strLblRunSettings = " DATA GROUPING CORRELATION SETTINGS";
-	private String strLblSubmit = " EXECUTE DATA GROUPING CORRELATION";
+	private String strLblDGSettings = " SELECT QUERY SET AND DISSIMILARITY MEASURE";
+	private String strLblRunSettings = " CONTEXT FOREST CORRELATION SETTINGS";
+	private String strLblSubmit = " BUILD CONTEXT FOREST";
 	private JTextField LblQuerySet, LblSelectDG, LblSelectDGType, 
 		LblAdjustmentPenalty, LblFreeMisMatches, TxtFreeMisMatches,
 		LblPenaltyperMM, TxtPenaltyperMM, LblSegmentationValue, 
 		LblSegValueInner, TxtSegmentationValue;
 
 	private String strLblQuerySet = "Query Set:";
-	private String strLblSelectDG = "Data Grouping:";
+	private String strLblSelectDiss = "Dissimilarity Metric:";
 	private String strLblSelectDGType = "Data Grouping Type:";
 	private JComboBox<String> DGMenu, QSMenu;
-	private String[] LoadedDGs;
+	private String[] LoadedDissimilarities;
 	private String[] LoadedQSs;
 	private ButtonGroup BG, BGAdj, BGDiceJaccard;
 	private JRadioButton rbSpecies, rbGene, rbMisMatch, rbScaleFactor, rbDice, rbJaccard;
@@ -87,7 +88,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 	private String strrbDice = "Dice's Coefficient";
 	private String strrbJaccard = "Jaccard Index";
 	private JButton btnOK;
-	private String strbtnOK = "Execute Scan";
+	private String strbtnOK = "Execute";
 	private JProgressBar progressBar;
 	
 	//Insets
@@ -98,11 +99,11 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 	private Insets downIns = new Insets(5,5,20,1);
 	
 	//CONSTRUCTOR
-	public ChooseDataGrouping(FrmPrincipalDesk f){
+	public ChooseContextForest(FrmPrincipalDesk f){
 		
 		//Initialization-type steps
 		this.f = f;
-		this.CDG = this;
+		this.CCF = this;
 		BuildMenus();
 		
 		//get panel and frame
@@ -118,7 +119,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 	}
 
 	// ======= Classes ===========//
-	public class DataGroupingWorker extends SwingWorker<Void, Void>{
+	public class ContextForestWorker extends SwingWorker<Void, Void>{
 
 		//Fields
 		public QuerySet TQ = null;
@@ -126,7 +127,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 		public String ComparisonName;
 		
 		//constructor
-		public DataGroupingWorker(double segValue){
+		public ContextForestWorker(double segValue){
 			this.segvalue = segValue;
 		}
 		
@@ -137,13 +138,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 			Component glassPane = getRootPane().getGlassPane();
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			glassPane.setVisible(true);
-			
-			//set counter
-			int Counter = 0;
-			
-			//Initialize output
-			LinkedList<ScanReport> Reports = new LinkedList<ScanReport>();
-			
+						
 			//Retrieve appropriate Query Set
 			for (QuerySet QS : f.getOS().getQuerySets()){
 				if (QS.getName().equals((String) QSMenu.getSelectedItem())){
@@ -152,74 +147,45 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 				}
 			}
 			
-			//Set Name
-			String DGName = (String) DGMenu.getSelectedItem();
-			ComparisonName = TQ.getName() + "_" + DGName;
+			// =================================// Compute Context Trees
 			
-			//Retrieve data grouping and reformat
-			LinkedList<String[]> MasterListArray = f.getOS().getDataGroups().get(DGName);
-			LinkedList<LinkedList<String>> MasterList = MasterListReformat(MasterListArray);
+			//set counter
+			int Counter = 0;
 			
-			//initialize to null
-			Cluster Query = null;
-			
-			//Iterate through Query lists
-			//Scan each individual query 
+			//Generate cluster for each context tree, if not already available.
 			for (QueryData QD : TQ.getContextTrees()){
-				
-				//generate cluster from every test query, if not already there
-				if (QD.getOutputCluster() != null){
-					Query = QD.getOutputCluster();
-				} else {
-					Query = GenerateClusterFromQuery(QD,false);
-					QD.setOutputCluster(Query);
-				}
-				
-				//null cluster - context tree is empty.
-				if (Query != null){
-					
-					//Initialize output
-					ScanReport TCR = new ScanReport();
-					TCR.setQueryName(QD.getName());
-					
-					//Retrieve Leaves in appropriate format from cluster
-					LinkedList<LinkedList<String>> QueryList = SegregatedLeaves(SegregateCluster(Query));
 
-					//Create new Fowlkes-Mallows objects
-					FowlkesMallows FM = new FowlkesMallows(MasterList, QueryList);
-					
-					//Set Adjustment parameters
-					FM.setAdjustmentPenalty(cbMisMatchPenalty.isSelected());
-					FM.setFreeMismatches(cbAllowMM.isSelected());
-					FM.setNumberOfFreeMatches(NumMismatches);
-					FM.setPenaltyperMismatch(PenaltyPerMismatch);
-					
-					//Compute dissimilarity
-					FM.Compute();
-					
-					//Set values
-					TCR.setDissimilarity(FM.getB());
-					TCR.setAdjustmentFactor(FM.getAdjustmentFactor());
-					TCR.setPreAdjustedDissimilarity(FM.getOriginalFowlkesMallows());
-					TCR.setIdenticalDataSet(FM.isIdenticalDataSets());
-					TCR.setTotalLeaves(FM.getQueryLeaves());
-					
-					//Add to list
-					Reports.add(TCR);
-					
-				} else {
-					//System.out.println("Null: " + QD.getName());
+				//query -> cluster
+				if (QD.getOutputCluster() == null){
+					Cluster Query = GenerateClusterFromQuery(QD, false);
+					QD.setOutputCluster(Query);
 				}
 				
 				//Increment counter + update progress bar
 				Counter++;
 				int progress = (int) (100.0 *((double) Counter )/((double) TQ.getContextTrees().size())); 
 				setProgress(progress);
-
 			}
 			
-			//Finally, store this set of reports appropriately
-			TQ.getTreeComparisons().put(ComparisonName, Reports);
+			// =================================// Build Dissimilarities
+			
+			LinkedList<Double> D = BuildDissimilarities();
+			
+			// =================================// Build Dendrogram
+			
+			//reset progress and counter to zero, in preparation for matrix computation
+			setProgress(0);
+			Counter = 0;
+
+			//Dendrogram
+			MatriuDistancies M = null;
+			
+//			//attempt to retrieve matrix
+//			for (DatasetAdjustmentParameters DAP2 : TQ.getDissimilarities().keySet()){
+//				if (DAP2.equals(DAP)){
+//					D = TQ.getDissimilarities().get(DAP2);
+//				}
+//			}
 			
 			//switch cursor
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -342,7 +308,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 					"Load", Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
 					Jpan_Menu.getPrecision(), false);
 			if (AddListener){
-				SW.addPropertyChangeListener(CDG);
+				SW.addPropertyChangeListener(CCF);
 			}
 			
 			SW.execute();
@@ -352,6 +318,93 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 			
 			return SW.RootCluster;
 			
+		}
+		
+		//Build dissimilarities
+		protected LinkedList<Double> BuildDissimilarities(){
+			
+			//reset progress and counter to zero, in preparation for dissimilarities
+			setProgress(0);
+			int Counter = 0;
+			
+			//Note dissimilarity matrix generation parameters
+			DatasetAdjustmentParameters DAP = new DatasetAdjustmentParameters();
+			DAP.setAdjustmentPenalty(cbMisMatchPenalty.isSelected());
+			DAP.setFreeMismatches(cbAllowMM.isSelected());
+			DAP.setNumberOfFreeMatches(NumMismatches);
+			DAP.setPenaltyperMismatch(PenaltyPerMismatch);
+			
+			//Dissimilarity
+			LinkedList<Double> D = null;
+			
+			//attempt to retrieve dissimilarities
+			for (DatasetAdjustmentParameters DAP2 : TQ.getDissimilarities().keySet()){
+				if (DAP2.equals(DAP)){
+					D = TQ.getDissimilarities().get(DAP2);
+				}
+			}
+			
+			int CompareSize = TQ.getContextTrees().size();
+			int Total = 0;
+			
+			//compute matrix from dissimilarity, if none already
+			if (D == null){
+				
+				//initialize list of dissimilarities
+				D = new LinkedList<Double>();
+				
+				//determine total
+				while (CompareSize > 1){
+					CompareSize--;
+					Total = Total + CompareSize;
+				}
+				
+				//iterate over keys
+				for (int i = 0; i <  TQ.getContextTrees().size(); i++){
+					
+					String str = "";
+					for (int j = i+1; j < TQ.getContextTrees().size(); j++){
+						
+						//Retrieve Leaves in appropriate format from cluster
+						LinkedList<LinkedList<String>> QueryList_I = SegregatedLeaves(SegregateCluster(TQ.getContextTrees().get(i).getOutputCluster()));
+						LinkedList<LinkedList<String>> QueryList_J = SegregatedLeaves(SegregateCluster(TQ.getContextTrees().get(j).getOutputCluster()));
+
+						//Create new Fowlkes-Mallows objects
+						FowlkesMallows FM = new FowlkesMallows(QueryList_I, QueryList_J);
+						
+						//Set Adjustment parameters
+						FM.setAdjustmentPenalty(DAP.isAdjustmentPenalty());
+						FM.setFreeMismatches(DAP.isFreeMismatches());
+						FM.setNumberOfFreeMatches(DAP.getNumberOfFreeMatches());
+						FM.setPenaltyperMismatch(DAP.getPenaltyperMismatch());
+						
+						//Compute dissimilarity
+						FM.Compute();
+						
+						double dist = FM.getB();
+
+						str = str + String.valueOf(dist) + " ";
+						
+						//add value to linked list
+						D.add(dist);
+						
+						//Increment counter + update progress bar
+						Counter++;
+						int progress = (int) (100.0 *((double) Counter )/((double) Total)); 
+						setProgress(progress);
+						
+					}
+					
+					//debugging - view matrix
+					System.out.println(str);
+				}
+				
+				//store dissimilarities with parameters
+				TQ.getDissimilarities().put(DAP, D);
+
+			}
+		
+			return D;
 		}
 		
 		// ----- post-processing----------- //
@@ -368,7 +421,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 			progressBar.setValue(0);
 
 			//launch new window
-			new FrmScanOutputWindow(f, TQ, ComparisonName, false);
+			//new FrmScanOutputWindow(f, TQ, ComparisonName, false);
 			
 			//close window
 			dispose();
@@ -435,7 +488,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 		c.insets = lblIns;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 1;
-		LblSelectDG = new JTextField(strLblSelectDG);
+		LblSelectDG = new JTextField(strLblSelectDiss);
 		LblSelectDG.setEditable(false);
 		jp.add(LblSelectDG, c);
 		
@@ -446,7 +499,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 		c.insets = basIns;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 1;
-		DGMenu = new JComboBox<String>(LoadedDGs);
+		DGMenu = new JComboBox<String>(LoadedDissimilarities);
 		jp.add(DGMenu, c);
 		gridy++;
 		
@@ -784,14 +837,9 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 			LoadedQSs[i] = Q.getName();
 		}
 		
-		//build DG menu
-		Set<String> DGKeys  = f.getOS().getDataGroups().keySet();
-		LoadedDGs = new String[DGKeys.size()];
-		int Counter = 0;
-		for (String s : DGKeys){
-			LoadedDGs[Counter] = s;
-			Counter++;
-		}
+		//build Dissimilarities menu
+		LoadedDissimilarities = new String[1];
+		LoadedDissimilarities[0] = "Fowlkes-Mallows";
 	}
 
 	// Action methods
@@ -851,7 +899,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 				}
 				
 				//new data groupings worker, to compute Adjusted Fowlkes-Mallows index.
-				DataGroupingWorker DGW = new DataGroupingWorker(SegmentationValue);
+				ContextForestWorker DGW = new ContextForestWorker(SegmentationValue);
 				DGW.addPropertyChangeListener(this);
 				DGW.execute();
 						
@@ -892,3 +940,4 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 	}
 
 }
+

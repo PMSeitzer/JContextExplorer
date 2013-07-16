@@ -135,7 +135,7 @@ public class Jpan_MotifOptions extends JPanel implements ActionListener{
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 4;
-		LoadMotifsBanner = new JLabel(" CURRENTLY ENABLED MOTIFS");
+		LoadMotifsBanner = new JLabel(" AVAILABLE SEQUENCE MOTIFS");
 		LoadMotifsBanner.setBackground(Color.GRAY);
 		LoadMotifsBanner.setOpaque(true);
 		LoadMotifsBanner.setFont(fontStandard);

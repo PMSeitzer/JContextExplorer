@@ -24,7 +24,7 @@ public class FowlkesMallows {
 	private int NumberOfFreeMatches;
 	private double PenaltyperMismatch;
 	
-	//Exactly penalty
+	//Exact penalty
 	private boolean AdjustmentPenalty;
 	
 	//Matching statistics

@@ -74,7 +74,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 	private String strQuerySet = "Query Set:";
 	private String strComparisonApproach = "Comparison Approach:";
 	private JButton btnExecuteScan;
-	private String strScan = "Excecute Scan";
+	private String strScan = "Execute Scan";
 	private JProgressBar progressbar;
 	private JTextField LblSegValue, TxtSegValue;
 	private String strLblSegValue = "Segmentation Point:";
@@ -165,7 +165,7 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 			glassPane.setVisible(true);
 			
 			//Initialize output
-			LinkedList<TreeCompareReport> Reports = new LinkedList<TreeCompareReport>();
+			LinkedList<ScanReport> Reports = new LinkedList<ScanReport>();
 			
 			//Retrieve appropriate Query Set
 			for (QuerySet QS : f.getOS().getQuerySets()){
@@ -295,14 +295,22 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 				//Scan each individual query 
 				for (QueryData QD : TQ.getContextTrees()){
 					
-					//generate cluster from every test query
-					Cluster Query = GenerateClusterFromQuery(QD,false);
+					//Initialize query
+					Cluster Query;
+					
+					//generate cluster from every test query, if not already there
+					if (QD.getOutputCluster() != null){
+						Query = QD.getOutputCluster();
+					} else {
+						Query = GenerateClusterFromQuery(QD,false);
+						QD.setOutputCluster(Query);
+					}
 					
 					//null cluster - context tree is empty.
 					if (Query != null){
 						
 						//Initialize output
-						TreeCompareReport TCR = new TreeCompareReport();
+						ScanReport TCR = new ScanReport();
 						TCR.setQueryName(QD.getName());
 						
 						//Retrieve Leaves in appropriate format from cluster
@@ -324,28 +332,13 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 						TCR.setDissimilarity(FM.getB());
 						TCR.setAdjustmentFactor(FM.getAdjustmentFactor());
 						TCR.setPreAdjustedDissimilarity(FM.getOriginalFowlkesMallows());
-						if (FM.isIdenticalDataSets()){
-							TCR.setIdenticalDataSet(true);
-						} else {
-							TCR.setIdenticalDataSet(false);
-						}
+						TCR.setIdenticalDataSet(FM.isIdenticalDataSets());
 						TCR.setTotalLeaves(FM.getQueryLeaves());
 						
 						//Add to list
 						Reports.add(TCR);
 						
 					}
-				
-//					//Generate report for every cluster
-//					String Method = (String) ComparisonMenu.getSelectedItem();
-//					if (Method.equals("Adjusted Fowlkes-Mallows")){
-//						TCR = FowlkesMallows(cm, cq);
-//					} else if (Method.equals("Robinson-Foulds")) {
-//						TCR = RobinsonFoulds(cm, cq);
-//					}
-//					
-//					//Add to list
-//					Reports.add(TCR);
 					
 					//Increment counter + update progress bar
 					Counter++;
@@ -521,40 +514,12 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 			
 			return CG;
 		}
-		
-//		//TODO OLD Tree comparison method: Fowlkes-Mallows
-//		protected TreeCompareReport FowlkesMallows(Cluster Master, Cluster Query){
-//			
-//			//Initialize output
-//			TreeCompareReport TCR = new TreeCompareReport();
-//			
-//			//Generate lists
-//			LinkedList<LinkedList<String>> MasterList = SegregatedLeaves(SegregateCluster(Master));
-//			LinkedList<LinkedList<String>> QueryList = SegregatedLeaves(SegregateCluster(Query));
-//			
-//			//create FowlkesMallow object + compute
-//			FowlkesMallows FM = new FowlkesMallows(MasterList, QueryList);
-//			TCR.setDissimilarity(FM.Compute());
-//			
-//			System.out.println(TCR.getDissimilarity());
-//			
-////			//DEBUGGING
-////			for (LinkedList<String> L : QueryList){
-////				System.out.println("----Cluster-----");
-////				for (String s : L){
-////					System.out.println(s);
-////				}
-////			}
-//			
-//			//return
-//			return TCR;
-//		}
-		
+				
 		//TODO Tree comparison method: Robinson Foulds
-		protected TreeCompareReport RobinsonFoulds(Cluster Master, Cluster Query){
+		protected ScanReport RobinsonFoulds(Cluster Master, Cluster Query){
 			
 			//Initialize output
-			TreeCompareReport TCR = new TreeCompareReport();
+			ScanReport TCR = new ScanReport();
 			
 			//return
 			return TCR;
