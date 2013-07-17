@@ -26,6 +26,8 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import ContextForest.DissimilarityMatrixData;
+
 import parser.Ultrametric;
 import definicions.Cluster;
 import definicions.MatriuDistancies;
@@ -50,7 +52,9 @@ public class DadesExternes {
 	private int numClusters = 0;
 	private int prec = 0;
 	private boolean CameFromFile;
+	private boolean ContextForest = false;
 	private ExtendedCRON EC = null;
+	private DissimilarityMatrixData DMD = null;
 
 	public DadesExternes(FitxerDades fitx) throws Exception {
 		CameFromFile = true;
@@ -64,6 +68,13 @@ public class DadesExternes {
 		this.fitx = new FitxerDades("a","b");
 		this.OmpleMatriuDistancies();
 
+	}
+
+	public DadesExternes(DissimilarityMatrixData DMD) {
+		this.DMD = DMD;
+		CameFromFile = false;
+		ContextForest = true;
+		this.OmpleMatriuDistancies();
 	}
 
 	private void OmpleMatriuDistancies(){
@@ -82,17 +93,34 @@ public class DadesExternes {
 		//comes from a computed ExtendedCRON instead of a file.
 		if (CameFromFile == true){
 			lst = this.LlegeixFitxer(); // read in file
-		} else { 			
-			// parse ExtendedCRON
-			//initialize lst
-			lst = new LinkedList<StructIn<String>>();
-
-			// read in the file
-			ReadTXT txt = new ReadTXT(EC);
-			lst = txt.read();
+		} else { 	
 			
-			//set number of entries
-			numClusters = EC.getNumberOfEntries();
+			if (!ContextForest){
+				
+				// parse ExtendedCRON
+				//initialize lst
+				lst = new LinkedList<StructIn<String>>();
+
+				// read in the file
+				ReadTXT txt = new ReadTXT(EC);
+				lst = txt.read();
+				
+				//set number of entries
+				numClusters = EC.getNumberOfEntries();
+				
+			} else { 	//Context Forest case
+
+				//initialize lst
+				lst = new LinkedList<StructIn<String>>();
+				
+				// read in the file
+				ReadTXT txt = new ReadTXT(DMD);
+				lst = txt.read();
+				
+				//set number of entries
+				numClusters = DMD.getNumLeaves();
+			}
+
 		}
 		
 		Ultrametric um = new Ultrametric();
@@ -164,6 +192,10 @@ public class DadesExternes {
 		return htNoms;
 	}
 
+	public void setMatriuDistancies(MatriuDistancies M){
+		matriuDades = M;
+	}
+	
 	public MatriuDistancies getMatriuDistancies() {
 		return matriuDades;
 	}

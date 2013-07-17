@@ -151,7 +151,7 @@ import definicions.MatriuDistancies;
 		
 		//These fields modify the new scrollable tree
 		
-		private int HorizontalScrollBuffer = 30;
+		public static int HorizontalScrollBuffer = 30;
 		private int VerticalScrollValue = 1500;
 
 		private String currentQuery;
@@ -170,7 +170,7 @@ import definicions.MatriuDistancies;
 		private int PhyloTreeLeaves;
 	
 	// ----- New Fields (1.2) --------------------------------------------//
-		private int ScrollInc = 30;
+		public static int ScrollInc = 30;
 		
 	// ----- Methods -----------------------------------------------//	
 		

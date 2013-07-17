@@ -368,7 +368,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 			progressBar.setValue(0);
 
 			//launch new window
-			new FrmScanOutputWindow(f, TQ, ComparisonName, false);
+			new FrmScanOutputWindow(f, TQ, ComparisonName, false, null);
 			
 			//close window
 			dispose();

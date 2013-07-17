@@ -1,8 +1,9 @@
 package moduls.frm.children;
 
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 
-public class GapPointMapping {
+public class GapPointMapping implements Serializable{
 
 	//Fields
 	public LinkedHashMap<Integer, Double> Mapping = new LinkedHashMap<Integer, Double>();

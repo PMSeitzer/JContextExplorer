@@ -111,46 +111,32 @@ public class Jpan_ViewResults extends JPanel implements ActionListener{
 		//Select Query Results
 		if (e.getSource().equals(btnSelectQR) || e.getSource().equals(selectQueryResults)){
 
-			//recover query, split by semicolon, comma, or white space
-			String Query = selectQueryResults.getText();
-			String[] Queries = Query.split(";");
-			if (Queries.length == 1){
-				Queries = Query.split(",");
+			if (fsow.getPan_ScanResults() != null){
+				//Scan results
+				SelectRowsInTable();
+			} else {
+				//Context forest
+				SelectLeaves();
+				System.out.println("TODO: Forest!");
 			}
-			if (Queries.length == 1) {
-				Queries = Query.split("\\s+");
-			}
-			
-			//Determine queries to select
-			LinkedList<String> SelectedQS = new LinkedList<String>();
-			for (String s : Queries){
-				for (QueryData QD : fsow.getQS().getContextTrees()){
-					if (QD.getName().contains(s)){
-						SelectedQS.add(QD.getName());
-					}
-				}
-			}
-			
-			//Deselect all
-			fsow.getPan_ScanResults().getTable().clearSelection();
-			
-			//Select queries
-			for (int i = 0; i < fsow.getPan_ScanResults().getTable().getRowCount(); i++){
-				if (SelectedQS.contains(fsow.getPan_ScanResults().getTable().getValueAt(i,0))){
-					fsow.getPan_ScanResults().getTable().addRowSelectionInterval(i,i);
-				}
-			}
-			
 		}
 		
 		//Draw Context Trees
 		if (e.getSource().equals(btnDrawCT)){
-			DrawContextTrees(RetrieveSelectedQueryResults());
+			if (fsow.getPan_ScanResults() != null){
+				//Scan results
+				DrawContextTrees(RetrieveSelectedQueryResultsFromTable());
+			} else {
+				//Context forest
+				DrawContextTrees(RetrieveSelectedQueryResultsFromTree());
+				System.out.println("TODO: Forest!");
+			}
+
 		}
 	}
 	
-	//retrieve selected query sets
-	public LinkedList<QueryData> RetrieveSelectedQueryResults(){
+	//retrieve selected query sets from table
+	public LinkedList<QueryData> RetrieveSelectedQueryResultsFromTable(){
 		
 		//Initialize output
 		LinkedList<QueryData> SelectedQS = new LinkedList<QueryData>();
@@ -172,6 +158,55 @@ public class Jpan_ViewResults extends JPanel implements ActionListener{
 		}
 				
 		return SelectedQS;
+	}
+	
+	//retrieve selected query sets from tree
+	public LinkedList<QueryData> RetrieveSelectedQueryResultsFromTree(){
+		
+		//Initialize output
+		LinkedList<QueryData> SelectedQS = new LinkedList<QueryData>();
+		
+		//TODO
+		
+		return SelectedQS;
+	}
+	
+	//select rows in a table
+	public void SelectRowsInTable(){
+		//recover query, split by semicolon, comma, or white space
+		String Query = selectQueryResults.getText();
+		String[] Queries = Query.split(";");
+		if (Queries.length == 1){
+			Queries = Query.split(",");
+		}
+		if (Queries.length == 1) {
+			Queries = Query.split("\\s+");
+		}
+		
+		//Determine queries to select
+		LinkedList<String> SelectedQS = new LinkedList<String>();
+		for (String s : Queries){
+			for (QueryData QD : fsow.getQS().getContextTrees()){
+				if (QD.getName().contains(s)){
+					SelectedQS.add(QD.getName());
+				}
+			}
+		}
+		
+		//Deselect all
+		fsow.getPan_ScanResults().getTable().clearSelection();
+		
+		//Select queries
+		for (int i = 0; i < fsow.getPan_ScanResults().getTable().getRowCount(); i++){
+			if (SelectedQS.contains(fsow.getPan_ScanResults().getTable().getValueAt(i,0))){
+				fsow.getPan_ScanResults().getTable().addRowSelectionInterval(i,i);
+			}
+		}
+	}
+	
+	//select leaves on tree
+	public void SelectLeaves(){
+		//TODO
 	}
 	
 	//draw a bunch of context trees from selected queries

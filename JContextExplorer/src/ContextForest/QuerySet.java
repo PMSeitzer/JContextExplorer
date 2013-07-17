@@ -30,16 +30,16 @@ public class QuerySet {
 	private LinkedHashMap<String, LinkedList<ScanReport>> TreeScans; 
 	
 	//Dissimilarities computed for context forest
-	private LinkedHashMap<DatasetAdjustmentParameters, LinkedList<Double>> Dissimilarities;
+	private LinkedHashMap<DatasetAdjustmentParameters, DissimilarityMatrixData> Dissimilarities;
 
 	//Dissimilarities + methodology, to retrieve computed context forests
-	private LinkedHashMap<DissimilarityAndMethod, MatriuDistancies> ContextForests;
+	private LinkedHashMap<DissimilarityMatrixData, MatriuDistancies> ContextForests;
 	
 	//constructor
 	public QuerySet(){
 		TreeScans = new LinkedHashMap<String, LinkedList<ScanReport>>();
-		setDissimilarities(new LinkedHashMap<DatasetAdjustmentParameters, LinkedList<Double>>());
-		
+		Dissimilarities = new LinkedHashMap<DatasetAdjustmentParameters, DissimilarityMatrixData>();
+		ContextForests = new LinkedHashMap<DissimilarityMatrixData, MatriuDistancies>();
 	}
 	
 	// ==================================================//
@@ -70,19 +70,19 @@ public class QuerySet {
 		TreeScans = treeComparisons;
 	}
 
-	public LinkedHashMap<DatasetAdjustmentParameters, LinkedList<Double>> getDissimilarities() {
+	public LinkedHashMap<DatasetAdjustmentParameters, DissimilarityMatrixData> getDissimilarities() {
 		return Dissimilarities;
 	}
 
-	public void setDissimilarities(LinkedHashMap<DatasetAdjustmentParameters, LinkedList<Double>> dissimilarities) {
+	public void setDissimilarities(LinkedHashMap<DatasetAdjustmentParameters, DissimilarityMatrixData> dissimilarities) {
 		Dissimilarities = dissimilarities;
 	}
 
-	public LinkedHashMap<DissimilarityAndMethod, MatriuDistancies> getContextForests() {
+	public LinkedHashMap<DissimilarityMatrixData, MatriuDistancies> getContextForests() {
 		return ContextForests;
 	}
 
-	public void setContextForests(LinkedHashMap<DissimilarityAndMethod, MatriuDistancies> contextForests) {
+	public void setContextForests(LinkedHashMap<DissimilarityMatrixData, MatriuDistancies> contextForests) {
 		ContextForests = contextForests;
 	}
 	

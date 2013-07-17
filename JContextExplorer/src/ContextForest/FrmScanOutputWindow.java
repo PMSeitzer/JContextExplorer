@@ -1,18 +1,30 @@
 package ContextForest;
 
+import importExport.DadesExternes;
+
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.LinkedList;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 
-import moduls.frm.FrmPrincipalDesk;
+import parser.Fig_Pizarra;
 
-public class FrmScanOutputWindow extends JFrame implements ActionListener {
+import definicions.Config;
+import definicions.MatriuDistancies;
+
+import moduls.frm.FrmPrincipalDesk;
+import moduls.frm.Panels.Jpan_Menu;
+import moduls.frm.Panels.Jpan_btn_NEW;
+import moduls.frm.children.FrmPiz;
+
+public class FrmScanOutputWindow extends JFrame {
 
 	//Fields
 	
@@ -23,28 +35,28 @@ public class FrmScanOutputWindow extends JFrame implements ActionListener {
 	private FrmScanOutputWindow fsow;
 	
 	//GUI
-	private JTabbedPane pan_Tabbed;
 	private Jpan_ScanResults pan_ScanResults;
 	private Jpan_ViewResults pan_SelectDraw;
-	private boolean DrawContextTree;
+	private JScrollPane ForestPane;
+	private boolean DrawContextForest;
+	private DadesExternes de;
 	
 	//Constructor
 	public FrmScanOutputWindow(FrmPrincipalDesk f, QuerySet QS, 
-			String ComparisonName, boolean DrawContextTree){
+			String ComparisonName, boolean DrawContextForest, DadesExternes de){
 		
 		//Initializations
 		this.setF(f);
 		this.QS = QS;
 		this.TCRKey = ComparisonName;
 		this.setFsow(this);
-		this.DrawContextTree = DrawContextTree;
+		this.DrawContextForest = DrawContextForest;
+		this.de = de;
 		
 		//Methods
-		getPanels();
 		getFrame();
-		
-		//TextDisplay();
-		
+		getPanels();
+
 		//final step - show visibility
 		this.setVisible(true);
 	}
@@ -66,36 +78,28 @@ public class FrmScanOutputWindow extends JFrame implements ActionListener {
 	//panel
 	public void getPanels(){
 		
-		// GET PANELS
-		
-		//create new scan results panel
-		pan_ScanResults = new Jpan_ScanResults(this, QS, TCRKey);
-		
-		//Initialize the selection pane
-		pan_SelectDraw = new Jpan_ViewResults(this);
-		
-		if (DrawContextTree){
-			//TODO: Draw context tree
-		}
-		
-		// COORDINATE PANELS, ADD TO FRAME
-		if (DrawContextTree){
+		//Context Forest or Scan Results
+		if (DrawContextForest){
 			
-			//create tabbed pane
-			pan_Tabbed = new JTabbedPane();
-			pan_Tabbed.addTab("Scan Results",null,pan_ScanResults);
-			pan_Tabbed.addTab("Context Forext",null,new JPanel());
+			//create forest pane
+			CreateContextForest();
 			
-			//Add tabbed pane to frame
-			this.getContentPane().add(pan_Tabbed, BorderLayout.CENTER);
+			//Add forest pane to frame
+			this.getContentPane().add(ForestPane, BorderLayout.CENTER);
 			
 		} else {
+			
+			//create new scan results panel
+			pan_ScanResults = new Jpan_ScanResults(this, QS, TCRKey);
 			
 			//Add results only to frame
 			this.getContentPane().add(pan_ScanResults, BorderLayout.CENTER);
 			
 		}
 
+		//Initialize the selection pane
+		pan_SelectDraw = new Jpan_ViewResults(this);
+		
 		//Either way, add the select draw pane
 		this.getContentPane().add(pan_SelectDraw, BorderLayout.SOUTH);
 		
@@ -124,9 +128,42 @@ public class FrmScanOutputWindow extends JFrame implements ActionListener {
 
 	}
 
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
+	//Draw the forest, from the data
+	public void CreateContextForest(){
+		try {
+			
+			Config cfg = f.getConfig();
+			cfg.setMatriu(de.getMatriuDistancies());//matrix
+			cfg.setHtNoms(de.getTaulaNoms()); //table names
+			
+			
+			//create a new context tree panel
+			FrmPiz fPiz = new FrmPiz(f, null);
+			Jpan_Menu.ajustaValors(cfg);
+			Fig_Pizarra figPizarra = new Fig_Pizarra(de.getMatriuDistancies().getArrel(), cfg);
+			
+			// Pass figures to the window
+			fPiz.setFigures(figPizarra.getFigures());
+			fPiz.setConfig(cfg);
+
+			//vertical scroll value - currently matching Jpan_btn_New
+			int VerticalScrollValue = 15*de.getTaulaNoms().size() + 250;
+			
+			Dimension d = new Dimension(this.getWidth()-
+					Jpan_btn_NEW.HorizontalScrollBuffer, VerticalScrollValue);
+			fPiz.setPreferredSize(d);
+			
+			//scroll pane
+			ForestPane = new JScrollPane(fPiz);
+			//ForestPane.setSize(this.getSize());
+			//ForestPane.setPreferredSize(this.getSize());
+			ForestPane.getVerticalScrollBar().setUnitIncrement(Jpan_btn_NEW.ScrollInc);
+		
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
+		// Set sizes
+		//fPiz.setPreferredSize(pizarra.getSize());
 		
 	}
 

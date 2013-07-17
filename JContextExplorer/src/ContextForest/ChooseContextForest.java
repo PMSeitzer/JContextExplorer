@@ -1,5 +1,8 @@
 package ContextForest;
 
+import genomeObjects.ExtendedCRON;
+import importExport.DadesExternes;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -31,6 +34,7 @@ import javax.swing.SwingWorker;
 import definicions.Cluster;
 import definicions.MatriuDistancies;
 
+import methods.Reagrupa;
 import moduls.frm.FrmPrincipalDesk;
 import moduls.frm.QueryData;
 import moduls.frm.Panels.Jpan_Menu;
@@ -62,7 +66,7 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 	private String strLblQuerySet = "Query Set:";
 	private String strLblSelectDiss = "Dissimilarity Metric:";
 	private String strLblSelectDGType = "Data Grouping Type:";
-	private JComboBox<String> DGMenu, QSMenu;
+	private JComboBox<String> CFDissimilarities, QSMenu;
 	private String[] LoadedDissimilarities;
 	private String[] LoadedQSs;
 	private ButtonGroup BG, BGAdj, BGDiceJaccard;
@@ -125,6 +129,7 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 		public QuerySet TQ = null;
 		public double segvalue;
 		public String ComparisonName;
+		public DadesExternes de;
 		
 		//constructor
 		public ContextForestWorker(double segValue){
@@ -169,23 +174,11 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 			
 			// =================================// Build Dissimilarities
 			
-			LinkedList<Double> D = BuildDissimilarities();
+			DissimilarityMatrixData DMD = BuildDissimilarities();
 			
 			// =================================// Build Dendrogram
 			
-			//reset progress and counter to zero, in preparation for matrix computation
-			setProgress(0);
-			Counter = 0;
-
-			//Dendrogram
-			MatriuDistancies M = null;
-			
-//			//attempt to retrieve matrix
-//			for (DatasetAdjustmentParameters DAP2 : TQ.getDissimilarities().keySet()){
-//				if (DAP2.equals(DAP)){
-//					D = TQ.getDissimilarities().get(DAP2);
-//				}
-//			}
+			de = BuildDendrogram(DMD);
 			
 			//switch cursor
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -321,7 +314,7 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 		}
 		
 		//Build dissimilarities
-		protected LinkedList<Double> BuildDissimilarities(){
+		protected DissimilarityMatrixData BuildDissimilarities(){
 			
 			//reset progress and counter to zero, in preparation for dissimilarities
 			setProgress(0);
@@ -335,12 +328,12 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 			DAP.setPenaltyperMismatch(PenaltyPerMismatch);
 			
 			//Dissimilarity
-			LinkedList<Double> D = null;
+			DissimilarityMatrixData DMD = null;
 			
 			//attempt to retrieve dissimilarities
 			for (DatasetAdjustmentParameters DAP2 : TQ.getDissimilarities().keySet()){
 				if (DAP2.equals(DAP)){
-					D = TQ.getDissimilarities().get(DAP2);
+					DMD = TQ.getDissimilarities().get(DAP2);
 				}
 			}
 			
@@ -348,10 +341,13 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 			int Total = 0;
 			
 			//compute matrix from dissimilarity, if none already
-			if (D == null){
+			if (DMD == null){
 				
 				//initialize list of dissimilarities
-				D = new LinkedList<Double>();
+				DMD = new DissimilarityMatrixData();
+				LinkedList<Double> D = new LinkedList<Double>();
+				LinkedList<String> FD = new LinkedList<String>();
+				DMD.setNumLeaves(CompareSize);
 				
 				//determine total
 				while (CompareSize > 1){
@@ -365,25 +361,43 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 					String str = "";
 					for (int j = i+1; j < TQ.getContextTrees().size(); j++){
 						
-						//Retrieve Leaves in appropriate format from cluster
-						LinkedList<LinkedList<String>> QueryList_I = SegregatedLeaves(SegregateCluster(TQ.getContextTrees().get(i).getOutputCluster()));
-						LinkedList<LinkedList<String>> QueryList_J = SegregatedLeaves(SegregateCluster(TQ.getContextTrees().get(j).getOutputCluster()));
+						double dist = 1.0;
+						
+						//Fowlkes-Mallows approach
+						if (CFDissimilarities.getSelectedItem().equals("Fowlkes-Mallows")){
+							
+							//Retrieve Leaves in appropriate format from cluster
+							LinkedList<LinkedList<String>> QueryList_I = SegregatedLeaves(SegregateCluster(TQ.getContextTrees().get(i).getOutputCluster()));
+							LinkedList<LinkedList<String>> QueryList_J = SegregatedLeaves(SegregateCluster(TQ.getContextTrees().get(j).getOutputCluster()));
 
-						//Create new Fowlkes-Mallows objects
-						FowlkesMallows FM = new FowlkesMallows(QueryList_I, QueryList_J);
-						
-						//Set Adjustment parameters
-						FM.setAdjustmentPenalty(DAP.isAdjustmentPenalty());
-						FM.setFreeMismatches(DAP.isFreeMismatches());
-						FM.setNumberOfFreeMatches(DAP.getNumberOfFreeMatches());
-						FM.setPenaltyperMismatch(DAP.getPenaltyperMismatch());
-						
-						//Compute dissimilarity
-						FM.Compute();
-						
-						double dist = FM.getB();
+							//Create new Fowlkes-Mallows objects
+							FowlkesMallows FM = new FowlkesMallows(QueryList_I, QueryList_J);
+							
+							//Set Adjustment parameters
+							FM.setAdjustmentPenalty(DAP.isAdjustmentPenalty());
+							FM.setFreeMismatches(DAP.isFreeMismatches());
+							FM.setNumberOfFreeMatches(DAP.getNumberOfFreeMatches());
+							FM.setPenaltyperMismatch(DAP.getPenaltyperMismatch());
+							
+							//Compute dissimilarity
+							FM.Compute();
+							
+							//map dissimilarity
+							dist = FM.getB();
+														
+						}
 
 						str = str + String.valueOf(dist) + " ";
+						
+						//Define node names - individual context trees
+						String Name1 = TQ.getContextTrees().get(i).getName().replaceAll(" ", "_").replaceAll(";", "AND");
+						String Name2 = TQ.getContextTrees().get(j).getName().replaceAll(" ", "_").replaceAll(";", "AND");
+						
+						//write row
+						String Row = Name1 + ";" + Name2 + ";" + String.valueOf(dist);
+						
+						//add to list
+						FD.add(Row);
 						
 						//add value to linked list
 						D.add(dist);
@@ -396,15 +410,95 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 					}
 					
 					//debugging - view matrix
-					System.out.println(str);
+					//System.out.println(str);
 				}
 				
+				//debugging: view pairwise relationships
+//				for (String s : FD){
+//					System.out.println(s);
+//				}
+				
+				//add info to DMD
+				DMD.setDissimilarities(D);
+				DMD.setFormattedDissimilarities(FD);
+				DMD.setMethodName((String) Jpan_Menu.getCbMethod().getSelectedItem());
+				
 				//store dissimilarities with parameters
-				TQ.getDissimilarities().put(DAP, D);
+				TQ.getDissimilarities().put(DAP, DMD);
 
 			}
 		
-			return D;
+			return DMD;
+		}
+		
+		//Build dendrogram
+		protected DadesExternes BuildDendrogram(DissimilarityMatrixData DMD){
+			
+			//display-related
+			setProgress(0);
+			int Counter = 0;
+			
+			//initialize matrix
+			DadesExternes de = null;
+			MatriuDistancies M = null;
+			try {
+				
+				//attempt to retrieve matrix
+				for (DissimilarityMatrixData DAM2 : TQ.getContextForests().keySet()){
+					if (DAM2.equals(DMD)){
+						M = TQ.getContextForests().get(DMD);
+					}
+				}
+				
+				//if the matrix does not already exist, need to calculate it
+				if (M == null){
+					
+					//create a DE out of dissimilarity matrix
+					de = new DadesExternes(DMD);
+					M = de.getMatriuDistancies();
+					
+					//get distances, compute dendrogram
+					double minBase = Double.MAX_VALUE;
+					int nbElements = M.getCardinalitat();
+					
+					Reagrupa rg;
+					MatriuDistancies mdNew;
+					double b;
+					int progress;
+					int ItCounter = 0;
+					while (M.getCardinalitat() > 1) {
+						
+						ItCounter++;
+						//System.out.println("Iteration: " + ItCounter + " Cardinality: " + M.getCardinalitat());
+						
+						//CLUSTERING FROM DISTANCES DATA
+						rg = new Reagrupa(M, Jpan_Menu.getTypeData(), 
+								Jpan_Menu.getMethod(),
+								Jpan_Menu.getPrecision());
+						
+						mdNew = rg.Recalcula();
+						
+						//SET THE CURRENT MULTIDENDROGRAM TO THE RESULT FROM RG.RECALCULA()
+						M = mdNew;
+						de.setMatriuDistancies(M);
+						
+						b = M.getArrel().getBase();
+						if ((b < minBase) && (b != 0)) {
+							minBase = b;
+						}
+					
+						progress = (nbElements - M.getCardinalitat())
+								/ (nbElements - 1);
+						setProgress(progress);	
+
+					}
+				}
+
+			} catch (Exception ex){
+				ex.printStackTrace();
+			}
+			
+			return de;
 		}
 		
 		// ----- post-processing----------- //
@@ -421,7 +515,7 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 			progressBar.setValue(0);
 
 			//launch new window
-			//new FrmScanOutputWindow(f, TQ, ComparisonName, false);
+			new FrmScanOutputWindow(f, TQ, ComparisonName, true, de);
 			
 			//close window
 			dispose();
@@ -499,8 +593,8 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 		c.insets = basIns;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 1;
-		DGMenu = new JComboBox<String>(LoadedDissimilarities);
-		jp.add(DGMenu, c);
+		CFDissimilarities = new JComboBox<String>(LoadedDissimilarities);
+		jp.add(CFDissimilarities, c);
 		gridy++;
 		
 //		//Label - select Data Grouping Type

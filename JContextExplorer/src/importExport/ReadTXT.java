@@ -36,6 +36,8 @@ import java.util.logging.Level;
 import javax.swing.JOptionPane;
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import ContextForest.DissimilarityMatrixData;
+
 import errors.FitxerIncompatible;
 
 /**
@@ -174,6 +176,55 @@ public class ReadTXT { //just a program to read in .txt files
 //		}
 	}
 	
+	public ReadTXT(DissimilarityMatrixData DMD) throws Exception{
+		this.EC = null;
+		nomfitx = "";
+		lstdades = this.PosaEnMemoria_CF(DMD);
+		String[] tmpC;
+		int nl, nc;
+		boolean tipusA, tipusB;
+
+		tmpC = lstdades.get(0);
+		nc = tmpC.length;
+		nl = lstdades.size();
+		// Matrix or list format
+		if ((nc > 3) || ((nc == 3) && (nl == 4)))
+			lst = this.llegeixMatriu();
+		else if ((nc == 3) && (nl == 3)) {
+			LinkedList<StructIn<String>> lstA, lstM;
+			try {
+				lstA = this.llegeixAparellat();
+				tipusA = true;
+			} catch (final Exception e) {
+				tipusA = false;
+				lstA = null;
+			}
+
+			try {
+				lstM = this.llegeixMatriu();
+				tipusB = true;
+			} catch (final Exception e) {
+				tipusB = false;
+				lstM = null;
+			}
+
+			if (tipusA && tipusB) {
+				// Unable to determine format
+				final String msg = Language.getLabel(10);
+				JOptionPane.showMessageDialog(null, msg, "Warning",
+						JOptionPane.WARNING_MESSAGE);
+				lst = lstA;
+			} else if (tipusA)
+				lst = lstA;
+			else if (tipusB)
+				lst = lstM;
+			else
+				throw new FitxerIncompatible(Language.getLabel(11));
+
+		} else if (nc == 3) {
+			lst = this.llegeixAparellat();
+		}
+	}
 	
 	public LinkedList<StructIn<String>> read() {
 		return lst;
@@ -471,6 +522,33 @@ public class ReadTXT { //just a program to read in .txt files
 			
 			return lstDades;			
 
+	}
+	
+	private LinkedList<String[]> PosaEnMemoria_CF(DissimilarityMatrixData DMD){
+		int tmpCol, numCols = 0;
+		String[] dadesLinia;
+		final LinkedList<String[]> lstDades = new LinkedList<String[]>();
+		String delims = " ,;|\t\n";
+
+			for (int i = 0; i< DMD.getFormattedDissimilarities().size(); i++){
+
+				// Reading headers
+				StringTokenizer st = new StringTokenizer(DMD.getFormattedDissimilarities().get(i), delims);
+				dadesLinia = new String[numCols];
+
+				numCols = st.countTokens();
+				dadesLinia = new String[numCols];
+
+				for (int c = 0; c < numCols; c++) {
+					String str = st.nextToken();
+					dadesLinia[c] = str;
+				}
+
+				lstDades.add(dadesLinia);
+
+				}
+			
+			return lstDades;
 	}
 	
 } //completed classbody
