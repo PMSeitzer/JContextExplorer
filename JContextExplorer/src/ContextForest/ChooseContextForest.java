@@ -379,11 +379,11 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 							FM.setNumberOfFreeMatches(DAP.getNumberOfFreeMatches());
 							FM.setPenaltyperMismatch(DAP.getPenaltyperMismatch());
 							
-							//Compute dissimilarity
+							//Compute similarity
 							FM.Compute();
 							
-							//map dissimilarity
-							dist = FM.getB();
+							//dissimilarity = 1 - similarity
+							dist = 1.0 - FM.getB();
 														
 						}
 
@@ -413,7 +413,7 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 					//System.out.println(str);
 				}
 				
-				//debugging: view pairwise relationships
+//				//debugging: view pairwise relationships
 //				for (String s : FD){
 //					System.out.println(s);
 //				}

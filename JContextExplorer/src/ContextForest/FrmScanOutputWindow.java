@@ -1,5 +1,6 @@
 package ContextForest;
 
+import genomeObjects.CSDisplayData;
 import importExport.DadesExternes;
 
 import java.awt.BorderLayout;
@@ -19,7 +20,9 @@ import parser.Fig_Pizarra;
 import definicions.Config;
 import definicions.MatriuDistancies;
 
+import moduls.frm.ContextLeaf;
 import moduls.frm.FrmPrincipalDesk;
+import moduls.frm.QueryData;
 import moduls.frm.Panels.Jpan_Menu;
 import moduls.frm.Panels.Jpan_btn_NEW;
 import moduls.frm.children.FrmPiz;
@@ -136,10 +139,33 @@ public class FrmScanOutputWindow extends JFrame {
 			cfg.setMatriu(de.getMatriuDistancies());//matrix
 			cfg.setHtNoms(de.getTaulaNoms()); //table names
 			
+			//Create a CSD data type
+			CSDisplayData CSD = new CSDisplayData();
+			ContextLeaf[] leaves = new ContextLeaf[QS.getContextTrees().size()];
+			int i = 0;
+			String Name = "";
+			for (QueryData QD : QS.getContextTrees()){
+				
+				//new leaf
+				ContextLeaf CL = new ContextLeaf();
+				Name = QD.getName().replaceAll(" ", "_").replaceAll(";", "AND");
+				CL.setName(Name);
+				CL.setSelected(false);
+				
+				//write to structure
+				leaves[i] = CL;
+				i++;
+			}
+			CSD.setGraphicalContexts(leaves);
 			
 			//create a new context tree panel
-			FrmPiz fPiz = new FrmPiz(f, null);
+			FrmPiz fPiz = new FrmPiz(f, CSD);
 			Jpan_Menu.ajustaValors(cfg);
+			
+			//Adjustments needed for context forest versus ordinary context tree
+			fPiz.setContextForest(true);
+			
+			//retrieve figures
 			Fig_Pizarra figPizarra = new Fig_Pizarra(de.getMatriuDistancies().getArrel(), cfg);
 			
 			// Pass figures to the window
@@ -159,6 +185,9 @@ public class FrmScanOutputWindow extends JFrame {
 			//ForestPane.setPreferredSize(this.getSize());
 			ForestPane.getVerticalScrollBar().setUnitIncrement(Jpan_btn_NEW.ScrollInc);
 		
+			//enable button
+			Jpan_btn_NEW.btnUpdate.setEnabled(true);
+			
 		} catch (Exception ex){
 			ex.printStackTrace();
 		}

@@ -99,7 +99,7 @@ import definicions.MatriuDistancies;
 		private JRadioButton annotationSearch, clusterSearch;
 		
 		// Load and update buttons
-		private static JButton btnManage, btnSubmit, btnUpdate;
+		public static JButton btnManage, btnSubmit, btnUpdate;
 		private JButton btnCancel;
 		
 		// Indicates if the buttons Load or Update are being clicked

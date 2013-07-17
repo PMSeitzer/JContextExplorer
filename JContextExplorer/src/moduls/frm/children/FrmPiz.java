@@ -170,6 +170,7 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 	private int PivotY;
 	
 	private CSDisplayData CSD;
+	private boolean ContextForest = false;
 		
 	// ----- Methods -----------------------------------------------//
 
@@ -275,8 +276,8 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 						frm.saveUltrametricTXT();
 					} catch (Exception e) {
 						errMsg = Language.getLabel(81);
-						FesLog.LOG
-								.throwing("FrmPiz", "initComponentsMenu()", e);
+//						FesLog.LOG
+//								.throwing("FrmPiz", "initComponentsMenu()", e);
 						JOptionPane.showInternalMessageDialog(
 								frm.getPan_Desk(), errMsg, "MultiDendrograms",
 								JOptionPane.ERROR_MESSAGE);
@@ -288,8 +289,8 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 						frm.showUltrametricErrors();
 					} catch (Exception e) {
 						errMsg = Language.getLabel(81);
-						FesLog.LOG
-								.throwing("FrmPiz", "initComponentsMenu()", e);
+//						FesLog.LOG
+//								.throwing("FrmPiz", "initComponentsMenu()", e);
 						JOptionPane.showInternalMessageDialog(
 								frm.getPan_Desk(), errMsg, "MultiDendrograms",
 								JOptionPane.ERROR_MESSAGE);
@@ -806,7 +807,10 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 		this.SelectedNodeNumbers = selectedNodeNumbers;
 		this.frm.setSelectedNodeNumbers(selectedNodeNumbers);
 		this.CSD.setSelectedNodes(selectedNodeNumbers);
-		this.frm.setCSD(this.CSD);
+		if (!ContextForest){
+			this.frm.setCSD(this.CSD);
+		}
+
 		
 //		//update selected nodes -> internal frame data
 //		this.SelectedNodeNumbers = selectedNodeNumbers;
@@ -819,9 +823,12 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 	}
 
 	public void UpdateNodes(){
-				
-		//retrieve most current set of selected nodes
-		this.CSD = frm.getCurrentFrame().getInternalFrameData().getQD().getCSD();
+		
+		if (!ContextForest){
+			//retrieve most current set of selected nodes
+			this.CSD = frm.getCurrentFrame().getInternalFrameData().getQD().getCSD();
+		}
+
 		
 		//repaint nodes
 		this.repaint();
@@ -836,8 +843,10 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 		//left click
 		if (SwingUtilities.isLeftMouseButton(e)){			
 			
-			//update CSD
-			this.CSD = frm.getCurrentFrame().getInternalFrameData().getQD().getCSD();
+			//update 
+			if (!ContextForest){
+				this.CSD = frm.getCurrentFrame().getInternalFrameData().getQD().getCSD();
+			}
 			
 			int x ,y;
 			
@@ -907,11 +916,15 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 				}
 			}
 			
-			//update master CSD
-			frm.getCurrentFrame().getInternalFrameData().getQD().setCSD(CSD);
+			if (!ContextForest){
+				//update master CSD
+				frm.getCurrentFrame().getInternalFrameData().getQD().setCSD(CSD);
+				
+				//call main frame to update this and all other panels
+				this.frm.UpdateSelectedNodes();
+			}
 			
-			//call main frame to update this and all other panels
-			this.frm.UpdateSelectedNodes();
+
 
 		}
 		
@@ -985,6 +998,14 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 
 	public void setCSD(CSDisplayData cSD) {
 		CSD = cSD;
+	}
+
+	public boolean isContextForest() {
+		return ContextForest;
+	}
+
+	public void setContextForest(boolean contextForest) {
+		ContextForest = contextForest;
 	}
 
 }
