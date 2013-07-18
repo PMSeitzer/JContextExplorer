@@ -171,7 +171,9 @@ public class DadesExternes {
 			htNoms.put(ht.get(s).getId(), s);
 		}
 		
-		} catch (Exception ex){}
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
 	}
 
 	private LinkedList<StructIn<String>> LlegeixFitxer() throws Exception {

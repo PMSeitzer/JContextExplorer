@@ -22,6 +22,8 @@ import genomeObjects.ExtendedCRON;
 import inicial.FesLog;
 import inicial.Language;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -34,6 +36,7 @@ import java.util.StringTokenizer;
 import java.util.logging.Level;
 
 import javax.swing.JOptionPane;
+import javax.swing.JProgressBar;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import ContextForest.DissimilarityMatrixData;
@@ -52,7 +55,7 @@ import errors.FitxerIncompatible;
  *
  * @since JDK 6.0
  */
-public class ReadTXT { //just a program to read in .txt files
+public class ReadTXT implements PropertyChangeListener { //just a program to read in .txt files
 
 	private final String nomfitx;
 	private int numElements = 0;
@@ -61,6 +64,7 @@ public class ReadTXT { //just a program to read in .txt files
 	private LinkedList<StructIn<String>> lst;
 	private static final double NULL = -1.0;
 	private final ExtendedCRON EC;
+	private JProgressBar progressBar = null;
 	
 	//							file path
 	public ReadTXT(final String pathFichero) throws Exception {
@@ -530,11 +534,21 @@ public class ReadTXT { //just a program to read in .txt files
 		final LinkedList<String[]> lstDades = new LinkedList<String[]>();
 		String delims = " ,;|\t\n";
 
+		boolean PrintStatus = false;
+		
+		//only print status for large matrices.
+		if (DMD.getFormattedDissimilarities().size() >= 250){
+			PrintStatus = true;
+			System.out.println("Large Tree: Data loading status will be displayed.");
+		}
+		int Counter = 0;
+		// matrix approach - works but still slow.
 			for (int i = 0; i< DMD.getFormattedDissimilarities().size(); i++){
-
+		//for (int i = 0; i< DMD.getMatrixFormattedDissimilarities().size(); i++){
+			
 				// Reading headers
 				StringTokenizer st = new StringTokenizer(DMD.getFormattedDissimilarities().get(i), delims);
-				dadesLinia = new String[numCols];
+				//StringTokenizer st = new StringTokenizer(DMD.getMatrixFormattedDissimilarities().get(i), delims);
 
 				numCols = st.countTokens();
 				dadesLinia = new String[numCols];
@@ -546,9 +560,33 @@ public class ReadTXT { //just a program to read in .txt files
 
 				lstDades.add(dadesLinia);
 
+				//display status messages, if appropriate.
+				if (PrintStatus){
+					Counter++;
+					if (Counter % 5000 == 0){
+						System.out.println("Read " + Counter + "/" + DMD.getFormattedDissimilarities().size() + " Dissimilarity Relations.");
+					}
+				}
+				
 				}
 			
+			if (PrintStatus){
+				System.out.println("All dissimilarities successfully read!");
+			}
+			
 			return lstDades;
+	}
+
+	@Override
+	
+	//currently nonfunctional
+	public void propertyChange(PropertyChangeEvent evt) {
+		if (progressBar != null){
+			if (evt.getPropertyName() == "progress") {
+				int progress = (Integer) evt.getNewValue();
+				progressBar.setValue(progress);
+			}
+		}
 	}
 	
 } //completed classbody

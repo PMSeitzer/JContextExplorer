@@ -347,6 +347,7 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 				DMD = new DissimilarityMatrixData();
 				LinkedList<Double> D = new LinkedList<Double>();
 				LinkedList<String> FD = new LinkedList<String>();
+				LinkedList<String> MFD = new LinkedList<String>();
 				DMD.setNumLeaves(CompareSize);
 				
 				//determine total
@@ -358,7 +359,8 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 				//iterate over keys
 				for (int i = 0; i <  TQ.getContextTrees().size(); i++){
 					
-					String str = "";
+					String str = TQ.getContextTrees().get(i).getName().replaceAll(" ", "_").replaceAll(";", "AND");
+					str = str + "\t";
 					for (int j = i+1; j < TQ.getContextTrees().size(); j++){
 						
 						double dist = 1.0;
@@ -387,7 +389,11 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 														
 						}
 
-						str = str + String.valueOf(dist) + " ";
+						if ((j+1) != TQ.getContextTrees().size()){
+							str = str + String.valueOf(dist) + "\t";
+						} else {
+							str = str + String.valueOf(dist);
+						}
 						
 						//Define node names - individual context trees
 						String Name1 = TQ.getContextTrees().get(i).getName().replaceAll(" ", "_").replaceAll(";", "AND");
@@ -398,7 +404,7 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 						
 						//add to list
 						FD.add(Row);
-						
+												
 						//add value to linked list
 						D.add(dist);
 						
@@ -411,10 +417,21 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 					
 					//debugging - view matrix
 					//System.out.println(str);
+					
+					//write row of matrix
+					MFD.add(str);
 				}
 				
 //				//debugging: view pairwise relationships
 //				for (String s : FD){
+//					System.out.println(s);
+//				}
+				
+				//add formatted triangle (alternative input format)
+				DMD.setMatrixFormattedDissimilarities(Triangle2Matrix(MFD));
+
+//				//debugging: view pairwise relationships
+//				for (String s : DMD.getMatrixFormattedDissimilarities()){
 //					System.out.println(s);
 //				}
 				
@@ -438,6 +455,9 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 			setProgress(0);
 			int Counter = 0;
 			
+			progressBar.setIndeterminate(true);
+			setProgress(100);
+			
 			//initialize matrix
 			DadesExternes de = null;
 			MatriuDistancies M = null;
@@ -456,7 +476,7 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 					//create a DE out of dissimilarity matrix
 					de = new DadesExternes(DMD);
 					M = de.getMatriuDistancies();
-					
+
 					//get distances, compute dendrogram
 					double minBase = Double.MAX_VALUE;
 					int nbElements = M.getCardinalitat();
@@ -464,12 +484,23 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 					Reagrupa rg;
 					MatriuDistancies mdNew;
 					double b;
-					int progress;
+					int progress = 0;
 					int ItCounter = 0;
+					
+					progressBar.setIndeterminate(false);
+					setProgress(0);
+					
+					long StartTime = System.nanoTime();
+					
 					while (M.getCardinalitat() > 1) {
 						
+						long ElapsedTime = (System.nanoTime()-StartTime)/(1000000000);
+			
+						
 						ItCounter++;
-						//System.out.println("Iteration: " + ItCounter + " Cardinality: " + M.getCardinalitat());
+//						System.out.println("Iteration: " + ItCounter 
+//								+ " Cardinality: " + M.getCardinalitat() 
+//								+ " Time: " + ElapsedTime);
 						
 						//CLUSTERING FROM DISTANCES DATA
 						rg = new Reagrupa(M, Jpan_Menu.getTypeData(), 
@@ -487,8 +518,11 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 							minBase = b;
 						}
 					
-						progress = (nbElements - M.getCardinalitat())
+						progress = 100 * (nbElements - M.getCardinalitat())
 								/ (nbElements - 1);
+						
+						//System.out.println("Progress: " + progress);
+						
 						setProgress(progress);	
 
 					}
@@ -499,6 +533,52 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 			}
 			
 			return de;
+		}
+		
+		//Extend Data Matrix
+		protected LinkedList<String> Triangle2Matrix(LinkedList<String> Triangle){
+			
+			//Initialize
+			LinkedList<String> Complete = new LinkedList<String>();
+			
+			String[][] EntryMatrix = new String[Triangle.size()][Triangle.size()+1];
+			
+			//constant for # non-name columns, # rows
+			int L = Triangle.size();
+			
+			for (int i = 0; i < Triangle.size(); i++){
+				String[] Tabs = Triangle.get(i).split("\t");
+				
+				//add name
+				EntryMatrix[i][0] = Tabs[0];
+				
+				//zero entries along diagonal
+				EntryMatrix[i][i+1] = "0.0";
+				
+				//add entries
+				if (Tabs.length > 1){
+					for (int j = 1; j < Tabs.length; j++){
+						
+						EntryMatrix[i][(L-j+1)] = Tabs[j];
+						EntryMatrix[L-j][i+1] = Tabs[j];
+					}
+				}
+				
+			}
+
+			for (int i = 0; i < Triangle.size(); i++){
+				String str = "";
+				for (int j = 0; j < Triangle.size()+1; j++){
+					if (j == 0){
+						str = EntryMatrix[i][j];
+					} else {
+						str = str + "\t" + EntryMatrix[i][j];
+					}
+				}
+				Complete.add(str);
+			}
+			
+			return Complete;
 		}
 		
 		// ----- post-processing----------- //

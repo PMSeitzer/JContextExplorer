@@ -7,6 +7,7 @@ public class DissimilarityMatrixData {
 	//Fields
 	private LinkedList<Double> Dissimilarities;
 	private LinkedList<String> FormattedDissimilarities;
+	private LinkedList<String> MatrixFormattedDissimilarities;
 	private String MethodName;
 	private int NumLeaves;
 	
@@ -41,5 +42,14 @@ public class DissimilarityMatrixData {
 
 	public void setNumLeaves(int numLeaves) {
 		NumLeaves = numLeaves;
+	}
+
+	public LinkedList<String> getMatrixFormattedDissimilarities() {
+		return MatrixFormattedDissimilarities;
+	}
+
+	public void setMatrixFormattedDissimilarities(
+			LinkedList<String> matrixFormattedDissimilarities) {
+		MatrixFormattedDissimilarities = matrixFormattedDissimilarities;
 	}
 }
