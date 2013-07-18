@@ -41,6 +41,7 @@ public class FrmScanOutputWindow extends JFrame {
 	private Jpan_ScanResults pan_ScanResults;
 	private Jpan_ViewResults pan_SelectDraw;
 	private JScrollPane ForestPane;
+	private FrmPiz fPiz;
 	private boolean DrawContextForest;
 	private DadesExternes de;
 	
@@ -151,6 +152,7 @@ public class FrmScanOutputWindow extends JFrame {
 				Name = QD.getName().replaceAll(" ", "_").replaceAll(";", "AND");
 				CL.setName(Name);
 				CL.setSelected(false);
+				CL.setContextForestOriginalName(QD.getName());
 				
 				//write to structure
 				leaves[i] = CL;
@@ -159,7 +161,7 @@ public class FrmScanOutputWindow extends JFrame {
 			CSD.setGraphicalContexts(leaves);
 			
 			//create a new context tree panel
-			FrmPiz fPiz = new FrmPiz(f, CSD);
+			fPiz = new FrmPiz(f, CSD);
 			Jpan_Menu.ajustaValors(cfg);
 			
 			//Adjustments needed for context forest versus ordinary context tree
@@ -186,7 +188,7 @@ public class FrmScanOutputWindow extends JFrame {
 			ForestPane.getVerticalScrollBar().setUnitIncrement(Jpan_btn_NEW.ScrollInc);
 		
 			//enable button
-			Jpan_btn_NEW.btnUpdate.setEnabled(true);
+			//Jpan_btn_NEW.btnUpdate.setEnabled(true);
 			
 		} catch (Exception ex){
 			ex.printStackTrace();
@@ -245,6 +247,16 @@ public class FrmScanOutputWindow extends JFrame {
 
 	public void setTCRKey(String tCRKey) {
 		TCRKey = tCRKey;
+	}
+
+
+	public FrmPiz getfPiz() {
+		return fPiz;
+	}
+
+
+	public void setfPiz(FrmPiz fPiz) {
+		this.fPiz = fPiz;
 	}
 	
 }

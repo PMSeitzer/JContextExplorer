@@ -15,6 +15,7 @@ public class ContextLeaf {
 	//information
 	private String Name;
 	private String SourceSpecies;
+	private String ContextForestOriginalName;
 	private boolean SearchReturnedContext = true;
 	
 	//various display sources
@@ -148,6 +149,14 @@ public class ContextLeaf {
 
 	public void setSearchReturnedContext(boolean searchReturnedContext) {
 		SearchReturnedContext = searchReturnedContext;
+	}
+
+	public String getContextForestOriginalName() {
+		return ContextForestOriginalName;
+	}
+
+	public void setContextForestOriginalName(String contextForestOriginalName) {
+		ContextForestOriginalName = contextForestOriginalName;
 	}
 
 

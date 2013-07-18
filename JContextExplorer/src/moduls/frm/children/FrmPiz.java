@@ -511,6 +511,7 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 		for (ContextLeaf CL : CSD.getGraphicalContexts()){
 			if (CL.isSelected()){
 				g.draw(CL.getContextTreeCoordinates());
+				//System.out.println("Selected! " + CL.getName());
 			} 
 		}
 		
@@ -922,6 +923,11 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 				
 				//call main frame to update this and all other panels
 				this.frm.UpdateSelectedNodes();
+				
+			} else {
+				
+				//repaint -> rectangles around selected leaves
+				this.repaint();
 			}
 			
 

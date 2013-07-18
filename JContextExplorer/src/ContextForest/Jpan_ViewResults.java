@@ -18,6 +18,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
+import moduls.frm.ContextLeaf;
 import moduls.frm.PostSearchAnalyses;
 import moduls.frm.QueryData;
 
@@ -117,7 +118,7 @@ public class Jpan_ViewResults extends JPanel implements ActionListener{
 			} else {
 				//Context forest
 				SelectLeaves();
-				System.out.println("TODO: Forest!");
+				
 			}
 		}
 		
@@ -129,7 +130,6 @@ public class Jpan_ViewResults extends JPanel implements ActionListener{
 			} else {
 				//Context forest
 				DrawContextTrees(RetrieveSelectedQueryResultsFromTree());
-				System.out.println("TODO: Forest!");
 			}
 
 		}
@@ -165,9 +165,21 @@ public class Jpan_ViewResults extends JPanel implements ActionListener{
 		
 		//Initialize output
 		LinkedList<QueryData> SelectedQS = new LinkedList<QueryData>();
+		LinkedList<String> SelectedQSNames = new LinkedList<String>();
 		
-		//TODO
+		//retrieve appropriate QS
+		for (ContextLeaf CL : fsow.getfPiz().getCSD().getGraphicalContexts())
+			if (CL.isSelected()){
+				SelectedQSNames.add(CL.getContextForestOriginalName());
+			}
 		
+		//Retrieve queries by name from QuerySet object
+		for (QueryData QD : fsow.getQS().getContextTrees()){
+			if (SelectedQSNames.contains(QD.getName())){
+				SelectedQS.add(QD);
+			}
+		}
+				
 		return SelectedQS;
 	}
 	
@@ -206,7 +218,32 @@ public class Jpan_ViewResults extends JPanel implements ActionListener{
 	
 	//select leaves on tree
 	public void SelectLeaves(){
-		//TODO
+		
+		//recover query, split by semicolon, comma, or white space
+		String Query = selectQueryResults.getText();
+		String[] Queries = Query.split(";");
+		if (Queries.length == 1){
+			Queries = Query.split(",");
+		}
+		if (Queries.length == 1) {
+			Queries = Query.split("\\s+");
+		}
+		
+		//Determine queries to select
+		LinkedList<String> SelectedQS = new LinkedList<String>();
+		for (String s : Queries){
+			for (ContextLeaf CL : fsow.getfPiz().getCSD().getGraphicalContexts()){
+				if (CL.getName().contains(s)){
+					CL.setSelected(true);
+				} else {
+					CL.setSelected(false);
+				}
+			}
+		}
+		
+		//repaint
+		fsow.getfPiz().repaint();
+		
 	}
 	
 	//draw a bunch of context trees from selected queries
