@@ -87,9 +87,9 @@ public class PrnArrelHTML extends JDialog {
 			}
 
 		} catch (Exception e) {
-			String msg_err = e.getMessage() + "\n";
-			msg_err += Language.getLabel(78);
-			throw new Exception(msg_err);
+//			String msg_err = e.getMessage() + "\n";
+//			msg_err += Language.getLabel(78);
+//			throw new Exception(msg_err);
 		}
 
 		final int Width_win = Parametres_Inicials.getWidth_frmDesk();
@@ -97,8 +97,9 @@ public class PrnArrelHTML extends JDialog {
 
 		txt.setSize(Width_win, height_win);
 		this.setVisible(true);
-		this.setTitle(cfg.getFitxerDades().getNom() + " - "
-				+ strMethod(cfg.getMethod().toString()));
+		this.setTitle("Dendrogram Details");
+//		this.setTitle(cfg.getFitxerDades().getNom() + " - "
+//				+ strMethod(cfg.getMethod().toString()));
 		this.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 		this.pack();
 

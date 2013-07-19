@@ -159,6 +159,7 @@ public class FrmScanOutputWindow extends JFrame {
 				i++;
 			}
 			CSD.setGraphicalContexts(leaves);
+			CSD.setContextForest(true);
 			
 			//create a new context tree panel
 			fPiz = new FrmPiz(f, CSD);

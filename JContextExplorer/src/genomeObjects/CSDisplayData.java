@@ -19,6 +19,7 @@ public class CSDisplayData implements Serializable {
 	
 	private Rectangle2D[] PhyloCoordinates;
 	private String[] PhyloNodeNames;
+	private boolean isContextForest = false;
 	
 	
 	private ExtendedCRON EC;				//--Context Set information-----
@@ -142,6 +143,14 @@ public class CSDisplayData implements Serializable {
 
 	public void setCurrentlyViewedPanel(String currentlyViewedPanel) {
 		CurrentlyViewedPanel = currentlyViewedPanel;
+	}
+
+	public boolean isContextForest() {
+		return isContextForest;
+	}
+
+	public void setContextForest(boolean isContextForest) {
+		this.isContextForest = isContextForest;
 	}
 	
 }

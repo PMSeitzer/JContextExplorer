@@ -218,17 +218,24 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 								JOptionPane.ERROR_MESSAGE);
 					}
 				} else if (evt.getActionCommand().equals(Language.getLabel(95))) {
-					// VIEW TREE
+					// SHOW DENDROGRAM DETAILS
 					try {
-						new PrnArrelHTML(cfg.getMatriu().getArrel(),
+						PrnArrelHTML P = new PrnArrelHTML(cfg.getMatriu().getArrel(),
 								cfg.getPrecision(), cfg);
+						
+//						System.out.println(P.getSize());
+//						
+//						if (P.getSize().equals(new Dimension(0,0))){
+//							P.setSize(new Dimension(500,500));
+//						}
+						
 					} catch (Exception e) {
 //						FesLog.LOG
 //								.throwing("FrmPiz", "initComponentsMenu()", e);
 						errMsg = Language.getLabel(76);
-						JOptionPane.showMessageDialog(frm.getPan_Desk(),
-								errMsg, "MultiDendrograms",
-								JOptionPane.ERROR_MESSAGE);
+//						JOptionPane.showMessageDialog(frm.getPan_Desk(),
+//								errMsg, "MultiDendrograms",
+//								JOptionPane.ERROR_MESSAGE);
 					}
 				} else if (evt.getActionCommand().equals(Language.getLabel(98))) {
 					// SAVE TO TXT
@@ -327,10 +334,17 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 		me6.addActionListener(al);
 		me7.addActionListener(al);
 
-		menu.add(me7);
+		if (CSD.getGraphicalContexts().length < 250){
+			if (!CSD.isContextForest()){
+				menu.add(me7);	
+			}
+		}
+
 		menu.add(me1);
 		menu.addSeparator();
-		menu.add(me6);
+		if (CSD.getGraphicalContexts().length < 250){
+			menu.add(me6);	
+		}
 		menu.add(me2);
 		menu.add(me0);
 		menu.addSeparator();

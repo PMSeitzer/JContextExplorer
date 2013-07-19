@@ -92,8 +92,15 @@ public class Fig_Pizarra {
 		} else {
 			posNodes = val_Max_show;
 		}
+		
 		Branca(abre, cf.getConfigMenu().isFranjaVisible()); //branch
-		construeixMatriuUltrametrica(c, false);
+		
+		if (c.getFills() > 200){
+			construeixMatriuUltrametrica(c, true); 	//don't fill in the matrix
+		} else {
+			construeixMatriuUltrametrica(c, false); // do fill in the matrix (time-consuming)
+		}
+
 	}
 
 	public Fig_Pizarra(Tree ImportedNewickTree, final Config cf) throws Exception {
@@ -115,7 +122,7 @@ public class Fig_Pizarra {
 		}
 		Branca(abre, cf.getConfigMenu().isFranjaVisible()); //branch
 		
-		//time-consuming point!
+		//time-consuming point! 
 		construeixMatriuUltrametrica(c, true);
 		
 		//save the value as a field.
@@ -424,7 +431,7 @@ public class Fig_Pizarra {
 
 		}
 
-		//Only need to fill matrix when computing contex tree.
+		//Only need to fill matrix when computing context tree.
 		if (!isPhylo){
 			ompleMatriuUltrametrica(c);
 		}
