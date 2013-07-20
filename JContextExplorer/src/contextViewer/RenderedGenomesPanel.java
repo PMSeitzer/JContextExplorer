@@ -91,8 +91,8 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	private String ECRONType; 			//Either "annotation" or "cluster"
 	
 	//Range-limited related
-	private int RangeLimit = 100000;				//Do not display a genomic region of this or more
-	private int SplitLimit = 100000;				//segment contexts when they are further away from this value.
+	private int RangeLimit = 50000;				//Do not display a genomic region of this or more
+	private int SplitLimit = 50000;				//segment contexts when they are further away from this value.
 	private LinkedList<String> ExceededRangeLimit;	//nodes that are excluded
 	private boolean ContextsExcluded = false; 		//initially, none are excluded
 	
@@ -1108,10 +1108,15 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 							MotifY = (int) GS[i].getBoundingRect().getCenterY()+1; //add 1 for display problems
 						}
 						
-						//update scale power
+						//note original motif width
+						int OriginalMotifWidth = MotifWidth;
+						
+						//update motif width, if appropriate
 						if (!Motifs2Scale)
-							if (MotifWidth < MotifWidthMinimum)
+							if (MotifWidth < MotifWidthMinimum){
 								MotifWidth = MotifWidthMinimum;
+							}
+								
 						
 						//create ellipse with appropriate values
 						Ellipse2D motif = new Ellipse2D.Double((double)MotifX, (double)MotifY, (double)MotifWidth, (double)MotifHeight);
@@ -1122,7 +1127,7 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 							
 							//height+width do not change
 							int MotifHeightFlip = MotifHeight;
-							int MotifWidthFlip = MotifWidth;
+							int MotifWidthFlip = OriginalMotifWidth;
 							int MotifYFlip;
 							
 							//determine Y-coordinate
@@ -1136,15 +1141,16 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 							double Dist2Center = Math.abs(MotifX - GS[i].getBoundingRect().getCenterX());
 							int MotifXFlip;
 							if (MotifX > GS[i].getBoundingRect().getCenterX()){
-								MotifXFlip = (int) (MotifX - 2*Dist2Center - MotifWidth);
+								MotifXFlip = (int) (MotifX - 2*Dist2Center - OriginalMotifWidth);
 							} else {
-								MotifXFlip = (int) (MotifX + 2*Dist2Center - MotifWidth);
+								MotifXFlip = (int) (MotifX + 2*Dist2Center - OriginalMotifWidth);
 							}
 							
-							//update scale power
+							//update flipped motif width, if appropriate
 							if (!Motifs2Scale)
-								if (MotifWidth < MotifWidthMinimum)
-									MotifWidth = MotifWidthMinimum;
+								if (MotifWidthFlip < MotifWidthMinimum){
+									MotifWidthFlip = MotifWidthMinimum;
+								}
 							
 							//create ellipse with appropriate values
 							Ellipse2D motifFlip = new Ellipse2D.Double((double)MotifXFlip, (double)MotifYFlip, (double)MotifWidthFlip, (double)MotifHeightFlip);

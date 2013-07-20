@@ -121,6 +121,7 @@ import moduls.frm.Panels.Jpan_btn_NEW;
 import moduls.frm.Panels.Jpan_genome;
 import moduls.frm.children.AboutBox;
 import moduls.frm.children.AboutJCE;
+import moduls.frm.children.CitationInfo;
 import moduls.frm.children.DeviationMeasuresBox;
 import moduls.frm.children.FrmPiz;
 import moduls.frm.children.ManageDissimilarity;
@@ -209,6 +210,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	//Popular genome sets, with data
 	private LinkedHashMap<JCheckBoxMenuItem, PopularGenomeSetData> PopularGenomeSets = new LinkedHashMap<JCheckBoxMenuItem, PopularGenomeSetData>();
+	
+	//System time limit
+	private long TimeLimit = 5;
 	
 	//private ButtonGroup AvailableOSCheckBoxMenuItems = new ButtonGroup();
 	//Import related
@@ -299,6 +303,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	//help components
 	private JMenuItem MH_Manual;
 	private JMenuItem MH_Video; 
+	private JMenuItem MH_Citation;
 	private JMenuItem MH_Publication;
 	
 	// ==== SwingWorkers ===== //
@@ -1059,7 +1064,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	public class LoadPopularWorker extends SwingWorker<Void, Void>{
 
 		//fields
-		protected JCheckBoxMenuItem SelectedItem;
+		public JCheckBoxMenuItem SelectedItem;
 		
 		public LoadPopularWorker(JCheckBoxMenuItem j) {
 			this.SelectedItem = j;
@@ -1080,6 +1085,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			
 			// ==== Call method ==== //
 			
+			//note system time
+			long StartTime = System.nanoTime();
+			
+			//pass system time to method
 			ImportPopularSet(SelectedItem);
 			
 			//switch cursor
@@ -1092,6 +1101,13 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//post-processing
 		public void done(){
+			
+			//switch cursor
+			Component glassPane = getRootPane().getGlassPane();
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			glassPane.setVisible(false);
+			getPanBtn().getProgressBar().setIndeterminate(false);
+			
 			setProgress(0);
 		}
 		
@@ -1448,15 +1464,18 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		M_Help = new JMenu("Help");
 		MH_Manual = new JMenuItem("User's Manual");
 		MH_Video = new JMenuItem("Video Tutorials");
-		MH_Publication = new JMenuItem("Publication");
+		MH_Citation = new JMenuItem("Show Citation");
+		MH_Publication = new JMenuItem("View Publication");
 			
 		MH_Manual.addActionListener(this);
 		MH_Video.addActionListener(this);
+		MH_Citation.addActionListener(this);
 		MH_Publication.addActionListener(this);
 		
 		M_Help.addSeparator();
 		M_Help.add(MH_Manual);
 		M_Help.add(MH_Video);
+		M_Help.add(MH_Citation);
 		M_Help.add(MH_Publication);
 			
 		/*
@@ -1660,10 +1679,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				//begin import
 				File[] files = GetGenomes.getSelectedFiles();
 				LoadGenomesWorker LGW = new LoadGenomesWorker(files);
-				//CurrentLGW = LGW;
+				CurrentLGW = LGW;
 				LGW.addPropertyChangeListener(panBtn);
 				LGW.execute();
-				//CurrentLGW = null;
+				CurrentLGW = null;
 			} 
 		
 		}
@@ -1739,7 +1758,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 						String[] options = new String[]{"OK","Cancel"};
 						int Option = JOptionPane.showOptionDialog(null, panel, "Password Required",
 								JOptionPane.NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-						
+					
 						if (JOptionPane.YES_OPTION == Option){
 							char[] pchar = pass.getPassword();
 							String password = new String(pchar);
@@ -1754,16 +1773,19 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 							}
 						}
 						
+						if (JOptionPane.NO_OPTION == Option){
+							j.setSelected(false);
+						}
+						
 					} else {
 						ContinueLoading = true;
 					}
 					
 					if (ContinueLoading){
 						LoadPopularWorker LPW = new LoadPopularWorker(j);
-						//CurrentLPW = LPW;
 						LPW.addPropertyChangeListener(panBtn);
+						this.CurrentLPW = LPW;
 						LPW.execute();
-						//CurrentLPW = null;
 						
 						if (PDG.isPasswordProtected()){
 							//update the GUI to enable components.
@@ -1892,9 +1914,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			LaunchWebsite("http://www.ncbi.nlm.nih.gov/genomes/MICROBES/microbial_taxtree.html");
 		}
 
-		if (evt.getSource().equals(MH_Publication)){
-			LaunchWebsite("http://www.biomedcentral.com/1471-2105/14/18");
-		}
+
 		
 		/*
 		 * EXPORT
@@ -2021,6 +2041,17 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//Youtube page of video tutorials
 		if (evt.getSource().equals(MH_Video)){
 			LaunchWebsite("http://www.youtube.com/user/JContextExplorer");
+		}
+		
+		//Show Citation information
+		if (evt.getSource().equals(MH_Citation)){
+			//TODO;
+			new CitationInfo();
+		}
+		
+		//Bring up publication
+		if (evt.getSource().equals(MH_Publication)){
+			LaunchWebsite("http://www.biomedcentral.com/1471-2105/14/18");
 		}
 		
 	}
@@ -2311,6 +2342,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Import!
 		try {
+
 			URL inputURL = new URL(strURL);
 			HttpURLConnection c = (HttpURLConnection) inputURL.openConnection();
 			ObjectInputStream in = new ObjectInputStream(c.getInputStream());
@@ -2361,14 +2393,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				this.CallSwitchWorker(OS.getName(), OSPopular.getName());
 				
 			}
-			
+
 		} catch (Exception e) {
 			
 			//item not selected
 			m.setSelected(false);
 			
 			//error message
-			JOptionPane.showMessageDialog(null, "There was a problem reading data from the internet.\nCheck your internet connection.",
+			JOptionPane.showMessageDialog(null, "There was a problem reading data from the internet.\nCheck your internet connection and try again later.",
 					"Data Import Error", JOptionPane.ERROR_MESSAGE);
 		}
 

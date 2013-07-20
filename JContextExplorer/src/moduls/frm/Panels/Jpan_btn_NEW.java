@@ -408,7 +408,7 @@ import definicions.MatriuDistancies;
 					}
 					
 					//option: condense into single list + update matches
-					if (!Matches.isEmpty()){
+					if (CurrentCSD.isSingleOrganismAmalgamation()){
 						Matches = Amalgamate(CurrentCSD.isSingleOrganismAmalgamation(), Matches);
 					}
 					
@@ -740,7 +740,7 @@ import definicions.MatriuDistancies;
 					}
 					
 					//option: condense into single list + update matches
-					if (!Matches.isEmpty()){
+					if (CurrentCSD.isSingleOrganismAmalgamation()){
 						Matches = Amalgamate(CurrentCSD.isSingleOrganismAmalgamation(), Matches);
 					}
 					
@@ -989,7 +989,7 @@ import definicions.MatriuDistancies;
 					//Initialize holding cell
 					LinkedList<GenomicElementAndQueryMatch> CondensedList = new LinkedList<GenomicElementAndQueryMatch>();
 					
-					//create another iterator
+					//create an iterator
 					Iterator<LinkedList<GenomicElementAndQueryMatch>> itp = Matches.iterator();
 					
 					//march through entries, condense
@@ -1455,6 +1455,32 @@ import definicions.MatriuDistancies;
 		@Override
 		public void actionPerformed(final ActionEvent evt) {
 			
+			//cancel button - version 1.1
+			if (evt.getSource().equals(btnCancel)){
+				
+				//Kill search worker
+				if (CurrentSearch != null){
+					CurrentSearch.cancel(true);
+					CurrentSearch = null;
+					de = null;
+				}
+				
+//				if (fr.getCurrentLGW() != null){
+//					fr.getCurrentLGW().cancel(true);
+//					fr.setCurrentLGW(null);
+//				}
+				
+				//kill popular set retrieval worker
+				if (fr.getCurrentLPW() != null){
+					fr.getCurrentLPW().SelectedItem.setSelected(false);
+					fr.getCurrentLPW().cancel(true);
+					fr.setCurrentLPW(null);
+				}
+
+				//message to console
+				System.out.println("The process has been cancelled.");
+			}
+			
 			if (fr.getOS() != null){
 				
 				
@@ -1606,7 +1632,8 @@ import definicions.MatriuDistancies;
 							String Unk = "Unknown function";
 							
 							if ((Hypo.contains(searchField.getText()) || Unk.contains(searchField.getText()) ||
-									searchField.getText().length() <= 3) && QD.getAnalysesList().isOptionComputeDendrogram()){
+									searchField.getText().length() <= 3) && QD.getAnalysesList().isOptionComputeDendrogram()
+									&& fr.getPanDisplayOptions().getDrawContextTree().isSelected()){
 								
 								String SureYouWantToSearch = "You have entered a search query that may return a large number of results." + "\n"
 										+ "Proceeding may cause this program to crash." + "\n"
@@ -1643,6 +1670,14 @@ import definicions.MatriuDistancies;
 							LinkedList<Integer> NumQueriesList = new LinkedList<Integer>();
 							for (int i = 0; i < Queries.length; i++){
 								try {
+									if (Queries[i].contains("-")){
+										String Rng[] = Queries[i].split("-");
+										int Start = Integer.parseInt(Rng[0].trim());
+										int Stop = Integer.parseInt(Rng[1].trim());
+										for (int j = Start; j <= Stop; j++){
+											NumQueriesList.add(j);
+										}
+									}
 									NumQueriesList.add(Integer.parseInt(Queries[i].trim()));
 								} catch (Exception ex){}
 							}
@@ -1716,29 +1751,7 @@ import definicions.MatriuDistancies;
 					buttonClicked = false;
 				}
 				
-				//cancel button - version 1.1
-				if (evt.getSource().equals(btnCancel)){
-					
-					//Kill swing worker
-					if (CurrentSearch != null){
-						CurrentSearch.cancel(true);
-						CurrentSearch = null;
-						de = null;
-					}
-					
-//					if (fr.getCurrentLGW() != null){
-//						fr.getCurrentLGW().cancel(true);
-//						fr.setCurrentLGW(null);
-//					}
-//					
-//					if (fr.getCurrentLPW() != null){
-//						fr.getCurrentLPW().cancel(true);
-//						fr.setCurrentLPW(null);
-//					}
 
-					//message to console
-//					System.out.println("Search successfully cancelled.");
-				}
 //			} else if (fr.getCurrentLPW() != null){
 //				System.out.println("Meeerh!");
 //				if (evt.getSource().equals(btnCancel)){
@@ -1751,7 +1764,9 @@ import definicions.MatriuDistancies;
 //					}
 //				}
 			} else {
-				fr.NoOS();
+				if(!evt.getSource().equals(btnCancel)){
+					fr.NoOS();
+				}
 			}
 		}
 		
