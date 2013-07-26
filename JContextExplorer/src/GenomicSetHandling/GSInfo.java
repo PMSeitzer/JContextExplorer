@@ -7,6 +7,7 @@ public class GSInfo {
 	//Fields
 	private String GSName;
 	private String GSNotes;
+						//genome, description
 	private LinkedHashMap<String, String> GSGenomeDescriptions;
 	
 	//Constructor

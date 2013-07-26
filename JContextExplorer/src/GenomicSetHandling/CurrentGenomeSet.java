@@ -19,6 +19,7 @@ import java.awt.event.ComponentListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.util.LinkedList;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -58,6 +59,7 @@ public class CurrentGenomeSet extends JFrame implements ActionListener, Componen
 	
 	private String strGenomes = "Genomes";
 	private String strSelectGenome = "Select Genome";
+	private LinkedList<String> Genomes2Remove = new LinkedList<String>();
 	
 	//Constructor
 	public CurrentGenomeSet(FrmPrincipalDesk f){
@@ -279,23 +281,30 @@ public class CurrentGenomeSet extends JFrame implements ActionListener, Componen
 			//Update fields
 			f.getOS().setNotes(OrganismSetNotes.getText());
 			
-			//Update GI information
-			f.getGenomeSets().get(f.getOS().getName()).setGSNotes(OrganismSetNotes.getText());
+			//Retrieve GI information
+			GSInfo GI = f.getGenomeSets().get(f.getOS().getName());
+			
+			//Update nodes
+			GI.setGSNotes(OrganismSetNotes.getText());
+			
+			//Remove genomes from OS + GS Info
+			for (String s : this.Genomes2Remove){
+				f.getOS().getSpecies().remove(s);
+				f.getOS().getSpeciesNames().remove(s);
+				GI.getGSGenomeDescriptions().remove(s);
+			}
+			
+			//replace GI with new GI
+			f.getGenomeSets().put(f.getOS().getName(), GI);
 			
 			//close subordinate + this frame
 			if (RG != null){
 				RG.dispose();
 			}
 			this.dispose();
-			
-			//TODO: update data across all fields
-			
+
 		}
-			
 
-			
-
-		
 	}
 	
 	//display per-genome information
@@ -376,5 +385,13 @@ public class CurrentGenomeSet extends JFrame implements ActionListener, Componen
 
 	public void setRG(RemoveGenomes rG) {
 		RG = rG;
+	}
+
+	public LinkedList<String> getGenomes2Remove() {
+		return Genomes2Remove;
+	}
+
+	public void setGenomes2Remove(LinkedList<String> genomes2Remove) {
+		Genomes2Remove = genomes2Remove;
 	}
 }

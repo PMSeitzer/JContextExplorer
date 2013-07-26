@@ -155,6 +155,11 @@ public class RemoveGenomes extends JFrame implements ActionListener{
 			//retrieve selected
 			List<String> Selected = NameListGUI.getSelectedValuesList();
 			
+			//schedule for removal
+			for (String s : Selected){
+				CGS.getGenomes2Remove().add(s);
+			}
+			
 			//Initialize the counter
 			int GenomeCounter = 0;
 			

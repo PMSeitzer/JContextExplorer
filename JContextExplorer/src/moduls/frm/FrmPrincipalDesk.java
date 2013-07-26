@@ -34,6 +34,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Dialog;
 import java.awt.FileDialog;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -1113,6 +1114,168 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 	}
 	
+	//Export a genome set (.gs file)
+	public class ExportGenomicSetWorker extends SwingWorker<Void, Void>{
+
+		//Fields
+		protected File file;
+		
+		//constructor
+		protected ExportGenomicSetWorker(File fi){
+			this.file = fi;
+		}
+		
+		@Override
+		protected Void doInBackground() throws Exception {
+			
+			//switch progressbar
+			getPanBtn().getProgressBar().setIndeterminate(true);
+			
+			//switch cursor
+			Component glassPane = getRootPane().getGlassPane();
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			glassPane.setVisible(true);
+			
+			setProgress(100);
+			
+			//Method
+			try {
+				
+		        FileOutputStream fileOut = new FileOutputStream(file);
+		        ObjectOutputStream out = new ObjectOutputStream(fileOut);
+		        out.writeObject(OS);
+		        out.close();
+		        fileOut.close();
+
+			} catch (Exception ex){
+				JOptionPane.showMessageDialog(null, "Unable to Export Genomic Set.",
+						"Export Error",JOptionPane.ERROR_MESSAGE);
+			}
+
+			//switch cursor
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			glassPane.setVisible(false);
+			getPanBtn().getProgressBar().setIndeterminate(false);
+			
+			return null;
+		}
+		
+		public void done(){
+			
+			//switch cursor
+			Component glassPane = getRootPane().getGlassPane();
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			glassPane.setVisible(false);
+			getPanBtn().getProgressBar().setIndeterminate(false);
+			
+			setProgress(0);
+			
+		}
+	}
+	
+	//Import a genomic set (.gs file)
+	public class ImportGenomicSetWorker extends SwingWorker<Void, Void>{
+
+		//Fields
+		protected File file;
+		
+		//constructor
+		protected ImportGenomicSetWorker(File fi){
+			this.file = fi;
+		}
+		
+		@Override
+		protected Void doInBackground() throws Exception {
+
+			//switch progressbar
+			getPanBtn().getProgressBar().setIndeterminate(true);
+			
+			//switch cursor
+			Component glassPane = getRootPane().getGlassPane();
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			glassPane.setVisible(true);
+			
+			setProgress(100);
+			
+			//Method
+			try
+		      {	
+
+				//Import data
+		        FileInputStream fileIn = new FileInputStream(file);
+		        ObjectInputStream in = new ObjectInputStream(fileIn);
+		        OrganismSet OS_Imported = (OrganismSet) in.readObject();
+		        in.close();
+		        fileIn.close();
+					
+		        //store
+				GenomeSetFiles.put(OS_Imported.getName(), file);
+					
+				//Need a new check box
+				JCheckBoxMenuItem imp = new JCheckBoxMenuItem();
+				imp.setText(OS_Imported.getName());
+				imp.setName(OS_Imported.getName());
+				imp.setSelected(true);
+					
+				//turn on additional options
+				OSMenuComponentsEnabled(true);
+		        
+				//update current genome set menu
+				if (AvailableOSCheckBoxMenuItems.contains(MG_NoGS)){
+					
+					//update appropriately
+					OS = OS_Imported;
+
+					//remove no GS type + add new type
+					AvailableOSCheckBoxMenuItems.remove(MG_NoGS);
+					AvailableOSCheckBoxMenuItems.add(imp);
+					MG_CurrentGS.remove(MG_NoGS);
+					MG_CurrentGS.add(imp);
+					
+					//Add information
+					CreateAndStoreGSInfo(OS);
+					
+					//Update GUI
+					NewOSUpdateGUI();
+					
+				//Switch out of old genome set
+				} else {
+					
+					//Create a GS
+					//Add this menu item to the list.			
+					MG_CurrentGS.add(imp);
+					
+					//create a dummy file for new genome set, store appropriately
+					OS_Imported.setName(imp.getName());
+					ExportNonFocusOS(OS_Imported);
+
+					//invoke switch worker
+					CallSwitchWorker(OS.getName(), OS_Imported.getName());
+					
+				}
+		         
+		      } catch(Exception ex) {
+					JOptionPane.showMessageDialog(null, "Unable to Import Genomic Set.\nPlease check the file format and try again.",
+							"File Reading Error",JOptionPane.ERROR_MESSAGE);
+		      }
+			
+			
+			return null;
+		}
+		
+		public void done(){
+			
+			//switch cursor
+			Component glassPane = getRootPane().getGlassPane();
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			glassPane.setVisible(false);
+			getPanBtn().getProgressBar().setIndeterminate(false);
+			
+			setProgress(0);
+			
+		}
+	}
+	
 	// ==== Constructor ==== //
 	public FrmPrincipalDesk(final String title, OrganismSet theOrganismSet) {
 		
@@ -1626,7 +1789,39 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Load a genome set from a .gs file
 		if (evt.getSource().equals(MG_ImportGS)){
-			System.out.println("From .gs file");
+
+			// initialize output
+			JFileChooser GetGenomeSet = new JFileChooser();
+			
+			GetGenomeSet.setMultiSelectionEnabled(false);
+			GetGenomeSet.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			GetGenomeSet
+					.setDialogTitle("Select A Genomic Set (.gs) File");
+		
+			//retrieve directory
+			if (this.FileChooserSource != null) {
+				GetGenomeSet.setCurrentDirectory(FileChooserSource);
+			} else {
+				GetGenomeSet.setCurrentDirectory(new File("."));
+			}
+			
+			GetGenomeSet.showOpenDialog(GetGenomeSet);
+			
+			// note current directory for next time
+			if (GetGenomeSet.getSelectedFile() != null) {
+								
+				//adjust file
+				this.FileChooserSource = GetGenomeSet.getCurrentDirectory();
+				
+				//retrieve file
+				File fi = GetGenomeSet.getSelectedFile();
+
+				//call SwingWorker
+				ImportGenomicSetWorker IGSW = new ImportGenomicSetWorker(fi);
+				IGSW.addPropertyChangeListener(panBtn);
+				IGSW.execute();
+			} 
+			
 		}
 		
 		//Manage Genome sets
@@ -1701,11 +1896,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		if (evt.getSource().equals(MG_AccessionID)){
 			new ImportGenbankIDs(this);
 		}
-		
-		/*
-		 * SWITCHING BETWEEN GENOME SETS
-		 */
 
+		//Switching between genome sets
 		if (this.AvailableOSCheckBoxMenuItems.contains(evt.getSource())){
 			
 			//don't do anything if only one item in the list.
@@ -1746,9 +1938,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 		}
 		
-		/*
-		 * POPULAR GENOME SET
-		 */
+		//Popular genome set
 		for (JCheckBoxMenuItem j : PopularGenomeSets.keySet()){
 			if (j.equals(evt.getSource())){
 				if (j.isSelected()){
@@ -1924,11 +2114,11 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			LaunchWebsite("http://www.ncbi.nlm.nih.gov/genomes/MICROBES/microbial_taxtree.html");
 		}
 
-
-		
 		/*
 		 * EXPORT
 		 */
+		
+		//Export extended GFFS
 		if (evt.getSource().equals(ME_GFFs)){
 			
 			// initialize output
@@ -1978,6 +2168,31 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			
 			//launch frame
 			new ImportGenbankIDs(this);
+		}
+		
+		//Export genomic working set (GS)
+		if (evt.getSource().equals(ME_gs)){
+			
+			//Initialize file dialog
+			FileDialog fd = new FileDialog(this, "Export Genome Set", FileDialog.SAVE);
+			String str = OS.getName() + ".gs";
+			fd.setFile(str);
+			fd.setVisible(true);
+			
+			//Retrieve file, export to file
+			if (fd.getFile() != null) {
+				
+				//file name
+				String sPath = fd.getDirectory() + fd.getFile();
+				File f = new File(sPath);
+			
+				//call worker
+				ExportGenomicSetWorker EGSW = new ExportGenomicSetWorker(f);
+				EGSW.addPropertyChangeListener(getPanBtn());
+				EGSW.execute();
+				
+			}
+			
 		}
 		
 		/*
@@ -2037,14 +2252,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			} else {
 				this.NoOS();
 			}
-		}
-		
-		/*
-		 * EXPORT
-		 */
-		
-		if (evt.getSource().equals(ME_gs)){
-			System.out.println("TODO: export chooser");
 		}
 		
 		/*
@@ -2147,13 +2354,11 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	
 	//invoke swing worker, for progress bar stuff
 	public void CallSwitchWorker(String FirstOS, String SecondOS){
+		
 		SwitchWorker SW = new SwitchWorker(FirstOS, SecondOS);
 		SW.addPropertyChangeListener(panBtn);
 		SW.execute();
-		
-//		//UI update
-//		SwingUtilities.updateComponentTreeUI(getRootPane());
-		
+
 	}
 	
 	//Create a new data grou
@@ -2379,7 +2584,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			
 			//turn on additional options
 			OSMenuComponentsEnabled(true);
-			
+
 			//update current genome set menu
 			if (AvailableOSCheckBoxMenuItems.contains(MG_NoGS)){
 				
@@ -2391,6 +2596,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 				//remove no GS type.
 				AvailableOSCheckBoxMenuItems.remove(MG_NoGS);
+				
+				//Add information
+				CreateAndStoreGSInfo(OS);
 				
 				//Update GUI
 				NewOSUpdateGUI();
