@@ -16,6 +16,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -32,22 +35,24 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.RootPaneContainer;
+import javax.swing.SwingConstants;
 
 import moduls.frm.FrmPrincipalDesk;
 
-public class CurrentGenomeSet extends JDialog implements ActionListener, ComponentListener{
+public class CurrentGenomeSet extends JFrame implements ActionListener, ComponentListener{
 
 	//fields
 	//data/base
 	private FrmPrincipalDesk f;
+	private RemoveGenomes RG = null;
 	
 	//GUI
 	private JPanel jp, jp2, jpEnclosing;
 	private JTextField LblName, TxtName, LblNotes, LblGenomes;
 	private JTextArea OrganismSetNotes, LblInfo;
-	private JComboBox menuGenomes;
+	private JComboBox<String> menuGenomes;
 	private JScrollPane ptsscroll, ptsscroll2;
-	private JButton btnOK;
+	private JButton btnOK, btnRemoveGenomes;
 	private int ScrollPaneInset = 15;
 	private int HeightInset = 160;
 	
@@ -64,7 +69,19 @@ public class CurrentGenomeSet extends JDialog implements ActionListener, Compone
 		this.pack();
 		this.setMinimumSize(this.getSize());
 		
-		this.setModalityType(ModalityType.DOCUMENT_MODAL);
+		WindowListener closeSubFrames = new WindowAdapter(){
+			public void windowClosing(WindowEvent e){
+				
+				//dispose all sub-windows
+				if (RG != null){
+					RG.dispose();
+				}
+				e.getWindow().dispose();
+			}
+		};
+		this.addWindowListener(closeSubFrames);
+		
+		//this.setModalityType(ModalityType.DOCUMENT_MODAL);
 		this.addComponentListener(this);
 		this.setVisible(true);
 
@@ -167,6 +184,16 @@ public class CurrentGenomeSet extends JDialog implements ActionListener, Compone
 		jp.add(ptsscroll2, c);
 		gridy++;
 		
+		//remove genomes button
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.fill = GridBagConstraints.NONE;
+		c.gridwidth = 1;
+		c.ipady = 0;
+		btnRemoveGenomes = new JButton("Remove Genomes");
+		btnRemoveGenomes.addActionListener(this);
+		jp.add(btnRemoveGenomes, c);
+		
 		//central frame
 		jp2 = new JPanel();
 		jp2.setLayout(new GridBagLayout());
@@ -198,8 +225,8 @@ public class CurrentGenomeSet extends JDialog implements ActionListener, Compone
 		OrganismSetNotes.setText(f.getOS().getNotes());
 		
 		//Update genomes
-		strGenomes = strGenomes + " (" + String.valueOf(f.getOS().getSpeciesNames().size()) + "):";
-		LblGenomes.setText(strGenomes);
+		String GenomeswNum = strGenomes + " (" + String.valueOf(f.getOS().getSpeciesNames().size()) + "):";
+		LblGenomes.setText(GenomeswNum);
 		if (f.getOS().getSpeciesNames().size() > 0){
 			menuGenomes.removeItemAt(0);
 			menuGenomes.addItem(strSelectGenome);
@@ -215,6 +242,37 @@ public class CurrentGenomeSet extends JDialog implements ActionListener, Compone
 	@Override
 	public void actionPerformed(ActionEvent e) {
 
+		//Show organism data
+		if (e.getSource().equals(menuGenomes)){
+			
+			
+			//this try/catch block is associated with the remove-genomes panel.
+			try {
+				
+				for (String s : f.getOS().getSpeciesNames()){
+					
+					//find appropriate species
+					if (menuGenomes.getSelectedItem().equals(s)){
+						showGenomeInfo(s);
+					}
+
+				}
+				
+				if (menuGenomes.getSelectedItem().equals(strSelectGenome)){
+					LblInfo.setText("");
+				}
+				
+			} catch (Exception ex) {}
+			
+		}
+		
+		//Remove one or more genomes from the set
+		if (e.getSource().equals(btnRemoveGenomes)){
+			if (RG == null){
+				RG = new RemoveGenomes(this);	
+			}
+		}
+		
 		//View Statistics, Update
 		if (e.getSource().equals(btnOK)){
 
@@ -224,25 +282,19 @@ public class CurrentGenomeSet extends JDialog implements ActionListener, Compone
 			//Update GI information
 			f.getGenomeSets().get(f.getOS().getName()).setGSNotes(OrganismSetNotes.getText());
 			
-			//close
+			//close subordinate + this frame
+			if (RG != null){
+				RG.dispose();
+			}
 			this.dispose();
-		}
-		
-		//Show organism data somehow
-		if (e.getSource().equals(menuGenomes)){
-			for (String s : f.getOS().getSpeciesNames()){
-				
-				//find appropriate species
-				if (menuGenomes.getSelectedItem().equals(s)){
-					showGenomeInfo(s);
-				}
-			}
 			
-			if (menuGenomes.getSelectedItem().equals(strSelectGenome)){
-				LblInfo.setText("");
-			}
+			//TODO: update data across all fields
 			
 		}
+			
+
+			
+
 		
 	}
 	
@@ -262,7 +314,8 @@ public class CurrentGenomeSet extends JDialog implements ActionListener, Compone
 				50));
 
 		ptsscroll2.setPreferredSize(new Dimension((int) this.getWidth()-(ScrollPaneInset*2),
-				(int)(this.getSize().getHeight()) - HeightInset - btnOK.getHeight()));
+				(int)(this.getSize().getHeight()) - HeightInset - btnOK.getHeight() 
+				- this.btnRemoveGenomes.getHeight()));
 
 		this.repaint();
 	}
@@ -283,5 +336,45 @@ public class CurrentGenomeSet extends JDialog implements ActionListener, Compone
 	public void componentHidden(ComponentEvent e) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	public JComboBox<String> getMenuGenomes() {
+		return menuGenomes;
+	}
+
+	public void setMenuGenomes(JComboBox<String> menuGenomes) {
+		this.menuGenomes = menuGenomes;
+	}
+
+	public String getStrSelectGenome() {
+		return strSelectGenome;
+	}
+
+	public void setStrSelectGenome(String strSelectGenome) {
+		this.strSelectGenome = strSelectGenome;
+	}
+
+	public JTextField getLblGenomes() {
+		return LblGenomes;
+	}
+
+	public void setLblGenomes(JTextField lblGenomes) {
+		LblGenomes = lblGenomes;
+	}
+
+	public String getStrGenomes() {
+		return strGenomes;
+	}
+
+	public void setStrGenomes(String strGenomes) {
+		this.strGenomes = strGenomes;
+	}
+
+	public RemoveGenomes getRG() {
+		return RG;
+	}
+
+	public void setRG(RemoveGenomes rG) {
+		RG = rG;
 	}
 }

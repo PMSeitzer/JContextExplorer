@@ -280,7 +280,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenuItem ML_DataGrouping;
 	
 	//export components
-	private JMenuItem ME_GWS;
+	private JMenuItem ME_gs;
 	private JMenuItem ME_GFFs;
 	private JMenuItem ME_Genbanks;
 	private JMenuItem ME_Clusters;
@@ -1233,7 +1233,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_ManageCurrentGS.setAccelerator(Gstroke);
 		MG_ManageCurrentGS.addActionListener(this);
 		
-		MG_ImportGS = new JMenuItem("Import Genome Set from .GS File");
+		MG_ImportGS = new JMenuItem("Import Genome Set from .gs file");
 		MG_AddGenomes = new JMenu("Import Genomes into current Genome Set");
 		MG_Files = new JMenuItem("From Genbank or .GFF Files");
 		MG_AccessionID = new JMenuItem ("Directly from NCBI Databases");
@@ -1241,7 +1241,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_NcbiTax = new JMenuItem("Launch NCBI microbial taxonomy browser");
 		MG_AddGenomes.add(MG_Files);
 		MG_AddGenomes.add(MG_AccessionID);
-		//MG_AddGenomes.add(MG_Ncbi);
 
 		//Import a genome set (.gs)
 		KeyStroke Istroke = KeyStroke.getKeyStroke(KeyEvent.VK_I, 
@@ -1298,22 +1297,22 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_PopularSets.add(MG_Staph);
 		MG_PopularSets.add(MG_Salmonella);
 		
-		//Whole genome set analysis / context forest
-		MG_WholeSet = new JMenuItem(strCF);
-		
-		//Browse NCBI genomes by taxonomy
-		KeyStroke Wstroke = KeyStroke.getKeyStroke(KeyEvent.VK_W, 
-				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-		MG_WholeSet.setAccelerator(Wstroke);
-		MG_WholeSet.addActionListener(this);
+//		//Whole genome set analysis / context forest
+//		MG_WholeSet = new JMenuItem(strCF);
+//		
+//		//Browse NCBI genomes by taxonomy
+//		KeyStroke Wstroke = KeyStroke.getKeyStroke(KeyEvent.VK_W, 
+//				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+//		MG_WholeSet.setAccelerator(Wstroke);
+//		MG_WholeSet.addActionListener(this);
 		
 		//Genomes menu - add to menu
 		M_Genomes.add(MG_NewGS);
+		M_Genomes.add(MG_ImportGS);
 		M_Genomes.add(MG_CurrentGS);
 		M_Genomes.add(MG_ManageGS);
 		M_Genomes.addSeparator();
 		M_Genomes.add(MG_ManageCurrentGS);
-		//M_Genomes.add(MG_ImportGS);
 		M_Genomes.add(MG_AddGenomes);
 		M_Genomes.add(MG_ImportSettings);
 		M_Genomes.addSeparator();
@@ -1387,10 +1386,16 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		 * EXPORT MENU
 		 */
 		M_Export = new JMenu("Export");
-		ME_GWS = new JMenuItem("Genome Set");
+		ME_gs = new JMenuItem("Genome Set as .gs file");
 		ME_GFFs = new JMenuItem("Genomes as Extended GFF files");
 		ME_Genbanks = new JMenuItem("Genomes as Genbank files from NCBI");
 		ME_Clusters = new JMenuItem("Homology Clusters");
+		
+		//Export gs file
+		KeyStroke Wstroke = KeyStroke.getKeyStroke(KeyEvent.VK_W, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		ME_gs.setAccelerator(Wstroke);
+		ME_gs.addActionListener(this);
 		
 		//Export GFFs
 		KeyStroke Xstroke = KeyStroke.getKeyStroke(KeyEvent.VK_X, 
@@ -1404,7 +1409,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		ME_Genbanks.setAccelerator(Ystroke);
 		ME_Genbanks.addActionListener(this);
 		
-		//M_Export.add(ME_GWS);
+		M_Export.add(ME_gs);
 		M_Export.add(ME_GFFs);
 		M_Export.add(ME_Genbanks);
 		//M_Export.add(ME_Clusters);
@@ -1617,6 +1622,11 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//Create a new Genome Set
 		if (evt.getSource().equals(MG_NewGS)){
 			new NewGS(this);
+		}
+		
+		//Load a genome set from a .gs file
+		if (evt.getSource().equals(MG_ImportGS)){
+			System.out.println("From .gs file");
 		}
 		
 		//Manage Genome sets
@@ -2027,6 +2037,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			} else {
 				this.NoOS();
 			}
+		}
+		
+		/*
+		 * EXPORT
+		 */
+		
+		if (evt.getSource().equals(ME_gs)){
+			System.out.println("TODO: export chooser");
 		}
 		
 		/*
