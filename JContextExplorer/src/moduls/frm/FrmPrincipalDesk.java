@@ -1253,6 +1253,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					CallSwitchWorker(OS.getName(), OS_Imported.getName());
 					
 				}
+				
+				//Activate menu items
+				OSMenuComponentsEnabled(true);
 		         
 		      } catch(Exception ex) {
 					JOptionPane.showMessageDialog(null, "Unable to Import Genomic Set.\nPlease check the file format and try again.",
@@ -1270,6 +1273,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			glassPane.setVisible(false);
 			getPanBtn().getProgressBar().setIndeterminate(false);
+			
+			if (OS != null){
+				OSMenuComponentsEnabled(true);
+			}
 			
 			setProgress(0);
 			
@@ -1820,6 +1827,11 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				ImportGenomicSetWorker IGSW = new ImportGenomicSetWorker(fi);
 				IGSW.addPropertyChangeListener(panBtn);
 				IGSW.execute();
+				
+				//update components
+				if (OS != null){
+					OSMenuComponentsEnabled(true);
+				}
 			} 
 			
 		}

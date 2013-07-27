@@ -189,7 +189,7 @@ public class NewGS extends JDialog implements ActionListener{
 											"switching between genome sets may be a time-consuming process.";
 						
 						int SwitchOS = JOptionPane.showConfirmDialog(null,MsgSwitch,
-								"Proceed with context viewing", JOptionPane.YES_NO_OPTION);
+								"Switch Genome Sets", JOptionPane.YES_NO_OPTION);
 						
 						if (SwitchOS == JOptionPane.YES_OPTION){
 							
