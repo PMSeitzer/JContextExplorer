@@ -94,6 +94,7 @@ public class NewGS extends JDialog implements ActionListener{
 		TxtName = new JTextField("");
 		TxtName.setEditable(true);
 		TxtName.setColumns(30);
+		TxtName.addActionListener(this);
 		jp.add(TxtName, c);
 		
 		gridy++;
@@ -144,7 +145,7 @@ public class NewGS extends JDialog implements ActionListener{
 	//Actions!
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource().equals(btnOK)){
+		if (e.getSource().equals(btnOK) || e.getSource().equals(TxtName)){
 			//Empty string is just read as close window.
 			if (!TxtName.getText().equals("")){
 				if (f.getGenomeSets().keySet().contains(TxtName.getText())){

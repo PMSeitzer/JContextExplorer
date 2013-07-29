@@ -33,7 +33,7 @@ public class GenomicElement implements Serializable{
     	Stop = 0;
     	ClusterID = 0;
     	GeneID = "";
-    	Annotation = null;
+    	Annotation = "";
     }
 
     // ----------------------- Comparisons ----------------------------//

@@ -26,6 +26,8 @@ import genomeObjects.OrganismSet;
 import haloGUI.GBKChecker;
 import haloGUI.GBKFieldMapping;
 import haloGUI.GFFChecker;
+import haloGUI.NCBIChecker;
+import haloGUI.NCBIFieldMapping;
 import inicial.FesLog;
 import inicial.Language;
 import inicial.Parametres_Inicials;
@@ -220,6 +222,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private LinkedList<String> FeatureIncludeTypes;
 	private LinkedList<String> FeatureDisplayTypes;
 	private GBKFieldMapping GBKFields;
+	private NCBIFieldMapping NCBIFields;
 	
 	private ChooseCompareTree CurrentCCTWindow = null;
 	private Cluster TmpCluster = null;
@@ -405,31 +408,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					
 				}
 			}
-				
-			//add a context set description, if appropriate
-			boolean MissingSingleGene = true;
-			for (ContextSetDescription CSD : OS.getCSDs()){
-				if (CSD.getName().equals("SingleGene")){
-					MissingSingleGene = false;
-				}
-			}
 			
-			//create default single gene set
-			if (MissingSingleGene){
-				
-				//add to OS
-				ContextSetDescription CSD = new ContextSetDescription();
-				CSD.setName("SingleGene");
-				CSD.setType("SingleGene");
-				CSD.setPreprocessed(false);
-				OS.getCSDs().add(CSD);
-				
-				//add to menu
-				panBtn.getContextSetMenu().addItem("SingleGene");
-				panBtn.getContextSetMenu().removeItem("<none>");
-
-			}
-
+			//Make single gene CS
+			MakeSingleGeneCS();
+		
 			return null;
 
 		}
@@ -1453,6 +1435,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	
 		MG_GFF.addActionListener(this);
 		MG_Genbank.addActionListener(this);
+		MG_NcbiSettings.addActionListener(this);
 		
 		//Popular sets
 		MG_PopularSets = new JMenu("Retrieve Popular Genome Set");
@@ -1718,6 +1701,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//Genbank files
 		setGBKFields(new GBKFieldMapping());
 		
+		//NCBI files
+		setNCBIFields(new NCBIFieldMapping());
+		
 		// ===== Popular Genome Sets ======== //
 		
 		//add names
@@ -1863,6 +1849,11 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		if (evt.getSource().equals(MG_Genbank)){
 			new GBKChecker(this);
 		}
+		
+		//Edit database import settings
+		if (evt.getSource().equals(MG_NcbiSettings)){
+			new NCBIChecker(this);
+		}
 
 		//Add one or more files to an existing genomic working set
 		if (evt.getSource().equals(MG_Files)){
@@ -1906,7 +1897,11 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Add genomes from NCBI
 		if (evt.getSource().equals(MG_AccessionID)){
-			new ImportGenbankIDs(this);
+			if (getOS() != null){
+				new ImportGenbankIDs(this);
+			} else {
+				this.NoOS();
+			}
 		}
 
 		//Switching between genome sets
@@ -2342,6 +2337,35 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		AvailableOSCheckBoxMenuItems.add(NewOS);
 		MG_CurrentGS.add(NewOS);
 
+	}
+	
+	//create single gene set
+	public void MakeSingleGeneCS(){
+		
+		//add a context set description, if appropriate
+		boolean MissingSingleGene = true;
+		for (ContextSetDescription CSD : OS.getCSDs()){
+			if (CSD.getName().equals("SingleGene")){
+				MissingSingleGene = false;
+			}
+		}
+		
+		//create default single gene set
+		if (MissingSingleGene){
+			
+			//add to OS
+			ContextSetDescription CSD = new ContextSetDescription();
+			CSD.setName("SingleGene");
+			CSD.setType("SingleGene");
+			CSD.setPreprocessed(false);
+			OS.getCSDs().add(CSD);
+			
+			//add to menu
+			panBtn.getContextSetMenu().addItem("SingleGene");
+			panBtn.getContextSetMenu().removeItem("<none>");
+
+		}
+		
 	}
 	
 	//centralized select node update source
@@ -3357,6 +3381,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	public void setSearchWorkerRunning(boolean searchWorkerRunning) {
 		SearchWorkerRunning = searchWorkerRunning;
+	}
+
+	public NCBIFieldMapping getNCBIFields() {
+		return NCBIFields;
+	}
+
+	public void setNCBIFields(NCBIFieldMapping nCBIFields) {
+		NCBIFields = nCBIFields;
 	}
 
 }

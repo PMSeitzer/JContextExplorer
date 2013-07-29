@@ -64,8 +64,8 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 	public static String NCBIQueryBase = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=nuccore&term=";
 	public static String NCBIIDSummaryBase = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=nuccore&id=";
 	public static String GenbankIDSearchBase = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=nuccore&term=";
-	public static String GenbankIDwParametersBase = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&rettype=gb&retmode=text&WebEnv=";
-	
+	public static String GenbankIDwParametersBase = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&rettype=gbwithparts&retmode=text&WebEnv=";
+
 	private String WebEnv;
 	private String query_key;
 	private boolean AccessedTextArea = false;
@@ -118,8 +118,15 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 		@Override
 		protected Void doInBackground() throws Exception {
 			
+			//switch cursor
+			Component glassPane = getRootPane().getGlassPane();
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			glassPane.setVisible(true);
+			
 			//format Query
 			String ToEntrez = AssembleURL(Query);
+			//System.out.println("To Entrez:");
+			//System.out.println(ToEntrez);
 			
 			//Send to Entrez, and return IDs
 			HashSet<String> IDs = RetrieveIDList(ToEntrez);
@@ -148,6 +155,11 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 		public void done(){
 			setProgress(0);
 			UpdateGenbankIDs();
+			
+			//switch cursor
+			Component glassPane = getRootPane().getGlassPane();
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			glassPane.setVisible(false);
 		}
 		
 		//Extra methods
@@ -168,7 +180,7 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 			}
 			NewQuery = NewQuery.substring(1);
 			
-			String ToEntrez = NCBIQueryBase + NewQuery + "&usehistory=y";
+			String ToEntrez = NCBIQueryBase + NewQuery + "&usehistory=y&retmax=" + String.valueOf(f.getNCBIFields().RetMax);
 			
 			return ToEntrez;
 		}
@@ -252,14 +264,19 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 					Name = (String) GBName_m.group().subSequence(33, GBName_m.group().length()-7);
 				}
 				
-				//only keep matches that make sense
-				
 				//text match
-				for (String s : LL){
-					if (Name.toUpperCase().contains(s.toUpperCase())){
-						KeepMatch = true;
-						break;
+				if (f.getNCBIFields().ScreenResults){
+					for (String s2 : f.getNCBIFields().Filters){
+						if (Name.toUpperCase().replace(" ", "_")
+								.contains(s2.toUpperCase().replace(" ", "_"))){
+							KeepMatch = true;
+						} else {
+							KeepMatch = false;
+							break;
+						}
 					}
+				} else {
+					KeepMatch = true;
 				}
 				
 				//Store this match
@@ -405,21 +422,44 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 		//post processing.
 		public void done(){
 			//re-set progress bar
-			setProgress(0);
-			
+
 			//re-enable okay button
 			btnOK.setEnabled(true);
-			
-			String msg = "";
-			if (LoadGenomes){
-				msg = "All Genomes have been successfully imported into the current Genome Set.";
-			} else {
-				msg = "All Genomes have been successfully exported in genbank format into the directory\n"
-						+ ExportDir + ".";
+			boolean ActuallyCompleted = false;
+			if (progressBar.getValue() == 100){
+				ActuallyCompleted = true;
 			}
-			//helpful message
-			JOptionPane.showMessageDialog(null,msg,
-					"Import Complete", JOptionPane.INFORMATION_MESSAGE);
+			String msg = "";
+			if (ActuallyCompleted){
+				if (LoadGenomes){
+					msg = "All Genomes have been successfully imported into the current Genome Set.";
+					f.MakeSingleGeneCS();
+					//TODO: make single gene context set
+					
+				} else {
+					msg = "All Genomes have been successfully exported in genbank format into the directory\n"
+							+ ExportDir + ".";
+				}
+				//helpful message
+				JOptionPane.showMessageDialog(null,msg,
+						"Import Complete", JOptionPane.INFORMATION_MESSAGE);
+				
+			} else {
+				msg = "There was a problem importing the information.\n" +
+						"Please check your internet connection and try again.";
+				//helpful message
+				JOptionPane.showMessageDialog(null,msg,
+						"Import Complete", JOptionPane.ERROR_MESSAGE);
+				
+			}
+
+
+			setProgress(0);
+			
+			//switch cursor
+			Component glassPane = getRootPane().getGlassPane();
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			glassPane.setVisible(false);
 		}
 		
 	}
@@ -636,6 +676,7 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 			// ======== Retrieve Genbank File ======== //
 			
 			String GetGenbankURL = GenbankIDwParametersBase + WebEnv + "&query_key=" + query_key;
+			//System.out.println("GetGenbankURL:");
 			//System.out.println(GetGenbankURL);
 
 			URL GbURL = new URL(GetGenbankURL);
