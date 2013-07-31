@@ -2267,7 +2267,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Launch User'sManual
 		if (evt.getSource().equals(MH_Manual)){
-			LaunchWebsite("http://www.bme.ucdavis.edu/facciotti/files/2012/11/UsersManual.pdf");
+			LaunchWebsite("http://www.bme.ucdavis.edu/facciotti/files/2013/07/UsersManual_v2.pdf");
 		}
 		
 		//Youtube page of video tutorials
