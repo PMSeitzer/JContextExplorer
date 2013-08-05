@@ -1336,10 +1336,12 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//Initialize various data import for default settings.
 		InitializeData();
 		
-		//disable components, if appropriate
-		if (OS == null){
-			OSMenuComponentsEnabled(false);
-		}
+//		//disable components, if appropriate
+//		if (OS == null){
+//			OSMenuComponentsEnabled(false);
+//		}
+		
+		//OSMenuComponentsEnabled(true);
 
 	}
 	
@@ -2018,93 +2020,120 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//load homology clusters
 		if (evt.getSource().equals(ML_HomologyClusterMenu)){
 			
-			// initialize output
-			JFileChooser GetHC = new JFileChooser();
-			
-			GetHC.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			GetHC
-					.setDialogTitle("Select pre-computed Homology Clusters File");
+			if (getOS() != null){
+				
+				// initialize output
+				JFileChooser GetHC = new JFileChooser();
+				
+				GetHC.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				GetHC
+						.setDialogTitle("Select pre-computed Homology Clusters File");
 
-			//retrieve directory
-			if (this.FileChooserSource != null) {
-				GetHC.setCurrentDirectory(FileChooserSource);
+				//retrieve directory
+				if (this.FileChooserSource != null) {
+					GetHC.setCurrentDirectory(FileChooserSource);
+				} else {
+					GetHC.setCurrentDirectory(new File("."));
+				}
+			
+				GetHC.showOpenDialog(GetHC);
+				
+				// note current directory for next time
+				if (GetHC.getCurrentDirectory() != null) {
+					this.FileChooserSource = GetHC.getCurrentDirectory();
+				}
+				
+				//import homology clusters from file.
+				if (GetHC.getSelectedFile() != null){
+					
+					//begin import
+					LoadTagsWorker LTW = new LoadTagsWorker(GetHC.getSelectedFile(), true);
+					LTW.addPropertyChangeListener(panBtn);
+					LTW.execute();
+					
+				}
+
 			} else {
-				GetHC.setCurrentDirectory(new File("."));
-			}
-		
-			GetHC.showOpenDialog(GetHC);
-			
-			// note current directory for next time
-			if (GetHC.getCurrentDirectory() != null) {
-				this.FileChooserSource = GetHC.getCurrentDirectory();
-			}
-			
-			//import homology clusters from file.
-			if (GetHC.getSelectedFile() != null){
-				
-				//begin import
-				LoadTagsWorker LTW = new LoadTagsWorker(GetHC.getSelectedFile(), true);
-				LTW.addPropertyChangeListener(panBtn);
-				LTW.execute();
-				
+				this.NoOS();
 			}
 			
 		}
 		
 		//load gene IDs
-		if (evt.getSource().equals(ML_GeneIDs)){
-			
-			// initialize output
-			JFileChooser GetHC = new JFileChooser();
-			
-			GetHC.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			GetHC
-					.setDialogTitle("Select Gene IDs File");
+		if (evt.getSource().equals(ML_GeneIDs)){			
+			if (getOS() != null){
 
-			//retrieve directory
-			if (this.FileChooserSource != null) {
-				GetHC.setCurrentDirectory(FileChooserSource);
+				// initialize output
+				JFileChooser GetHC = new JFileChooser();
+				
+				GetHC.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				GetHC
+						.setDialogTitle("Select Gene IDs File");
+
+				//retrieve directory
+				if (this.FileChooserSource != null) {
+					GetHC.setCurrentDirectory(FileChooserSource);
+				} else {
+					GetHC.setCurrentDirectory(new File("."));
+				}
+			
+				GetHC.showOpenDialog(GetHC);
+				
+				// note current directory for next time
+				if (GetHC.getCurrentDirectory() != null) {
+					this.FileChooserSource = GetHC.getCurrentDirectory();
+				}
+				
+				//import homology clusters from file.
+				if (GetHC.getSelectedFile() != null){
+					
+					//begin import
+					LoadTagsWorker LTW = new LoadTagsWorker(GetHC.getSelectedFile(), false);
+					LTW.addPropertyChangeListener(panBtn);
+					LTW.execute();
+					
+				}
+				
 			} else {
-				GetHC.setCurrentDirectory(new File("."));
+				this.NoOS();
 			}
-		
-			GetHC.showOpenDialog(GetHC);
-			
-			// note current directory for next time
-			if (GetHC.getCurrentDirectory() != null) {
-				this.FileChooserSource = GetHC.getCurrentDirectory();
-			}
-			
-			//import homology clusters from file.
-			if (GetHC.getSelectedFile() != null){
-				
-				//begin import
-				LoadTagsWorker LTW = new LoadTagsWorker(GetHC.getSelectedFile(), false);
-				LTW.addPropertyChangeListener(panBtn);
-				LTW.execute();
-				
-			}
-			
 		}
 		
 		//load context set
 		if (evt.getSource().equals(ML_ContextSet)){
-			new manageContextSetsv2(this, this.getPanBtn());
+			if (this.getOS() != null){
+				new manageContextSetsv2(this, this.getPanBtn());
+			} else {
+				this.NoOS();
+			}
+
 		}
 		
 		//Add a new dissimilarity measure
 		if (evt.getSource().equals(ML_DissMeas)){
-			new ManageDissimilarity(this);
+			if (this.getOS() != null){
+				new ManageDissimilarity(this);
+			} else {
+				this.NoOS();
+			}
 		}
 		
 		//Add a phylogenetic tree
 		if (evt.getSource().equals(ML_Phylo)){
-			panPhyTreeMenu.ImportPhyTree();
+			if (this.getOS() != null){
+				panPhyTreeMenu.ImportPhyTree();
+			} else {
+				this.NoOS();
+			}
 		}
 		
 		//Add motifs
 		if (evt.getSource().equals(ML_Motifs)){
-			new ManageMotifs(this);
+			if (this.getOS() != null){
+				new ManageMotifs(this);
+			} else {
+				this.NoOS();
+			}
 		}
 
 		/*
@@ -2127,77 +2156,90 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Export extended GFFS
 		if (evt.getSource().equals(ME_GFFs)){
-			
-			// initialize output
-			JFileChooser ExportGenomes = new JFileChooser();
-			
-			ExportGenomes.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			ExportGenomes
-					.setDialogTitle("Select a Directory for Export");
+			if (this.getOS() != null){
+				
+				// initialize output
+				JFileChooser ExportGenomes = new JFileChooser();
+				
+				ExportGenomes.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				ExportGenomes
+						.setDialogTitle("Select a Directory for Export");
 
-			//retrieve directory
-			if (this.FileChooserSource != null) {
-				ExportGenomes.setCurrentDirectory(FileChooserSource);
+				//retrieve directory
+				if (this.FileChooserSource != null) {
+					ExportGenomes.setCurrentDirectory(FileChooserSource);
+				} else {
+					ExportGenomes.setCurrentDirectory(new File("."));
+				}
+			
+				ExportGenomes.showOpenDialog(ExportGenomes);
+				
+				//File Path
+				String DirName = "";
+				
+				// note current directory for next time
+				if (ExportGenomes.getCurrentDirectory() != null) {
+					this.FileChooserSource = ExportGenomes.getCurrentDirectory();
+				}
+				//DirName = ExportGenomes.getCurrentDirectory().getPath();
+				DirName = ExportGenomes.getSelectedFile().getPath();
+				
+				//begin export
+				if (DirName != null){
+					ExportWorker EW = new ExportWorker(DirName);
+					EW.addPropertyChangeListener(panBtn);
+					EW.execute();
+				}
+				
 			} else {
-				ExportGenomes.setCurrentDirectory(new File("."));
+				this.NoOS();
 			}
-		
-			ExportGenomes.showOpenDialog(ExportGenomes);
-			
-			//File Path
-			String DirName = "";
-			
-			// note current directory for next time
-			if (ExportGenomes.getCurrentDirectory() != null) {
-				this.FileChooserSource = ExportGenomes.getCurrentDirectory();
-			}
-			//DirName = ExportGenomes.getCurrentDirectory().getPath();
-			DirName = ExportGenomes.getSelectedFile().getPath();
-			
-			//begin export
-			if (DirName != null){
-				ExportWorker EW = new ExportWorker(DirName);
-				EW.addPropertyChangeListener(panBtn);
-				EW.execute();
-			}
-			
+
 		}
 		
 		//Genbank Export from NCBI
 		if (evt.getSource().equals(ME_Genbanks)){
-			
-			//Announcement/instructions
-			String msg = "To Retrieve one or more Genbank file(s) from NCBI, in the next window,\n" +
-					"under the heading 'Organism and GenbankIDs', on each line type in the name of each genome\n" +
-					"followed by the genbank ID in the provided text area and push the 'Export Genome Files' button.\n\n" +
-					"Please see the User's manual for more information.";
-			JOptionPane.showMessageDialog(null, msg,"",JOptionPane.INFORMATION_MESSAGE);
-			
-			//launch frame
-			new ImportGenbankIDs(this);
+			if (this.getOS() != null){
+				//Announcement/instructions
+				String msg = "To Retrieve one or more Genbank file(s) from NCBI, in the next window,\n" +
+						"under the heading 'Organism and GenbankIDs', on each line type in the name of each genome\n" +
+						"followed by the genbank ID in the provided text area and push the 'Export Genome Files' button.\n\n" +
+						"Please see the User's manual for more information.";
+				JOptionPane.showMessageDialog(null, msg,"",JOptionPane.INFORMATION_MESSAGE);
+				
+				//launch frame
+				new ImportGenbankIDs(this);
+			} else {
+				this.NoOS();
+			}
 		}
 		
 		//Export genomic working set (GS)
 		if (evt.getSource().equals(ME_gs)){
-			
-			//Initialize file dialog
-			FileDialog fd = new FileDialog(this, "Export Genome Set", FileDialog.SAVE);
-			String str = OS.getName() + ".gs";
-			fd.setFile(str);
-			fd.setVisible(true);
-			
-			//Retrieve file, export to file
-			if (fd.getFile() != null) {
+			if (this.getOS() != null) {
 				
-				//file name
-				String sPath = fd.getDirectory() + fd.getFile();
-				File f = new File(sPath);
-			
-				//call worker
-				ExportGenomicSetWorker EGSW = new ExportGenomicSetWorker(f);
-				EGSW.addPropertyChangeListener(getPanBtn());
-				EGSW.execute();
+				//Initialize file dialog
+				FileDialog fd = new FileDialog(this, "Export Genome Set", FileDialog.SAVE);
+				String str = OS.getName() + ".gs";
+				fd.setFile(str);
+				fd.setVisible(true);
 				
+				//Retrieve file, export to file
+				if (fd.getFile() != null) {
+					
+					//file name
+					String sPath = fd.getDirectory() + fd.getFile();
+					File f = new File(sPath);
+				
+					//call worker
+					ExportGenomicSetWorker EGSW = new ExportGenomicSetWorker(f);
+					EGSW.addPropertyChangeListener(getPanBtn());
+					EGSW.execute();
+					
+				}
+				
+			} else {
+				this.NoOS();
 			}
 			
 		}
@@ -2208,12 +2250,20 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Add Query Set
 		if (evt.getSource().equals(ML_QuerySet)){
-			new ManageQuerySets(this);
+			if (this.getOS() != null){
+				new ManageQuerySets(this);
+			} else {
+				this.NoOS();
+			}
 		}
 		
 		//Add Data Grouping
 		if (evt.getSource().equals(ML_DataGrouping)){
-			NewDataGrouping();
+			if (this.getOS() != null){
+				NewDataGrouping();
+			} else {
+				this.NoOS();
+			}
 		}
 		
 		//Data Grouping comparison
@@ -2277,7 +2327,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Show Citation information
 		if (evt.getSource().equals(MH_Citation)){
-			//TODO;
 			new CitationInfo();
 		}
 		

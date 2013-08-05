@@ -1505,11 +1505,11 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	//perform all initialization activities.
 	
 	//Recalculate, redraw
-	public void ReComputeWithNewSegments(String NewBeforeBuffer, String NewAfterBuffer){
+	public void ReComputeWithNewSegments(int BeforeValue, int AfterValue){
 		
 		//set new values
-		this.BeforeBuffer = Integer.parseInt(NewBeforeBuffer);
-		this.AfterBuffer = Integer.parseInt(NewAfterBuffer);
+		this.BeforeBuffer = BeforeValue;
+		this.AfterBuffer = AfterValue;
 		//this.addMouseListener(this);
 		
 		//take care of mouse-clicked info windows

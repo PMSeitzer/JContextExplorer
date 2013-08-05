@@ -1465,11 +1465,6 @@ import definicions.MatriuDistancies;
 					de = null;
 				}
 				
-//				if (fr.getCurrentLGW() != null){
-//					fr.getCurrentLGW().cancel(true);
-//					fr.setCurrentLGW(null);
-//				}
-				
 				//kill popular set retrieval worker
 				if (fr.getCurrentLPW() != null){
 					fr.getCurrentLPW().SelectedItem.setSelected(false);
@@ -1541,13 +1536,37 @@ import definicions.MatriuDistancies;
 				//Search Query
 				if (evt.getSource().equals(searchField) || evt.getSource().equals(btnSubmit)){
 					
-					if (!searchField.getText().equals("")) {
+					//reset bad search flag
+					boolean BadSearch = false;
+					
+					//all semicolon case
+					String txt = searchField.getText().trim();
+					for (int i = 0; i < txt.length(); i++){
+						if (txt.charAt(i) == ';'){
+							BadSearch = true;
+						} else {
+							BadSearch = false;
+							break;
+						}
+					}
+					
+					//retrieve semicolons
+					String[] L = searchField.getText().trim().split(";");
+					for (String s : L){
+						if (s.trim().equals("")){
+							BadSearch = true;
+							break;
+						}
+					}
+
+					//Proceed with Query, if appropriate.
+					if (!BadSearch) {
 						
 						//System.out.println("Search field invoked with query:" + searchField.getText());
 						if (searchType.getSelection().equals(annotationSearch.getModel())){
-							currentQuery = "Search Query: " + searchField.getText();
+							currentQuery = "Search Query: " + searchField.getText().trim();
 						} else {
-							currentQuery ="Search Query: Cluster(s) " + searchField.getText();
+							currentQuery ="Search Query: Cluster(s) " + searchField.getText().trim();
 						}
 					
 						action = "Load";
@@ -1555,7 +1574,9 @@ import definicions.MatriuDistancies;
 						ambDades = true;
 					
 					} else {
-						showError("Please enter a query in the search bar.");
+						//showError("Please enter a query in the search bar.");
+						JOptionPane.showMessageDialog(null, "One or more queries are empty string searches.\nPlease remove all empty string searches.",
+								"Empty Search",JOptionPane.ERROR_MESSAGE);
 					}
 					
 				} else if (evt.getSource().equals(btnUpdate)) {
@@ -1622,7 +1643,7 @@ import definicions.MatriuDistancies;
 					try {
 						
 						//parse into candidates
-						String[] Queries = searchField.getText().split(";");
+						String[] Queries = searchField.getText().trim().split(";");
 						minBase = Double.MAX_VALUE;
 						
 						if (searchType.getSelection().equals(annotationSearch.getModel())){

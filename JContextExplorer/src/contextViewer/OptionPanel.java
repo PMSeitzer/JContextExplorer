@@ -15,6 +15,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
@@ -416,9 +417,23 @@ public class OptionPanel extends JPanel implements ActionListener{
 //			RenderedGenomesPanel RGP = new RenderedGenomesPanel(this.mf);
 //			this.mf.setRgp(RGP);
 //			this.mf.getRgp().repaint();
-			this.mf.getRgp().ReComputeWithNewSegments(beforeRangeValue.getText(), 
-					afterRangeValue.getText());
-			this.mf.getRgp().repaint();
+			try {
+				
+				//attempt to retrieve integers from these values
+				int BeforeValue = (int) Math.round(Double.parseDouble(beforeRangeValue.getText().trim()));
+				int AfterValue = (int) Math.round(Double.parseDouble(afterRangeValue.getText().trim()));
+				
+				//call method
+				this.mf.getRgp().ReComputeWithNewSegments(BeforeValue,AfterValue);
+				this.mf.getRgp().repaint();
+				
+			} catch (Exception ex){
+				JOptionPane.showMessageDialog(null,"Before and After range values must be numerical,\n" +
+						"and the total genomic area to be displayed must be a positive value",
+						"Non-Numerical Field Values", JOptionPane.ERROR_MESSAGE);
+			}
+			
+
 		}
 		
 	}

@@ -446,7 +446,12 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 				
 			} else {
 				msg = "There was a problem importing the information.\n" +
-						"Please check your internet connection and try again.";
+						"This could be a result of your internet connection,\n" +
+						"or the genomes may be improperly formatted on the NCBI website.\n\n" +
+						"If you were loading a number of genomes,\n" +
+						"it is possible that some of these genomes were successfully imported.\n" +
+						"To see which genomes were successfully loaded, close this window and\n" +
+						"select 'Current Genome Set' from the Genomes drop-down menu.";
 				//helpful message
 				JOptionPane.showMessageDialog(null,msg,
 						"Import Complete", JOptionPane.ERROR_MESSAGE);
