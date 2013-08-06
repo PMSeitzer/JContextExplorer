@@ -1,6 +1,8 @@
 package moduls.frm.children;
 
-public class GapPoint {
+import java.io.Serializable;
+
+public class GapPoint implements Serializable {
 
 	public int GapValue;
 	public double Dissimilarity;

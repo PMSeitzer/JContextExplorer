@@ -1,5 +1,6 @@
 package ContextForest;
 
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -10,7 +11,7 @@ import definicions.MatriuDistancies;
 
 import moduls.frm.QueryData;
 
-public class QuerySet {
+public class QuerySet implements Serializable {
 	
 	// ==================================================//
 	// ======= Fields ===================================//

@@ -1,9 +1,10 @@
 package ContextForest;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.LinkedList;
 
-public class FowlkesMallows {
+public class FowlkesMallows implements Serializable {
 
 	//Fields
 	

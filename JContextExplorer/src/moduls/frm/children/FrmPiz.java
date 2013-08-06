@@ -268,7 +268,7 @@ public class FrmPiz extends JPanel implements MouseListener, MouseMotionListener
 					try {
 						frm.savePostSript(frmpiz);
 					} catch (Exception e) {
-						System.out.println("Exception 262 FrmPiz");
+						//System.out.println("Exception 262 FrmPiz");
 						errMsg = Language.getLabel(81);
 //						FesLog.LOG
 //								.throwing("FrmPiz", "initComponentsMenu()", e);

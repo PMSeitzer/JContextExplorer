@@ -1,10 +1,11 @@
 package ContextForest;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 
 import definicions.Cluster;
 
-public class ClusterGroup {
+public class ClusterGroup implements Serializable {
 
 	//Fields
 	private LinkedList<Cluster> RetainGroup;

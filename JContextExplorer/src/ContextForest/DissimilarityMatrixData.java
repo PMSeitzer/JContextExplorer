@@ -1,8 +1,9 @@
 package ContextForest;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 
-public class DissimilarityMatrixData {
+public class DissimilarityMatrixData implements Serializable {
 
 	//Fields
 	private LinkedList<Double> Dissimilarities;

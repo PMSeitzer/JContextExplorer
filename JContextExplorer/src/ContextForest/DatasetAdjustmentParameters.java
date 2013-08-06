@@ -1,6 +1,8 @@
 package ContextForest;
 
-public class DatasetAdjustmentParameters {
+import java.io.Serializable;
+
+public class DatasetAdjustmentParameters implements Serializable {
 
 	//fields
 	private boolean AdjustmentPenalty;

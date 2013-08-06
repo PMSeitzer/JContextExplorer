@@ -1,6 +1,8 @@
 package ContextForest;
 
-public class ScanReport {
+import java.io.Serializable;
+
+public class ScanReport implements Serializable{
 
 	//Fields
 	

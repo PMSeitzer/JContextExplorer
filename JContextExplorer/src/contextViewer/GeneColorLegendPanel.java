@@ -188,6 +188,10 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 		//annotation or annotation + cluster cases
 		if (this.ItemsToShow.contentEquals("Annotations")){
 			for (int i = 0; i <this.GeneList.length; i++){
+				//null catching
+				if (this.GeneList[i].getAnnotation() == null){
+					this.GeneList[i].setAnnotation("");
+				}
 				TextLayout label = new TextLayout(this.GeneList[i].getAnnotation(),fontStandard,renderContext);
 
 				//determine longest annotation, and re-do rendering
@@ -198,6 +202,12 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 		
 		} else if (this.ItemsToShow.contentEquals("Complete")) {
 			for (int i = 0; i <this.GeneList.length; i++){
+				
+				//null catching
+				if (this.GeneList[i].getAnnotation() == null){
+					this.GeneList[i].setAnnotation("");
+				}
+				
 				TextLayout label = new TextLayout(this.GeneList[i].getAnnotation(),fontStandard,renderContext);
 
 				//determine longest annotation, and re-do rendering

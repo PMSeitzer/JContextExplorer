@@ -67,7 +67,6 @@ public class GeneColorLegendFrame extends JFrame implements ComponentListener{
 		//JFrame properties
 		JFrame.setDefaultLookAndFeelDecorated(false);
 		this.setSize(dim);
-		this.setVisible(true);
 		this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		this.setLocationRelativeTo(null);
 		this.setResizable(true);
@@ -90,6 +89,9 @@ public class GeneColorLegendFrame extends JFrame implements ComponentListener{
 		
 		//add directionality panels
 		this.add(pan_North, BorderLayout.NORTH);
+		
+		//last - set visible
+		this.setVisible(true);
 
 	}
 
