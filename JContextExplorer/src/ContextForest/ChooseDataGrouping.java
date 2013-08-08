@@ -167,6 +167,8 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 			//Scan each individual query 
 			for (QueryData QD : TQ.getContextTrees()){
 				
+				//BUG IS IN REGION BELOW
+				
 				//generate cluster from every test query, if not already there
 				if (QD.getOutputCluster() != null){
 					Query = QD.getOutputCluster();
@@ -174,6 +176,8 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 					Query = GenerateClusterFromQuery(QD,false);
 					QD.setOutputCluster(Query);
 				}
+				
+				//BUG IS IN REGION ABOVE
 				
 				//null cluster - context tree is empty.
 				if (Query != null){
@@ -350,6 +354,10 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 			//empty while loop - implicit waiting
 			while(!SW.isDone()){}
 			
+//			Cluster c = new Cluster();
+//			c = SW.RootCluster;
+//			
+//			return c;
 			return SW.RootCluster;
 			
 		}
@@ -368,6 +376,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 			progressBar.setValue(0);
 
 			//launch new window
+			//DEBUGGING ONLY!!!
 			new FrmScanOutputWindow(f, TQ, ComparisonName, false, null);
 			
 			//close window

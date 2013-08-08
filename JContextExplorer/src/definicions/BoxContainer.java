@@ -18,6 +18,8 @@
 
 package definicions;
 
+import java.io.Serializable;
+
 /**
  * <p>
  * <b>MultiDendrograms</b>
@@ -29,7 +31,7 @@ package definicions;
  *
  * @since JDK 6.0
  */
-public class BoxContainer {
+public class BoxContainer implements Serializable {
 
 	private double corner_x = 0.0, corner_y = 0.0;
 

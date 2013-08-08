@@ -22,6 +22,7 @@ import importExport.DadesExternes;
 import importExport.FitxerDades;
 import inicial.FesLog;
 
+import java.io.Serializable;
 import java.util.Hashtable;
 
 import javax.swing.JInternalFrame;
@@ -42,7 +43,7 @@ import tipus.tipusDades;
  *
  * @since JDK 6.0
  */
-public class Config {
+public class Config implements Serializable {
 
 	private MatriuDistancies md = null;
 	private Hashtable<Integer, String> htNoms;

@@ -1,12 +1,14 @@
 package moduls.frm;
 
+import java.io.Serializable;
+
 import importExport.DadesExternes;
 import moduls.frm.children.FrmSearchResults;
 import definicions.Cluster;
 import definicions.MatriuDistancies;
 import genomeObjects.CSDisplayData;
 
-public class QueryData {
+public class QueryData implements Serializable{
 
 	//Fields
 	private boolean AnnotationSearch;
@@ -22,7 +24,7 @@ public class QueryData {
 	//Output- type fields
 	private int[] Clusters = null;
 	private MatriuDistancies multiDendro;
-	private FrmSearchResults SRF;
+	private transient FrmSearchResults SRF;
 	private DadesExternes de;
 	private Cluster OutputCluster = null;
 	

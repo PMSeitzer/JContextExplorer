@@ -21,6 +21,7 @@ package importExport;
 import genomeObjects.ExtendedCRON;
 import inicial.FesLog;
 
+import java.io.Serializable;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -44,7 +45,7 @@ import definicions.MatriuDistancies;
  *
  * @since JDK 6.0
  */
-public class DadesExternes {
+public class DadesExternes implements Serializable {
 
 	private FitxerDades fitx;
 	private Hashtable<Integer, String> htNoms;

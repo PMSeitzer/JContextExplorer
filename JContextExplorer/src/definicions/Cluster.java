@@ -20,6 +20,7 @@ package definicions;
 
 import inicial.Language;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 
 /**
@@ -33,7 +34,7 @@ import java.util.LinkedList;
  *
  * @since JDK 6.0
  */
-public class Cluster {
+public class Cluster implements Serializable {
 
 	// Incremented for each cluster to ensure that there are no repetitions
 	//				   lastID

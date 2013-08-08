@@ -1132,6 +1132,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			} catch (Exception ex){
 				JOptionPane.showMessageDialog(null, "Unable to Export Genomic Set.",
 						"Export Error",JOptionPane.ERROR_MESSAGE);
+				ex.printStackTrace();
 			}
 
 			//switch cursor
@@ -1224,7 +1225,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				} else {
 					
 					//Create a GS
-					//Add this menu item to the list.			
+					//Add this menu item to the list.
+					AvailableOSCheckBoxMenuItems.add(imp);
 					MG_CurrentGS.add(imp);
 					
 					//create a dummy file for new genome set, store appropriately

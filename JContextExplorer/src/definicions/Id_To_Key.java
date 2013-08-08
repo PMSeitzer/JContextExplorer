@@ -18,6 +18,7 @@
 
 package definicions;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
 /**
@@ -31,7 +32,7 @@ import java.util.HashMap;
  *
  * @since JDK 6.0
  */
-public class Id_To_Key<item> {
+public class Id_To_Key<item> implements Serializable {
 
 	private Integer nextId = 0;
 	private final HashMap<item, Integer> keyToInd;

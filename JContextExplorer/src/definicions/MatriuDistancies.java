@@ -20,6 +20,7 @@ package definicions;
 
 import inicial.Language;
 
+import java.io.Serializable;
 import java.util.Vector;
 
 import tipus.tipusDades;
@@ -35,7 +36,7 @@ import tipus.tipusDades;
  *
  * @since JDK 6.0
  */
-public class MatriuDistancies {
+public class MatriuDistancies implements Serializable {
 
 	// Type of data stored in the matrix
 	private tipusDades tipDades = tipusDades.DISTANCIA;

@@ -18,6 +18,8 @@
 
 package definicions;
 
+import java.io.Serializable;
+
 /**
  * <p>
  * <b>MultiDendrograms</b>
@@ -29,7 +31,7 @@ package definicions;
  *
  * @since JDK 6.0
  */
-public class Dimensions<tipo> {
+public class Dimensions<tipo> implements Serializable {
 
 	tipo w, h;
 

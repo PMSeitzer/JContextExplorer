@@ -28,6 +28,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -55,7 +56,7 @@ import errors.FitxerIncompatible;
  *
  * @since JDK 6.0
  */
-public class ReadTXT implements PropertyChangeListener { //just a program to read in .txt files
+public class ReadTXT implements PropertyChangeListener, Serializable { //just a program to read in .txt files
 
 	private final String nomfitx;
 	private int numElements = 0;

@@ -18,6 +18,8 @@
 
 package importExport;
 
+import java.io.Serializable;
+
 /**
  * <p>
  * <b>MultiDendrograms</b>
@@ -29,7 +31,7 @@ package importExport;
  *
  * @since JDK 6.0
  */
-public class StructIn<elem> {
+public class StructIn<elem> implements Serializable {
 
 	private elem c1;
 	private elem c2;

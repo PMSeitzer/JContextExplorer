@@ -1,6 +1,8 @@
 package moduls.frm;
 
-public class PostSearchAnalyses {
+import java.io.Serializable;
+
+public class PostSearchAnalyses implements Serializable {
 
 	//Fields
 	private boolean OptionDisplaySearches;

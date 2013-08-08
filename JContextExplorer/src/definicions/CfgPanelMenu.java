@@ -20,6 +20,7 @@ package definicions;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.io.Serializable;
 
 import tipus.Orientation;
 import tipus.metodo;
@@ -37,7 +38,7 @@ import tipus.tipusDades;
  *
  * @since JDK 6.0
  */
-public class CfgPanelMenu {
+public class CfgPanelMenu implements Serializable {
 
 	// DATA
 	private tipusDades eTipusDades = tipusDades.DISTANCIA;

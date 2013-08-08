@@ -18,6 +18,8 @@
 
 package importExport;
 
+import java.io.Serializable;
+
 /**
  * <p>
  * <b>MultiDendrograms</b>
@@ -29,7 +31,7 @@ package importExport;
  *
  * @since JDK 6.0
  */
-public class FitxerDades { //data file object
+public class FitxerDades implements Serializable { //data file object
 
 	private String nom = "";
 	private String path = "";

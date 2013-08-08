@@ -18,6 +18,8 @@
 
 package definicions;
 
+import java.io.Serializable;
+
 /**
  * <p>
  * <b>MultiDendrograms</b>
@@ -29,7 +31,7 @@ package definicions;
  *
  * @since JDK 6.0
  */
-public class Coordenada<tipo> {
+public class Coordenada<tipo> implements Serializable {
 
 	tipo x, y;
 

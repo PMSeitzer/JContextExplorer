@@ -20,6 +20,7 @@ package definicions;
 
 import inicial.Parametres_Inicials;
 
+import java.io.Serializable;
 import java.util.Locale;
 
 import javax.swing.JCheckBox;
@@ -40,7 +41,7 @@ import javax.swing.JTextField;
  *
  * @since JDK 6.0
  */
-public class Formats {
+public class Formats implements Serializable {
 
 	public static JCheckBox AtributCHKFont(final String caption) {
 		final JCheckBox chk = new JCheckBox(caption);

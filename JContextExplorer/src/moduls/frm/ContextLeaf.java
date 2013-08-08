@@ -1,6 +1,7 @@
 package moduls.frm;
 
 import java.awt.geom.Rectangle2D;
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.LinkedList;
 
@@ -10,7 +11,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
  * @author Phil
  *
  */
-public class ContextLeaf {
+public class ContextLeaf implements Serializable {
 
 	//information
 	private String Name;
