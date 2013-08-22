@@ -384,6 +384,13 @@ import definicions.MatriuDistancies;
 				//Initialize a hash map to use for the case of cassette contexts.
 				HashSet<String> GenesForCassettes = new HashSet<String>();
 
+				//Initialize a hash map for the use of RetainFraction-type analysis.
+				//Annotation Counts
+				LinkedHashMap<String, Integer> AnnCounts = new LinkedHashMap<String, Integer>();
+	
+				//increment number of genomic groupings
+				int GGCounter = 0;
+				
 				//iterate through species.
 				for (Entry<String, AnnotatedGenome> entry : fr.getOS().getSpecies().entrySet()) {
 
@@ -419,8 +426,36 @@ import definicions.MatriuDistancies;
 					int OperonCounter = 0; //reset operon counter
 					while(it.hasNext()){
 						
+						//increment counter
+						GGCounter++;
+						
 						//context unit object
 						LinkedList<GenomicElementAndQueryMatch> ContextSegment = it.next();
+						
+						//Counts for retain fraction
+						if (CurrentCSD.isRetainFractionEnabled()){
+							
+							//multiple copies of a single cluster num don't score better
+							HashSet<String> ClusterAnns = new HashSet<String>();
+							for (GenomicElementAndQueryMatch GandE : ContextSegment){
+								String Ann = GandE.getE().getAnnotation().trim().toUpperCase();
+								ClusterAnns.add(Ann);
+							}
+							Iterator<String> CS_it = ClusterAnns.iterator();
+							
+							while (CS_it.hasNext()){
+								String ClusterAnn = CS_it.next();
+								
+								//add to hash map
+								if (AnnCounts.get(ClusterAnn) == null){
+									AnnCounts.put(ClusterAnn, 1);
+								} else {
+									int Count = AnnCounts.get(ClusterAnn);
+									Count++;
+									AnnCounts.put(ClusterAnn,Count);
+								}
+							}
+						}
 						
 						//increment counters
 						OperonCounter++;	
@@ -442,6 +477,54 @@ import definicions.MatriuDistancies;
 						}
 						
 						ContigNames.put(Key, HSContigNames);
+					}
+					
+					//Retain Fraction
+					if (CurrentCSD.isRetainFractionEnabled()){
+						
+						//New Data Objects
+						//initialize output
+						LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> ContextSetList_N = 
+								new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
+						
+						//contig names
+						LinkedHashMap<String, HashSet<String>> ContigNames_N = 
+								new LinkedHashMap<String, HashSet<String>>();
+						
+						for (String s : ContextSetList.keySet()){
+							
+							//old
+							LinkedList<GenomicElementAndQueryMatch> CS = ContextSetList.get(s);
+							
+							//new
+							LinkedList<GenomicElementAndQueryMatch> CS_N = new LinkedList<GenomicElementAndQueryMatch>();
+							HashSet<String> HSContigNames = new HashSet<String>();
+							
+							for (GenomicElementAndQueryMatch GandE : CS){
+								
+								//cluster ID
+								String Annotation = GandE.getE().getAnnotation().trim().toUpperCase();
+								
+								//determine fraction
+								Double Frac = (double) AnnCounts.get(Annotation) / (double) GGCounter;
+								
+								if (Frac >= CurrentCSD.getRetainFraction()){
+									CS_N.add(GandE);
+									HSContigNames.add(GandE.getE().getContig());
+								}
+							}
+							
+							//add new to set
+							if (CS_N.size() > 0){
+								ContextSetList_N.put(s,CS_N);
+								ContigNames_N.put(s, HSContigNames);
+							}
+
+						}
+						
+						//update data - new contigs + genes
+						ContextSetList = ContextSetList_N;
+						ContigNames = ContigNames_N;
 					}
 					
 					//Cassette cases: add genes
@@ -715,6 +798,14 @@ import definicions.MatriuDistancies;
 				//Initialize a hash map to use for the case of cassette contexts.
 				HashSet<Integer> GenesForCassettes = new HashSet<Integer>();
 				
+				//Initialize a hash map for the use of RetainFraction-type analysis.
+							 //Cluster Counts
+				LinkedHashMap<Integer, Integer> ClusterCounts 
+					= new LinkedHashMap<Integer, Integer>();
+				
+				//increment number of genomic groupings
+				int GGCounter = 0;
+				
 				//iterate through species.
 				for (Entry<String, AnnotatedGenome> entry : fr.getOS().getSpecies().entrySet()) {
 
@@ -751,8 +842,35 @@ import definicions.MatriuDistancies;
 					int OperonCounter = 0; //reset operon counter
 					while(it.hasNext()){
 						
+						//increment counter
+						GGCounter++;
+						
 						//context unit object
 						LinkedList<GenomicElementAndQueryMatch> ContextSegment = it.next();
+						
+						//Counts for retain fraction
+						if (CurrentCSD.isRetainFractionEnabled()){
+							
+							//multiple copies of a single cluster num don't score better
+							HashSet<Integer> ClusterNums = new HashSet<Integer>();
+							for (GenomicElementAndQueryMatch GandE : ContextSegment){
+								ClusterNums.add(GandE.getE().getClusterID());
+							}
+							Iterator<Integer> CS_it = ClusterNums.iterator();
+							
+							while (CS_it.hasNext()){
+								int ClusterNum = CS_it.next();
+								
+								//add to hash map
+								if (ClusterCounts.get(ClusterNum) == null){
+									ClusterCounts.put(ClusterNum, 1);
+								} else {
+									int Count = ClusterCounts.get(ClusterNum);
+									Count++;
+									ClusterCounts.put(ClusterNum,Count);
+								}
+							}
+						}
 						
 						//increment counters
 						OperonCounter++;	
@@ -777,6 +895,55 @@ import definicions.MatriuDistancies;
 
 					}
 					
+					//POST - FILTERING PART
+					
+					//Retain Fraction
+					if (CurrentCSD.isRetainFractionEnabled()){
+						
+						//New Data Objects
+						//initialize output
+						LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> ContextSetList_N = 
+								new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
+						
+						//contig names
+						LinkedHashMap<String, HashSet<String>> ContigNames_N = 
+								new LinkedHashMap<String, HashSet<String>>();
+						
+						for (String s : ContextSetList.keySet()){
+							
+							//old
+							LinkedList<GenomicElementAndQueryMatch> CS = ContextSetList.get(s);
+							
+							//new
+							LinkedList<GenomicElementAndQueryMatch> CS_N = new LinkedList<GenomicElementAndQueryMatch>();
+							HashSet<String> HSContigNames = new HashSet<String>();
+							
+							for (GenomicElementAndQueryMatch GandE : CS){
+								
+								//cluster ID
+								int ClusterID = GandE.getE().getClusterID();
+								
+								//determine fraction
+								Double Frac = (double) ClusterCounts.get(ClusterID) / (double) GGCounter;
+								
+								if (Frac >= CurrentCSD.getRetainFraction() && ClusterID != 0){
+									CS_N.add(GandE);
+									HSContigNames.add(GandE.getE().getContig());
+								}
+							}
+							
+							//add new to set
+							if (CS_N.size() > 0){
+								ContextSetList_N.put(s,CS_N);
+								ContigNames_N.put(s, HSContigNames);
+							}
+
+						}
+						
+						//update data - new contigs + genes
+						ContextSetList = ContextSetList_N;
+						ContigNames = ContigNames_N;
+					}
 					
 					//Cassette cases: add genes
 					if (isCassette){
@@ -830,7 +997,7 @@ import definicions.MatriuDistancies;
 								
 								//context unit object
 								LinkedList<GenomicElementAndQueryMatch> ContextSegment = it.next();
-								
+																
 								//increment counters
 								AlternativeOperonCounter++;	
 								
@@ -897,7 +1064,7 @@ import definicions.MatriuDistancies;
 						CurrentCSD.setGenesAfter(GenesAfter);
 					}
 				}	
-				
+			
 				//adjust values, if necessary, if context set type is a cassette
 				if (isCassette){
 					int CassetteCounter = 0;
@@ -971,7 +1138,7 @@ import definicions.MatriuDistancies;
 					EC.setSourceSpeciesNames(SourceNames);
 					EC.setSourceContigNames(ContigNames);
 				}
-
+				
 				//Update the query data with all changes.
 				CSDisplayData CSD = new CSDisplayData();
 				CSD.setECandInitializeTreeLeaves(EC);

@@ -235,6 +235,7 @@ public class ReadTXT implements PropertyChangeListener, Serializable { //just a 
 		return lst;
 	}
 
+	//paired reads
 	private LinkedList<StructIn<String>> llegeixAparellat() throws Exception {
 		LinkedList<StructIn<String>> lstd, lstTmp;
 		String a, b;
@@ -318,6 +319,7 @@ public class ReadTXT implements PropertyChangeListener, Serializable { //just a 
 		return lstd;
 	}
 
+	//matrix reads
 	private LinkedList<StructIn<String>> llegeixMatriu() throws Exception {
 		LinkedList<StructIn<String>> lstd = null;
 		int nl, nc, row = 0, col = 0;

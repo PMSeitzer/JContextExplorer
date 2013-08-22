@@ -176,9 +176,14 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 	private JButton btnLaunchCombiner;
 	private String strLaunchCombiner = "Launch Context Set Combiner Tool";
 	
+	// MODIFIERS
+	
 	//Single organism amalgamation option
-	private JCheckBox cbAmalg;
+	private JCheckBox cbAmalg, cbRetainElements;
 	private String strcbAmalg = "Single Organism Amalgamation";
+	private String strcbRetainElements = "Retain Elements Common to a Fraction of Genomic Groupings: ";
+	private String strInitialTxtFraction = "0.75";
+	private JTextField TxtFractionRetain;
 	
 	//Add panel
 	private JButton btnAddCS;
@@ -975,6 +980,8 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		//add this mapping to hash map.
 		RadioButtonComponents.put(CSCombination.getModel(), CSCombination_group);
 
+		//FILTERS
+		
 		// Single organism amalgamation option
 		c.gridx = 0;
 		c.gridy = gridy;
@@ -984,6 +991,28 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		cbAmalg = new JCheckBox(strcbAmalg);
 		cbAmalg.setSelected(false);
 		jp.add(cbAmalg, c);
+		gridy++;
+		
+		//check box
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 2;
+		c.insets = new Insets(10,1,1,1);
+		cbRetainElements = new JCheckBox(strcbRetainElements);
+		cbRetainElements.setSelected(false);
+		cbRetainElements.addActionListener(this);
+		jp.add(cbRetainElements, c);
+		
+		//fraction
+		c.gridx = 2;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		TxtFractionRetain = new JTextField(strInitialTxtFraction);
+		TxtFractionRetain.setEditable(true);
+		TxtFractionRetain.setEnabled(false);
+		jp.add(TxtFractionRetain, c);
 		gridy++;
 		
 		// ADD CONTEXT SET
@@ -1296,9 +1325,28 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 						ToAdd.setCassetteOf(CassetteOf);
 					} 
 
-					//Add single string amalgamation
+					//Add filters
 					ToAdd.setSingleOrganismAmalgamation(cbAmalg.isSelected());
-					
+					if (this.cbRetainElements.isSelected()){
+						try {
+							String s = this.TxtFractionRetain.getText();
+							Double Value = Double.parseDouble(s);
+							if (Value < 0 || Value > 1){
+								throw new Exception();
+							}
+							ToAdd.setRetainFractionEnabled(true);
+							ToAdd.setRetainFraction(Value);
+						} catch (Exception ex){
+							ToAdd.setRetainFractionEnabled(false);
+							JOptionPane.showMessageDialog(null, 
+									"Retain Fraction must be a numerical value beween 0 and 1.\n" +
+									"Could not add Retain Fraction to this Context Set.",
+									"Number Format Error",JOptionPane.ERROR_MESSAGE);
+						}
+					} else{
+						ToAdd.setRetainFractionEnabled(false);
+					}
+
 					//add description to the OS
 					ToAdd.setName(CSName.getText());
 					fr.getOS().getCSDs().add(ToAdd);
@@ -1320,6 +1368,10 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 					}
 				}
 			} 
+		}
+		
+		if (evt.getSource().equals(cbRetainElements)){
+			this.TxtFractionRetain.setEnabled(cbRetainElements.isSelected());
 		}
 		
 		//REMOVE BUTTON

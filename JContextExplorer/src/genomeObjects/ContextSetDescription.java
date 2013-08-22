@@ -14,6 +14,8 @@ public class ContextSetDescription implements Serializable{
 	
 	//ALL
 	private boolean SingleOrganismAmalgamation;
+	private boolean RetainFractionEnabled;
+	private double RetainFraction;
 	
 	//distance
 	private int IntGenSpacing;
@@ -159,5 +161,21 @@ public class ContextSetDescription implements Serializable{
 
 	public void setGapLimitSize(int gapLimitSize) {
 		GapLimitSize = gapLimitSize;
+	}
+
+	public boolean isRetainFractionEnabled() {
+		return RetainFractionEnabled;
+	}
+
+	public void setRetainFractionEnabled(boolean retainFractionEnabled) {
+		RetainFractionEnabled = retainFractionEnabled;
+	}
+
+	public double getRetainFraction() {
+		return RetainFraction;
+	}
+
+	public void setRetainFraction(double retainFraction) {
+		RetainFraction = retainFraction;
 	}
 }

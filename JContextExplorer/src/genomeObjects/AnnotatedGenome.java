@@ -60,113 +60,115 @@ public void importFromGFFFile(String filename){
 			
 			while((Line = br.readLine()) != null){
 				
-					//increment Counter
-					Counter++;
-					
-					//import each line of the .gff file
-					String ImportedLine[] = Line.split("\t");
-					
-					//GFF files must contain exactly at least 9 fields
-					if (ImportedLine.length < 9){
-						throw new Exception();
-					}
-					
-					//check and see if this element should be retained at all
-					//check include types
-					boolean RetainElement = false;
-					for (String s : this.FeatureIncludeTypes){
-						if (ImportedLine[2].trim().contentEquals(s)){
-							RetainElement = true;
-							break;
+					//ignore commented lines
+					if (!Line.startsWith("#") && !Line.isEmpty()){
+						
+						//increment Counter
+						Counter++;
+						
+						//import each line of the .gff file
+						String ImportedLine[] = Line.split("\t");
+						
+						//GFF files must contain exactly at least 9 fields
+						if (ImportedLine.length < 9){
+							throw new Exception();
 						}
-					}
-					//if this fails, check for display types
-					if (!RetainElement){
-						for (String s : this.FeatureDisplayTypes){
+						
+						//check and see if this element should be retained at all
+						//check include types
+						boolean RetainElement = false;
+						for (String s : this.FeatureIncludeTypes){
 							if (ImportedLine[2].trim().contentEquals(s)){
 								RetainElement = true;
 								break;
 							}
 						}
-					}
-					
-					//add this element to the list, if necessary
-					if (RetainElement){
-						
-						//if a line or two are not formatted correctly, just ignore these lines.
-						try {
-							
-							//create a new element
-							GenomicElement E = new GenomicElement();
-							
-							//set appropriate fields of this genomic element with inputs achieved from the GFF file
-							E.setContig(ImportedLine[0]);
-							E.setType(ImportedLine[2]);
-							E.setStart(Integer.parseInt(ImportedLine[3]));
-							E.setStop(Integer.parseInt(ImportedLine[4]));
-							E.setElementID(Counter);
-							
-							try {
-								if(Integer.parseInt(ImportedLine[6])==1){
-									E.setStrand(Strand.POSITIVE);
-								}else{
-									E.setStrand(Strand.NEGATIVE);
+						//if this fails, check for display types
+						if (!RetainElement){
+							for (String s : this.FeatureDisplayTypes){
+								if (ImportedLine[2].trim().contentEquals(s)){
+									RetainElement = true;
+									break;
 								}
-							} catch (Exception ex) {
-								if (ImportedLine[6].contentEquals("+")){
-									E.setStrand(Strand.POSITIVE);
-								} else {
-									E.setStrand(Strand.NEGATIVE);
-								}
-							} 
-							
-							//set annotation
-							E.setAnnotation(ImportedLine[8]);
-						
-							//add gene IDs + homology clusters, if available
-							if (ImportedLine.length > 9){
-								int ClustID = Integer.parseInt(ImportedLine[9]);
-								E.setClusterID(ClustID);
-								if (ClustID > LargestCluster){
-									LargestCluster = ClustID;
-								}
-								this.AGClustersLoaded = true;
-								
-								//System.out.println("Set!");
-								if (ImportedLine.length > 10){
-									E.setGeneID(ImportedLine[10]);
-								}
-								
-								//System.out.println("Largest: " + LargestCluster);
 							}
+						}
+						
+						//add this element to the list, if necessary
+						if (RetainElement){
 							
-							//add to list
-							Elements.add(E);
+							//if a line or two are not formatted correctly, just ignore these lines.
+							try {
+								
+								//create a new element
+								GenomicElement E = new GenomicElement();
+								
+								//set appropriate fields of this genomic element with inputs achieved from the GFF file
+								E.setContig(ImportedLine[0]);
+								E.setType(ImportedLine[2]);
+								E.setStart(Integer.parseInt(ImportedLine[3]));
+								E.setStop(Integer.parseInt(ImportedLine[4]));
+								E.setElementID(Counter);
+								
+								try {
+									if(Integer.parseInt(ImportedLine[6])==1){
+										E.setStrand(Strand.POSITIVE);
+									}else{
+										E.setStrand(Strand.NEGATIVE);
+									}
+								} catch (Exception ex) {
+									if (ImportedLine[6].contentEquals("+")){
+										E.setStrand(Strand.POSITIVE);
+									} else {
+										E.setStrand(Strand.NEGATIVE);
+									}
+								} 
+								
+								//set annotation
+								E.setAnnotation(ImportedLine[8]);
 							
-							//add contig ends
-							if (ContigEnds.get(E.getContig()) != null){
-								if (ContigEnds.get(E.getContig()) < E.getStop()){
+								//add gene IDs + homology clusters, if available
+								if (ImportedLine.length > 9){
+									int ClustID = Integer.parseInt(ImportedLine[9]);
+									E.setClusterID(ClustID);
+									if (ClustID > LargestCluster){
+										LargestCluster = ClustID;
+									}
+									this.AGClustersLoaded = true;
+									
+									//System.out.println("Set!");
+									if (ImportedLine.length > 10){
+										E.setGeneID(ImportedLine[10]);
+									}
+									
+									//System.out.println("Largest: " + LargestCluster);
+								}
+								
+								//add to list
+								Elements.add(E);
+								
+								//add contig ends
+								if (ContigEnds.get(E.getContig()) != null){
+									if (ContigEnds.get(E.getContig()) < E.getStop()){
+										ContigEnds.put(E.getContig(), E.getStop());
+									}
+								} else {
 									ContigEnds.put(E.getContig(), E.getStop());
 								}
-							} else {
-								ContigEnds.put(E.getContig(), E.getStop());
-							}
-							
-							//Record counts of types
-							if (Counts.get(E.getType()) != null){
-								int OldCount = Counts.get(E.getType());
-								Counts.put(E.getType(),(OldCount+1));
-							} else {
-								Counts.put(E.getType(), 1);
-							}
-							
-							//Record counts of contigs
-							ContigCount.add(E.getContig());
-							
-						} catch (Exception ex) {}
-
+								
+								//Record counts of types
+								if (Counts.get(E.getType()) != null){
+									int OldCount = Counts.get(E.getType());
+									Counts.put(E.getType(),(OldCount+1));
+								} else {
+									Counts.put(E.getType(), 1);
+								}
+								
+								//Record counts of contigs
+								ContigCount.add(E.getContig());
+								
+							} catch (Exception ex) {}
+						}
 					}
-		
 			}
 			
 			//Convert feature counts to string, for display.
