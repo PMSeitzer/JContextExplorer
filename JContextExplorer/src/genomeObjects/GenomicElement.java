@@ -14,6 +14,7 @@ public class GenomicElement implements Serializable{
     private String Contig;              //-Biological-placement----------
     private int Start;					//-Coordinates-------------------
     private int Stop;					//
+    private int Center;					//
     private String Type;				//-Annotation Information--------
     private Strand Strand;				//
     private String Annotation;		    //
@@ -43,6 +44,14 @@ public class GenomicElement implements Serializable{
 		return (this.Start - E.Start);
     }
 
+    //Determine center
+    public void DetermineCenter(){
+		double CenterPosition = Math.round(0.5*(double)(Stop - Start));
+		Center = (int) CenterPosition + Start;
+		//debugging - print statement
+		//System.out.println("Start:\t" + Start + "\tStop:\t"+ Stop + "\tCenter:\t" + Center);
+    }
+    
     //Getters and Setters
     //------------------------Getters and Setters----------------------//
 
@@ -163,6 +172,14 @@ public class GenomicElement implements Serializable{
 
 	public void setTranslation(String translation) {
 		Translation = translation;
+	}
+
+	public int getCenter() {
+		return Center;
+	}
+
+	public void setCenter(int center) {
+		Center = center;
 	}
 
 }
