@@ -144,8 +144,9 @@ public void importFromGFFFile(String filename){
 									//System.out.println("Largest: " + LargestCluster);
 								}
 								
-								//add to list
+								//add to list, if it doesn't already exist.
 								Elements.add(E);
+
 								
 								//add contig ends
 								if (ContigEnds.get(E.getContig()) != null){
@@ -195,8 +196,11 @@ public void importFromGFFFile(String filename){
 		//sort elements
 		Collections.sort(Elements, new GenomicElementComparator());
 		
+		//set elements to newly parsed, sorted, and redundancy-filtered elements.
+		this.Elements = removeRedundantElements(Elements);
+		
 		//set elements to the newly parsed elements.
-		this.Elements = Elements;
+		//this.Elements = Elements;
 		//System.out.println(LargestCluster);
 
 	}
@@ -205,7 +209,6 @@ public void importFromGFFFile(String filename){
 public void importFromGBKFile(String filename){
 	
 	//call reader!
-	
 	try {
 
 	     //create a buffered reader to read the sequence file specified by args[0]
@@ -543,6 +546,58 @@ public void importFromGBKReader(BufferedReader br){
       
 		//sort elements
 		Collections.sort(Elements, new GenomicElementComparator());
+		
+		//remove redundant elements
+		this.Elements = removeRedundantElements(Elements);
+}
+
+//remove redundant elements
+public LinkedList<GenomicElement> removeRedundantElements(LinkedList<GenomicElement> InitialElements){
+
+	//Initialize output
+	LinkedList<GenomicElement> OutputElements = new LinkedList<GenomicElement>();
+	
+	if (InitialElements.size() > 0){
+		
+		//initial comparison element
+		GenomicElement ECompare = InitialElements.get(0);
+
+		//check all remaining (move through list)
+		for (int i = 1; i < InitialElements.size(); i++){
+			
+			//a new element for comparison
+			GenomicElement ENew = InitialElements.get(i);
+			
+			//if all of these are similar, no need to write this element.
+			if (ECompare.getContig().equals(ENew.getContig()) &&
+					ECompare.getStart() == ENew.getStart() &&
+					ECompare.getStop() == ENew.getStop() &&
+					ECompare.getStrand().equals(ENew.getStrand()) &&
+					ECompare.getType().equals(ENew.getType())){
+				
+			} else {
+				OutputElements.add(ECompare);
+			}
+			ECompare = ENew;
+		}
+		
+		//last gene in file
+		GenomicElement ENew = OutputElements.getLast();
+
+		//if all of these are similar, no need to write this element.
+		if (ECompare.getContig().equals(ENew.getContig()) &&
+				ECompare.getStart() == ENew.getStart() &&
+				ECompare.getStop() == ENew.getStop() &&
+				ECompare.getStrand().equals(ENew.getStrand()) &&
+				ECompare.getType().equals(ENew.getType())){
+			
+		} else {
+			OutputElements.add(ECompare);
+		}
+	}
+	
+	//return with new set.
+	return OutputElements;
 }
 
 //----------------------- add cluster number -----------------------//

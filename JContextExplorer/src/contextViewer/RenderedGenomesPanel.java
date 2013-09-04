@@ -1252,6 +1252,9 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	        LinkedList<SharedHomology> AnnColorsSorted = SortAndAddColors2Cluster(AnnColors);
 	        this.GeneColorList = AnnColorsSorted;
 	        
+	        //debugging
+			//System.out.println("assigning colors.");
+			
 	        //add these colors back to the elements
 	        for (int i = 0; i < GS.length; i++){
 	        	for (int j = 0; j < GS[i].getDg().size(); j++){
@@ -1259,6 +1262,15 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	        			if (AnnColorsSorted.get(k).getClusterID() == GS[i].getDg().get(j).getBioInfo().getClusterID()){
 	        				//set color appropriately
 	        				GS[i].getDg().get(j).setColor(AnnColorsSorted.get(k).getColor());
+	        				
+//	        				//for debugging - problem here?
+//	        				if (GS[i].getDg().get(j).getBioInfo().getClusterID() == 144){
+//	        					DrawGene DG = GS[i].getDg().get(j);
+//    		        			String str = "Org= "+ DG.getSourceSpecies() + 
+//    		        					" Contig= " + DG.getBioInfo().getContig() +
+//    		        					" Color= " + DG.getColor().toString();
+//    		        	        System.out.println(str);
+//	        				}	        				
 	        				
 	        				//add all elements to the shared homology colors for later parsing
 	        				AnnColorsSorted.get(k).getMembers().add(GS[i].getDg().get(j).getBioInfo());
@@ -1309,7 +1321,19 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
         
         //reset offset point
         this.OffSetPoint = 0;
-		
+        
+//        //Debugging - everything showing up as blue (which is correct)
+//        for (int i = 0; i < GS.length; i++){
+//        	for (DrawGene DG : GS[i].getDg()){
+//        		if (DG.getBioInfo().getClusterID() == 144){
+//        			String str = "Org= "+ DG.getSourceSpecies() + 
+//        					" Contig= " + DG.getBioInfo().getContig() +
+//        					" Color= " + DG.getColor().toString();
+//        	        System.out.println(str);
+//        		}
+//        	}
+//        }
+       
 	}
 	
 	//add coordinate bars
@@ -1565,6 +1589,19 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		//The main frame CSD should not be altered.
 		//this.mf.getFr().getCurrentFrame().getInternalFrameData().getQD().setCSD(this.mf.getOriginalCSD());
 
+        //Debugging - everything showing up as blue (which is correct)
+//		System.out.println("paintComponent entered.");
+//        for (int i = 0; i < GS.length; i++){
+//        	for (DrawGene DG : GS[i].getDg()){
+//        		if (DG.getBioInfo().getClusterID() == 144){
+//        			String str = "Org= "+ DG.getSourceSpecies() + 
+//        					" Contig= " + DG.getBioInfo().getContig() +
+//        					" Color= " + DG.getColor().toString();
+//        	        System.out.println(str);
+//        		}
+//        	}
+//        }
+		
 	}
 
 	//draw label associated with each genomic segment
@@ -1601,9 +1638,29 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	//draw genes on each genomic context
 	private void draftGenes(Graphics2D g) {
 		
+		//Debugging
+		//System.out.println("draftGenes.");
+		
 		//add all genes to all backgrounds
 		for (int i = 0; i <this.GS.length; i++){
 			for (int j = 0; j <this.GS[i].getDg().size(); j++){
+				
+				//debugging.
+				//DrawGene DG = GS[i].getDg().get(j);
+//        		if (DG.getBioInfo().getClusterID() == 144){
+//    			String str = "Org= "+ DG.getSourceSpecies() + 
+//    					" Contig= " + DG.getBioInfo().getContig() +
+//    					" Color= " + DG.getColor().toString();
+//    	        System.out.println(str);
+//        		}
+        		
+//        		if (DG.getSourceSpecies().equals("CVA-1_ORF_Final") &&
+//        				DG.getBioInfo().getStart()==90483){
+//        			String str = "Org= "+ DG.getSourceSpecies() + 
+//        					" Contig= " + DG.getBioInfo().getContig() +
+//        					" Color= " + DG.getColor().toString();
+//        	        System.out.println(str);
+//        		}
 				
 				//options to display some or all 
 				if ((isShowSurrounding() == true) || 
