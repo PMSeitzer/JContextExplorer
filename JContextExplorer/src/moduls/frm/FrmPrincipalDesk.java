@@ -262,16 +262,21 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	
 	//popular sets
 	private JMenu MG_PopularSets;
-	private JCheckBoxMenuItem MG_Halos;
-	private JCheckBoxMenuItem MG_Myxo;
 	private JCheckBoxMenuItem MG_Chloroviruses;
-	private JCheckBoxMenuItem MG_Staph;
+	private JCheckBoxMenuItem MG_Ecoli;
+	private JCheckBoxMenuItem MG_Halos;
+	private JCheckBoxMenuItem MG_Mimi;
+	private JCheckBoxMenuItem MG_Myxo;
 	private JCheckBoxMenuItem MG_Salmonella;
-	private String strHalos = "Haloarchaea";
-	private String strMyxo = "Myxococcus";
+	private JCheckBoxMenuItem MG_Staph;
+
 	private String strChloroviruses = "Chloroviruses";
-	private String strStaph = "Staphylococcus Aureus";
+	private String strEcoli = "Escherichia coli";
+	private String strHalos = "Haloarchaea";
+	private String strMimi = "Mimiviruses";
+	private String strMyxo = "Myxococcus";
 	private String strSalmonella = "Salmonella Enterica";
+	private String strStaph = "Staphylococcus Aureus";
 	
 	//Load components
 	private JMenuItem ML_ContextSet;
@@ -295,9 +300,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenu MP_QuerySet;
 	private JMenuItem MP_ContextForest;
 	private JMenuItem MP_Similarity;
-	private JMenuItem MP_NewPheno;
-	private JMenuItem MP_ManagePheno;
-	private JMenu MP_PhenotypeData;
 	private JMenuItem MP_TreeDataCorr;
 	
 	//default sub-menus
@@ -1443,13 +1445,19 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Popular sets
 		MG_PopularSets = new JMenu("Retrieve Popular Genome Set");
-		MG_Halos = new JCheckBoxMenuItem(strHalos);
+		
 		MG_Chloroviruses = new JCheckBoxMenuItem(strChloroviruses);
+		MG_Ecoli = new JCheckBoxMenuItem(strEcoli);
+		MG_Halos = new JCheckBoxMenuItem(strHalos);
+		MG_Mimi = new JCheckBoxMenuItem(strMimi);
 		MG_Myxo = new JCheckBoxMenuItem(strMyxo);
-		MG_Staph = new JCheckBoxMenuItem(strStaph);
 		MG_Salmonella = new JCheckBoxMenuItem(strSalmonella);
-		MG_PopularSets.add(MG_Halos);
+		MG_Staph = new JCheckBoxMenuItem(strStaph);
+
 		MG_PopularSets.add(MG_Chloroviruses);
+		MG_PopularSets.add(MG_Ecoli);
+		MG_PopularSets.add(MG_Halos);
+		MG_PopularSets.add(MG_Mimi);
 		MG_PopularSets.add(MG_Myxo);
 		MG_PopularSets.add(MG_Staph);
 		MG_PopularSets.add(MG_Salmonella);
@@ -1711,56 +1719,75 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		// ===== Popular Genome Sets ======== //
 		
 		//add names
-		MG_Halos.setName(strHalos);
 		MG_Chloroviruses.setName(strChloroviruses);
+		MG_Ecoli.setName(strEcoli);
+		MG_Halos.setName(strHalos);
+		MG_Mimi.setName(strMimi);
 		MG_Myxo.setName(strMyxo);
-		MG_Staph.setName(strStaph);
 		MG_Salmonella.setName(strSalmonella);
-		
+		MG_Staph.setName(strStaph);
+
 		//Popular genome set objects (including various options)
+		
+		//Chloroviruses (dunigan, adrien, fangrui ma)
+		PopularGenomeSetData PGD_chloros = new PopularGenomeSetData();
+		PGD_chloros.setName(strChloroviruses);
+		PGD_chloros.setChkBox(MG_Chloroviruses);
+		PGD_chloros.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/09/Chloroviruses.txt");
+		PGD_chloros.setPasswordProtected(false);
+		PopularGenomeSets.put(MG_Chloroviruses, PGD_chloros);
+		
+		//E coli (sima)
+		PopularGenomeSetData PGD_ecoli = new PopularGenomeSetData();
+		PGD_ecoli.setName(strEcoli);
+		PGD_ecoli.setChkBox(MG_Ecoli);
+		PGD_ecoli.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/09/Escherichia_coli.txt");
+		PGD_ecoli.setPasswordProtected(true);
+		PGD_ecoli.setPassword("nenegoose");
+		PopularGenomeSets.put(MG_Ecoli, PGD_ecoli);
 		
 		//Halophiles
 		PopularGenomeSetData PGD_halos = new PopularGenomeSetData();
 		PGD_halos.setName(strHalos);
 		PGD_halos.setChkBox(MG_Halos);
-		PGD_halos.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/07/Haloarchaea.txt");
+		PGD_halos.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/09/Haloarchaea.txt");
 		PGD_halos.setPasswordProtected(false);
 		PopularGenomeSets.put(MG_Halos, PGD_halos);
-		
-		//Chloroviruses
-		PopularGenomeSetData PGD_chloros = new PopularGenomeSetData();
-		PGD_chloros.setName(strChloroviruses);
-		PGD_chloros.setChkBox(MG_Chloroviruses);
-		PGD_chloros.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/07/Chloroviruses.txt");
-		PGD_chloros.setPasswordProtected(false);
-		PopularGenomeSets.put(MG_Chloroviruses, PGD_chloros);
+
+		//Mimiviruses
+		PopularGenomeSetData PGD_mimi = new PopularGenomeSetData();
+		PGD_mimi.setName(strMimi);
+		PGD_mimi.setChkBox(MG_Mimi);
+		PGD_mimi.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/09/Mimiviruses.txt");
+		PGD_mimi.setPasswordProtected(false);
+		PopularGenomeSets.put(MG_Mimi, PGD_mimi);
 		
 		//Myxococcus
 		PopularGenomeSetData PGD_myxo = new PopularGenomeSetData();
 		PGD_myxo.setName(strMyxo);
 		PGD_myxo.setChkBox(MG_Myxo);
-		PGD_myxo.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/07/Myxococcus.txt");
+		PGD_myxo.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/09/Myxococcus.txt");
 		PGD_myxo.setPasswordProtected(false);
 		PopularGenomeSets.put(MG_Myxo, PGD_myxo);
-		
-		//Staphylococcus
-		PopularGenomeSetData PGD_staph = new PopularGenomeSetData();
-		PGD_staph.setName(strStaph);
-		PGD_staph.setChkBox(MG_Staph);
-		PGD_staph.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/07/Staphylococcus_aureus.txt");
-		PGD_staph.setPasswordProtected(true);
-		PGD_staph.setPassword("nenegoose");
-		PopularGenomeSets.put(MG_Staph, PGD_staph);
 		
 		//Salmonella
 		PopularGenomeSetData PGD_salmonella = new PopularGenomeSetData();
 		PGD_salmonella.setName(strSalmonella);
 		PGD_salmonella.setChkBox(MG_Salmonella);
-		PGD_salmonella.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/07/Salmonella_Enterica.txt");
+		PGD_salmonella.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/09/Salmonella_enterica.txt");
 		PGD_salmonella.setPasswordProtected(true);
 		PGD_salmonella.setPassword("fugufish");
 		PopularGenomeSets.put(MG_Salmonella, PGD_salmonella);
 		
+		//Staphylococcus
+		PopularGenomeSetData PGD_staph = new PopularGenomeSetData();
+		PGD_staph.setName(strStaph);
+		PGD_staph.setChkBox(MG_Staph);
+		PGD_staph.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/09/Staphylococcus_aureus.txt");
+		PGD_staph.setPasswordProtected(true);
+		PGD_staph.setPassword("nenegoose");
+		PopularGenomeSets.put(MG_Staph, PGD_staph);
+
 		//add action listener
 		for (JMenuItem j : PopularGenomeSets.keySet()){
 			j.addActionListener(this);

@@ -243,6 +243,7 @@ public void importFromGBKReader(BufferedReader br){
       String LocusTag = "";
       boolean WritingProduct = false;
       boolean WritingTranslation = false;
+      boolean InAnIgnoreFeature = false;
       
       //define types for import.
       LinkedList<String> Types = new LinkedList<String>();
@@ -278,10 +279,16 @@ public void importFromGBKReader(BufferedReader br){
 				  //check if line is a new feature
 				  for (String s : Types){
 					  //System.out.println(s);
-					  if (Line.startsWith(s) && !WritingProduct && !WritingTranslation && L[0].equals(s)){
-						  NewFeature = true;
-						  TypeName = s;
-						  break;
+					  if (Line.startsWith(s) && !WritingProduct 
+							  && !WritingTranslation && L[0].equals(s)){
+						  if (L.length == 2){
+							  if (L[1].contains("..")){
+								  NewFeature = true;
+								  InAnIgnoreFeature = false;
+								  TypeName = s;
+								  break;
+							  }
+						  }
 					  }
 				  }
 				  
@@ -403,11 +410,21 @@ public void importFromGBKReader(BufferedReader br){
 					  
 				  //line is not a new feature	  
 				  } else {
+					  
+					  //not a new feature
 					  NewFeature = false;
+					  
+					  //Is this feature one to be ignored?
+					  if (L.length == 2){
+						  if (L[1].contains("..")){
+							  InAnIgnoreFeature = true;
+						  }
+					  }
+					  
 				  }
 				  
 				  //add to an existing feature
-				  if (!NewFeature){
+				  if (!NewFeature && !InAnIgnoreFeature){
 					  
 					 //check if currently writing things, first
 				     if(WritingProduct){
@@ -516,6 +533,11 @@ public void importFromGBKReader(BufferedReader br){
 			  }
 			  
 		  }
+		
+		//add last element.
+		if (!Elements.contains(E)){
+			Elements.add(E);
+		}
 		
 		
 	} catch (NumberFormatException e) {
