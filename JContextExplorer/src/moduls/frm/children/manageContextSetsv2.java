@@ -313,40 +313,39 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 
 				try {
 					
+					//information regarding context set upload.
+					ToAdd = new ContextSetDescription();
+					ToAdd.setName(CSName.getText());
+					ToAdd.setPreprocessed(true);
+					ToAdd.setType("Loaded");
+					
+					//import buffered reader
+					BufferedReader br_count = new BufferedReader(new FileReader(OperonStringToDisplay));
+					int TotalLines = 0;
+					boolean FirstLine = true;
+					String CountLine = null;
+					//count lines
+					while ((CountLine = br_count.readLine()) != null){
+						TotalLines++;
+						if (FirstLine){
+							String[] L = CountLine.split("\t");
+							if (L.length == 5){
+								GenomicGroupingsAsSingleFile = true;
+							} else {
+								GenomicGroupingsAsSingleFile = false;
+							}
+							FirstLine = false;
+						}
+						
+					}
+					br_count.close();
+					
+					//single-file import
 					if (GenomicGroupingsAsSingleFile) {
 
-						//import buffered reader
-						BufferedReader br_count = new BufferedReader(new FileReader(OperonStringToDisplay));
-						BufferedReader br = new BufferedReader(new FileReader(OperonStringToDisplay));
-						String Line = null;
-						int TotalLines = 0;
-						
-						//count lines
-						while (br_count.readLine() != null){
-							TotalLines++;
-						}
-						
-						int LineCounter = 0;
-						while ((Line = br.readLine()) != null){
-							
-							//import each line
-							String[] ImportedLine = Line.split("\t");
-						
-							//retrieve species
-							AnnotatedGenome AG = fr.getOS().getSpecies().get(ImportedLine[0]);
-							
-							//import from file
-							AG.ImportContextSet(CSName.getText(), ImportedLine[1]);
-
-							//report to SwingWorker
-							LineCounter++;
-							
-							operonLoadProgress= (int) Math.round(100*((double)LineCounter/(double)TotalLines));
-							setProgress(operonLoadProgress);
-							
-						}
-						
-						
+						//context set
+						ImportFromSingleFile(ToAdd.getName(),TotalLines);
+	
 					//from a set of files	
 					} else {
 						
@@ -385,45 +384,38 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 
 							}
 						}
+						
+						//check
+						int NewCSCounter = 0;
+						for (AnnotatedGenome AG : fr.getOS().getSpecies().values()){
+							boolean NewCS = true;
+							for (ContextSet CS : AG.getGroupings()){
+								if (CS.getName().equals(CSName.getText())){
+									NewCS = false;
+									break;
+								}
+							}
 
-					}
-
-					
-					//check
-					int NewCSCounter = 0;
-					for (AnnotatedGenome AG : fr.getOS().getSpecies().values()){
-						boolean NewCS = true;
-						for (ContextSet CS : AG.getGroupings()){
-							if (CS.getName().equals(CSName.getText())){
-								NewCS = false;
-								break;
+							//create a new CS
+							if (NewCS){
+								NewCSCounter++;
+								ContextSet CS = new ContextSet();
+								CS.setName(CSName.getText());
+								CS.setType("Loaded");
+								CS.setPreProcessed(true);
+								CS.setContextMapping(new HashMap<Integer, LinkedList<GenomicElement>>());
+								AG.getGroupings().add(CS);
 							}
 						}
+							if (NewCSCounter == fr.getOS().getSpeciesNames().size()){
+								progressBar.setVisible(false);
+								progressBar.setValue(0);
+								LoadedFileName.setText("No genomic groupings were discovered.");
+								LoadedFileName.setVisible(true);
+								throw new IOException();
+							}
 
-						//create a new CS
-						if (NewCS){
-							NewCSCounter++;
-							ContextSet CS = new ContextSet();
-							CS.setName(CSName.getText());
-							CS.setType("Loaded");
-							CS.setPreProcessed(true);
-							CS.setContextMapping(new HashMap<Integer, LinkedList<GenomicElement>>());
-							AG.getGroupings().add(CS);
-						}
 					}
-						if (NewCSCounter == fr.getOS().getSpeciesNames().size()){
-							progressBar.setVisible(false);
-							progressBar.setValue(0);
-							LoadedFileName.setText("No genomic groupings were discovered.");
-							LoadedFileName.setVisible(true);
-							throw new IOException();
-						}
-
-					//information regarding context set upload.
-					ToAdd = new ContextSetDescription();
-					ToAdd.setName(CSName.getText());
-					ToAdd.setPreprocessed(true);
-					ToAdd.setType("Loaded");
 					
 					progressBar.setVisible(false);
 					LoadedFileName.setVisible(true);
@@ -433,10 +425,13 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 					ReadyToAdd = true;
 				
 				} catch (IOException ex){
+					//ex.printStackTrace();
 					JOptionPane.showMessageDialog(null, "No genomic groupings could be mapped to the genomic working set.",
 							"No Groupings Discovered",JOptionPane.ERROR_MESSAGE);
 					
 				} catch(Exception ex) {
+					
+					//ex.printStackTrace();
 					
 					progressBar.setStringPainted(false);
 					progressBar.setVisible(false);
@@ -451,6 +446,61 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 				}
 			}
 			
+			return null;
+		}
+		
+		//Method to import
+		protected Void ImportFromSingleFile(String CSName, int TotalLines){
+			
+			int operonLoadProgress;
+			int LineCounter = 0;
+			
+			//stream in data from file
+			try {
+				
+				BufferedReader br = new BufferedReader(new FileReader(OperonStringToDisplay));
+				String Line = null;
+				while ((Line = br.readLine()) != null){
+					
+					//increment counter
+					LineCounter++;
+					
+					//split
+					String L[] = Line.split("\t");
+					
+					//recover species
+					AnnotatedGenome AG = fr.getOS().getSpecies().get(L[0]);
+					
+					//modify, when appropriate
+					if (AG != null){
+						
+						//try every line - skip lines that don't map anywhere
+						try {
+							
+							//parse other fields 
+							String ContigName = L[1];
+							int Start = Integer.parseInt(L[2]);
+							int Stop = Integer.parseInt(L[3]);
+							int Key = Integer.parseInt(L[4]);
+							
+							//adjust context set
+							AG.AdjustContextSet(CSName, ContigName, Start, Stop, Key);
+							
+							operonLoadProgress= (int) Math.round(100*((double)LineCounter/(double)TotalLines));
+							setProgress(operonLoadProgress);
+							
+						} catch (Exception ex) {
+							
+						}
+					}
+					
+				}
+				br.close();
+
+			} catch (Exception ex){
+				//System.out.println("dies in import");
+				//ex.printStackTrace();
+			}
 			return null;
 		}
 		

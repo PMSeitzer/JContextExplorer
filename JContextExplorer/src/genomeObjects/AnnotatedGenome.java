@@ -890,6 +890,69 @@ public void ImportContextSet(String CSName, String fileName) {
 	
 	}
 
+//adjust a context set
+public void AdjustContextSet(String CSName, String ContigName, int Start, int Stop, int Key){
+	
+	ContextSet CS = null;
+	boolean AddCStoGroups = true;
+	
+	//Find the context set
+	for (ContextSet CS1 : Groupings){
+		if (CS1.getName().equals(CSName)){
+			CS = CS1;
+			AddCStoGroups = false;
+			break;
+		}
+	}
+	
+	//create it if it doesn't yet exist
+	if (CS == null){
+		CS = new ContextSet();
+		CS.setPreProcessed(true);
+		CS.setName(CSName);
+	}
+	
+	//Retrieve existing mapping, or create new one
+	HashMap<Integer, LinkedList<GenomicElement>> CSMap = null;
+	if (CS.getContextMapping() != null){
+		CSMap = CS.getContextMapping();
+	} else {
+		CSMap = new HashMap<Integer, LinkedList<GenomicElement>>();
+	}
+	
+	//add element
+	//find appropriate elements
+	for (GenomicElement E : Elements){
+		
+		//match start, stop, and contig
+		if (E.getContig().equals(ContigName) &&
+				E.getStart() == Start &&
+				E.getStop() == Stop){
+			
+			//update list
+			if (CSMap.get(Key) != null){
+				CSMap.get(Key).add(E);
+			} else {
+				LinkedList<GenomicElement> List = new LinkedList<GenomicElement>();
+				List.add(E);
+				CSMap.put(Key, List);
+			}
+			
+			//break out of loop
+			break;
+		}
+	}
+	
+	//update the hash map
+	CS.setContextMapping(CSMap);
+	
+	//add the CS to the groupings, if it's brand new.
+	if (AddCStoGroups){
+		Groupings.add(CS);
+	}
+	
+}
+
 //----------------------- Sorting ------------------------//
 
 //sort genomic elements by (1) contig name, and within contigs, (2) start position.

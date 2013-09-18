@@ -789,6 +789,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 							throw new Exception();
 						}
 					} catch (Exception ex) {
+						ex.printStackTrace();
 					}
 
 					// report to SwingWorker
