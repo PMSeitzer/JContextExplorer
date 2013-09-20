@@ -130,6 +130,8 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 		public double segvalue;
 		public String ComparisonName;
 		public DadesExternes de;
+		public long StartTime = 0;
+		public long FinishTime = 0;
 		
 		//constructor
 		public ContextForestWorker(double segValue){
@@ -138,6 +140,10 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 		
 		@Override
 		protected Void doInBackground() throws Exception {
+			
+			
+			//start recording time
+			StartTime = System.nanoTime();
 			
 			//switch cursor
 			Component glassPane = getRootPane().getGlassPane();
@@ -153,6 +159,7 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 			}
 			
 			// =================================// Compute Context Trees
+			System.out.println("Computing context trees.");
 			
 			//set counter
 			int Counter = 0;
@@ -173,12 +180,18 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 			}
 			
 			// =================================// Build Dissimilarities
+			System.out.println("Determining pairwise dissimilarities.");
 			
 			DissimilarityMatrixData DMD = BuildDissimilarities();
 			
 			// =================================// Build Dendrogram
+			System.out.println("Computing dendrogram.");
 			
 			de = BuildDendrogram(DMD);
+			
+			//turn indeterminate on.
+			progressBar.setIndeterminate(true);
+			setProgress(100);
 			
 			//switch cursor
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -538,6 +551,9 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 		//Extend Data Matrix
 		protected LinkedList<String> Triangle2Matrix(LinkedList<String> Triangle){
 			
+			//another message
+			System.out.println("Reformatting pairwise dissimilarities into matrix.");
+			
 			//Initialize
 			LinkedList<String> Complete = new LinkedList<String>();
 			
@@ -585,7 +601,7 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 		
 		//post-processing
 		public void done(){
-			
+						
 			//switch cursor to normal
 			Component glassPane = getRootPane().getGlassPane();
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -593,9 +609,34 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 			
 			//re-set progress bar
 			progressBar.setValue(0);
+			progressBar.setIndeterminate(false);
 
 			//launch new window
 			new FrmScanOutputWindow(f, TQ, ComparisonName, true, de);
+			
+			//time announcement
+			FinishTime = System.nanoTime();
+			
+			long ElapsedTime = (FinishTime-StartTime) / 1000000000;
+			
+			//in seconds - test case
+			//long ElapsedTime = 10000;
+			
+			long hours = 0;
+			long minutes = 0;
+			
+			if (ElapsedTime > 3600){
+				hours = (ElapsedTime/3600);
+				ElapsedTime = ElapsedTime % 3600;
+			}
+			if (ElapsedTime > 60){
+				minutes = (ElapsedTime / 60);
+				ElapsedTime = ElapsedTime % 60;
+			}
+			
+			//time for process
+			System.out.println("Context Forest computation time: " +
+					hours + "h " + minutes + "m " + ElapsedTime + "s.");
 			
 			//close window
 			dispose();

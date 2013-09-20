@@ -33,6 +33,7 @@ public class ExtendedCRON implements Serializable{
 	private LinkedList<Double> Distances; 
 	private int NumberOfEntries = 0;
 	private LinkedList<String> Dissimilarities;
+	private LinkedList<String> DissimilaritiesAsMatrix;
 	private String DissimilarityType;
 	private String[] Queries;
 	private int[] ClusterNumbers;
@@ -97,6 +98,7 @@ public class ExtendedCRON implements Serializable{
 		}
 		
 
+		//do not use a custom method
 		if (!UseCustomMethod){
 			
 			//initialize output list
@@ -107,15 +109,24 @@ public class ExtendedCRON implements Serializable{
 					
 			//iterate over keys
 			for (int i = 0; i < Keys.length; i++){
+				
+				//debugging variable
+				String str = "";
+				
 				for (int j = i+1; j < Keys.length; j++){
+					
 					double dist = distMethod.computeDissimilarity(this.Contexts.get(Keys[i]),this.Contexts.get(Keys[j]));
 					
-					//print statements - also reveals the order of keys
+					//print statements - also reveals the order of keys (debugging)
 					//System.out.println("Distance between " + Keys[i] + " and " + Keys[j] + ": " + "(" + i + "," + j + "): "+ dist);
-		
+					str = str + String.valueOf(dist) + " ";
+					
 					//add value to linked list
 					D.add(dist);
 				}
+				
+				//debugging - view matrix
+				//System.out.println(str);
 			}
 
 			//set list to ECRON structure.
@@ -253,13 +264,71 @@ public class ExtendedCRON implements Serializable{
 
 		//set field
 		setDissimilarities(PairwiseRelationships);
+		
+		//also make the matrix
+		exportDissimilaritiesAsMatrix();
 	}
+	
+	//Export a dissimilarity set into a matrix
+	public void exportDissimilaritiesAsMatrix(){
+		
+		//initialize matrix
+		DissimilaritiesAsMatrix = new LinkedList<String>();
+		
+		//initialize counter
+		int Counter = -1;	//counter
+		Object[] Keys = this.Contexts.keySet().toArray(); //retrieve keys
+		int L = Keys.length; //width of array
+		//System.out.println("L = " + L + "\n");
+		
+		//create object array
+		Object[][] Matrix = new Object[L][L+1];
+			
+		//build matrix
+		for (int i = 0; i < Keys.length; i++){
+			
+			Matrix[i][0] = Keys[i];		//row name
+			Matrix[i][i+1] = 0.0;		//anything vs itself has diss of 0
+			
+			for (int j = i+1; j < Keys.length; j++){
+					
+				//increment counter
+				Counter++;
+					
+				//print statement
+				//System.out.println("(i,j) = (" + i +"," + j + "): " + this.Distances.get(Counter));
+				
+				//write values
+				Matrix[i][j+1] =  this.Distances.get(Counter); //serves as D(i,j);
+				Matrix[j][i+1] =  this.Distances.get(Counter);
+			}
+		}
+		
+		//blank line
+		//System.out.println();
+		
+		//write rows to matrix
+		for (int i = 0; i < Matrix.length; i++){
+			String str = "";
+			for (int j = 0; j < Matrix[i].length; j++){
+				str = str + String.valueOf(Matrix[i][j]) + "\t";
+			}
+			//System.out.println(str);
+			DissimilaritiesAsMatrix.add(str);
+		}
+		
+	}
+
+	
+	// ---- Cosmetic ----- //
 	
 	public void displayDistancesToscreen(){
 		for(int i = 0; i<Dissimilarities.size(); i++){
 			System.out.println(Dissimilarities.get(i));
 		}
 	}
+	
+	
 	//----------------------- Getters and Setters -----------------------//
 
 	public String getName() {
@@ -368,6 +437,14 @@ public class ExtendedCRON implements Serializable{
 
 	public void setCustomDissimilarities(LinkedList<CustomDissimilarity> customDissimilarities) {
 		CustomDissimilarities = customDissimilarities;
+	}
+
+	public LinkedList<String> getDissimilaritiesAsMatrix() {
+		return DissimilaritiesAsMatrix;
+	}
+
+	public void setDissimilaritiesAsMatrix(LinkedList<String> dissimilaritiesAsMatrix) {
+		DissimilaritiesAsMatrix = dissimilaritiesAsMatrix;
 	}
 
 }

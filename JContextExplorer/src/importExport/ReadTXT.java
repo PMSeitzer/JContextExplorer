@@ -124,10 +124,17 @@ public class ReadTXT implements PropertyChangeListener, Serializable { //just a 
 //		}
 	}
 
+	//use this constructor for context trees
 	public ReadTXT(final ExtendedCRON EC) throws Exception{
 		this.EC = EC;
 		nomfitx = "";
-		lstdades = this.PosaEnMemoria_noFile();
+		
+		//by dissimilarities
+		//lstdades = this.PosaEnMemoria_noFile();
+		
+		//by matrix
+		lstdades = this.PosaEnMemoria_noFile_2();
+		
 		String[] tmpC;
 		int nl, nc;
 		boolean tipusA, tipusB;
@@ -137,10 +144,15 @@ public class ReadTXT implements PropertyChangeListener, Serializable { //just a 
 		nl = lstdades.size();
 		// Matrix or list format
 		if ((nc > 3) || ((nc == 3) && (nl == 4)))
+			
+			//from a read matrix
 			lst = this.llegeixMatriu();
+		
 		else if ((nc == 3) && (nl == 3)) {
 			LinkedList<StructIn<String>> lstA, lstM;
 			try {
+				
+				//from matched reads
 				lstA = this.llegeixAparellat();
 				tipusA = true;
 			} catch (final Exception e) {
@@ -181,10 +193,12 @@ public class ReadTXT implements PropertyChangeListener, Serializable { //just a 
 //		}
 	}
 	
+	//this constructor for context forests
 	public ReadTXT(DissimilarityMatrixData DMD) throws Exception{
 		this.EC = null;
 		nomfitx = "";
-		lstdades = this.PosaEnMemoria_CF(DMD);
+		//lstdades = this.PosaEnMemoria_CF(DMD);
+		lstdades = this.PosaEnMemoria_CF_2(DMD);
 		String[] tmpC;
 		int nl, nc;
 		boolean tipusA, tipusB;
@@ -502,6 +516,55 @@ public class ReadTXT implements PropertyChangeListener, Serializable { //just a 
 		return lstDades;
 	}
 
+	private LinkedList<String[]> PosaEnMemoria_noFile_2(){
+		int tmpCol, numCols = 0, numLinia = 1;
+		String[] dadesLinia;
+		final LinkedList<String[]> lstDades = new LinkedList<String[]>();
+		String linia;
+		String delims = " ,;|\t\n";
+		final File fichero = new File(nomfitx);
+
+//			// Reading headers
+//			linia = EC.getDissimilaritiesAsMatrix().get(0);
+//				
+//			StringTokenizer stH = new StringTokenizer(linia, delims);
+//			dadesLinia = new String[numCols];
+//
+//			numCols = stH.countTokens();
+//			dadesLinia = new String[numCols];
+//
+//			for (int c = 0; c < numCols; c++) {
+//				String str = stH.nextToken();
+//				dadesLinia[c] = str;
+//			}
+//
+//			lstDades.add(dadesLinia);
+
+			//reading through all lines
+			for (String S : EC.getDissimilaritiesAsMatrix()){
+					
+				linia = S;
+					
+				numLinia++;
+
+				StringTokenizer st = new StringTokenizer(linia, delims);
+				dadesLinia = new String[numCols];
+
+				tmpCol = st.countTokens();
+
+				dadesLinia = new String[tmpCol];
+				for (int c = 0; c < tmpCol; c++) {
+					String str = st.nextToken();
+					dadesLinia[c] = str;
+				}
+				lstDades.add(dadesLinia);
+					
+			}
+
+		return lstDades;
+
+	}
+	
 	private LinkedList<String[]> PosaEnMemoria_noFile(){
 		
 		int tmpCol, numCols = 0;
@@ -580,6 +643,66 @@ public class ReadTXT implements PropertyChangeListener, Serializable { //just a 
 			return lstDades;
 	}
 
+	private LinkedList<String[]> PosaEnMemoria_CF_2(DissimilarityMatrixData DMD){
+		int tmpCol, numCols = 0, numLinia = 1;
+		String[] dadesLinia;
+		final LinkedList<String[]> lstDades = new LinkedList<String[]>();
+		String linia;
+		String delims = " ,;|\t\n";
+		final File fichero = new File(nomfitx);
+
+//			// Reading headers
+//			linia = EC.getDissimilaritiesAsMatrix().get(0);
+//				
+//			StringTokenizer stH = new StringTokenizer(linia, delims);
+//			dadesLinia = new String[numCols];
+//
+//			numCols = stH.countTokens();
+//			dadesLinia = new String[numCols];
+//
+//			for (int c = 0; c < numCols; c++) {
+//				String str = stH.nextToken();
+//				dadesLinia[c] = str;
+//			}
+//
+//			lstDades.add(dadesLinia);
+
+			System.out.println("Transferring dendrogram data.");
+		
+			//int Counter = 0;
+			//reading through all lines
+			for (String S : DMD.getMatrixFormattedDissimilarities()){
+					
+				linia = S;
+					
+				//increment counters
+				//Counter++;
+				numLinia++;
+
+				StringTokenizer st = new StringTokenizer(linia, delims);
+				dadesLinia = new String[numCols];
+
+				tmpCol = st.countTokens();
+
+				dadesLinia = new String[tmpCol];
+				for (int c = 0; c < tmpCol; c++) {
+					String str = st.nextToken();
+					dadesLinia[c] = str;
+				}
+				lstDades.add(dadesLinia);
+				
+//				//message
+//				System.out.println("Scanned " + Counter
+//						+ "/" + DMD.getMatrixFormattedDissimilarities().size()
+//						+ " rows of dissimilarity matrix.");
+				
+			}
+
+		return lstDades;
+
+
+	}
+	
 	@Override
 	
 	//currently nonfunctional

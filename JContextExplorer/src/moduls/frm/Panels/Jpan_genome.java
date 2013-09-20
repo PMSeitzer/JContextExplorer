@@ -6,6 +6,7 @@ import genomeObjects.GenomicElement;
 import genomeObjects.GenomicElementAndQueryMatch;
 import genomeObjects.OrganismSet;
 
+import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -127,26 +128,31 @@ public class Jpan_genome extends JPanel implements ActionListener,
 		//View Contexts
 		c.gridx = gridx;
 		c.gridy = 1;
+		
+		//c.gridwidth = 2;
 		c.gridwidth = 1;
+		
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1, 1, 1, 1);
 		btnViewContexts = new JButton(strViewContexts);
 		btnViewContexts.addActionListener(this);
 		btnViewContexts.setFont(fontStandard);
+		//btnViewContexts.setOpaque(true);
+		//btnViewContexts.setBackground(Color.RED);
 		add(btnViewContexts, c);
 		gridx++;
 		
-		//View Annotations
-		c.gridx = gridx;
-		c.gridy = 1;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.insets = new Insets(1, 1, 1, 1);
-		btnViewAnnotations = new JButton(strViewAnnotations);
-		btnViewAnnotations.addActionListener(this);
-		btnViewAnnotations.setFont(fontStandard);
+//		//View Annotations
+//		c.gridx = gridx;
+//		c.gridy = 1;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.fill = GridBagConstraints.HORIZONTAL;
+//		c.insets = new Insets(1, 1, 1, 1);
+//		btnViewAnnotations = new JButton(strViewAnnotations);
+//		btnViewAnnotations.addActionListener(this);
+//		btnViewAnnotations.setFont(fontStandard);
 		//add(btnViewAnnotations, c);
 		
 		//search for nodes bar
