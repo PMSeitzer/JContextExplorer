@@ -1,5 +1,7 @@
 package ContextForest;
 
+import importExport.DadesExternes;
+
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -20,27 +22,26 @@ public class QuerySet implements Serializable {
 	//Logistics
 	private String Name;								//Name of this Query Set
 	
-	//Processing
+	//Processing - 3 stages
+	private boolean ContextTreesComputed = false;
 	
-	//Context Trees (all data is in QueryData structure)
+	//(1) Context Trees (all data is in QueryData structure)
 	private LinkedList<QueryData> ContextTrees;		//Component Trees
 	
-	//Results
+	//(2) Dissimilarity matrices
+	private LinkedHashMap<DatasetAdjustmentParameters, DissimilarityMatrixData> DissMatrices;
+	
+	//(3) Computed Dendrograms
+	private LinkedHashMap<DissimilarityMatrixData, DadesExternes> Dendrograms;
 	
 	//Comparisons of context trees with ref trees /DGs
 	private LinkedHashMap<String, LinkedList<ScanReport>> TreeScans; 
 	
-	//Dissimilarities computed for context forest
-	private LinkedHashMap<DatasetAdjustmentParameters, DissimilarityMatrixData> Dissimilarities;
-
-	//Dissimilarities + methodology, to retrieve computed context forests
-	private LinkedHashMap<DissimilarityMatrixData, MatriuDistancies> ContextForests;
-	
 	//constructor
 	public QuerySet(){
 		TreeScans = new LinkedHashMap<String, LinkedList<ScanReport>>();
-		Dissimilarities = new LinkedHashMap<DatasetAdjustmentParameters, DissimilarityMatrixData>();
-		ContextForests = new LinkedHashMap<DissimilarityMatrixData, MatriuDistancies>();
+		DissMatrices = new LinkedHashMap<DatasetAdjustmentParameters, DissimilarityMatrixData>();
+		Dendrograms = new LinkedHashMap<DissimilarityMatrixData, DadesExternes>();
 	}
 	
 	// ==================================================//
@@ -71,20 +72,28 @@ public class QuerySet implements Serializable {
 		TreeScans = treeComparisons;
 	}
 
-	public LinkedHashMap<DatasetAdjustmentParameters, DissimilarityMatrixData> getDissimilarities() {
-		return Dissimilarities;
+	public boolean isContextTreesComputed() {
+		return ContextTreesComputed;
 	}
 
-	public void setDissimilarities(LinkedHashMap<DatasetAdjustmentParameters, DissimilarityMatrixData> dissimilarities) {
-		Dissimilarities = dissimilarities;
+	public void setContextTreesComputed(boolean contextTreesComputed) {
+		ContextTreesComputed = contextTreesComputed;
 	}
 
-	public LinkedHashMap<DissimilarityMatrixData, MatriuDistancies> getContextForests() {
-		return ContextForests;
+	public LinkedHashMap<DatasetAdjustmentParameters, DissimilarityMatrixData> getDissMatrices() {
+		return DissMatrices;
 	}
 
-	public void setContextForests(LinkedHashMap<DissimilarityMatrixData, MatriuDistancies> contextForests) {
-		ContextForests = contextForests;
+	public void setDissMatrices(LinkedHashMap<DatasetAdjustmentParameters, DissimilarityMatrixData> dissMatrices) {
+		DissMatrices = dissMatrices;
+	}
+
+	public LinkedHashMap<DissimilarityMatrixData, DadesExternes> getDendrograms() {
+		return Dendrograms;
+	}
+
+	public void setDendrograms(LinkedHashMap<DissimilarityMatrixData, DadesExternes> dendrograms) {
+		Dendrograms = dendrograms;
 	}
 	
 	

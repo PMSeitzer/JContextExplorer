@@ -14,6 +14,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -141,7 +142,6 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 		@Override
 		protected Void doInBackground() throws Exception {
 			
-			
 			//start recording time
 			StartTime = System.nanoTime();
 			
@@ -161,34 +161,80 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 			// =================================// Compute Context Trees
 			System.out.println("Computing context trees.");
 			
-			//set counter
-			int Counter = 0;
-			
-			//Generate cluster for each context tree, if not already available.
-			for (QueryData QD : TQ.getContextTrees()){
+			//no need to recompute if already computed
+			if (!TQ.isContextTreesComputed()){
+				
+				//set counter
+				int Counter = 0;
+				
+				//Generate cluster for each context tree, if not already available.
+				for (QueryData QD : TQ.getContextTrees()){
 
-				//query -> cluster
-				if (QD.getOutputCluster() == null){
-					Cluster Query = GenerateClusterFromQuery(QD, false);
-					QD.setOutputCluster(Query);
+					//query -> cluster
+//					if (QD.getOutputCluster() == null){
+						Cluster Query = GenerateClusterFromQuery(QD, false);
+						QD.setOutputCluster(Query);
+//					}
+					
+					//Increment counter + update progress bar
+					Counter++;
+					int progress = (int) (100.0 *((double) Counter )/((double) TQ.getContextTrees().size())); 
+					setProgress(progress);
 				}
 				
-				//Increment counter + update progress bar
-				Counter++;
-				int progress = (int) (100.0 *((double) Counter )/((double) TQ.getContextTrees().size())); 
-				setProgress(progress);
+				//all context trees computed.
+				TQ.setContextTreesComputed(true);
+			} else {
+				System.out.println("Retrieving stored context trees.");
 			}
 			
 			// =================================// Build Dissimilarities
 			System.out.println("Determining pairwise dissimilarities.");
 			
-			DissimilarityMatrixData DMD = BuildDissimilarities();
+			//determine dissimilarity matrix generation parameters
+			DatasetAdjustmentParameters DAP = new DatasetAdjustmentParameters();
+			DAP.setAdjustmentPenalty(cbMisMatchPenalty.isSelected());
+			DAP.setFreeMismatches(cbAllowMM.isSelected());
+			DAP.setNumberOfFreeMatches(NumMismatches);
+			DAP.setPenaltyperMismatch(PenaltyPerMismatch);
+			DAP.setContextTreeSegmentationPoint(segvalue);
 			
+			//check and see if a matrix has already been computed, with these parameters.
+			boolean DissimilaritiesAlreadyComputed = false;
+			for (DatasetAdjustmentParameters DAPk : TQ.getDissMatrices().keySet()){
+				if (DAPk.AllFieldsEqual(DAP)){
+					DAP = DAPk;
+					DissimilaritiesAlreadyComputed = true;
+					break;
+				}
+			}
+			
+//			if (TQ.getDissMatrices().get(DAP) != null){
+//				DissimilaritiesAlreadyComputed = true;
+//			}
+			
+			//determine output set, or compute (if necessary)
+			DissimilarityMatrixData DMD;
+			if (!DissimilaritiesAlreadyComputed){
+				 DMD = BuildDissimilarities(DAP);
+				 TQ.getDissMatrices().put(DAP, DMD);
+			} else {
+				 DMD = TQ.getDissMatrices().get(DAP);
+				 System.out.println("Dissimilarities already computed.");
+			}
+
 			// =================================// Build Dendrogram
 			System.out.println("Computing dendrogram.");
 			
-			de = BuildDendrogram(DMD);
-			
+			//retrieve pre-built dendrogram, or build new one + store
+			if (TQ.getDendrograms().containsKey(DMD)){
+				de = TQ.getDendrograms().get(DMD);
+				System.out.println("Dendrogram already computed.");
+			} else {
+				de = BuildDendrogram(DMD);
+				TQ.getDendrograms().put(DMD, de);
+			}
+
 			//turn indeterminate on.
 			progressBar.setIndeterminate(true);
 			setProgress(100);
@@ -327,137 +373,99 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 		}
 		
 		//Build dissimilarities
-		protected DissimilarityMatrixData BuildDissimilarities(){
+		protected DissimilarityMatrixData BuildDissimilarities(DatasetAdjustmentParameters DAP){
 			
 			//reset progress and counter to zero, in preparation for dissimilarities
 			setProgress(0);
 			int Counter = 0;
 			
-			//Note dissimilarity matrix generation parameters
-			DatasetAdjustmentParameters DAP = new DatasetAdjustmentParameters();
-			DAP.setAdjustmentPenalty(cbMisMatchPenalty.isSelected());
-			DAP.setFreeMismatches(cbAllowMM.isSelected());
-			DAP.setNumberOfFreeMatches(NumMismatches);
-			DAP.setPenaltyperMismatch(PenaltyPerMismatch);
-			
-			//Dissimilarity
-			DissimilarityMatrixData DMD = null;
-			
-			//attempt to retrieve dissimilarities
-			for (DatasetAdjustmentParameters DAP2 : TQ.getDissimilarities().keySet()){
-				if (DAP2.equals(DAP)){
-					DMD = TQ.getDissimilarities().get(DAP2);
-				}
-			}
-			
 			int CompareSize = TQ.getContextTrees().size();
 			int Total = 0;
 			
-			//compute matrix from dissimilarity, if none already
-			if (DMD == null){
+			//initialize list of dissimilarities
+			DissimilarityMatrixData DMD = new DissimilarityMatrixData();
+			LinkedList<Double> D = new LinkedList<Double>();
+			LinkedList<String> FD = new LinkedList<String>();
+			LinkedList<String> MFD = new LinkedList<String>();
+			DMD.setNumLeaves(CompareSize);
+			
+			//determine total
+			while (CompareSize > 1){
+				CompareSize--;
+				Total = Total + CompareSize;
+			}
+			
+			//iterate over keys
+			for (int i = 0; i <  TQ.getContextTrees().size(); i++){
 				
-				//initialize list of dissimilarities
-				DMD = new DissimilarityMatrixData();
-				LinkedList<Double> D = new LinkedList<Double>();
-				LinkedList<String> FD = new LinkedList<String>();
-				LinkedList<String> MFD = new LinkedList<String>();
-				DMD.setNumLeaves(CompareSize);
-				
-				//determine total
-				while (CompareSize > 1){
-					CompareSize--;
-					Total = Total + CompareSize;
-				}
-				
-				//iterate over keys
-				for (int i = 0; i <  TQ.getContextTrees().size(); i++){
+				String str = TQ.getContextTrees().get(i).getName().replaceAll(" ", "_").replaceAll(";", "AND");
+				str = str + "\t";
+				for (int j = i+1; j < TQ.getContextTrees().size(); j++){
 					
-					String str = TQ.getContextTrees().get(i).getName().replaceAll(" ", "_").replaceAll(";", "AND");
-					str = str + "\t";
-					for (int j = i+1; j < TQ.getContextTrees().size(); j++){
+					double dist = 1.0;
+					
+					//Fowlkes-Mallows approach
+					if (CFDissimilarities.getSelectedItem().equals("Fowlkes-Mallows")){
 						
-						double dist = 1.0;
-						
-						//Fowlkes-Mallows approach
-						if (CFDissimilarities.getSelectedItem().equals("Fowlkes-Mallows")){
-							
-							//Retrieve Leaves in appropriate format from cluster
-							LinkedList<LinkedList<String>> QueryList_I = SegregatedLeaves(SegregateCluster(TQ.getContextTrees().get(i).getOutputCluster()));
-							LinkedList<LinkedList<String>> QueryList_J = SegregatedLeaves(SegregateCluster(TQ.getContextTrees().get(j).getOutputCluster()));
+						//Retrieve Leaves in appropriate format from cluster
+						LinkedList<LinkedList<String>> QueryList_I = SegregatedLeaves(SegregateCluster(TQ.getContextTrees().get(i).getOutputCluster()));
+						LinkedList<LinkedList<String>> QueryList_J = SegregatedLeaves(SegregateCluster(TQ.getContextTrees().get(j).getOutputCluster()));
 
-							//Create new Fowlkes-Mallows objects
-							FowlkesMallows FM = new FowlkesMallows(QueryList_I, QueryList_J);
-							
-							//Set Adjustment parameters
-							FM.setAdjustmentPenalty(DAP.isAdjustmentPenalty());
-							FM.setFreeMismatches(DAP.isFreeMismatches());
-							FM.setNumberOfFreeMatches(DAP.getNumberOfFreeMatches());
-							FM.setPenaltyperMismatch(DAP.getPenaltyperMismatch());
-							
-							//Compute similarity
-							FM.Compute();
-							
-							//dissimilarity = 1 - similarity
-							dist = 1.0 - FM.getB();
-														
-						}
+						//Create new Fowlkes-Mallows objects
+						FowlkesMallows FM = new FowlkesMallows(QueryList_I, QueryList_J);
+						
+						//Set Adjustment parameters
+						FM.setAdjustmentPenalty(DAP.isAdjustmentPenalty());
+						FM.setFreeMismatches(DAP.isFreeMismatches());
+						FM.setNumberOfFreeMatches(DAP.getNumberOfFreeMatches());
+						FM.setPenaltyperMismatch(DAP.getPenaltyperMismatch());
+						
+						//Compute similarity
+						FM.Compute();
+						
+						//dissimilarity = 1 - similarity
+						dist = 1.0 - FM.getB();
+													
+					}
 
-						if ((j+1) != TQ.getContextTrees().size()){
-							str = str + String.valueOf(dist) + "\t";
-						} else {
-							str = str + String.valueOf(dist);
-						}
-						
-						//Define node names - individual context trees
-						String Name1 = TQ.getContextTrees().get(i).getName().replaceAll(" ", "_").replaceAll(";", "AND");
-						String Name2 = TQ.getContextTrees().get(j).getName().replaceAll(" ", "_").replaceAll(";", "AND");
-						
-						//write row
-						String Row = Name1 + ";" + Name2 + ";" + String.valueOf(dist);
-						
-						//add to list
-						FD.add(Row);
-												
-						//add value to linked list
-						D.add(dist);
-						
-						//Increment counter + update progress bar
-						Counter++;
-						int progress = (int) (100.0 *((double) Counter )/((double) Total)); 
-						setProgress(progress);
-						
+					if ((j+1) != TQ.getContextTrees().size()){
+						str = str + String.valueOf(dist) + "\t";
+					} else {
+						str = str + String.valueOf(dist);
 					}
 					
-					//debugging - view matrix
-					//System.out.println(str);
+					//Define node names - individual context trees
+					String Name1 = TQ.getContextTrees().get(i).getName().replaceAll(" ", "_").replaceAll(";", "AND");
+					String Name2 = TQ.getContextTrees().get(j).getName().replaceAll(" ", "_").replaceAll(";", "AND");
 					
-					//write row of matrix
-					MFD.add(str);
+					//write row
+					String Row = Name1 + ";" + Name2 + ";" + String.valueOf(dist);
+					
+					//add to list
+					FD.add(Row);
+											
+					//add value to linked list
+					D.add(dist);
+					
+					//Increment counter + update progress bar
+					Counter++;
+					int progress = (int) (100.0 *((double) Counter )/((double) Total)); 
+					setProgress(progress);
+					
 				}
 				
-//				//debugging: view pairwise relationships
-//				for (String s : FD){
-//					System.out.println(s);
-//				}
-				
-				//add formatted triangle (alternative input format)
-				DMD.setMatrixFormattedDissimilarities(Triangle2Matrix(MFD));
-
-//				//debugging: view pairwise relationships
-//				for (String s : DMD.getMatrixFormattedDissimilarities()){
-//					System.out.println(s);
-//				}
-				
-				//add info to DMD
-				DMD.setDissimilarities(D);
-				DMD.setFormattedDissimilarities(FD);
-				DMD.setMethodName((String) Jpan_Menu.getCbMethod().getSelectedItem());
-				
-				//store dissimilarities with parameters
-				TQ.getDissimilarities().put(DAP, DMD);
-
+				//write row of matrix
+				MFD.add(str);
 			}
-		
+			
+			//add formatted triangle (alternative input format)
+			DMD.setMatrixFormattedDissimilarities(Triangle2Matrix(MFD));
+			
+			//add info to DMD
+			DMD.setDissimilarities(D);
+			DMD.setFormattedDissimilarities(FD);
+			DMD.setMethodName((String) Jpan_Menu.getCbMethod().getSelectedItem());
+	
 			return DMD;
 		}
 		
@@ -470,79 +478,50 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 			
 			progressBar.setIndeterminate(true);
 			setProgress(100);
+					
+			//create a DE out of dissimilarity matrix
+			DadesExternes de = new DadesExternes(DMD);
+			MatriuDistancies M = de.getMatriuDistancies();
+
+			//get distances, compute dendrogram
+			double minBase = Double.MAX_VALUE;
+			int nbElements = M.getCardinalitat();
 			
-			//initialize matrix
-			DadesExternes de = null;
-			MatriuDistancies M = null;
-			try {
+			Reagrupa rg;
+			MatriuDistancies mdNew = null;
+			double b;
+			int progress = 0;
+			
+			progressBar.setIndeterminate(false);
+			setProgress(0);
+
+			while (M.getCardinalitat() > 1) {
 				
-				//attempt to retrieve matrix
-				for (DissimilarityMatrixData DAM2 : TQ.getContextForests().keySet()){
-					if (DAM2.equals(DMD)){
-						M = TQ.getContextForests().get(DMD);
-					}
+				//CLUSTERING FROM DISTANCES DATA
+				rg = new Reagrupa(M, Jpan_Menu.getTypeData(), 
+						Jpan_Menu.getMethod(),
+						Jpan_Menu.getPrecision());
+				
+				try {
+					mdNew = rg.Recalcula();
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 				
-				//if the matrix does not already exist, need to calculate it
-				if (M == null){
-					
-					//create a DE out of dissimilarity matrix
-					de = new DadesExternes(DMD);
-					M = de.getMatriuDistancies();
-
-					//get distances, compute dendrogram
-					double minBase = Double.MAX_VALUE;
-					int nbElements = M.getCardinalitat();
-					
-					Reagrupa rg;
-					MatriuDistancies mdNew;
-					double b;
-					int progress = 0;
-					int ItCounter = 0;
-					
-					progressBar.setIndeterminate(false);
-					setProgress(0);
-					
-					long StartTime = System.nanoTime();
-					
-					while (M.getCardinalitat() > 1) {
-						
-						long ElapsedTime = (System.nanoTime()-StartTime)/(1000000000);
-			
-						
-						ItCounter++;
-//						System.out.println("Iteration: " + ItCounter 
-//								+ " Cardinality: " + M.getCardinalitat() 
-//								+ " Time: " + ElapsedTime);
-						
-						//CLUSTERING FROM DISTANCES DATA
-						rg = new Reagrupa(M, Jpan_Menu.getTypeData(), 
-								Jpan_Menu.getMethod(),
-								Jpan_Menu.getPrecision());
-						
-						mdNew = rg.Recalcula();
-						
-						//SET THE CURRENT MULTIDENDROGRAM TO THE RESULT FROM RG.RECALCULA()
-						M = mdNew;
-						de.setMatriuDistancies(M);
-						
-						b = M.getArrel().getBase();
-						if ((b < minBase) && (b != 0)) {
-							minBase = b;
-						}
-					
-						progress = 100 * (nbElements - M.getCardinalitat())
-								/ (nbElements - 1);
-						
-						//System.out.println("Progress: " + progress);
-						
-						setProgress(progress);	
-
-					}
+				//SET THE CURRENT MULTIDENDROGRAM TO THE RESULT FROM RG.RECALCULA()
+				M = mdNew;
+				de.setMatriuDistancies(M);
+				
+				b = M.getArrel().getBase();
+				if ((b < minBase) && (b != 0)) {
+					minBase = b;
 				}
+			
+				//update prodgress
+				progress = 100 * (nbElements - M.getCardinalitat())
+						/ (nbElements - 1);
+				setProgress(progress);	
 
-			} catch (Exception ex){
-				ex.printStackTrace();
 			}
 			
 			return de;

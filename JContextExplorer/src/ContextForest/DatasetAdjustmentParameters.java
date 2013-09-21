@@ -9,10 +9,22 @@ public class DatasetAdjustmentParameters implements Serializable {
 	private boolean FreeMismatches;
 	private int NumberOfFreeMatches;
 	private double PenaltyperMismatch;
-	
-	
+	private double ContextTreeSegmentationPoint;
 	
 	//setters and getters
+	
+	public boolean AllFieldsEqual(DatasetAdjustmentParameters DAPx){
+		if (this.AdjustmentPenalty == DAPx.isAdjustmentPenalty()
+			&& this.FreeMismatches == DAPx.isFreeMismatches()
+			&& this.NumberOfFreeMatches == DAPx.getNumberOfFreeMatches()
+			&& this.PenaltyperMismatch == DAPx.getPenaltyperMismatch()
+			&& this.getContextTreeSegmentationPoint() == DAPx.getContextTreeSegmentationPoint()
+				){
+			return true;
+		} else {
+			return false;
+		}
+	}
 	
 	public boolean isAdjustmentPenalty() {
 		return AdjustmentPenalty;
@@ -38,6 +50,14 @@ public class DatasetAdjustmentParameters implements Serializable {
 	}
 	public void setPenaltyperMismatch(double penaltyperMismatch) {
 		PenaltyperMismatch = penaltyperMismatch;
+	}
+
+	public double getContextTreeSegmentationPoint() {
+		return ContextTreeSegmentationPoint;
+	}
+
+	public void setContextTreeSegmentationPoint(double contextTreeSegmentationPoint) {
+		ContextTreeSegmentationPoint = contextTreeSegmentationPoint;
 	}
 	
 
