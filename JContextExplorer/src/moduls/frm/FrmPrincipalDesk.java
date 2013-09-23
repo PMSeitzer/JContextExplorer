@@ -2947,6 +2947,40 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		return Runtime.getRuntime().freeMemory();
 	}
 	
+	// ==== Display related ====== //
+	
+	//determine elapsed time, in human-readable format
+	public String getElapsedTime(long StartTime, long FinishTime){
+		
+		//initialize output
+		String t = "";
+		
+		long ElapsedTime = (FinishTime-StartTime) / 1000000000;
+		
+		//in seconds - test case
+		//long ElapsedTime = 10000;
+		
+		long hours = 0;
+		long minutes = 0;
+		
+		if (ElapsedTime > 3600){
+			hours = (ElapsedTime/3600);
+			ElapsedTime = ElapsedTime % 3600;
+		}
+		if (ElapsedTime > 60){
+			minutes = (ElapsedTime / 60);
+			ElapsedTime = ElapsedTime % 60;
+		}
+
+		//print time in hours, minutes, seconds
+		t = String.valueOf(hours) + "h " 
+				+ String.valueOf(minutes) + "m " 
+				+ String.valueOf(ElapsedTime) + "s";
+				
+		return t;
+
+	}
+	
 	// ==== Save/Export Items (Original Multidendrograms) ==== //
 	
 	public void savePicture(final BufferedImage buff, final String tipus)

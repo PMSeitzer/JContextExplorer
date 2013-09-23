@@ -395,12 +395,24 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 				Total = Total + CompareSize;
 			}
 			
+			//Initialize a matrix
+			int L = TQ.getContextTrees().size();
+			Object[][] Matrix = new Object[L][L+1];
+			
+			
 			//iterate over keys
-			for (int i = 0; i <  TQ.getContextTrees().size(); i++){
+			for (int i = 0; i <  L; i++){
 				
-				String str = TQ.getContextTrees().get(i).getName().replaceAll(" ", "_").replaceAll(";", "AND");
-				str = str + "\t";
-				for (int j = i+1; j < TQ.getContextTrees().size(); j++){
+				//name of context tree
+				String Name = TQ.getContextTrees().get(i).getName().replaceAll(" ", "_").replaceAll(";", "AND");
+
+				//add values to matrix
+				Matrix[i][0] = Name;		//row name
+				Matrix[i][i+1] = 0.0;		//anything vs itself has diss of 0
+
+				//string for output
+				String str = Name + "\t";
+				for (int j = i+1; j < L; j++){
 					
 					double dist = 1.0;
 					
@@ -447,6 +459,9 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 					//add value to linked list
 					D.add(dist);
 					
+					Matrix[i][j+1] =  dist; //serves as D(i,j);
+					Matrix[j][i+1] =  dist;
+					
 					//Increment counter + update progress bar
 					Counter++;
 					int progress = (int) (100.0 *((double) Counter )/((double) Total)); 
@@ -458,8 +473,21 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 				MFD.add(str);
 			}
 			
+			LinkedList<String> DissimilaritiesAsMatrix = new LinkedList<String>();
+			
+			//write rows to matrix
+			for (int i = 0; i < Matrix.length; i++){
+				String str = "";
+				for (int j = 0; j < Matrix[i].length; j++){
+					str = str + String.valueOf(Matrix[i][j]) + "\t";
+				}
+				//System.out.println(str);
+				DissimilaritiesAsMatrix.add(str);
+			}
+			
 			//add formatted triangle (alternative input format)
-			DMD.setMatrixFormattedDissimilarities(Triangle2Matrix(MFD));
+			//DMD.setMatrixFormattedDissimilarities(Triangle2Matrix(MFD));
+			DMD.setMatrixFormattedDissimilarities(DissimilaritiesAsMatrix);
 			
 			//add info to DMD
 			DMD.setDissimilarities(D);
@@ -614,7 +642,7 @@ public class ChooseContextForest extends JDialog implements ActionListener, Prop
 			}
 			
 			//time for process
-			System.out.println("Context Forest computation time: " +
+			System.out.println("Context Forest total computation time: " +
 					hours + "h " + minutes + "m " + ElapsedTime + "s.");
 			
 			//close window

@@ -21,18 +21,20 @@ public class QuerySet implements Serializable {
 	
 	//Logistics
 	private String Name;								//Name of this Query Set
-	
-	//Processing - 3 stages
-	private boolean ContextTreesComputed = false;
-	
-	//(1) Context Trees (all data is in QueryData structure)
 	private LinkedList<QueryData> ContextTrees;		//Component Trees
+	
+	//Context Forest Processing - 3 stages
+
+	//(1) Context Trees (all data is in QueryData structure)
+	private boolean ContextTreesComputed = false;
 	
 	//(2) Dissimilarity matrices
 	private LinkedHashMap<DatasetAdjustmentParameters, DissimilarityMatrixData> DissMatrices;
 	
 	//(3) Computed Dendrograms
 	private LinkedHashMap<DissimilarityMatrixData, DadesExternes> Dendrograms;
+	
+	//Scan processing
 	
 	//Comparisons of context trees with ref trees /DGs
 	private LinkedHashMap<String, LinkedList<ScanReport>> TreeScans; 

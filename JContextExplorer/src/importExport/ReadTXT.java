@@ -667,7 +667,7 @@ public class ReadTXT implements PropertyChangeListener, Serializable { //just a 
 //
 //			lstDades.add(dadesLinia);
 
-			System.out.println("Transferring dendrogram data.");
+			System.out.println("Transferring matrix data.");
 		
 			//int Counter = 0;
 			//reading through all lines
