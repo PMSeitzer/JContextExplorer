@@ -21,6 +21,7 @@ import javax.swing.SwingUtilities;
 import moduls.frm.ContextLeaf;
 import moduls.frm.PostSearchAnalyses;
 import moduls.frm.QueryData;
+import moduls.frm.children.FrmSearchResults;
 
 public class Jpan_ViewResults extends JPanel implements ActionListener{
 
@@ -272,7 +273,15 @@ public class Jpan_ViewResults extends JPanel implements ActionListener{
 			QD.setAnalysesList(P);
 			
 			//Update aspects of drawing frame
-			fsow.getF().getPanBtn().setSearchResultsFrame(QD.getSRF());
+			
+			//search results frame - not available as a serialized object, need to remake
+			if (QD.getSRF() != null){
+				fsow.getF().getPanBtn().setSearchResultsFrame(QD.getSRF());
+			} else {
+				FrmSearchResults SRF = new FrmSearchResults(fsow.getF(), QD.getCSD());
+				fsow.getF().getPanBtn().setSearchResultsFrame(SRF);
+			}
+
 			fsow.getF().getPanBtn().setMultiDendro(QD.getMultiDendro());
 			fsow.getF().getPanBtn().setDe(QD.getDe());
 			
