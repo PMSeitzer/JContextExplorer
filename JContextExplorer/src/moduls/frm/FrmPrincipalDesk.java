@@ -2924,6 +2924,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			this.getPanMotifOptions().getMenuOfMotifs().addItem("<none>");
 		}		
 		
+		//Update motifs
+		panMotifOptions.setLoadedMotifs(OS.getMotifNames());
+		
 		// ====== UI update ====== //
 		//SwingUtilities.updateComponentTreeUI(getRootPane());
 		

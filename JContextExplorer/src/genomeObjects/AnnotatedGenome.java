@@ -970,6 +970,21 @@ public class GenomicElementComparator implements Comparator<GenomicElement> {
 	  }
 	}
 
+public static class SortGandEByElements implements Comparator<GenomicElementAndQueryMatch> {
+
+	@Override
+	public int compare(GenomicElementAndQueryMatch GandE1, GenomicElementAndQueryMatch GandE2) {
+	     int nameCompare = GandE1.getE().getContig().compareToIgnoreCase(GandE2.getE().getContig());
+	     if (nameCompare != 0) {
+	        return nameCompare;
+	     } else {
+		     return Integer.valueOf(GandE1.getE().getCenter())
+		    		 .compareTo(Integer.valueOf(GandE2.getE().getCenter()));
+	     }
+	}
+	
+}
+
 // ----------------------- Export ----------------------------------//
 
 // this function simply returns a DNA sequence from a particular genome file.
@@ -999,6 +1014,7 @@ public String retrieveSequence(String contig, int start, int stop, Strand strand
 	return seq;
 }
 
+//Export a GFF file with gene IDs + cluster IDs (if applicable)
 public void ExportExtendedGFFFile(String FileName){
 	
 	try {
@@ -1279,10 +1295,12 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 						} else {
 							EndOfContig = true;
 						}
-							
-						} else {
-							EndOfContig = true;
+						
+						//when the element is not valid, just skip to the next one.
 						}
+//						else {
+//							EndOfContig = true;
+//						}
 					} else {
 						EndOfContig = true;
 					}
@@ -1329,9 +1347,12 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 							EndOfContig = true;
 						}
 							
-						} else {
-							EndOfContig = true;
-						}
+						} 
+						
+						//try: just skipping over
+//						else {
+//							EndOfContig = true;
+//						}
 
 					} else {
 						EndOfContig = true;

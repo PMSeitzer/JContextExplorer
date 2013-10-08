@@ -36,7 +36,8 @@ public class ContextSetDescription implements Serializable{
 	
 	//cassette
 	private String CassetteOf; 		//Name of another ContextSetDescription
-
+	private boolean isNearbyOnly;
+	private int NearbyLimit;
 	
 	//constructor
 	public ContextSetDescription(){
@@ -177,5 +178,21 @@ public class ContextSetDescription implements Serializable{
 
 	public void setRetainFraction(double retainFraction) {
 		RetainFraction = retainFraction;
+	}
+
+	public boolean isNearbyOnly() {
+		return isNearbyOnly;
+	}
+
+	public void setNearbyOnly(boolean isNearbyOnly) {
+		this.isNearbyOnly = isNearbyOnly;
+	}
+
+	public int getNearbyLimit() {
+		return NearbyLimit;
+	}
+
+	public void setNearbyLimit(int nearbyLimit) {
+		NearbyLimit = nearbyLimit;
 	}
 }

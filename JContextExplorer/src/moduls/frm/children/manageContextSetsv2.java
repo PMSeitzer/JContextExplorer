@@ -168,6 +168,11 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 	private String strCSCassette = "Construct a cassette based on an existing context set";
 	private JComboBox<String> contextSetMenuforCassette;
 	private JTextField contextSetHeaderforCassette;
+	private JCheckBox cbOnlyNearby;
+	private JTextField TxtNearby, LblNearby;
+	private String strcbOnlyNearby = "Only add nearby features";
+	private String strTxtNearby = "1000";
+	private String strLblNearby = "nt Distance to closest original feature";
 	
 	//CSType (8) CS
 	private LinkedList<Component> CSCombination_group;
@@ -994,11 +999,48 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		jp.add(contextSetMenuforCassette, c);
 		CSCassette_group.add(contextSetMenuforCassette);
 		
+		//row 2 - cassette options
 		gridy++;
+		
+		c.ipady = 0;
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.insets = new Insets(1,20,1,1);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		cbOnlyNearby = new JCheckBox(strcbOnlyNearby);
+		cbOnlyNearby.setSelected(true);
+		cbOnlyNearby.setEnabled(false);
+		cbOnlyNearby.addActionListener(this);
+		jp.add(cbOnlyNearby, c);
+		CSCassette_group.add(cbOnlyNearby);
+		
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.insets = new Insets(1,1,1,1);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		TxtNearby = new JTextField(strTxtNearby);
+		TxtNearby.setEditable(true);
+		jp.add(TxtNearby, c);
+		CSCassette_group.add(TxtNearby);
+		
+		c.gridx = 2;
+		c.gridy = gridy;
+		c.gridwidth = 3;
+		c.gridheight = 1;
+		c.insets = new Insets(1,1,1,1);
+		LblNearby = new JTextField(strLblNearby);
+		LblNearby.setEditable(false);
+		jp.add(LblNearby, c);
+		CSCassette_group.add(LblNearby);
+	
 		
 		//add this mapping to hash map.
 		RadioButtonComponents.put(CSCassette.getModel(), CSCassette_group);
-		
+
 		//(8) CSCOMBINATION
 		
 		//grouping
@@ -1293,6 +1335,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 			
 		} 
 		
+		//Between, limiting distance
 		if (evt.getSource().equals(cbLimitDistance)){
 			if (cbLimitDistance.isSelected()){
 				TxtDistanceLimit.setEnabled(true);
@@ -1300,6 +1343,17 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 			} else {
 				TxtDistanceLimit.setEnabled(false);
 				LblDistanceLimit.setEnabled(false);
+			}
+		}
+		
+		//cassette, limiting distance
+		if (evt.getSource().equals(this.cbOnlyNearby)){
+			if (cbOnlyNearby.isSelected()){
+				this.LblNearby.setEnabled(true);
+				this.TxtNearby.setEnabled(true);
+			} else {
+				this.LblNearby.setEnabled(false);
+				this.TxtNearby.setEnabled(false);
 			}
 		}
 		
@@ -1373,6 +1427,26 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 						ToAdd.setCassette(true);
 						String CassetteOf = contextSetMenuforCassette.getSelectedItem().toString();
 						ToAdd.setCassetteOf(CassetteOf);
+						
+						//add a limit
+						if (cbOnlyNearby.isSelected()){
+							ToAdd.setNearbyOnly(true);
+							try {
+								String s = this.TxtNearby.getText();
+								Integer Dist = Integer.parseInt(s);
+								if (Dist <  0){
+									throw new Exception();
+								}
+								ToAdd.setNearbyLimit(Dist);
+							} catch (Exception ex){
+								JOptionPane.showMessageDialog(null, 
+										"Nearby Distance must be an integral value greater than 0.\n" +
+										"Could not add Nearby Distance to this Cassette Context Set.",
+										"Number Format Error",JOptionPane.ERROR_MESSAGE);
+								ToAdd.setNearbyOnly(false);
+							}
+						}
+
 					} 
 
 					//Add filters
@@ -1521,6 +1595,12 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 					LblDistanceLimit.setEnabled(false);
 				}
 				
+				//case: cassette limiter
+				if (LL.equals(CSCassette_group) && !cbOnlyNearby.isSelected()){
+					LblNearby.setEnabled(false);
+					TxtNearby.setEnabled(false);
+				}
+				
 			} else {
 				for (Component c : LL){
 					c.setEnabled(false);
@@ -1566,14 +1646,16 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 			LoadedFileName.setText("All genes within a defined range of a single gene query are grouped together.");
 		} else if (CSType.isSelected(CSGenesBetween.getModel())){
 			LoadedFileName.setText("All genes between two independent queries are grouped together.");
-			if (CSName.getText().contentEquals("") || CSName.getText().contentEquals("MultipleQuery")){
+			if (CSName.getText().contentEquals("") || CSName.getText().contentEquals("MultipleQuery")
+					|| CSName.getText().contentEquals("Cas-")){
 				CSName.setText("Between");
 			}
 		} else if (CSType.isSelected(CSGenesAround.getModel())){
 			LoadedFileName.setText("A number of genes both before and after a single gene query are grouped together");
 		} else if (CSType.isSelected(CSMultipleQuery.getModel())) {
 			LoadedFileName.setText("Multiple gene query matches within a single organism are grouped together.");
-			if (CSName.getText().contentEquals("")  || CSName.getText().contentEquals("Between")){
+			if (CSName.getText().contentEquals("")  || CSName.getText().contentEquals("Between") 
+					|| CSName.getText().contentEquals("Cas-")){
 				CSName.setText("MultipleQuery");
 			}
 		} else if (CSType.isSelected(CSCombination.getModel())){

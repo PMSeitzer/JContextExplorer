@@ -1,6 +1,7 @@
 package genomeObjects;
 
 import java.io.Serializable;
+import java.util.Comparator;
 
 public class GenomicElementAndQueryMatch implements Serializable{
 
@@ -29,6 +30,5 @@ public class GenomicElementAndQueryMatch implements Serializable{
 	public void setQueryMatch(boolean queryMatch) {
 		QueryMatch = queryMatch;
 	}
-	
 	
 }

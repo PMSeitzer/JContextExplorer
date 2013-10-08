@@ -8,22 +8,23 @@ import genomeObjects.GenomicElement;
 import genomeObjects.GenomicElementAndQueryMatch;
 import genomeObjects.OrganismSet;
 import importExport.DadesExternes;
-	import importExport.FitxerDades;
-	import inicial.Language;
+import importExport.FitxerDades;
+import inicial.Language;
 
 import java.awt.BorderLayout;
-	import java.awt.Color;
-	import java.awt.Cursor;
-	import java.awt.Dimension;
-	import java.awt.FileDialog;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FileDialog;
 import java.awt.Font;
-	import java.awt.GridBagConstraints;
-	import java.awt.GridBagLayout;
-	import java.awt.Insets;
-	import java.awt.event.ActionEvent;
-	import java.awt.event.ActionListener;
-	import java.beans.PropertyChangeEvent;
-	import java.beans.PropertyChangeListener;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -32,48 +33,48 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import javax.swing.AbstractAction;
-	import javax.swing.BorderFactory;
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
-	import javax.swing.JButton;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
-	import javax.swing.JOptionPane;
-	import javax.swing.JPanel;
-	import javax.swing.JProgressBar;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
-	import javax.swing.JScrollPane;
-	import javax.swing.JTextField;
-	import javax.swing.SwingWorker;
-	import javax.swing.event.InternalFrameEvent;
-	import javax.swing.event.InternalFrameListener;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.SwingWorker;
+import javax.swing.event.InternalFrameEvent;
+import javax.swing.event.InternalFrameListener;
 
 import org.biojava3.core.sequence.Strand;
 
 	import methods.Reagrupa;
 import moduls.frm.ContextLeaf;
-	import moduls.frm.FrmInternalFrame;
-	import moduls.frm.FrmPrincipalDesk;
-	import moduls.frm.InternalFrameData;
+import moduls.frm.FrmInternalFrame;
+import moduls.frm.FrmPrincipalDesk;
+import moduls.frm.InternalFrameData;
 import moduls.frm.PostSearchAnalyses;
 import moduls.frm.QueryData;
 import moduls.frm.Panels.Jpan_btn.MDComputation;
 import moduls.frm.children.FrmGraph;
 import moduls.frm.children.FrmPhylo;
-	import moduls.frm.children.FrmPiz;
+import moduls.frm.children.FrmPiz;
 import moduls.frm.children.FrmSearchResults;
 import moduls.frm.children.FrmTabbed;
 import moduls.frm.children.manageContextSetsv2;
 import parser.EscalaFigures;
-	import parser.Fig_Pizarra;
+import parser.Fig_Pizarra;
 import parser.figures.Marge;
-	import tipus.Orientation;
-	import tipus.metodo;
-	import tipus.tipusDades;
+import tipus.Orientation;
+import tipus.metodo;
+import tipus.tipusDades;
 import definicions.CfgPanelMenu;
 import definicions.Cluster;
-	import definicions.Config;
+import definicions.Config;
 import definicions.MatriuDistancies;
 
 	public class Jpan_btn_NEW extends JPanel implements ActionListener,
@@ -761,6 +762,10 @@ import definicions.MatriuDistancies;
 					isCassette = true;
 					ContextSetName = CurrentCSD.getCassetteOf();
 					
+					//note critical information
+					boolean isNearbyOnly = CurrentCSD.isNearbyOnly();
+					int NearbyOnlyVal = CurrentCSD.getNearbyLimit();
+					
 					//recover the context set description of the cassette
 					for (ContextSetDescription csd : fr.getOS().getCSDs()){
 						if (csd.getName().contentEquals(ContextSetName)){
@@ -768,6 +773,9 @@ import definicions.MatriuDistancies;
 							break;
 						}
 					}
+					
+					CurrentCSD.setNearbyOnly(isNearbyOnly);
+					CurrentCSD.setNearbyLimit(NearbyOnlyVal);
 				} 
 
 				//initialize output
@@ -1085,39 +1093,127 @@ import definicions.MatriuDistancies;
 					String SpeciesKey;
 					LinkedList<GenomicElementAndQueryMatch> SpeciesGenes;
 					
-					for (AnnotatedGenome AG : fr.getOS().getSpecies().values()){
-						
-						//Species Name
-						SpeciesKey = AG.getSpecies() + "-1";
-						SpeciesGenes = new LinkedList<GenomicElementAndQueryMatch>();
-						
-						//Contigs
-						HashSet<String> Contigs = new HashSet<String>();
-						
-						for (GenomicElement E : AG.getElements()){
-							if (GenesForCassettes.contains(E.getClusterID())){
+					//nearby only: merge all into a single set
+					if (!CurrentCSD.isNearbyOnly()){
+						for (AnnotatedGenome AG : fr.getOS().getSpecies().values()){
+							
+							//Species Name
+							SpeciesKey = AG.getSpecies() + "-1";
+							SpeciesGenes = new LinkedList<GenomicElementAndQueryMatch>();
+							
+							//Contigs
+							HashSet<String> Contigs = new HashSet<String>();
+							
+							for (GenomicElement E : AG.getElements()){
 								
-								//create appropriate GenomicElementAndQueryMatch
-								GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
-								GandE.setQueryMatch(true);
-								GandE.setE(E);
-								Contigs.add(E.getContig());
+								//candidate new values, to add
+								if (GenesForCassettes.contains(E.getClusterID())){
+									
+									//create appropriate GenomicElementAndQueryMatch
+									GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+									GandE.setQueryMatch(true);
+									GandE.setE(E);
+									Contigs.add(E.getContig());
+									
+									//add to list
+									SpeciesGenes.add(GandE);
+								}
+							}
+							
+							//add, if not empty
+							if (!SpeciesGenes.isEmpty()){
 								
-								//add to list
-								SpeciesGenes.add(GandE);
+								//update information
+								CassetteContextSetList.put(SpeciesKey,SpeciesGenes);
+								CassetteSourceNames.put(SpeciesKey, AG.getSpecies());
+								CassetteContigNames.put(SpeciesKey, Contigs);
+								
+								CassetteCounter++;
 							}
 						}
 						
-						//add, if not empty
-						if (!SpeciesGenes.isEmpty()){
+					} else {
+						
+						//iterate through all old sets, and adjust
+						for (String s : ContextSetList.keySet()){
 							
-							//update information
-							CassetteContextSetList.put(SpeciesKey,SpeciesGenes);
-							CassetteSourceNames.put(SpeciesKey, AG.getSpecies());
-							CassetteContigNames.put(SpeciesKey, Contigs);
-							
+							//implement counter
 							CassetteCounter++;
+							
+							//Retrieve Original
+							LinkedList<GenomicElementAndQueryMatch> LL  = ContextSetList.get(s);
+							
+							//new list to merge
+							LinkedList<GenomicElementAndQueryMatch> Additions = new LinkedList<GenomicElementAndQueryMatch>();
+							
+							//Retrieve appropriate organisms
+							String OrgName[]  = s.split("-");
+							String WholeName = "";
+							for (int i = 0; i < OrgName.length-1; i++){
+								WholeName = WholeName + OrgName[i] + "-";
+							}
+							WholeName = (String) WholeName.subSequence(0, WholeName.length()-1);
+							AnnotatedGenome AG = fr.getOS().getSpecies().get(WholeName);
+							
+							//debugging
+							//System.out.println(WholeName);
+							//System.out.println(AG.getSpecies());
+							
+							//iterate through elements, find elements to add.
+							for (GenomicElement E : AG.getElements()){
+								
+								//gene has appropriate ID
+								if (GenesForCassettes.contains(E.getClusterID())){
+									
+									boolean AddThisGene = false;
+									
+									for (GenomicElementAndQueryMatch GandE : LL){
+										GenomicElement E2 = GandE.getE();
+										
+//										//debugging
+//										if (E.getStart() == 382735 && E.getStop() == 383745){
+//											System.out.println(CurrentCSD.getNearbyLimit());
+//											System.out.println(Math.abs(E2.getStart() - E.getStop()));
+//											System.out.println(Math.abs(E.getStart() - E2.getStop()));
+//										}
+										
+										//Add a gene, or not
+										if (E.getContig().equals(E2.getContig())){
+											if  (Math.abs(E2.getStart() - E.getStop()) <= CurrentCSD.getNearbyLimit() ||
+												Math.abs(E.getStart() - E2.getStop()) <= CurrentCSD.getNearbyLimit()){
+												AddThisGene = true;
+												break;
+											}
+
+										}
+									}
+									
+									//add the new gene
+									if (AddThisGene){
+										GenomicElementAndQueryMatch GandE_n = new GenomicElementAndQueryMatch();
+										GandE_n.setE(E);
+										GandE_n.setQueryMatch(false);
+										Additions.add(GandE_n);
+									}
+								}
+								
+							}
+							
+							//debugging
+							//System.out.println(s + ": " + Additions.size());
+							
+							//Add the list, and sort it.
+							LL.addAll(Additions);
+							Collections.sort(LL, new AnnotatedGenome.SortGandEByElements());
+							
+							//write this list into the new hash map
+							CassetteContextSetList.put(s,LL);
 						}
+						
+						//update variables that didn't change
+						CassetteSourceNames = SourceNames;
+						CassetteContigNames = ContigNames;
+						
 					}
 					
 					//When complete, add completed structures
@@ -1147,8 +1243,14 @@ import definicions.MatriuDistancies;
 				return null;
 			}
 			
+			//generalized search - to do?
+			protected Void SearchOrganisms(){
+				
+				return null;
+			}
+			
 			//both
-			protected HashSet<LinkedList<GenomicElementAndQueryMatch>> Amalgamate(boolean Amalgamate, HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches){
+ 			protected HashSet<LinkedList<GenomicElementAndQueryMatch>> Amalgamate(boolean Amalgamate, HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches){
 				
 				//option: condense into single list + update matches
 				if (Amalgamate){
