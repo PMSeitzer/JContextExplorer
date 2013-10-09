@@ -500,11 +500,35 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 					}
 					
 				}
+				
+				//Create an empty set for orgs not featured.
+				for (AnnotatedGenome AG : fr.getOS().getSpecies().values()){
+					boolean NeedToMakeEmptySet = true;
+					
+					//determine if a set of this name already exists
+					for (ContextSet CS : AG.getGroupings()){
+						if (CS.getName().equals(CSName)){
+							NeedToMakeEmptySet = false;
+							break;
+						}
+					}
+					
+					//if not, create empty set
+					if (NeedToMakeEmptySet){
+						ContextSet CS = new ContextSet();
+						CS.setPreProcessed(true);
+						CS.setName(CSName);
+						CS.setContextMapping(new HashMap<Integer, LinkedList<GenomicElement>>());
+						AG.getGroupings().add(CS);
+					}
+				}
+				
+				//close file stream
 				br.close();
 
 			} catch (Exception ex){
 				//System.out.println("dies in import");
-				//ex.printStackTrace();
+				ex.printStackTrace();
 			}
 			return null;
 		}
