@@ -1203,14 +1203,17 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener{
 		Jpan_btn_NEW.axisDecimalsCorrect = false;
 	}
 
-	public static void ajustaValors(final Config cfg) {
+	public static void ajustaValors(Config cfg) {
 		int precision;
 		double min, max, separation;
 		SmartAxis sa;
 
 		precision = cfg.getPrecision();
-		min = cfg.getBaseDendograma();
-		max = cfg.getCimDendograma();
+//		min = cfg.getBaseDendograma();
+//		max = cfg.getCimDendograma();
+		//try manual override
+		min = 0;
+		max = 1;
 		sa = new SmartAxis(min, max);
 		min = sa.smartMin();
 		max = sa.smartMax();
@@ -1226,7 +1229,8 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener{
 		
 	}
 	
-	public static void adjustValuesPhylo(final Config cfg){
+	//changed config to non-final
+	public static void adjustValuesPhylo(Config cfg){
 
 		double min = cfg.getConfigMenu().getValMin();
 		double max = cfg.getConfigMenu().getValMax();

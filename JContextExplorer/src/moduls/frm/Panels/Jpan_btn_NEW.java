@@ -2068,10 +2068,20 @@ import definicions.MatriuDistancies;
 					currentInternalFrame.doDefaultCloseAction();
 				}
 
-				//CHANGE: commented out these two lines needed for mass-selection.
-				//show(action, Jpan_Menu.getMethod(), Jpan_Menu.getPrecision(), qD);
-				//currentInternalFrame.doDefaultCloseAction();
+				/*
+				 * GHETTO FIX: artificial opening/closing
+				 */
 				
+				//CHANGE: commented out these two lines needed for mass-selection.
+				//CHANGEBACK: this seems to help.
+				show(action, Jpan_Menu.getMethod(), Jpan_Menu.getPrecision(), qD);
+				currentInternalFrame.doDefaultCloseAction();
+								
+				/*
+				 * GHETTO FIX: artificial opening/closing
+				 */
+				
+				//actual showing (somehow, settings have been appropriately updated)
 				show(action, Jpan_Menu.getMethod(), Jpan_Menu.getPrecision(), qD);
 				btnUpdate.setEnabled(true);
 				buttonClicked = false;
@@ -2280,6 +2290,8 @@ import definicions.MatriuDistancies;
 						
 						//scroll panel
 						fPhyloSP = new JScrollPane(fPhylo);
+						fPhyloSP.setSize(pizarra.getSize());
+						fPhyloSP.setPreferredSize(pizarra.getSize());
 						fPhyloSP.getVerticalScrollBar().setUnitIncrement(ScrollInc);
 						
 						//update CSD with phylogenetic tree rectangles
@@ -2325,6 +2337,11 @@ import definicions.MatriuDistancies;
 				//CONTAINER OWNERSHIP
 				pizarra.setInternalPanel(fPiz);
 				pizarra.setVisible(true);
+				
+				//Mod Oct 22
+				if (action.equals("Load") || action.equals("Reload")) {
+					Jpan_Menu.ajustaValors(cfg);
+				}
 				
 				//both Jpan_btn_NEW and fr
 				this.currentInternalFrame = pizarra;
