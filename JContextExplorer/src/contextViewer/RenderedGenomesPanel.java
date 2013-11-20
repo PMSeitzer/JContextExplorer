@@ -91,8 +91,8 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 	private String ECRONType; 			//Either "annotation" or "cluster"
 	
 	//Range-limited related
-	private int RangeLimit = 50000;				//Do not display a genomic region of this or more
-	private int SplitLimit = 50000;				//segment contexts when they are further away from this value.
+	private int RangeLimit = 50000;		//Do not display a genomic region of this or more
+	private int SplitLimit = 50000;		//segment contexts when they are further away from this value.
 	private LinkedList<String> ExceededRangeLimit;	//nodes that are excluded
 	private boolean ContextsExcluded = false; 		//initially, none are excluded
 	
@@ -177,9 +177,15 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		this.rgp = this;
 		this.addMouseListener(this);
 
+		//Retrieve settings
+		this.RangeLimit = mf.getFr().getCVS().RangeLimit;
+		this.SplitLimit = mf.getFr().getCVS().SplitLimit;
+		this.BeforeBuffer = mf.getFr().getCVS().DefaultRangeAround;
+		this.AfterBuffer = mf.getFr().getCVS().DefaultRangeAround;
+		
 		//write in info from option panel
-		this.BeforeBuffer = Integer.parseInt(this.mf.getOp().getStrbeforeRangeValue());
-		this.AfterBuffer = Integer.parseInt(this.mf.getOp().getStrafterRangeValue());
+		//this.BeforeBuffer = Integer.parseInt(this.mf.getOp().getStrbeforeRangeValue());
+		//this.AfterBuffer = Integer.parseInt(this.mf.getOp().getStrafterRangeValue());
 		
 		//Splitting/editing
 		
@@ -191,7 +197,6 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 		splitCrossContigGroupings();	//Adjust contexts
 		splitLargeGapGroupings();		//Adjust for large gaps within groupings		
 
-		
 		//computing segment info
 		this.dim = computeGenomicSegments();
 		this.setPreferredSize(dim);		 //key: preferredsize, not size
@@ -2276,7 +2281,6 @@ public class RenderedGenomesPanel extends JPanel implements MouseListener{
 			//trigger pop-up menu display
 			this.ExportMenu.show(e.getComponent(),
 					e.getXOnScreen(), e.getYOnScreen());
-			
 
 			//reposition appropriately
 			this.ExportMenu.setLocation(e.getXOnScreen(),e.getYOnScreen());

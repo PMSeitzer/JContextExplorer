@@ -148,7 +148,7 @@ public class OptionPanel extends JPanel implements ActionListener{
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.NONE;
 		cbStart = new JCheckBox(strcbStart);
-		cbStart.setSelected(false);
+		cbStart.setSelected(mf.getFr().getCVS().cbStart);
 		cbStart.addActionListener(this);
 		cbStart.setFont(fontStandard);
 		add(cbStart, c);
@@ -160,7 +160,7 @@ public class OptionPanel extends JPanel implements ActionListener{
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.NONE;
 		cbStop = new JCheckBox(strcbStop);
-		cbStop.setSelected(false);
+		cbStop.setSelected(mf.getFr().getCVS().cbStop);
 		cbStop.addActionListener(this);
 		cbStop.setFont(fontStandard);
 		add(cbStop, c);
@@ -172,7 +172,7 @@ public class OptionPanel extends JPanel implements ActionListener{
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.NONE;
 		cbSize = new JCheckBox(strcbSize);
-		cbSize.setSelected(true);
+		cbSize.setSelected(mf.getFr().getCVS().cbSize);
 		cbSize.addActionListener(this);
 		cbSize.setFont(fontStandard);
 		add(cbSize, c);
@@ -184,7 +184,7 @@ public class OptionPanel extends JPanel implements ActionListener{
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.NONE;
 		cbType = new JCheckBox(strcbType);
-		cbType.setSelected(false);
+		cbType.setSelected(mf.getFr().getCVS().cbType);
 		cbType.addActionListener(this);
 		cbType.setFont(fontStandard);
 		add(cbType, c);
@@ -198,7 +198,7 @@ public class OptionPanel extends JPanel implements ActionListener{
 		cbClusterID = new JCheckBox(strcbClusterID);
 		cbClusterID.addActionListener(this);
 		cbClusterID.setFont(fontStandard);
-		cbClusterID.setSelected(true);
+		cbClusterID.setSelected(mf.getFr().getCVS().cbClusterID);
 		add(cbClusterID, c);
 		
 		//check box: annotation
@@ -208,7 +208,7 @@ public class OptionPanel extends JPanel implements ActionListener{
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.NONE;
 		cbAnnotation = new JCheckBox(strcbAnnotation);
-		cbAnnotation.setSelected(true);
+		cbAnnotation.setSelected(mf.getFr().getCVS().cbAnnotation);
 		cbAnnotation.addActionListener(this);
 		cbAnnotation.setFont(fontStandard);
 		add(cbAnnotation, c);
@@ -221,7 +221,8 @@ public class OptionPanel extends JPanel implements ActionListener{
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.NONE;
 		cbCoordinates = new JCheckBox(strcbCoordinates);
-		cbCoordinates.setSelected(true);
+		//cbCoordinates.setSelected(true);
+		cbCoordinates.setSelected(mf.getFr().getCVS().cbCoordinates);
 		cbCoordinates.addActionListener(this);
 		cbCoordinates.setFont(fontStandard);
 		add(cbCoordinates, c);
@@ -233,7 +234,8 @@ public class OptionPanel extends JPanel implements ActionListener{
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.NONE;
 		cbStrandNormalize = new JCheckBox(strcbStrandNormalize);
-		cbStrandNormalize.setSelected(true);
+		//cbStrandNormalize.setSelected(true);
+		cbStrandNormalize.setSelected(mf.getFr().getCVS().cbStrandNormalize);
 		cbStrandNormalize.addActionListener(this);
 		cbStrandNormalize.setFont(fontStandard);
 		add(cbStrandNormalize, c);
@@ -245,7 +247,8 @@ public class OptionPanel extends JPanel implements ActionListener{
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.NONE;
 		cbShowSurrounding = new JCheckBox(strcbShowSurrounding);
-		cbShowSurrounding.setSelected(true);
+		//cbShowSurrounding.setSelected(true);
+		cbShowSurrounding.setSelected(mf.getFr().getCVS().cbShowSurrounding);
 		cbShowSurrounding.addActionListener(this);
 		cbShowSurrounding.setFont(fontStandard);
 		add(cbShowSurrounding, c);
@@ -257,7 +260,8 @@ public class OptionPanel extends JPanel implements ActionListener{
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.NONE;
 		cbColorSurrounding = new JCheckBox(strcbColorSurrounding);
-		cbColorSurrounding.setSelected(false);
+		//cbColorSurrounding.setSelected(false);
+		cbColorSurrounding.setSelected(mf.getFr().getCVS().cbColorSurrounding);
 		cbColorSurrounding.addActionListener(this);
 		cbColorSurrounding.setFont(fontStandard);
 		add(cbColorSurrounding, c);

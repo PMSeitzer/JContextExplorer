@@ -62,7 +62,7 @@ public void importFromGFFFile(String filename){
 				
 					//ignore commented lines
 					if (!Line.startsWith("#") && !Line.isEmpty()){
-						
+												
 						//increment Counter
 						Counter++;
 						
@@ -168,7 +168,9 @@ public void importFromGFFFile(String filename){
 								//Record counts of contigs
 								ContigCount.add(E.getContig());
 								
-							} catch (Exception ex) {}
+							} catch (Exception ex) {
+								ex.printStackTrace();
+							}
 						}
 					}
 			}
@@ -1153,7 +1155,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> ClusterMatches(int[] Clu
 	for (LinkedList<GenomicElement> LL: CS.getContextMapping().values()){
 		
 		//initialize the list
-		LinkedList<GenomicElementAndQueryMatch> TheList = new LinkedList<GenomicElementAndQueryMatch>();	
+		LinkedList<GenomicElementAndQueryMatch> TheList = new LinkedList<GenomicElementAndQueryMatch>();
 		
 		//reset value to false
 		AddtheSet = false;
@@ -1188,8 +1190,9 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> ClusterMatches(int[] Clu
 			//System.out.println("added a new set with " + TheList.size() + " genes, from " + LL.size());
 			
 		}
+		
 	}
-
+	
 	//return HashSet
 	return Hits;
 }

@@ -1211,9 +1211,21 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener{
 		precision = cfg.getPrecision();
 //		min = cfg.getBaseDendograma();
 //		max = cfg.getCimDendograma();
+//		min = 0;
+//		max = 1;
 		//try manual override
-		min = 0;
-		max = 1;
+		if (cfg.getBaseDendograma() > 0){
+			min = 0;
+		} else {
+			min = cfg.getBaseDendograma();
+		}
+		
+		if (cfg.getCimDendograma() < 1){
+			max = 1;
+		} else {
+			max = cfg.getCimDendograma();
+		}
+
 		sa = new SmartAxis(min, max);
 		min = sa.smartMin();
 		max = sa.smartMax();
@@ -1234,6 +1246,19 @@ public class Jpan_Menu extends JPanel implements ActionListener, FocusListener{
 
 		double min = cfg.getConfigMenu().getValMin();
 		double max = cfg.getConfigMenu().getValMax();
+		
+		if (cfg.getBaseDendograma() > 0){
+			min = 0;
+		} else {
+			min = cfg.getBaseDendograma();
+		}
+		
+		if (cfg.getCimDendograma() < 1){
+			max = 1;
+		} else {
+			max = cfg.getCimDendograma();
+		}
+		
 		SmartAxis sa = new SmartAxis(min, max);
 		setMinAxisValue(min);
 		setMaxAxisValue(max);

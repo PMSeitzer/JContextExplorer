@@ -155,6 +155,21 @@ public class RemoveGenomes extends JFrame implements ActionListener{
 			//retrieve selected
 			List<String> Selected = NameListGUI.getSelectedValuesList();
 			
+//			String Version = System.getProperty("java.version");
+//			//System.out.println(Version);
+//			if (Version.contains("1.7")) {
+//				
+//			} else {
+//				//use deprecated method for older versions
+//				Object[] vals = NameListGUI.getSelectedValues();
+//				LinkedList<String> SelectedLL = new LinkedList<String>();
+//				for (int i = 0; i < vals.length; i++){
+//					SelectedLL.add((String) vals[i]);
+//				}
+//				Selected = SelectedLL;
+//			}
+
+			
 			//schedule for removal
 			for (String s : Selected){
 				CGS.getGenomes2Remove().add(s);

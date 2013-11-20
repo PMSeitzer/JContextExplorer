@@ -11,7 +11,8 @@ import org.biojava3.core.sequence.Strand;
 public class GenomicElement implements Serializable{
 	
 	//Fields 
-    private String Contig;              //-Biological-placement----------
+    private String Genome;
+	private String Contig;              //-Biological-placement----------
     private int Start;					//-Coordinates-------------------
     private int Stop;					//
     private int Center;					//
@@ -180,6 +181,14 @@ public class GenomicElement implements Serializable{
 
 	public void setCenter(int center) {
 		Center = center;
+	}
+
+	public String getGenome() {
+		return Genome;
+	}
+
+	public void setGenome(String genome) {
+		Genome = genome;
 	}
 
 }

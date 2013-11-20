@@ -2,21 +2,32 @@ package moduls.frm.children;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FileDialog;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 import genomeObjects.CSDisplayData;
+import genomeObjects.GenomicElement;
 import genomeObjects.GenomicElementAndQueryMatch;
 
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTree;
@@ -26,8 +37,13 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
+import org.biojava3.core.sequence.Strand;
+
+import contextViewer.GeneColorLegendFrame;
+
 import moduls.frm.ContextLeaf;
 import moduls.frm.FrmPrincipalDesk;
+import moduls.frm.Panels.Jpan_btn_NEW;
 
 public class FrmSearchResults extends JPanel implements ActionListener, TreeSelectionListener{
 
@@ -50,22 +66,312 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 	private String strExpandAll = "Expand All";
 	private String strCollapseAll = "Collapse All";
 	
+	//data retrieval
+	public LinkedHashMap<String, GenomicElement> LeafData = new LinkedHashMap<String, GenomicElement>();
+	public LinkedHashMap<String, String> LeafSource = new LinkedHashMap<String, String>();
+	//pop-up window
+	private JPopupMenu ExportMenu;	//export frame information
+	
 	//constructor
 	public FrmSearchResults(final FrmPrincipalDesk f, CSDisplayData CSD){
 		//base variables
 		this.fr = f;
 		this.CSD = CSD;
 		
+		//initialize
+		this.InitializeSequenceExportMenu();
+		
 		//get panel
 		this.getPanel();
+
 
 	}
 	
 	//dummy constructor
 	public FrmSearchResults(){
+
+	}
+	
+	// ====== Export-Related ======= //
+	
+	//create the pop-up menu object
+	private void InitializeSequenceExportMenu(){
+		
+		//Strings
+		final String ExportDNASeqs = "Export Genes (DNA Sequences)";
+		final String ExportProtSeqs = "Export Protein Sequences";
+		final String ExportSegments = "Export Whole Segments";
+		final String ExportDataAsShortTable = "Export Data as Table (short)";
+		final String ExportDataAsLongTable = "Export Data as Table (long)";
+		
+		//create action listener
+		ActionListener exportAction = new ActionListener(){
+			
+			public void actionPerformed(final ActionEvent evt) {
+				
+				/*
+				 * EXPORT SEQUENCES
+				 */
+				
+				//export DNA sequence of whole segment
+				if (evt.getActionCommand().equals(ExportSegments)){
+					
+				}
+				
+				//export DNA segment of selected genes
+				if (evt.getActionCommand().equals(ExportDNASeqs)) {
+					
+				}
+				
+				//export protein sequence
+				if (evt.getActionCommand().equals(ExportProtSeqs)){
+					
+				}
+				
+				/*
+				 * EXPORT DATA TABLE
+				 */
+				
+				//export data table - short version
+				if (evt.getActionCommand().equals(ExportDataAsShortTable)){
+					ExportShortTable();
+				}
+				
+				//export data table - long version
+				if (evt.getActionCommand().equals(ExportDataAsLongTable)){
+					ExportLongTable();
+				}
+			}
+
+		};
+		
+		//set export menu
+		this.ExportMenu = new JPopupMenu();
+		
+		//create menu items
+		final JMenuItem me0 = new JMenuItem(ExportDNASeqs);
+		final JMenuItem me1 = new JMenuItem(ExportProtSeqs);
+		final JMenuItem me2 = new JMenuItem(ExportSegments);
+		final JMenuItem me3 = new JMenuItem(ExportDataAsShortTable);
+		final JMenuItem me4 = new JMenuItem(ExportDataAsLongTable);
+		
+		//add action listeners
+		me0.addActionListener(exportAction);
+		me1.addActionListener(exportAction);
+		me2.addActionListener(exportAction);
+		me3.addActionListener(exportAction);
+		me4.addActionListener(exportAction);
+		
+		//build menu
+		ExportMenu.add(me0);
+		ExportMenu.add(me1);
+		ExportMenu.add(me2);
+		ExportMenu.addSeparator();
+		ExportMenu.add(me3);
+		ExportMenu.add(me4);
+
+	}
+	
+	//export short table
+	private void ExportShortTable(){
+		
+		//Create + Show file dialog window
+		final FileDialog fd = new FileDialog(fr, "Export Search Results Data", FileDialog.SAVE);
+		fd.setDirectory(fr.getFileChooserSource().getAbsolutePath());
+		fd.setFile(".txt");
+		fd.setVisible(true);
+		
+		//if a file is specified, export the data to file.
+		if (fd.getFile() != null){
+			
+			//recover data for file
+			String sPath = fd.getDirectory() + fd.getFile();
+			final File OutputFile = new File(sPath);
+			
+			//update file chooser
+			fr.setFileChooserSource(OutputFile.getParentFile());
+			
+			//a data structure to hold the source data
+			LinkedList<String> SourceData = new LinkedList<String>();
+			
+			//iterate through tree nodes, retrieve selected, export
+			int[] SelectedElements = SearchResults.getSelectionRows();
+			for (int i = 0; i < SelectedElements.length; i++){
+				
+				//retrieve the appropriate node
+				DefaultMutableTreeNode TN = (DefaultMutableTreeNode) SearchResults.getPathForRow(SelectedElements[i]).getLastPathComponent();
+				
+				//an individual gene / genes
+				if (TN.isLeaf() && !TN.getAllowsChildren()){
+					String s = TN.toString();
+					if (!SourceData.contains(s)){
+						SourceData.add(s);
+					}
+				//a whole set of genes
+				} else {
+					int ChildCount = TN.getChildCount();
+					for (int j = 0; j < ChildCount; j++){
+						String s = TN.getChildAt(j).toString();
+						if (!SourceData.contains(s)){
+							SourceData.add(s);
+						}
+					}
+				}
+				
+			}
+			
+			try {
+				
+				//open file stream
+				BufferedWriter bw = new BufferedWriter(new FileWriter(OutputFile));
+
+				String Header = "#GeneID\tClusterID\tAnnotation\n";
+				bw.write(Header);
+				bw.flush();
+
+				
+				//print output to table
+				for (String s : SourceData){
+					
+					//overall string to output to file
+					String str = "";
+					
+					//split line appropriately
+					String[] ChopOne = s.split("ANNOTATION:");
+					String[] ChopTwo = ChopOne[0].split("CLUSTERID:");
+					String[] ChopThree = ChopTwo[0].split("GENEID:");
+					
+					//export as tab-delimited
+					str = 	ChopThree[1].trim()
+							+ "\t" + ChopTwo[1].trim() 
+							+ "\t" + ChopOne[1].trim() 
+							+ "\n";
+					
+					bw.write(str);
+					bw.flush();
+				}
+				
+				//close file stream
+				bw.close();
+				
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(null, "The data in the table could not be exported.",
+						"Table Export Error",JOptionPane.ERROR_MESSAGE);
+			}
+		}
 		
 	}
+	
+	//export long table
+	public void ExportLongTable(){
+	
+		//Create + Show file dialog window
+		final FileDialog fd = new FileDialog(fr, "Export Search Results Data", FileDialog.SAVE);
+		fd.setDirectory(fr.getFileChooserSource().getAbsolutePath());
+		fd.setFile(".txt");
+		fd.setVisible(true);
+		
+		//if a file is specified, export the data to file.
+		if (fd.getFile() != null){
+			
+			//recover data for file
+			String sPath = fd.getDirectory() + fd.getFile();
+			final File OutputFile = new File(sPath);
+			
+			//update file chooser
+			fr.setFileChooserSource(OutputFile.getParentFile());
+			
+			//a data structure to hold the source data
+			LinkedList<String> SourceData = new LinkedList<String>();
+			
+			//iterate through tree nodes, retrieve selected, export
+			int[] SelectedElements = SearchResults.getSelectionRows();
+			for (int i = 0; i < SelectedElements.length; i++){
+				
+				//retrieve the appropriate node
+				DefaultMutableTreeNode TN = (DefaultMutableTreeNode) SearchResults.getPathForRow(SelectedElements[i]).getLastPathComponent();
+				
+				//an individual gene / genes
+				if (TN.isLeaf() && !TN.getAllowsChildren()){
+					String s = TN.toString();
+					if (!SourceData.contains(s)){
+						SourceData.add(s);
+					}
+				//a whole set of genes
+				} else {
+					int ChildCount = TN.getChildCount();
+					for (int j = 0; j < ChildCount; j++){
+						String s = TN.getChildAt(j).toString();
+						if (!SourceData.contains(s)){
+							SourceData.add(s);
+						}
+					}
+				}
+				
+			}
+			
+			try {
+				
+				//open file stream
+				BufferedWriter bw = new BufferedWriter(new FileWriter(OutputFile));
 
+				String Header = "#Organism\tContig\tStart\tStop\tStrand\tAnnotation\tClusterID\tGeneID\n";
+				bw.write(Header);
+				bw.flush();
+				
+				//print output to table
+				for (String s : SourceData){
+					
+					//retrieve all bioinfo.
+					GenomicElement E = LeafData.get(s);
+					String OrgName = LeafSource.get(s);
+					
+					String ClusterID = "";
+					if (E.getClusterID() != -1){
+						ClusterID = String.valueOf(E.getClusterID());
+					} else {
+						ClusterID = "none";
+					}
+					
+					String GeneID = "";
+					if (E.getGeneID() != null){
+						GeneID = E.getGeneID();
+					} else{
+						GeneID = "none";
+					}
+					
+					String TheStrand = "";
+					if (E.getStrand().equals(Strand.POSITIVE)){
+						TheStrand = "1";
+					} else{
+						TheStrand = "-1";
+					}
+					
+					//export all the bioinfo.
+					String str = OrgName + "\t" + E.getContig() + "\t"
+							+ String.valueOf(E.getStart()) + "\t"
+							+ String.valueOf(E.getStop()) + "\t" 
+							+ TheStrand + "\t"
+							+ E.getAnnotation() + "\t"
+							+ ClusterID + "\t"
+							+ GeneID + "\n";
+					
+					bw.write(str);
+					bw.flush();
+					
+				}
+				
+				//close file stream
+				bw.close();
+				
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(null, "The data in the table could not be exported.",
+						"Table Export Error",JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		
+	}
+	
 	//create panel
 	public void getPanel(){
 		//create top panel
@@ -80,6 +386,24 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
         
         SearchResults = new JTree(Query);
         SearchResults.addTreeSelectionListener(this);
+        
+        //adapter for export menu
+        MouseAdapter ml = new MouseAdapter(){
+        	public void mouseClicked(MouseEvent e){
+        		//right-clicking on panel
+        		if (SwingUtilities.isRightMouseButton(e)){
+        			
+        			//trigger pop-up menu display
+        			ExportMenu.show(e.getComponent(),
+        					e.getXOnScreen(), e.getYOnScreen());
+        			
+        			//reposition appropriately
+        			ExportMenu.setLocation(e.getXOnScreen(),e.getYOnScreen());
+        			
+        		}
+        	}
+        };
+        SearchResults.addMouseListener(ml);
         
         //Create the scroll pane and add the tree to it. 
         JScrollPane treeView = new JScrollPane(SearchResults);
@@ -153,6 +477,9 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 				DefaultMutableTreeNode GM = new DefaultMutableTreeNode(GeneInfo);
 				SM.add(GM);
 				
+				//store in hash map
+				LeafData.put(GeneInfo, GandE.getE());
+				LeafSource.put(GeneInfo, CSD.getEC().getSourceSpeciesNames().get(CL.getName()));
 				String GeneInfoWithSource = "SOURCE: " + CL.getName() + ": " + GeneInfo;
 				//TreeNodeMapping.put(GeneInfoWithSource, GM);
 			}
@@ -251,4 +578,5 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 	public CSDisplayData getCSD() {
 		return CSD;
 	}
+
 }

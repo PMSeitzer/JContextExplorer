@@ -92,6 +92,9 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 
+import contextViewer.ContextViewerSettings;
+import contextViewer.ContextViewerSettingsPanel;
+
 //Importing these classes on a non-Mac will cause crash!
 
 //import com.apple.eawt.AboutHandler;
@@ -227,6 +230,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private ChooseCompareTree CurrentCCTWindow = null;
 	private Cluster TmpCluster = null;
 	
+	// ------------ //
+	
 	// ===== MENU RELATED ====== //
 	
 	//Menu bar related
@@ -237,6 +242,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenu M_Load;
 	private JMenu M_Export;
 	private JMenu M_Process;
+	private JMenu M_Settings;
 	private JMenu M_Help;
 	
 	//Genomes components
@@ -287,6 +293,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private JMenuItem ML_GeneIDs;
 	private JMenuItem ML_QuerySet;
 	private JMenuItem ML_DataGrouping;
+	private JMenuItem ML_GenomicSequencingFile;
 	
 	//export components
 	private JMenuItem ME_gs;
@@ -305,6 +312,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	//default sub-menus
 	private JCheckBoxMenuItem MP_NoQuerySets;
 	private JCheckBoxMenuItem MP_NoPhenotypeData;
+	
+	private JMenuItem MS_GenomeBrowser;
+	private ContextViewerSettings CVS;
 	
 	//help components
 	private JMenuItem MH_Manual;
@@ -532,16 +542,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				AG.setIncludeTypes(FeatureIncludeTypes);
 				AG.setDisplayOnlyTypes(FeatureDisplayTypes);
 
-				// Annotation information
-				AG.importFromGFFFile(f.getAbsolutePath());
-
-				//update cluster IDs, if appropriate
-				if (AG.getLargestCluster() > -1){
-					if (OS.LargestCluster < AG.getLargestCluster()){
-						OS.LargestCluster = AG.getLargestCluster();
-					}
-				}
-				
 				// reference to genome file
 				AG.setGenomeFile(f);
 
@@ -554,6 +554,16 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				String TheGenus = Genus[0];
 				AG.setGenus(TheGenus);
 				
+				// Annotation information
+				AG.importFromGFFFile(f.getAbsolutePath());
+
+				//update cluster IDs, if appropriate
+				if (AG.getLargestCluster() > -1){
+					if (OS.LargestCluster < AG.getLargestCluster()){
+						OS.LargestCluster = AG.getLargestCluster();
+					}
+				}
+								
 				//System.out.println(TheName + ":\t" + OS.LargestCluster);
 				
 				
@@ -590,9 +600,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				AG.setDisplayOnlyTypes(FeatureDisplayTypes);
 				AG.setGFM(GBKFields);
 				
-				// Annotation information
-				AG.importFromGBKFile(f.getAbsolutePath());
-
 				// reference to genome file
 				AG.setGenomeFile(f);
 
@@ -612,6 +619,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				String[] Genus = SpeciesName[0].split("_");
 				String TheGenus = Genus[0];
 				AG.setGenus(TheGenus);
+				
+				// Annotation information
+				AG.importFromGBKFile(f.getAbsolutePath());
 				
 				// add to hash map
 				OS.getSpecies().put(TheName, AG);
@@ -1495,6 +1505,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		M_Load = new JMenu("Load");
 			
 		//Components
+		ML_GenomicSequencingFile = new JMenuItem("Genome Sequence File(s)");
 		ML_HomologyClusterMenu = new JMenuItem("Homology Clusters");
 		ML_GeneIDs = new JMenuItem("Gene IDs");
 		ML_ContextSet = new JMenuItem("Context Set");
@@ -1503,6 +1514,24 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		ML_Motifs = new JMenuItem("Sequence Motifs");
 		ML_QuerySet = new JMenuItem("Load Query Set");
 		ML_DataGrouping = new JMenuItem("Load Data Grouping");
+		
+		//Load homology clusters
+		KeyStroke Zerostroke = KeyStroke.getKeyStroke(KeyEvent.VK_0, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		ML_GenomicSequencingFile.setAccelerator(Zerostroke);
+		ML_GenomicSequencingFile.addActionListener(this);
+		
+		//Load homology clusters
+		KeyStroke Ustroke = KeyStroke.getKeyStroke(KeyEvent.VK_U, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		ML_HomologyClusterMenu.setAccelerator(Ustroke);
+		ML_HomologyClusterMenu.addActionListener(this);
+		
+		//Load gene IDs
+		KeyStroke Dstroke = KeyStroke.getKeyStroke(KeyEvent.VK_D, 
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		ML_GeneIDs.setAccelerator(Dstroke);
+		ML_GeneIDs.addActionListener(this);
 		
 		//Load context Set
 		KeyStroke OneStroke = KeyStroke.getKeyStroke(KeyEvent.VK_1,
@@ -1515,18 +1544,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
 		ML_DissMeas.setAccelerator(TwoStroke);
 		ML_DissMeas.addActionListener(this);
-		
-		//Load homology clusters
-		KeyStroke Hstroke = KeyStroke.getKeyStroke(KeyEvent.VK_U, 
-				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-		ML_HomologyClusterMenu.setAccelerator(Hstroke);
-		ML_HomologyClusterMenu.addActionListener(this);
-		
-		//Load gene IDs
-		KeyStroke Dstroke = KeyStroke.getKeyStroke(KeyEvent.VK_D, 
-				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-		ML_GeneIDs.setAccelerator(Dstroke);
-		ML_GeneIDs.addActionListener(this);
 	
 		//Load phylogenetic tree
 		KeyStroke Pstroke = KeyStroke.getKeyStroke(KeyEvent.VK_P, 
@@ -1541,6 +1558,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		ML_Motifs.addActionListener(this);
 		
 		//add to menu
+		M_Load.add(ML_GenomicSequencingFile);
 		M_Load.add(ML_HomologyClusterMenu);
 		M_Load.add(ML_GeneIDs);
 		M_Load.add(ML_ContextSet);
@@ -1630,6 +1648,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		M_Process.add(MP_ContextForest);
 
 		/*
+		 * SETTINGS MENU
+		 */
+		M_Settings = new JMenu("Settings");
+		MS_GenomeBrowser = new JMenuItem("Genome Browser");
+		
+		M_Settings.add(MS_GenomeBrowser);
+		
+		/*
 		 * HELP MENU
 		 */
 		M_Help = new JMenu("Help");
@@ -1656,6 +1682,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MB.add(M_Load);
 		MB.add(M_Export);
 		MB.add(M_Process);
+		MB.add(M_Settings);
 		MB.add(M_Help);
 			
 		this.setJMenuBar(MB);
@@ -1794,6 +1821,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			j.addActionListener(this);
 		}
 		
+		 // ========== Settings ====== //
+		setCVS(new ContextViewerSettings());
 		
 	}
 	
@@ -2046,6 +2075,58 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		/*
 		 * LOAD
 		 */
+		
+		//load one or more sequences to associate with existing genomes
+		if (evt.getSource().equals(ML_GenomicSequencingFile)){
+			if (getOS() != null){
+
+				// initialize output
+				JFileChooser GetGenomesSeqList = new JFileChooser();
+				
+				GetGenomesSeqList.setMultiSelectionEnabled(true);
+				GetGenomesSeqList.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+				GetGenomesSeqList
+						.setDialogTitle("Select one or more Genome File(s) or Directory of Genome Files (.fasta format)");
+			
+				//retrieve directory
+				if (this.FileChooserSource != null) {
+					GetGenomesSeqList.setCurrentDirectory(FileChooserSource);
+				} else {
+					GetGenomesSeqList.setCurrentDirectory(new File("."));
+				}
+				
+				GetGenomesSeqList.showOpenDialog(GetGenomesSeqList);
+				
+				// note current directory for next time
+				if (GetGenomesSeqList.getSelectedFile() != null) {
+					
+					//update current directory
+					this.FileChooserSource = GetGenomesSeqList.getCurrentDirectory();
+					
+					//retrieve list of files
+					File[] files = GetGenomesSeqList.getSelectedFiles();
+					
+					//associate
+					for (File f : files){
+						
+						//name
+						String[] SpeciesName = f.getName().split(".fasta");
+						
+						//check for organism in species list
+						if (OS.getSpecies().get(SpeciesName[0]) != null){
+							OS.getSpecies().get(SpeciesName[0]).setGenomeFile(f);
+						}
+						
+						//output message
+						System.out.println(SpeciesName[0] + " is associated with the genome " + f.getAbsolutePath());
+					}
+
+				} 
+				
+			} else {
+				this.NoOS();
+			}
+		}
 		
 		//load homology clusters
 		if (evt.getSource().equals(ML_HomologyClusterMenu)){
@@ -2339,6 +2420,15 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			} else {
 				this.NoOS();
 			}
+		}
+		
+		/*
+		 * SETTINGS
+		 */
+		
+		//options for context display
+		if (evt.getSource().equals(MS_GenomeBrowser)){
+			new ContextViewerSettingsPanel(this);
 		}
 		
 		/*
@@ -3506,6 +3596,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	public void setNCBIFields(NCBIFieldMapping nCBIFields) {
 		NCBIFields = nCBIFields;
+	}
+
+	public ContextViewerSettings getCVS() {
+		return CVS;
+	}
+
+	public void setCVS(ContextViewerSettings cVS) {
+		CVS = cVS;
 	}
 
 }
