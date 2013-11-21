@@ -2100,6 +2100,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				// note current directory for next time
 				if (GetGenomesSeqList.getSelectedFile() != null) {
 					
+					
 					//update current directory
 					this.FileChooserSource = GetGenomesSeqList.getCurrentDirectory();
 					
@@ -2109,16 +2110,48 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					//associate
 					for (File f : files){
 						
-						//name
-						String[] SpeciesName = f.getName().split(".fasta");
+						//selection is a file
+						if (f.isFile()){
+							
+							//name
+							String[] SpeciesName = f.getName().split(".fasta");
+							
+							//check for organism in species list
+							if (OS.getSpecies().get(SpeciesName[0]) != null){
+								
+								//associate genome with selected genome file
+								OS.getSpecies().get(SpeciesName[0]).setGenomeSequenceFile(f);
+								
+								//output message
+								System.out.println(SpeciesName[0] + " is now associated with the genome " + f.getAbsolutePath());
+
+							}
 						
-						//check for organism in species list
-						if (OS.getSpecies().get(SpeciesName[0]) != null){
-							OS.getSpecies().get(SpeciesName[0]).setGenomeFile(f);
+						//selection is a directory containing files
+						} else {
+							
+							File[] subfiles = f.listFiles();
+							
+							for (File f1 : subfiles){
+								
+								//name
+								String[] SpeciesName = f1.getName().split(".fasta");
+								
+								//check for organism in species list
+								if (OS.getSpecies().get(SpeciesName[0]) != null){
+									
+									//associate genome with selected genome file
+									OS.getSpecies().get(SpeciesName[0]).setGenomeSequenceFile(f1);
+									
+									//output message
+									System.out.println(SpeciesName[0] + " is now associated with the genome " + f1.getAbsolutePath());
+
+								}
+								
+							}
+							
 						}
 						
-						//output message
-						System.out.println(SpeciesName[0] + " is associated with the genome " + f.getAbsolutePath());
 					}
 
 				} 
@@ -3204,7 +3237,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		DeviationMeasuresBox box = new DeviationMeasuresBox(this);
 		box.setVisible(true);
 	}
-	
+
 	// ======= Internal Frame Stuff ========//
 	
 	//Create an internal frame

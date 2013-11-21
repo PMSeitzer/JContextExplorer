@@ -10,6 +10,8 @@ import java.util.Map.Entry;
 import javax.swing.JOptionPane;
 
 import org.biojava3.core.sequence.DNASequence;
+import org.biojava3.core.sequence.ProteinSequence;
+import org.biojava3.core.sequence.RNASequence;
 import org.biojava3.core.sequence.Strand;
 import org.biojava3.core.sequence.io.FastaReaderHelper;
 
@@ -23,6 +25,7 @@ public class AnnotatedGenome implements Serializable {
     	= new LinkedList<MotifGroup>();						    //
     private LinkedList<ContextSet> Groupings = new LinkedList<ContextSet>();					//-Predicted Groupings-----------------
     private File GenomeFile; 									//-Associated genome file --------------
+    private File GenomeSequenceFile;
     private boolean TryToComputeOperons;
 	private LinkedList<String> FeatureIncludeTypes;					//-Types of data worth importing/processing
 	private LinkedList<String> FeatureDisplayTypes;
@@ -987,32 +990,101 @@ public static class SortGandEByElements implements Comparator<GenomicElementAndQ
 	
 }
 
-// ----------------------- Export ----------------------------------//
+// ----------------------- Export + Sequence -----------------------//
 
-// this function simply returns a DNA sequence from a particular genome file.
-public String retrieveSequence(String contig, int start, int stop, Strand strand){
+//return DNA sequence from a .fasta file (by streaming file in)
+public String DNASequence(String contig, int start, int stop, Strand strand){
 	
 	//initialize and instantiate variable
-	String seq=null;
-	
-	//load genome, and recover sequence
-	LinkedHashMap<String, DNASequence> genome;
+	String seq = null;
+
+	//stream in until the appropriate line is discovered.
 	try {
 		
-		//import genome
-		genome = FastaReaderHelper.readFastaDNASequence(GenomeFile);
-		
-		//retrieve string value + extract subsequence
-		for (Entry<String, DNASequence> entry : genome.entrySet()) {
-			if (entry.getValue().getOriginalHeader().contains(contig)){
-				seq = entry.getValue().getSequenceAsString(start, stop, strand);
-				break;
+		BufferedReader br = new BufferedReader(new FileReader(this.GenomeSequenceFile));
+		String Line = null;
+
+		boolean ThisContig = false;
+		boolean StartedSequence = false;
+		int ContigSeqBlock = 0;
+
+		while ((Line = br.readLine()) != null){
+
+			//header
+			if (Line.startsWith(">")){
+				if (Line.contains(contig)){
+					ThisContig = true;
+				}
+				
+			//sequence
+			} else if (ThisContig){
+
+				/*
+				* (1) First coordinate in line = ContigSeqBlock + 1
+				* (2) 
+				*/
+				
+				//available coordinate range featured in this line.
+
+				int StartLine = ContigSeqBlock + 1;
+				int StopLine = ContigSeqBlock + Line.length();
+
+				//(1) Check for start coordinate, if appropriate
+				if (StartedSequence){
+					if (stop < StopLine){
+						
+						//the line ends in this line - recover sequence + exit.
+						seq = seq + (String) Line.subSequence(0, stop - ContigSeqBlock);
+						break; 
+						
+					} else{
+						//write all sequence and proceed.
+						seq = seq + Line;
+					}
+
+				} else {
+
+					//the line starts here. Record the appropriate place.
+					if (start >= StartLine && start <= StopLine){
+						StartedSequence = true;
+						
+						//the string also ends in this line. - recover sequence + exit
+						if (stop <= StopLine){
+							seq = (String) Line.subSequence((start-1)-ContigSeqBlock,stop-ContigSeqBlock);
+							break;
+						
+						//start sequence, end later
+						} else {
+							seq = (String) Line.substring((start-1)-ContigSeqBlock);
+						}
+
+					}
+				}
+
+
+				//update the tally of all previous sequence
+				ContigSeqBlock = StopLine;
+				
 			}
 		}
 		
-	} catch (Exception e) {
-		e.printStackTrace();
-	}
+		//close file stream
+		br.close();
+		
+		//flip, if appropriate
+		if (strand.equals(Strand.NEGATIVE)){
+			DNASequence d = new DNASequence(seq);
+			seq = d.getReverseComplement().getSequenceAsString();
+		}
+		
+		//return all sequence as upper case string.
+		seq = seq.toUpperCase();
+		
+		} catch (Exception ex){
+			//ex.printStackTrace();
+		}
+
+	//return statement
 	return seq;
 }
 
@@ -2056,8 +2128,6 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 
 //----------------------- GETTERS+SETTERS ------------------------//
 
-//----------------------- Getters and Setters ----------------------//
-
 //Getters and Setters
  public String getGenus() {
 	return Genus;
@@ -2176,6 +2246,43 @@ public void setLargestCluster(Integer largestCluster) {
 	LargestCluster = largestCluster;
 }
 
+public File getGenomeSequenceFile() {
+	return GenomeSequenceFile;
+}
+
+public void setGenomeSequenceFile(File genomeSequenceFile) {
+	GenomeSequenceFile = genomeSequenceFile;
+}
+
 //-----------------------Deprecated ----------------------//
+
+//DEPRECATED biojava this function simply returns a DNA sequence from a particular genome file.
+public String retrieveSequence(String contig, int start, int stop, Strand strand){
+	
+	//initialize and instantiate variable
+	String seq=null;
+	
+	//load genome, and recover sequence
+	LinkedHashMap<String, DNASequence> genome;
+	try {
+		
+		//import genome
+		genome = FastaReaderHelper.readFastaDNASequence(GenomeSequenceFile);
+		
+		//retrieve string value + extract subsequence
+		for (Entry<String, DNASequence> entry : genome.entrySet()) {
+			if (entry.getValue().getOriginalHeader().contains(contig)){
+				seq = entry.getValue().getSequenceAsString(start, stop, strand).toUpperCase();
+				System.out.println("Start: " + start + " Stop: " + stop + " Strand: " + strand);
+				break;
+			}
+		}
+		
+	} catch (Exception e) {
+		e.printStackTrace();
+	}
+	return seq;
+}
+
 
 } //completes classbody
