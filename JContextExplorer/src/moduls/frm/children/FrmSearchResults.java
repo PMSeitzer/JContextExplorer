@@ -36,6 +36,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import org.biojava3.core.sequence.DNASequence;
@@ -78,9 +79,10 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 	private int FastaSeqLineLength = 70;
 	private int FastaTitleLineLength = 70;
 	
-	//data retrieval
-	public LinkedHashMap<String, GenomicElement> LeafData = new LinkedHashMap<String, GenomicElement>();
-	public LinkedHashMap<String, String> LeafSource = new LinkedHashMap<String, String>();
+	//data retrieval	
+	public LinkedHashMap<DefaultMutableTreeNode, GenomicElement> LeafData = new LinkedHashMap<DefaultMutableTreeNode, GenomicElement>();
+	public LinkedHashMap<DefaultMutableTreeNode, String> LeafSource = new LinkedHashMap<DefaultMutableTreeNode, String>();
+	
 	//pop-up window
 	private JPopupMenu ExportMenu;	//export frame information
 	
@@ -132,12 +134,12 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 				
 				//export DNA segment of selected genes
 				if (evt.getActionCommand().equals(ExportDNASeqs)) {
-					ExportDNASeqs();
+					ExportGeneSequences(false);
 				}
 				
 				//export protein sequence
 				if (evt.getActionCommand().equals(ExportProtSeqs)){
-					ExportProtSeqs();
+					ExportGeneSequences(true);
 				}
 				
 				/*
@@ -146,12 +148,12 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 				
 				//export data table - short version
 				if (evt.getActionCommand().equals(ExportDataAsShortTable)){
-					ExportShortTable();
+					ExportTable(false);
 				}
 				
 				//export data table - long version
 				if (evt.getActionCommand().equals(ExportDataAsLongTable)){
-					ExportLongTable();
+					ExportTable(true);
 				}
 			}
 
@@ -185,7 +187,7 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 	}
 	
 	//export short table
-	private void ExportShortTable(){
+	private void ExportTable(boolean isLongTable){
 		
 		//Create + Show file dialog window
 		final FileDialog fd = new FileDialog(fr, "Export Search Results Data", FileDialog.SAVE);
@@ -203,9 +205,9 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 			//update file chooser
 			fr.setFileChooserSource(OutputFile.getParentFile());
 			
-			//a data structure to hold the source data
-			LinkedList<String> SourceData = new LinkedList<String>();
-			
+			//a data structure to hold the selected node data
+			LinkedList<TreeNode> SelectedNodes = new LinkedList<TreeNode>();
+
 			//iterate through tree nodes, retrieve selected, export
 			int[] SelectedElements = SearchResults.getSelectionRows();
 			for (int i = 0; i < SelectedElements.length; i++){
@@ -215,17 +217,15 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 				
 				//an individual gene / genes
 				if (TN.isLeaf() && !TN.getAllowsChildren()){
-					String s = TN.toString();
-					if (!SourceData.contains(s)){
-						SourceData.add(s);
+					if (!SelectedNodes.contains(TN)){
+						SelectedNodes.add(TN);
 					}
 				//a whole set of genes
 				} else {
 					int ChildCount = TN.getChildCount();
 					for (int j = 0; j < ChildCount; j++){
-						String s = TN.getChildAt(j).toString();
-						if (!SourceData.contains(s)){
-							SourceData.add(s);
+						if (!SelectedNodes.contains(TN.getChildAt(j))){
+							SelectedNodes.add(TN.getChildAt(j));
 						}
 					}
 				}
@@ -237,140 +237,94 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 				//open file stream
 				BufferedWriter bw = new BufferedWriter(new FileWriter(OutputFile));
 
-				String Header = "#GeneID\tClusterID\tAnnotation\n";
-				bw.write(Header);
-				bw.flush();
-
+				//short table header
+				if (!isLongTable){
+					
+					String Header = "#GeneID\tClusterID\tAnnotation\n";
+					bw.write(Header);
+					bw.flush();
+				
+				//long table header
+				} else {
+				
+					String Header = "#Organism\tContig\tStart\tStop\tStrand\tAnnotation\tClusterID\tGeneID\n";
+					bw.write(Header);
+					bw.flush();
+					
+				}
 				
 				//print output to table
-				for (String s : SourceData){
+				for (TreeNode TN : SelectedNodes){
+					
+					//retrieve all bioinfo.
+					GenomicElement E = LeafData.get(TN);
+					String OrgName = LeafSource.get(TN);
 					
 					//overall string to output to file
 					String str = "";
 					
-					//split line appropriately
-					String[] ChopOne = s.split("ANNOTATION:");
-					String[] ChopTwo = ChopOne[0].split("CLUSTERID:");
-					String[] ChopThree = ChopTwo[0].split("GENEID:");
-					
-					//export as tab-delimited
-					str = 	ChopThree[1].trim()
-							+ "\t" + ChopTwo[1].trim() 
-							+ "\t" + ChopOne[1].trim() 
-							+ "\n";
-					
-					bw.write(str);
-					bw.flush();
-				}
-				
-				//close file stream
-				bw.close();
-				
-			} catch (Exception e) {
-				JOptionPane.showMessageDialog(null, "The data in the table could not be exported.",
-						"Table Export Error",JOptionPane.ERROR_MESSAGE);
-			}
-		}
-		
-	}
-	
-	//export long table
-	public void ExportLongTable(){
-	
-		//Create + Show file dialog window
-		final FileDialog fd = new FileDialog(fr, "Export Search Results Data", FileDialog.SAVE);
-		fd.setDirectory(fr.getFileChooserSource().getAbsolutePath());
-		fd.setFile(".txt");
-		fd.setVisible(true);
-		
-		//if a file is specified, export the data to file.
-		if (fd.getFile() != null){
-			
-			//recover data for file
-			String sPath = fd.getDirectory() + fd.getFile();
-			final File OutputFile = new File(sPath);
-			
-			//update file chooser
-			fr.setFileChooserSource(OutputFile.getParentFile());
-			
-			//a data structure to hold the source data
-			LinkedList<String> SourceData = new LinkedList<String>();
-			
-			//iterate through tree nodes, retrieve selected, export
-			int[] SelectedElements = SearchResults.getSelectionRows();
-			for (int i = 0; i < SelectedElements.length; i++){
-				
-				//retrieve the appropriate node
-				DefaultMutableTreeNode TN = (DefaultMutableTreeNode) SearchResults.getPathForRow(SelectedElements[i]).getLastPathComponent();
-				
-				//an individual gene / genes
-				if (TN.isLeaf() && !TN.getAllowsChildren()){
-					String s = TN.toString();
-					if (!SourceData.contains(s)){
-						SourceData.add(s);
-					}
-				//a whole set of genes
-				} else {
-					int ChildCount = TN.getChildCount();
-					for (int j = 0; j < ChildCount; j++){
-						String s = TN.getChildAt(j).toString();
-						if (!SourceData.contains(s)){
-							SourceData.add(s);
+					//short table
+					if (!isLongTable){
+						
+						String ClusterID = "";
+						if (E.getClusterID() != -1){
+							ClusterID = String.valueOf(E.getClusterID());
+						} else {
+							ClusterID = "none";
 						}
-					}
-				}
-				
-			}
-			
-			try {
-				
-				//open file stream
-				BufferedWriter bw = new BufferedWriter(new FileWriter(OutputFile));
-
-				String Header = "#Organism\tContig\tStart\tStop\tStrand\tAnnotation\tClusterID\tGeneID\n";
-				bw.write(Header);
-				bw.flush();
-				
-				//print output to table
-				for (String s : SourceData){
-					
-					//retrieve all bioinfo.
-					GenomicElement E = LeafData.get(s);
-					String OrgName = LeafSource.get(s);
-					
-					String ClusterID = "";
-					if (E.getClusterID() != -1){
-						ClusterID = String.valueOf(E.getClusterID());
+						
+						String GeneID = "";
+						if (E.getGeneID() != null){
+							GeneID = E.getGeneID();
+						} else{
+							GeneID = "none";
+						}
+						
+						//export as tab-delimited
+						str = 	GeneID + "\t" + 
+								ClusterID + "\t" +
+								E.getAnnotation() + "\n";
+						
+						bw.write(str);
+						bw.flush();
+						
+					//long table
 					} else {
-						ClusterID = "none";
+						
+						String ClusterID = "";
+						if (E.getClusterID() != -1){
+							ClusterID = String.valueOf(E.getClusterID());
+						} else {
+							ClusterID = "none";
+						}
+						
+						String GeneID = "";
+						if (E.getGeneID() != null){
+							GeneID = E.getGeneID();
+						} else{
+							GeneID = "none";
+						}
+						
+						String TheStrand = "";
+						if (E.getStrand().equals(Strand.POSITIVE)){
+							TheStrand = "1";
+						} else{
+							TheStrand = "-1";
+						}
+						
+						//export all the bioinfo.
+						str = OrgName + "\t" + E.getContig() + "\t"
+								+ String.valueOf(E.getStart()) + "\t"
+								+ String.valueOf(E.getStop()) + "\t" 
+								+ TheStrand + "\t"
+								+ E.getAnnotation() + "\t"
+								+ ClusterID + "\t"
+								+ GeneID + "\n";
+						
+						bw.write(str);
+						bw.flush();
+						
 					}
-					
-					String GeneID = "";
-					if (E.getGeneID() != null){
-						GeneID = E.getGeneID();
-					} else{
-						GeneID = "none";
-					}
-					
-					String TheStrand = "";
-					if (E.getStrand().equals(Strand.POSITIVE)){
-						TheStrand = "1";
-					} else{
-						TheStrand = "-1";
-					}
-					
-					//export all the bioinfo.
-					String str = OrgName + "\t" + E.getContig() + "\t"
-							+ String.valueOf(E.getStart()) + "\t"
-							+ String.valueOf(E.getStop()) + "\t" 
-							+ TheStrand + "\t"
-							+ E.getAnnotation() + "\t"
-							+ ClusterID + "\t"
-							+ GeneID + "\n";
-					
-					bw.write(str);
-					bw.flush();
-					
 				}
 				
 				//close file stream
@@ -379,13 +333,14 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 			} catch (Exception e) {
 				JOptionPane.showMessageDialog(null, "The data in the table could not be exported.",
 						"Table Export Error",JOptionPane.ERROR_MESSAGE);
+				e.printStackTrace();
 			}
 		}
 		
 	}
-	
-	//export a file DNA sequences
-	public void ExportDNASeqs(){
+		
+	//export a file DNA or protein sequences
+	public void ExportGeneSequences(boolean isProtein){
 		
 		//Create + Show file dialog window
 		final FileDialog fd = new FileDialog(fr, "Export DNA Sequences of Selected Genes", FileDialog.SAVE);
@@ -403,8 +358,8 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 			//update file chooser
 			fr.setFileChooserSource(OutputFile.getParentFile());
 			
-			//a data structure to hold the source data
-			LinkedList<String> SourceData = new LinkedList<String>();
+			//a data structure to hold the selected node data
+			LinkedList<TreeNode> SelectedNodes = new LinkedList<TreeNode>();
 			
 			//iterate through tree nodes, retrieve selected, export
 			int[] SelectedElements = SearchResults.getSelectionRows();
@@ -416,42 +371,55 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 				//an individual gene / genes
 				if (TN.isLeaf() && !TN.getAllowsChildren()){
 					String s = TN.toString();
-					if (!SourceData.contains(s)){
-						SourceData.add(s);
+					if (!SelectedNodes.contains(TN)){
+						SelectedNodes.add(TN);
 					}
-				//a whole set of genes
+					
+				//find appropriate genes within a whole set of genes
 				} else {
 					int ChildCount = TN.getChildCount();
 					for (int j = 0; j < ChildCount; j++){
-						String s = TN.getChildAt(j).toString();
-						if (!SourceData.contains(s)){
-							SourceData.add(s);
+						if (!SelectedNodes.contains(TN.getChildAt(j))){
+							SelectedNodes.add(TN.getChildAt(j));
 						}
 					}
 				}
 				
 			}
 			
-			// 			  Header, Sequence
-			LinkedHashMap<String,String> Genes4Export = new LinkedHashMap<String, String>();
+			//hash maps to store data
+			
+			// 			  Node, Sequence
+			LinkedHashMap<TreeNode,String> Genes4Export = new LinkedHashMap<TreeNode, String>();
 			
 			boolean FailedExport = false;
 			
-			//print output to table
-			for (String s : SourceData){
-				
+			//iterate through output
+			for (TreeNode TN : SelectedNodes){
+
 				//retrieve all bioinfo.
-				GenomicElement E = LeafData.get(s);
-				AnnotatedGenome AG = fr.getOS().getSpecies().get(LeafSource.get(s));
-				
+				GenomicElement E = LeafData.get(TN);
+				AnnotatedGenome AG = fr.getOS().getSpecies().get(LeafSource.get(TN));
+						
 				if (AG.getGenomeSequenceFile() != null){
 					
 					//retrieve sequence
 					//String str = AG.retrieveSequence(E.getContig(), E.getStart(), E.getStop(), E.getStrand());
 					String str = AG.DNASequence(E.getContig(), E.getStart(), E.getStop(), E.getStrand());
 					
+					//if these are proteins, modify to protein sequences.
+					if (isProtein){
+												
+						//convert string to protein sequence
+						DNASequence d = new DNASequence(str);
+						str = d.getReverseComplement().getSequenceAsString();
+						RNASequence rna = d.getRNASequence();
+						str = rna.getProteinSequence().toString();
+						
+					}
+					
 					//store values
-					Genes4Export.put(s, str);
+					Genes4Export.put(TN, str);
 
 				} else {
 					FailedExport = true;
@@ -465,14 +433,14 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 				//open file stream
 				BufferedWriter bw = new BufferedWriter(new FileWriter(OutputFile));
 				
-				for (String s : Genes4Export.keySet()){
+				for (TreeNode TN : Genes4Export.keySet()){
 					
 					//Header
-					bw.write(FastaHeaderReformat(s));
+					bw.write(FastaHeaderReformat(TN));
 					bw.flush();
 					
 					//body
-					bw.write(FastaBodyReformat(Genes4Export.get(s)));
+					bw.write(FastaBodyReformat(Genes4Export.get(TN)));
 					bw.flush();
 				}
 				
@@ -497,128 +465,8 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 
 		
 	}
-	
-	//export a file of protein sequences
-	public void ExportProtSeqs(){
 		
-		//Create + Show file dialog window
-		final FileDialog fd = new FileDialog(fr, "Export Protein Sequences of Selected Genes", FileDialog.SAVE);
-		fd.setDirectory(fr.getFileChooserSource().getAbsolutePath());
-		fd.setFile(".fasta");
-		fd.setVisible(true);
-		
-		//if a file is specified, export the data to file.
-		if (fd.getFile() != null){
-			
-			//recover data for file
-			String sPath = fd.getDirectory() + fd.getFile();
-			final File OutputFile = new File(sPath);
-			
-			//update file chooser
-			fr.setFileChooserSource(OutputFile.getParentFile());
-			
-			//a data structure to hold the source data
-			LinkedList<String> SourceData = new LinkedList<String>();
-			
-			//iterate through tree nodes, retrieve selected, export
-			int[] SelectedElements = SearchResults.getSelectionRows();
-			for (int i = 0; i < SelectedElements.length; i++){
-				
-				//retrieve the appropriate node
-				DefaultMutableTreeNode TN = (DefaultMutableTreeNode) SearchResults.getPathForRow(SelectedElements[i]).getLastPathComponent();
-				
-				//an individual gene / genes
-				if (TN.isLeaf() && !TN.getAllowsChildren()){
-					String s = TN.toString();
-					if (!SourceData.contains(s)){
-						SourceData.add(s);
-					}
-				//a whole set of genes
-				} else {
-					int ChildCount = TN.getChildCount();
-					for (int j = 0; j < ChildCount; j++){
-						String s = TN.getChildAt(j).toString();
-						if (!SourceData.contains(s)){
-							SourceData.add(s);
-						}
-					}
-				}
-				
-			}
-			
-			// 			  Header, Sequence
-			LinkedHashMap<String,String> Genes4Export = new LinkedHashMap<String, String>();
-			
-			boolean FailedExport = false;
-			
-			//print output to table
-			for (String s : SourceData){
-				
-				//retrieve all bioinfo.
-				GenomicElement E = LeafData.get(s);
-				AnnotatedGenome AG = fr.getOS().getSpecies().get(LeafSource.get(s));
-				
-				if (AG.getGenomeSequenceFile() != null){
-					
-					//retrieve sequence
-					//String str = AG.retrieveSequence(E.getContig(), E.getStart(), E.getStop(), E.getStrand());
-					String str = AG.DNASequence(E.getContig(), E.getStart(), E.getStop(), E.getStrand());
-					
-					//convert string to protein sequence
-					DNASequence d = new DNASequence(str);
-					str = d.getReverseComplement().getSequenceAsString();
-					RNASequence rna = d.getRNASequence();
-					str = rna.getProteinSequence().toString();
-					
-					//store values
-					Genes4Export.put(s, str);
-
-				} else {
-					FailedExport = true;
-				}
-				
-			}
-
-			//write sequence to file
-			try {
-		
-				//open file stream
-				BufferedWriter bw = new BufferedWriter(new FileWriter(OutputFile));
-				
-				for (String s : Genes4Export.keySet()){
-					
-					//Header
-					bw.write(FastaHeaderReformat(s));
-					bw.flush();
-					
-					//body
-					bw.write(FastaBodyReformat(Genes4Export.get(s)));
-					bw.flush();
-				}
-				
-				//close file stream
-				bw.close();
-		
-			} catch (Exception e) {
-				e.printStackTrace();
-				JOptionPane.showMessageDialog(null, "The gene sequences could not be exported.",
-						"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
-			}
-			
-			//when a genome does not exist, failed export.
-			if (FailedExport){
-				JOptionPane.showMessageDialog(null, "One or more of the genes selected for export do " +
-						"not have an associated sequence file.\nTo associate a genome with a sequence file, " +
-						"select \"Load Genome Sequence File(s)\" from the Load drop-down menu.",
-						"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
-			}
-
-		}
-
-		
-	}
-	
-	//export a file of DNA in all appropriate segments
+	//export a file of contiguous DNA stretches in all appropriate segments
 	public void ExportSegments(){
 		
 		//Create + Show file dialog window
@@ -638,7 +486,7 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 			fr.setFileChooserSource(OutputFile.getParentFile());
 			
 			//a data structure to hold the source data
-			LinkedList<String> SourceData = new LinkedList<String>();
+			LinkedList<TreeNode> SelectedNodes = new LinkedList<TreeNode>();
 			
 			//iterate through tree nodes, retrieve selected, export
 			int[] SelectedElements = SearchResults.getSelectionRows();
@@ -655,7 +503,7 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 //					}
 				//a whole set of genes
 				} else {
-					SourceData.add(TN.toString());
+					SelectedNodes.add(TN);
 //					int ChildCount = TN.getChildCount();
 //					for (int j = 0; j < ChildCount; j++){
 //						String s = TN.getChildAt(j).toString();
@@ -668,109 +516,118 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 			}
 			
 			// 			  Header, Sequence
-			LinkedHashMap<String,String> Genes4Export = new LinkedHashMap<String, String>();
+			LinkedHashMap<TreeNode,String> Genes4Export = new LinkedHashMap<TreeNode, String>();
 			
+			//export fails because genomes not loaded.
 			boolean FailedExport = false;
 			
-			//print output to table
-			for (String s : SourceData){
+			if (SelectedNodes.size() > 0){
 				
-				//retrieve from CSD
-				LinkedList<GenomicElementAndQueryMatch> Elements = CSD.getEC().getContexts().get(s);
-				
-				//split up this list into smaller lists
-				LinkedHashMap<String, LinkedList<GenomicElement>> ContigSplits
-					= new LinkedHashMap<String, LinkedList<GenomicElement>>();
-			
-				GenomicElement E = null;
-				
-				for (GenomicElementAndQueryMatch GandE : Elements){
+				//print output to table
+				for (TreeNode TN : SelectedNodes){
 					
-					//retrieve element
-					E = GandE.getE();
+					//retrieve from CSD
+					LinkedList<GenomicElementAndQueryMatch> Elements = CSD.getEC().getContexts().get(TN.toString());
 					
-					//organize by hash map
-					if (ContigSplits.get(E.getContig()) != null){
-						LinkedList<GenomicElement> L = ContigSplits.get(E.getContig());
-						L.add(E);
-						ContigSplits.put(E.getContig(), L);
-					} else {
-						LinkedList<GenomicElement> L = new LinkedList<GenomicElement>();
-						L.add(E);
-						ContigSplits.put(E.getContig(),L);
-					}
-					
-				}
+					//split up this list into smaller lists
+					LinkedHashMap<String, LinkedList<GenomicElement>> ContigSplits
+						= new LinkedHashMap<String, LinkedList<GenomicElement>>();
 				
-				//retrieve bioinfo.
-				AnnotatedGenome AG = fr.getOS().getSpecies().get(CSD.getEC().getSourceSpeciesNames().get(s));
-				
-				if (AG.getGenomeSequenceFile() != null){
+					GenomicElement E = null;
 					
-					//segment by sequence
-					for (String contigkey : ContigSplits.keySet()){
+					for (GenomicElementAndQueryMatch GandE : Elements){
 						
-						//retrieve all appropriate elements
-						LinkedList<GenomicElement> LL = ContigSplits.get(contigkey);
+						//retrieve element
+						E = GandE.getE();
 						
-						int MinStart = 99999999;
-						int MaxStop = -1;
-						
-						for (GenomicElement E1 : LL){
-							if (E1.getStart() < MinStart){
-								MinStart = E1.getStart();
-							}
-							if (E1.getStop() > MaxStop){
-								MaxStop = E1.getStop();
-							}
+						//organize by hash map
+						if (ContigSplits.get(E.getContig()) != null){
+							LinkedList<GenomicElement> L = ContigSplits.get(E.getContig());
+							L.add(E);
+							ContigSplits.put(E.getContig(), L);
+						} else {
+							LinkedList<GenomicElement> L = new LinkedList<GenomicElement>();
+							L.add(E);
+							ContigSplits.put(E.getContig(),L);
 						}
 						
-						//retrieve sequence
-						String str = AG.DNASequence(contigkey, MinStart, MaxStop, Strand.POSITIVE);
-						
-						//store values
-						Genes4Export.put(s, str);
-						
 					}
-
-				} else {
-					FailedExport = true;
-				}
-				
-			}
-
-			//write sequence to file
-			try {
-		
-				//open file stream
-				BufferedWriter bw = new BufferedWriter(new FileWriter(OutputFile));
-				
-				for (String s : Genes4Export.keySet()){
 					
-					//Header
-					bw.write(FastaHeaderReformat(s));
-					bw.flush();
+					//retrieve bioinfo.
+					AnnotatedGenome AG = fr.getOS().getSpecies().get(CSD.getEC().getSourceSpeciesNames().get(TN.toString()));
 					
-					//body
-					bw.write(FastaBodyReformat(Genes4Export.get(s)));
-					bw.flush();
+					if (AG.getGenomeSequenceFile() != null){
+						
+						//segment by sequence
+						for (String contigkey : ContigSplits.keySet()){
+							
+							//retrieve all appropriate elements
+							LinkedList<GenomicElement> LL = ContigSplits.get(contigkey);
+							
+							int MinStart = 99999999;
+							int MaxStop = -1;
+							
+							for (GenomicElement E1 : LL){
+								if (E1.getStart() < MinStart){
+									MinStart = E1.getStart();
+								}
+								if (E1.getStop() > MaxStop){
+									MaxStop = E1.getStop();
+								}
+							}
+							
+							//retrieve sequence
+							String str = AG.DNASequence(contigkey, MinStart, MaxStop, Strand.POSITIVE);
+							
+							//store values
+							Genes4Export.put(TN, str);
+							
+						}
+
+					} else {
+						FailedExport = true;
+					}
+					
 				}
-				
-				//close file stream
-				bw.close();
-		
-			} catch (Exception e) {
-				e.printStackTrace();
-				JOptionPane.showMessageDialog(null, "The sequences could not be exported.",
-						"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
-			}
+
+				//write sequence to file
+				try {
 			
-			//when a genome does not exist, failed export.
-			if (FailedExport){
-				JOptionPane.showMessageDialog(null, "One or more of the genes selected for export do " +
-						"not have an associated sequence file.\nTo associate a genome with a sequence file, " +
-						"select \"Load Genome Sequence File(s)\" from the Load drop-down menu.",
-						"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
+					//open file stream
+					BufferedWriter bw = new BufferedWriter(new FileWriter(OutputFile));
+					
+					for (TreeNode TN : Genes4Export.keySet()){
+						
+						//Header
+						bw.write(FastaHeaderReformat(TN));
+						bw.flush();
+						
+						//body
+						bw.write(FastaBodyReformat(Genes4Export.get(TN)));
+						bw.flush();
+					}
+					
+					//close file stream
+					bw.close();
+			
+				} catch (Exception e) {
+					e.printStackTrace();
+					JOptionPane.showMessageDialog(null, "The sequences could not be exported.",
+							"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
+				}
+				
+				//when a genome does not exist, failed export.
+				if (FailedExport){
+					JOptionPane.showMessageDialog(null, "One or more of the genes selected for export do " +
+							"not have an associated sequence file.\nTo associate a genome with a sequence file, " +
+							"select \"Load Genome Sequence File(s)\" from the Load drop-down menu.",
+							"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
+				}
+				
+			} else {
+				JOptionPane.showMessageDialog(null, "No genomic groupings are selected.\n" +
+						"Please select one or more groupings to export associated sequences.",
+						"No Groupings Selected",JOptionPane.ERROR_MESSAGE);
 			}
 
 		}
@@ -779,33 +636,45 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 	}
 	
 	//general method to reformat a string into fasta header
-	public String FastaHeaderReformat(String s){
+	public String FastaHeaderReformat(TreeNode TN){
 		
 		//initialize output
 		String formattedString = "";
 		
-		if (LeafData.get(s) != null){
+		if (LeafData.get(TN) != null){
 			
 			//retrieve data
-			GenomicElement E = LeafData.get(s);
-			String OrgName = LeafSource.get(s);
+			GenomicElement E = LeafData.get(TN);
+			String OrgName = LeafSource.get(TN);
 			
 			//build header from data - either gene ID, or sequence info
-			if (E.getGeneID() != null){
+			if (!E.getGeneID().equals("")){
 				formattedString = ">" + E.getGeneID();
 			} else {
+				
+				//ordering of gene start/stop follows the strand
+				String StartPos;
+				String StopPos;
+				if (E.getStrand().equals(Strand.POSITIVE)){
+					StartPos = String.valueOf(E.getStart());
+					StopPos = String.valueOf(E.getStop());
+				} else {
+					StartPos = String.valueOf(E.getStop());
+					StopPos = String.valueOf(E.getStart());
+				}
+				
+				//build string
 				formattedString  = ">" + OrgName + " " + E.getContig() + 
-				" [" + E.getStart() + ":" + E.getStop() + "]";
+				" [" + StartPos + ":" + StopPos + "]";
+				
+				//remove white space
 				formattedString = (String) formattedString.replaceAll(" ", "_");
 			}
-			
-			//old approach - based on table
-			//formattedString = ">" + OrgName + "_" + (String) s.replaceAll(" ", "_");
-			
+						
 		} else {
 			
 			//name of whole segment
-			formattedString = ">" + s;
+			formattedString = ">" + TN.toString();
 		}
 		
 		//trim to fit size constraints
@@ -830,34 +699,24 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 		boolean SeqCompleted = false;
 		int BlockStart = 0;
 		int BlockStop = Math.min(FastaSeqLineLength, Body.length());
-		boolean SingleLine = true;
 		while (!SeqCompleted){
 			
 			//line for export
 			formattedString = formattedString + (String) Body.subSequence(BlockStart,BlockStop) + "\n";
-			
-			//move to next segment
-			BlockStart = BlockStop;
-			BlockStop = Math.min(Body.length(), BlockStop+FastaSeqLineLength);
-			
+
 			//conclude when sequence done exporting.
 			if (BlockStop >= Body.length()){
 				
-				//don't keep writing
+				//if you've written to the end of the sequence, no need to keep writing.
 				SeqCompleted = true;
 				
-				//only if this sequence spans more than one line.
-				if (!SingleLine){
-
-					//last line for export
-					formattedString = formattedString + (String) Body.subSequence(BlockStart,BlockStop) + "\n";
-
-				}
-
+			} else {
+				
+				//move to next segment
+				BlockStart = BlockStop;
+				BlockStop = Math.min(Body.length(), BlockStop+FastaSeqLineLength);
+				
 			}
-			
-			//for cases where the sequence extends more than one line.
-			SingleLine = false;
 			
 		}
 		
@@ -933,7 +792,8 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 		String GeneInfo;
 		String GeneIDNum;
 		String ClusterIDNum;
-		
+
+		//Initialize the hash map
 		TreeNodeMapping = new LinkedHashMap<String, DefaultMutableTreeNode>();
 		
 		//iterate through all contexts
@@ -949,7 +809,7 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 			
 			//store mapping
 			//TreeNodeMapping.put(S,SM);
-			
+						
 			for (GenomicElementAndQueryMatch GandE : Genes){
 
 				//Retrieve Gene ID number
@@ -972,17 +832,21 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 				
 				//add node to tree
 				DefaultMutableTreeNode GM = new DefaultMutableTreeNode(GeneInfo);
+				GM.setAllowsChildren(false);
 				SM.add(GM);
 				
-				//store in hash map
-				LeafData.put(GeneInfo, GandE.getE());
-				LeafSource.put(GeneInfo, CSD.getEC().getSourceSpeciesNames().get(CL.getName()));
-				String GeneInfoWithSource = "SOURCE: " + CL.getName() + ": " + GeneInfo;
+				//store node data in hash maps
+				LeafData.put(GM, GandE.getE());
+				LeafSource.put(GM, CSD.getEC().getSourceSpeciesNames().get(CL.getName()));
+				
+				//String GeneInfoWithSource = "SOURCE: " + CL.getName() + ": " + GeneInfo;
 				//TreeNodeMapping.put(GeneInfoWithSource, GM);
+
 			}
 			
 			//add tree node to root
 			root.add(SM);
+			
 		}
 		
 	}

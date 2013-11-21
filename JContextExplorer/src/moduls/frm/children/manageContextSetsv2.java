@@ -1017,6 +1017,10 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		c.insets = new Insets(1,1,1,1);
 		c.fill = GridBagConstraints.HORIZONTAL;
 		String[] CurrentContextLists = this.convertContextSets(fr.getOS().getCSDs());
+		if (CurrentContextLists.length == 0){
+			CurrentContextLists = new String[1];
+			CurrentContextLists[0] = "<none>";
+		}
 		contextSetMenuforCassette = new JComboBox<String>(CurrentContextLists);
 		contextSetMenuforCassette.addActionListener(this);
 		contextSetMenuforCassette.setEnabled(true);
@@ -1387,6 +1391,9 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 			//check if name is acceptable
 			CheckName();
 			
+			//for cassettes
+			boolean ProceedToAdd = true;
+			
 			if (AcceptableName == true){
 			
 //				//rule out pre-processed cases, if necessary
@@ -1447,6 +1454,11 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 					} else if (CSType.isSelected(CSCassette.getModel())){	//CSType (7) - Cassette
 						ToAdd.setType("Cassette"); ToAdd.setPreprocessed(false);
 						
+						//null case
+						if (contextSetMenuforCassette.getSelectedItem().equals("<none>")){
+							ProceedToAdd = false;
+						}
+						
 						//cassette-related parameters
 						ToAdd.setCassette(true);
 						String CassetteOf = contextSetMenuforCassette.getSelectedItem().toString();
@@ -1495,21 +1507,61 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 						ToAdd.setRetainFractionEnabled(false);
 					}
 
-					//add description to the OS
-					ToAdd.setName(CSName.getText());
-					fr.getOS().getCSDs().add(ToAdd);
-				
-					//insert item into the menu
-					MostRecentlyAddedContextSet = CSName.getText();
-					contextSetMenu.insertItemAt(CSName.getText(), 0);
-					contextSetMenuforCassette.insertItemAt(CSName.getText(), 0);
-					contextSetMenu.setSelectedItem(CSName.getText());
+					//if appropriate, proceed.
+					if (ProceedToAdd){
+						
+						//add description to the OS
+						ToAdd.setName(CSName.getText());
+						fr.getOS().getCSDs().add(ToAdd);
 					
-					//pre-processed sets are reset
-					ComputedGrouping = false;
-					LoadedGrouping = false;
-					LoadedFileName.setText("Context Set \"" + ToAdd.getName() + "\" Successfully Added!");
+						//insert item into the menu
+						MostRecentlyAddedContextSet = CSName.getText();
+						contextSetMenu.insertItemAt(CSName.getText(), 0);
+						
+						//remove the "none" tag from main menu, if appropriate
+						int TotItemsCS = contextSetMenu.getItemCount();
+						int Num2RemoveCS = -1;
+						for (int i = 0; i < TotItemsCS; i++){
+							if (contextSetMenu.getItemAt(i).equals("<none>")){
+								Num2RemoveCS = i;
+								break;
+							}
+						}
+						
+						//remove the null set, if appropriate
+						if (Num2RemoveCS != -1){
+							contextSetMenu.removeItemAt(Num2RemoveCS);							
+						}
+						
+						//only non-cassette types can be added here.
+						if (!ToAdd.isCassette()){
+							int TotItems = contextSetMenuforCassette.getItemCount();
+							int Num2Remove = -1;
+							for (int i = 0; i < TotItems; i++){
+								if (contextSetMenuforCassette.getItemAt(i).equals("<none>")){
+									Num2Remove = i;
+									break;
+								}
+							}
+							
+							//remove the null set, if appropriate
+							if (Num2Remove != -1){
+								contextSetMenuforCassette.removeItemAt(Num2Remove);							
+							}
+							contextSetMenuforCassette.insertItemAt(CSName.getText(), 0);
+							contextSetMenuforCassette.setSelectedItem(CSName.getText());
+						}
+
+						contextSetMenu.setSelectedItem(CSName.getText());
+						
+						//pre-processed sets are reset
+						ComputedGrouping = false;
+						LoadedGrouping = false;
+						LoadedFileName.setText("Context Set \"" + ToAdd.getName() + "\" Successfully Added!");
+						
+					}
 					
+
 					} catch (Exception ex) {
 						JOptionPane.showMessageDialog(null, "Field values must be integers",
 								"Integer",JOptionPane.ERROR_MESSAGE);
@@ -1524,7 +1576,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		
 		//REMOVE BUTTON
 		if (evt.getSource().equals(btnRemoveCS)){
-			if (!contextSetMenu.getSelectedItem().equals("SingleGene")){
+			if (!contextSetMenu.getSelectedItem().equals("SingleGene") && !contextSetMenu.getSelectedItem().equals("<none>")){
 				
 				try {
 					
@@ -1564,6 +1616,16 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 					}
 				}
 				
+				//add null case - cassete
+				if (contextSetMenuforCassette.getItemCount() == 0){
+					contextSetMenuforCassette.addItem("<none>");
+				}
+				
+				//add null case - total
+				if (contextSetMenu.getItemCount() == 0){
+					contextSetMenu.addItem("<none>");
+				}
+				
 				//remove from parent panel
 				for (int i = 0; i < fr.getPanBtn().getContextSetMenu().getItemCount(); i++){
 					if (fr.getPanBtn().getContextSetMenu().getItemAt(i).equals(Item)){
@@ -1572,13 +1634,12 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 					}
 				}
 
-
 			} else {
 				
-				//remove the one and only context set
+				//cannot remove the one and only context set
 				 JOptionPane.showMessageDialog(null, 
 						 "Unable to remove this context set.",
-						 "SingleGene Context Set",JOptionPane.ERROR_MESSAGE);
+						 "Unremovable Context Set",JOptionPane.ERROR_MESSAGE);
 				
 			}
 		} else if (evt.getSource().equals(btnOK)){
@@ -1589,7 +1650,16 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 			for (int i = 0; i < fr.getOS().getCSDs().size(); i++){
 				this.fr.getPanBtn().getContextSetMenu().addItem(fr.getOS().getCSDs().get(i).getName());
 			}
-			this.fr.getPanBtn().getContextSetMenu().setSelectedItem(MostRecentlyAddedContextSet);
+			
+			//update the menu to show most recnet context set, if appropriate
+			if (MostRecentlyAddedContextSet != null){
+				this.fr.getPanBtn().getContextSetMenu().setSelectedItem(MostRecentlyAddedContextSet);
+			}
+
+			//add default "<none>" case.
+			if (this.fr.getPanBtn().getContextSetMenu().getItemCount() == 0){
+				this.fr.getPanBtn().getContextSetMenu().addItem("<none>");
+			}
 			
 //			this.fr.getPanBtn().setContextSetMenu(contextSetMenu);
 //			this.fr.getPanBtn().revalidate();

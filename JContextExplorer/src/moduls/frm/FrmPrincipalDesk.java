@@ -2100,7 +2100,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				// note current directory for next time
 				if (GetGenomesSeqList.getSelectedFile() != null) {
 					
-					
 					//update current directory
 					this.FileChooserSource = GetGenomesSeqList.getCurrentDirectory();
 					

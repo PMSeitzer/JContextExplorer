@@ -1081,7 +1081,7 @@ public String DNASequence(String contig, int start, int stop, Strand strand){
 		seq = seq.toUpperCase();
 		
 		} catch (Exception ex){
-			//ex.printStackTrace();
+			ex.printStackTrace();
 		}
 
 	//return statement

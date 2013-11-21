@@ -1275,16 +1275,11 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		
 		//initialize output
 		JFileChooser GetMotifFiles = new JFileChooser();
-		try {
-			//GetGenomes.setLUIManager.getLookAndFeel()
-		} catch (Exception ex){
-			
-		}
 		GetMotifFiles.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 		GetMotifFiles.setDialogTitle("Select directory containing FIMO output or custom motif files (or directories)");
 
-		if (this.ReferenceDirectory != null){
-			GetMotifFiles.setCurrentDirectory(ReferenceDirectory);
+		if (f.getFileChooserSource() != null){
+			GetMotifFiles.setCurrentDirectory(f.getFileChooserSource());
 		} else {
 			GetMotifFiles.setCurrentDirectory(new File("."));
 		}
@@ -1296,7 +1291,10 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 		
 		//check if file could be received
 		if (ParentDirectory != null){
-		
+	
+			//update current directory
+			f.setFileChooserSource(GetMotifFiles.getCurrentDirectory());
+			
 			if (ParentDirectory.isDirectory()){
 				
 				//retrieve directory
@@ -1310,7 +1308,6 @@ public class ManageMotifs extends JDialog implements ActionListener, PropertyCha
 				SingleFile = ParentDirectory;
 			}
 		
-
 		} else {
 			
 			//no files are currently loaded.

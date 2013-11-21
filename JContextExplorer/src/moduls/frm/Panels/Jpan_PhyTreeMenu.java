@@ -429,8 +429,10 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 		getPhyTree.setDialogTitle("Select Phylogenetic tree file (Newick format required)");
 		
 		//open at last open point.
-		if (FilePath != null){
-			getPhyTree.setCurrentDirectory(FilePath);
+		if (f.getFileChooserSource() != null){
+			getPhyTree.setCurrentDirectory(f.getFileChooserSource());
+		} else {
+			getPhyTree.setCurrentDirectory(new File("."));
 		}
 		
 		getPhyTree.showOpenDialog(getPhyTree);
@@ -440,6 +442,10 @@ public class Jpan_PhyTreeMenu extends JPanel implements ActionListener {
 		
 		//if the file is not null (cancel operation), try to parse
 		if (TreeFile != null){
+			
+			//update current directory
+			f.setFileChooserSource(getPhyTree.getCurrentDirectory());
+			
 			Tree t = ParseNewickTree(TreeFile);
 			setCurrentParsedTree(t);
 
