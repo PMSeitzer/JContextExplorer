@@ -2119,7 +2119,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 							if (OS.getSpecies().get(SpeciesName[0]) != null){
 								
 								//associate genome with selected genome file
-								OS.getSpecies().get(SpeciesName[0]).setGenomeSequenceFile(f);
+								//associate genome with selected genome file
+								AnnotatedGenome AG = OS.getSpecies().get(SpeciesName[0]);
+								AG.setGenomeSequenceFile(f.getAbsolutePath());
+								AG.setSeqsFromFile(true);
 								
 								//output message
 								System.out.println(SpeciesName[0] + " is now associated with the genome " + f.getAbsolutePath());
@@ -2140,7 +2143,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 								if (OS.getSpecies().get(SpeciesName[0]) != null){
 									
 									//associate genome with selected genome file
-									OS.getSpecies().get(SpeciesName[0]).setGenomeSequenceFile(f1);
+									AnnotatedGenome AG = OS.getSpecies().get(SpeciesName[0]);
+									AG.setGenomeSequenceFile(f1.getAbsolutePath());
+									AG.setSeqsFromFile(true);
 									
 									//output message
 									System.out.println(SpeciesName[0] + " is now associated with the genome " + f1.getAbsolutePath());
@@ -2153,7 +2158,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 						
 					}
 
-				} 
+				} else {
+					System.out.println("Temp loaded!");
+					AssociateHalophileSequences();
+				}
 				
 			} else {
 				this.NoOS();
@@ -2856,6 +2864,12 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				this.CallSwitchWorker(OS.getName(), OSPopular.getName());
 				
 			}
+			
+			//for the halophiles, import sequences as appropriate
+			//UNTESTED
+			if (m.getName().equals("Haloarchaea")){
+				AssociateHalophileSequences();
+			}
 
 		} catch (Exception e) {
 			
@@ -3072,9 +3086,28 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		return Runtime.getRuntime().freeMemory();
 	}
 	
+	// ==== Sequence Import related ==== //
+	
+	//Import halophiles - a TEMPORARY GHETTO FIX JUST FOR NOW 11-21-2013
+	public void AssociateHalophileSequences(){
+		
+		//define base dir
+		String BaseDir = "http://www.bme.ucdavis.edu/facciotti/files/2013/11/";
+		
+		//associate each organism with a file on a server.
+		for (String OrgName : OS.getSpecies().keySet()){
+			String WebPath = BaseDir + OrgName + ".txt";
+			AnnotatedGenome AG = OS.getSpecies().get(OrgName);
+			AG.setGenomeSequenceFile(WebPath);
+			AG.setSeqsFromFile(false);
+		}
+		
+	}
+	
 	// ==== Display related ====== //
 	
 	//determine elapsed time, in human-readable format
+
 	public String getElapsedTime(long StartTime, long FinishTime){
 		
 		//initialize output

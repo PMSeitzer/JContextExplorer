@@ -1,6 +1,8 @@
 package moduls.frm.children;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FileDialog;
 import java.awt.GridLayout;
@@ -123,6 +125,11 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 			
 			public void actionPerformed(final ActionEvent evt) {
 				
+				//switch cursor
+				Component glassPane = fr.getRootPane().getGlassPane();
+				glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				glassPane.setVisible(true);
+				
 				/*
 				 * EXPORT SEQUENCES
 				 */
@@ -155,6 +162,10 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 				if (evt.getActionCommand().equals(ExportDataAsLongTable)){
 					ExportTable(true);
 				}
+				
+				//switch cursor back to normal
+				glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+				glassPane.setVisible(false);
 			}
 
 		};
@@ -215,19 +226,24 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 				//retrieve the appropriate node
 				DefaultMutableTreeNode TN = (DefaultMutableTreeNode) SearchResults.getPathForRow(SelectedElements[i]).getLastPathComponent();
 				
-				//an individual gene / genes
-				if (TN.isLeaf() && !TN.getAllowsChildren()){
-					if (!SelectedNodes.contains(TN)){
-						SelectedNodes.add(TN);
-					}
-				//a whole set of genes
-				} else {
-					int ChildCount = TN.getChildCount();
-					for (int j = 0; j < ChildCount; j++){
-						if (!SelectedNodes.contains(TN.getChildAt(j))){
-							SelectedNodes.add(TN.getChildAt(j));
+				//ignore root note
+				if (!TN.isRoot()){
+					
+					//an individual gene / genes
+					if (TN.isLeaf() && !TN.getAllowsChildren()){
+						if (!SelectedNodes.contains(TN)){
+							SelectedNodes.add(TN);
+						}
+					//a whole set of genes
+					} else {
+						int ChildCount = TN.getChildCount();
+						for (int j = 0; j < ChildCount; j++){
+							if (!SelectedNodes.contains(TN.getChildAt(j))){
+								SelectedNodes.add(TN.getChildAt(j));
+							}
 						}
 					}
+					
 				}
 				
 			}
@@ -368,21 +384,26 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 				//retrieve the appropriate node
 				DefaultMutableTreeNode TN = (DefaultMutableTreeNode) SearchResults.getPathForRow(SelectedElements[i]).getLastPathComponent();
 				
-				//an individual gene / genes
-				if (TN.isLeaf() && !TN.getAllowsChildren()){
-					String s = TN.toString();
-					if (!SelectedNodes.contains(TN)){
-						SelectedNodes.add(TN);
-					}
+				//ignore root note
+				if (!TN.isRoot()){
 					
-				//find appropriate genes within a whole set of genes
-				} else {
-					int ChildCount = TN.getChildCount();
-					for (int j = 0; j < ChildCount; j++){
-						if (!SelectedNodes.contains(TN.getChildAt(j))){
-							SelectedNodes.add(TN.getChildAt(j));
+					//an individual gene / genes
+					if (TN.isLeaf() && !TN.getAllowsChildren()){
+						String s = TN.toString();
+						if (!SelectedNodes.contains(TN)){
+							SelectedNodes.add(TN);
+						}
+						
+					//find appropriate genes within a whole set of genes
+					} else {
+						int ChildCount = TN.getChildCount();
+						for (int j = 0; j < ChildCount; j++){
+							if (!SelectedNodes.contains(TN.getChildAt(j))){
+								SelectedNodes.add(TN.getChildAt(j));
+							}
 						}
 					}
+					
 				}
 				
 			}
@@ -495,24 +516,13 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 				//retrieve the appropriate node
 				DefaultMutableTreeNode TN = (DefaultMutableTreeNode) SearchResults.getPathForRow(SelectedElements[i]).getLastPathComponent();
 				
-				//an individual gene / genes
-				if (TN.isLeaf() && !TN.getAllowsChildren()){
-//					String s = TN.toString();
-//					if (!SourceData.contains(s)){
-//						SourceData.add(s);
-//					}
-				//a whole set of genes
-				} else {
-					SelectedNodes.add(TN);
-//					int ChildCount = TN.getChildCount();
-//					for (int j = 0; j < ChildCount; j++){
-//						String s = TN.getChildAt(j).toString();
-//						if (!SourceData.contains(s)){
-//							SourceData.add(s);
-//						}
-//					}
+				//ignore root note
+				if (!TN.isRoot()){
+					//retrieve whole set
+					if (!(TN.isLeaf() && !TN.getAllowsChildren())){
+						SelectedNodes.add(TN);
+					}
 				}
-				
 			}
 			
 			// 			  Header, Sequence

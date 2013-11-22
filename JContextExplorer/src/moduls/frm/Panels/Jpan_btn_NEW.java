@@ -1740,7 +1740,7 @@ import definicions.MatriuDistancies;
 					fr.getCurrentLPW().cancel(true);
 					fr.setCurrentLPW(null);
 				}
-
+				
 				//message to console
 				System.out.println("The process has been cancelled.");
 			}

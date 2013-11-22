@@ -3,6 +3,7 @@ package genomeObjects;
 import haloGUI.GBKFieldMapping;
 
 import java.io.*;
+import java.net.URL;
 import java.text.Collator;
 import java.util.*;
 import java.util.Map.Entry;
@@ -25,7 +26,8 @@ public class AnnotatedGenome implements Serializable {
     	= new LinkedList<MotifGroup>();						    //
     private LinkedList<ContextSet> Groupings = new LinkedList<ContextSet>();					//-Predicted Groupings-----------------
     private File GenomeFile; 									//-Associated genome file --------------
-    private File GenomeSequenceFile;
+    private String GenomeSequenceFile;
+    private boolean SeqsFromFile;
     private boolean TryToComputeOperons;
 	private LinkedList<String> FeatureIncludeTypes;					//-Types of data worth importing/processing
 	private LinkedList<String> FeatureDisplayTypes;
@@ -1001,7 +1003,17 @@ public String DNASequence(String contig, int start, int stop, Strand strand){
 	//stream in until the appropriate line is discovered.
 	try {
 		
-		BufferedReader br = new BufferedReader(new FileReader(this.GenomeSequenceFile));
+		BufferedReader br = null;
+		//read from file
+		if (SeqsFromFile){
+			br = new BufferedReader(new FileReader(GenomeSequenceFile));
+		} else {
+		//read from website
+			URL SeqFile = new URL(GenomeSequenceFile);
+			InputStream is = SeqFile.openStream();
+			br = new BufferedReader(new InputStreamReader(is));
+		}
+		
 		String Line = null;
 
 		boolean ThisContig = false;
@@ -2246,11 +2258,11 @@ public void setLargestCluster(Integer largestCluster) {
 	LargestCluster = largestCluster;
 }
 
-public File getGenomeSequenceFile() {
+public String getGenomeSequenceFile() {
 	return GenomeSequenceFile;
 }
 
-public void setGenomeSequenceFile(File genomeSequenceFile) {
+public void setGenomeSequenceFile(String genomeSequenceFile) {
 	GenomeSequenceFile = genomeSequenceFile;
 }
 
@@ -2267,7 +2279,7 @@ public String retrieveSequence(String contig, int start, int stop, Strand strand
 	try {
 		
 		//import genome
-		genome = FastaReaderHelper.readFastaDNASequence(GenomeSequenceFile);
+		genome = FastaReaderHelper.readFastaDNASequence(new File(GenomeSequenceFile));
 		
 		//retrieve string value + extract subsequence
 		for (Entry<String, DNASequence> entry : genome.entrySet()) {
@@ -2282,6 +2294,14 @@ public String retrieveSequence(String contig, int start, int stop, Strand strand
 		e.printStackTrace();
 	}
 	return seq;
+}
+
+public boolean isSeqsFromFile() {
+	return SeqsFromFile;
+}
+
+public void setSeqsFromFile(boolean seqsFromFile) {
+	SeqsFromFile = seqsFromFile;
 }
 
 
