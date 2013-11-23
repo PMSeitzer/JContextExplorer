@@ -7,6 +7,7 @@ import genomeObjects.GenomicElementAndQueryMatch;
 import genomeObjects.OrganismSet;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -33,6 +34,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.SwingWorker;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 import javax.swing.text.BadLocationException;
@@ -77,6 +79,55 @@ public class Jpan_genome extends JPanel implements ActionListener,
 	//context view warning
 	private boolean ProceedWithContextView;
 	private int ViewingThreshold = 100;
+	
+	//SwingWorker class
+	public class RenderGenomesWorker extends SwingWorker<Void,Void>{
+
+		//fields
+		CSDisplayData CSDToContexts;
+		String Title;
+		//constructor
+		public RenderGenomesWorker(CSDisplayData CSD, String title){
+			CSDToContexts = CSD;
+			Title = title;
+		}
+		
+		@Override
+		protected Void doInBackground() throws Exception {
+			
+			//switch to wait cursor
+			Component glassPane = fr.getRootPane().getGlassPane();
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			glassPane.setVisible(true);
+			
+			//set progress bar to indeterminate
+			fr.getPanBtn().getProgressBar().setIndeterminate(true);
+			setProgress(100);
+			
+			//create main frame
+			new mainFrame(CSDToContexts, fr.getOS(), Title, fr);
+			
+			//switch cursor back to normal
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			glassPane.setVisible(false);
+			
+			return null;
+		}
+		
+		//done method
+		public void done(){
+			
+			//switch cursor back to normal
+			Component glassPane = fr.getRootPane().getGlassPane();
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			glassPane.setVisible(false);
+			
+			//set progress bar back to normal
+			setProgress(0);
+			fr.getPanBtn().getProgressBar().setIndeterminate(false);
+		}
+		
+	}
 	
 	public Jpan_genome(FrmPrincipalDesk fr) {
 		super();
@@ -388,7 +439,21 @@ public class Jpan_genome extends JPanel implements ActionListener,
 								//set wait cursor
 								fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 								
-								new mainFrame(CSDToContexts, fr.getOS(), Title, fr);
+								//old - make frame in main thread
+								//new mainFrame(CSDToContexts, fr.getOS(), Title, fr);
+								
+								//new - do in worker thread, so cancellable
+								RenderGenomesWorker RGW = new RenderGenomesWorker(CSDToContexts,Title);
+								RGW.addPropertyChangeListener(fr.getPanBtn());
+								
+								//add to main frame
+								fr.setCurrentRGW(RGW);
+								
+								//execute rendering
+								RGW.execute();
+								
+								//reset swing worker in main frame
+								fr.setCurrentRGW(null);
 								
 								// return cursor to default
 								fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));

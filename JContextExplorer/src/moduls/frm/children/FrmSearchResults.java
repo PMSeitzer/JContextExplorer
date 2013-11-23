@@ -35,6 +35,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -110,6 +111,395 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 	
 	// ====== Export-Related ======= //
 	
+	//extra class
+	public class ExportSequencesWorker extends SwingWorker<Void, Void>{
+
+		public ActionEvent evt;
+		//Strings
+		final String ExportDNASeqs = "Export Genes (DNA Sequences)";
+		final String ExportProtSeqs = "Export Protein Sequences";
+		final String ExportSegments = "Export Genomic Grouping Segments (DNA)";
+		final String ExportDataAsShortTable = "Export Data as Table (short)";
+		final String ExportDataAsLongTable = "Export Data as Table (long)";
+		
+		//constructor
+		public ExportSequencesWorker(ActionEvent e){
+			this.evt = e;
+		}
+		
+		@Override
+		protected Void doInBackground() throws Exception {
+			
+			//switch cursor
+			Component glassPane = fr.getRootPane().getGlassPane();
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			glassPane.setVisible(true);
+			
+			/*
+			 * EXPORT SEQUENCES
+			 */
+			
+			//export DNA sequence of whole segment
+			if (evt.getActionCommand().equals(ExportSegments)){
+				ExportSegments();
+			}
+			
+			//export DNA segment of selected genes
+			if (evt.getActionCommand().equals(ExportDNASeqs)) {
+				SWExportGeneSequences(false);
+			}
+			
+			//export protein sequence
+			if (evt.getActionCommand().equals(ExportProtSeqs)){
+				ExportGeneSequences(true);
+			}
+			
+			/*
+			 * EXPORT DATA TABLE
+			 */
+			
+			//export data table - short version
+			if (evt.getActionCommand().equals(ExportDataAsShortTable)){
+				ExportTable(false);
+			}
+			
+			//export data table - long version
+			if (evt.getActionCommand().equals(ExportDataAsLongTable)){
+				ExportTable(true);
+			}
+			
+			//switch cursor back to normal
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			glassPane.setVisible(false);
+
+			return null;
+		}
+		
+		//export a file DNA or protein sequences
+		public void SWExportGeneSequences(boolean isProtein){
+			
+			//Create + Show file dialog window
+			final FileDialog fd = new FileDialog(fr, "Export DNA Sequences of Selected Genes", FileDialog.SAVE);
+			fd.setDirectory(fr.getFileChooserSource().getAbsolutePath());
+			fd.setFile(".fasta");
+			fd.setVisible(true);
+			
+			//if a file is specified, export the data to file.
+			if (fd.getFile() != null){
+				
+				//recover data for file
+				String sPath = fd.getDirectory() + fd.getFile();
+				final File OutputFile = new File(sPath);
+				
+				//update file chooser
+				fr.setFileChooserSource(OutputFile.getParentFile());
+				
+				//a data structure to hold the selected node data
+				LinkedList<TreeNode> SelectedNodes = new LinkedList<TreeNode>();
+				
+				//iterate through tree nodes, retrieve selected, export
+				int[] SelectedElements = SearchResults.getSelectionRows();
+				for (int i = 0; i < SelectedElements.length; i++){
+					
+					//retrieve the appropriate node
+					DefaultMutableTreeNode TN = (DefaultMutableTreeNode) SearchResults.getPathForRow(SelectedElements[i]).getLastPathComponent();
+					
+					//ignore root note
+					if (!TN.isRoot()){
+						
+						//an individual gene / genes
+						if (TN.isLeaf() && !TN.getAllowsChildren()){
+							String s = TN.toString();
+							if (!SelectedNodes.contains(TN)){
+								SelectedNodes.add(TN);
+							}
+							
+						//find appropriate genes within a whole set of genes
+						} else {
+							int ChildCount = TN.getChildCount();
+							for (int j = 0; j < ChildCount; j++){
+								if (!SelectedNodes.contains(TN.getChildAt(j))){
+									SelectedNodes.add(TN.getChildAt(j));
+								}
+							}
+						}
+						
+					}
+					
+				}
+				
+				//hash maps to store data
+				
+				// 			  Node, Sequence
+				LinkedHashMap<TreeNode,String> Genes4Export = new LinkedHashMap<TreeNode, String>();
+				
+				boolean FailedExport = false;
+				
+				
+				//for progress bar
+				int NumCounter = 0;
+				
+				//iterate through output
+				for (TreeNode TN : SelectedNodes){
+
+					//retrieve all bioinfo.
+					GenomicElement E = LeafData.get(TN);
+					AnnotatedGenome AG = fr.getOS().getSpecies().get(LeafSource.get(TN));
+							
+					if (AG.getGenomeSequenceFile() != null){
+						
+						//retrieve sequence
+						//String str = AG.retrieveSequence(E.getContig(), E.getStart(), E.getStop(), E.getStrand());
+						String str = AG.DNASequence(E.getContig(), E.getStart(), E.getStop(), E.getStrand());
+						
+						//if these are proteins, modify to protein sequences.
+						if (isProtein){
+													
+							//convert string to protein sequence
+							DNASequence d = new DNASequence(str);
+							str = d.getReverseComplement().getSequenceAsString();
+							RNASequence rna = d.getRNASequence();
+							str = rna.getProteinSequence().toString();
+							
+						}
+						
+						//store values
+						Genes4Export.put(TN, str);
+						NumCounter++;
+						//adjust progress bar
+						// update progress bar
+						int progress = (int) Math
+								.round(100 * ((double) NumCounter / SelectedNodes.size()));
+						System.out.println("Exported " + NumCounter + "/" + SelectedNodes.size() + " Sequences.");
+						setProgress(progress);
+
+					} else {
+						FailedExport = true;
+					}
+					
+				}
+
+				//write sequence to file
+				try {
+			
+					//open file stream
+					BufferedWriter bw = new BufferedWriter(new FileWriter(OutputFile));
+					
+					for (TreeNode TN : Genes4Export.keySet()){
+						
+						//Header
+						bw.write(FastaHeaderReformat(TN));
+						bw.flush();
+						
+						//body
+						bw.write(FastaBodyReformat(Genes4Export.get(TN)));
+						bw.flush();
+					}
+					
+					//close file stream
+					bw.close();
+			
+				} catch (Exception e) {
+					e.printStackTrace();
+					JOptionPane.showMessageDialog(null, "The gene sequences could not be exported.",
+							"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
+				}
+				
+				//when a genome does not exist, failed export.
+				if (FailedExport){
+					JOptionPane.showMessageDialog(null, "One or more of the genes selected for export do " +
+							"not have an associated sequence file.\nTo associate a genome with a sequence file, " +
+							"select \"Load Genome Sequence File(s)\" from the Load drop-down menu.",
+							"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
+				}
+
+			}
+
+			
+		}
+		
+		//export a file of contiguous DNA stretches in all appropriate segments
+		public void SWExportSegments(){
+			
+			//Create + Show file dialog window
+			final FileDialog fd = new FileDialog(fr, "Export DNA Sequences of Selected Genomic Groupings", FileDialog.SAVE);
+			fd.setDirectory(fr.getFileChooserSource().getAbsolutePath());
+			fd.setFile(".fasta");
+			fd.setVisible(true);
+			
+			//if a file is specified, export the data to file.
+			if (fd.getFile() != null){
+				
+				//recover data for file
+				String sPath = fd.getDirectory() + fd.getFile();
+				final File OutputFile = new File(sPath);
+				
+				//update file chooser
+				fr.setFileChooserSource(OutputFile.getParentFile());
+				
+				//a data structure to hold the source data
+				LinkedList<TreeNode> SelectedNodes = new LinkedList<TreeNode>();
+				
+				//iterate through tree nodes, retrieve selected, export
+				int[] SelectedElements = SearchResults.getSelectionRows();
+				for (int i = 0; i < SelectedElements.length; i++){
+					
+					//retrieve the appropriate node
+					DefaultMutableTreeNode TN = (DefaultMutableTreeNode) SearchResults.getPathForRow(SelectedElements[i]).getLastPathComponent();
+					
+					//ignore root note
+					if (!TN.isRoot()){
+						//retrieve whole set
+						if (!(TN.isLeaf() && !TN.getAllowsChildren())){
+							SelectedNodes.add(TN);
+						}
+					}
+				}
+				
+				// 			  Header, Sequence
+				LinkedHashMap<TreeNode,String> Genes4Export = new LinkedHashMap<TreeNode, String>();
+				
+				//export fails because genomes not loaded.
+				boolean FailedExport = false;
+				
+				if (SelectedNodes.size() > 0){
+					
+					//print output to table
+					for (TreeNode TN : SelectedNodes){
+						
+						//retrieve from CSD
+						LinkedList<GenomicElementAndQueryMatch> Elements = CSD.getEC().getContexts().get(TN.toString());
+						
+						//split up this list into smaller lists
+						LinkedHashMap<String, LinkedList<GenomicElement>> ContigSplits
+							= new LinkedHashMap<String, LinkedList<GenomicElement>>();
+					
+						GenomicElement E = null;
+						
+						for (GenomicElementAndQueryMatch GandE : Elements){
+							
+							//retrieve element
+							E = GandE.getE();
+							
+							//organize by hash map
+							if (ContigSplits.get(E.getContig()) != null){
+								LinkedList<GenomicElement> L = ContigSplits.get(E.getContig());
+								L.add(E);
+								ContigSplits.put(E.getContig(), L);
+							} else {
+								LinkedList<GenomicElement> L = new LinkedList<GenomicElement>();
+								L.add(E);
+								ContigSplits.put(E.getContig(),L);
+							}
+							
+						}
+						
+						//retrieve bioinfo.
+						AnnotatedGenome AG = fr.getOS().getSpecies().get(CSD.getEC().getSourceSpeciesNames().get(TN.toString()));
+						
+						int NumCounter = 0;
+						
+						if (AG.getGenomeSequenceFile() != null){
+							
+							//segment by sequence
+							for (String contigkey : ContigSplits.keySet()){
+								
+								//retrieve all appropriate elements
+								LinkedList<GenomicElement> LL = ContigSplits.get(contigkey);
+								
+								int MinStart = 99999999;
+								int MaxStop = -1;
+								
+								for (GenomicElement E1 : LL){
+									if (E1.getStart() < MinStart){
+										MinStart = E1.getStart();
+									}
+									if (E1.getStop() > MaxStop){
+										MaxStop = E1.getStop();
+									}
+								}
+								
+								//retrieve sequence
+								String str = AG.DNASequence(contigkey, MinStart, MaxStop, Strand.POSITIVE);
+								
+								//store values
+								Genes4Export.put(TN, str);
+								NumCounter++;
+								
+								//progress
+								int progress = (int) Math
+										.round(100 * ((double) NumCounter / SelectedNodes.size()));
+								System.out.println("Exported " + NumCounter + "/" + SelectedNodes.size() + " Sequences.");
+								setProgress(progress);
+								
+							}
+
+						} else {
+							FailedExport = true;
+						}
+						
+					}
+
+					//write sequence to file
+					try {
+				
+						//open file stream
+						BufferedWriter bw = new BufferedWriter(new FileWriter(OutputFile));
+
+						for (TreeNode TN : Genes4Export.keySet()){
+							
+							//Header
+							bw.write(FastaHeaderReformat(TN));
+							bw.flush();
+							
+							//body
+							bw.write(FastaBodyReformat(Genes4Export.get(TN)));
+							bw.flush();
+							
+
+						}
+						
+						//close file stream
+						bw.close();
+				
+					} catch (Exception e) {
+						e.printStackTrace();
+						JOptionPane.showMessageDialog(null, "The sequences could not be exported.",
+								"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
+					}
+					
+					//when a genome does not exist, failed export.
+					if (FailedExport){
+						JOptionPane.showMessageDialog(null, "One or more of the genes selected for export do " +
+								"not have an associated sequence file.\nTo associate a genome with a sequence file, " +
+								"select \"Load Genome Sequence File(s)\" from the Load drop-down menu.",
+								"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
+					}
+					
+				} else {
+					JOptionPane.showMessageDialog(null, "No genomic groupings are selected.\n" +
+							"Please select one or more groupings to export associated sequences.",
+							"No Groupings Selected",JOptionPane.ERROR_MESSAGE);
+				}
+
+			}
+
+			
+		}
+		
+		//post-processing
+		public void done(){
+			
+			//reset progress bar
+			setProgress(0);
+						
+			//switch cursor back to normal
+			Component glassPane = fr.getRootPane().getGlassPane();
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			glassPane.setVisible(false);
+		}
+	}
+	
 	//create the pop-up menu object
 	private void InitializeSequenceExportMenu(){
 		
@@ -125,47 +515,60 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 			
 			public void actionPerformed(final ActionEvent evt) {
 				
-				//switch cursor
-				Component glassPane = fr.getRootPane().getGlassPane();
-				glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				glassPane.setVisible(true);
+				//New SwingWorker
+				ExportSequencesWorker ESW = new ExportSequencesWorker(evt);
+				ESW.addPropertyChangeListener(fr.getPanBtn());
 				
-				/*
-				 * EXPORT SEQUENCES
-				 */
+				//add to main frame
+				fr.setCurrentESW(ESW);
 				
-				//export DNA sequence of whole segment
-				if (evt.getActionCommand().equals(ExportSegments)){
-					ExportSegments();
-				}
+				//execute action
+				ESW.execute();
 				
-				//export DNA segment of selected genes
-				if (evt.getActionCommand().equals(ExportDNASeqs)) {
-					ExportGeneSequences(false);
-				}
+				//reset swing worker in main frame
+				fr.setCurrentESW(null);
 				
-				//export protein sequence
-				if (evt.getActionCommand().equals(ExportProtSeqs)){
-					ExportGeneSequences(true);
-				}
-				
-				/*
-				 * EXPORT DATA TABLE
-				 */
-				
-				//export data table - short version
-				if (evt.getActionCommand().equals(ExportDataAsShortTable)){
-					ExportTable(false);
-				}
-				
-				//export data table - long version
-				if (evt.getActionCommand().equals(ExportDataAsLongTable)){
-					ExportTable(true);
-				}
-				
-				//switch cursor back to normal
-				glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-				glassPane.setVisible(false);
+//				//switch cursor
+//				Component glassPane = fr.getRootPane().getGlassPane();
+//				glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+//				glassPane.setVisible(true);
+//				
+//				/*
+//				 * EXPORT SEQUENCES
+//				 */
+//				
+//				//export DNA sequence of whole segment
+//				if (evt.getActionCommand().equals(ExportSegments)){
+//					ExportSegments();
+//				}
+//				
+//				//export DNA segment of selected genes
+//				if (evt.getActionCommand().equals(ExportDNASeqs)) {
+//					ExportGeneSequences(false);
+//				}
+//				
+//				//export protein sequence
+//				if (evt.getActionCommand().equals(ExportProtSeqs)){
+//					ExportGeneSequences(true);
+//				}
+//				
+//				/*
+//				 * EXPORT DATA TABLE
+//				 */
+//				
+//				//export data table - short version
+//				if (evt.getActionCommand().equals(ExportDataAsShortTable)){
+//					ExportTable(false);
+//				}
+//				
+//				//export data table - long version
+//				if (evt.getActionCommand().equals(ExportDataAsLongTable)){
+//					ExportTable(true);
+//				}
+//				
+//				//switch cursor back to normal
+//				glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+//				glassPane.setVisible(false);
 			}
 
 		};

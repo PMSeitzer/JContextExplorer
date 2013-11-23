@@ -13,6 +13,7 @@ import inicial.Language;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FileDialog;
@@ -1740,6 +1741,29 @@ import definicions.MatriuDistancies;
 					fr.getCurrentLPW().cancel(true);
 					fr.setCurrentLPW(null);
 				}
+				
+				//kill export sequences worker
+				if (fr.getCurrentESW() != null) {
+					fr.getCurrentESW().cancel(true);
+					fr.setCurrentESW(null);
+				}
+				
+				//kill display sequences worker
+				if (fr.getCurrentRGW() != null){
+					fr.getCurrentRGW().cancel(true);
+					fr.setCurrentRGW(null);
+				}
+				
+				//GUI-related re-sets
+				
+				//progress bar back to defaults
+				fr.getPanBtn().getProgressBar().setValue(0);
+				fr.getPanBtn().getProgressBar().setIndeterminate(false);
+				
+				//switch cursor back to normal
+				Component glassPane = fr.getRootPane().getGlassPane();
+				glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+				glassPane.setVisible(false);
 				
 				//message to console
 				System.out.println("The process has been cancelled.");

@@ -125,11 +125,13 @@ import moduls.frm.Panels.Jpan_TabbedMenu;
 import moduls.frm.Panels.Jpan_btn;
 import moduls.frm.Panels.Jpan_btn_NEW;
 import moduls.frm.Panels.Jpan_genome;
+import moduls.frm.Panels.Jpan_genome.RenderGenomesWorker;
 import moduls.frm.children.AboutBox;
 import moduls.frm.children.AboutJCE;
 import moduls.frm.children.CitationInfo;
 import moduls.frm.children.DeviationMeasuresBox;
 import moduls.frm.children.FrmPiz;
+import moduls.frm.children.FrmSearchResults.ExportSequencesWorker;
 import moduls.frm.children.ManageDissimilarity;
 import moduls.frm.children.ManageMotifs;
 import moduls.frm.children.manageContextSetsv2;
@@ -326,6 +328,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private LoadGenomesWorker CurrentLGW;
 	private LoadPopularWorker CurrentLPW;
 	private boolean SearchWorkerRunning = false;
+	private ExportSequencesWorker CurrentESW;
+	private RenderGenomesWorker CurrentRGW;
 	
 	// ===== Classes ===== //
 	
@@ -2049,6 +2053,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 						ContinueLoading = true;
 					}
 					
+					//proceed to attempt to stream in from internet
 					if (ContinueLoading){
 						LoadPopularWorker LPW = new LoadPopularWorker(j);
 						LPW.addPropertyChangeListener(panBtn);
@@ -3669,6 +3674,22 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	public void setCVS(ContextViewerSettings cVS) {
 		CVS = cVS;
+	}
+
+	public ExportSequencesWorker getCurrentESW() {
+		return CurrentESW;
+	}
+
+	public void setCurrentESW(ExportSequencesWorker currentESW) {
+		CurrentESW = currentESW;
+	}
+
+	public RenderGenomesWorker getCurrentRGW() {
+		return CurrentRGW;
+	}
+
+	public void setCurrentRGW(RenderGenomesWorker rGW) {
+		CurrentRGW = rGW;
 	}
 
 }
