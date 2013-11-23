@@ -1390,30 +1390,39 @@ import definicions.MatriuDistancies;
 			setProgress(0);
 			progressBar.setString("");
 			progressBar.setBorderPainted(false);
-			
-			//proceed if exception thrown
-			if (!ExceptionThrown){
 				
-				//process completed!
-				ProcessCompleted = true;
-				fr.setTmpCluster(RootCluster);
+			//only do these things if the searchworker is not recognized as cancelled.
+			if (!fr.isSearchWorkerCancelled()){
 				
-				if (DisplayOutput){
+				//proceed if exception thrown
+				if (!ExceptionThrown){
 					
-					//try to update values
-					try {
-						//update values for display
-						if (AnalysesList.isOptionComputeDendrogram()){
-							multiDendro.getArrel().setBase(minBase);
-						}
-						showCalls(action, this.WorkerQD); //pass on the QD + display options
-					} catch (Exception ex) {
+					//process completed!
+					ProcessCompleted = true;
+					fr.setTmpCluster(RootCluster);
+					
+					if (DisplayOutput){
 						
-					}
+						//try to update values
+						try {
+							//update values for display
+							if (AnalysesList.isOptionComputeDendrogram()){
+								multiDendro.getArrel().setBase(minBase);
+							}
+							showCalls(action, this.WorkerQD); //pass on the QD + display options
+						} catch (Exception ex) {
+							
+						}
 
+					}
 				}
+				
+			} else {
+				
+				//default: search worker is not cancelled.
+				fr.setSearchWorkerCancelled(false);
 			}
-			
+
 			//no search worker is running, any more
 			//fr.setSearchWorkerRunning(false);
 
@@ -1725,52 +1734,15 @@ import definicions.MatriuDistancies;
 		@Override
 		public void actionPerformed(final ActionEvent evt) {
 			
-			//cancel button - version 1.1
-			if (evt.getSource().equals(btnCancel)){
-				
-				//Kill search worker
-				if (CurrentSearch != null){
-					CurrentSearch.cancel(true);
-					CurrentSearch = null;
-					de = null;
-				}
-				
-				//kill popular set retrieval worker
-				if (fr.getCurrentLPW() != null){
-					fr.getCurrentLPW().SelectedItem.setSelected(false);
-					fr.getCurrentLPW().cancel(true);
-					fr.setCurrentLPW(null);
-				}
-				
-				//kill export sequences worker
-				if (fr.getCurrentESW() != null) {
-					fr.getCurrentESW().cancel(true);
-					fr.setCurrentESW(null);
-				}
-				
-				//kill display sequences worker
-				if (fr.getCurrentRGW() != null){
-					fr.getCurrentRGW().cancel(true);
-					fr.setCurrentRGW(null);
-				}
-				
-				//GUI-related re-sets
-				
-				//progress bar back to defaults
-				fr.getPanBtn().getProgressBar().setValue(0);
-				fr.getPanBtn().getProgressBar().setIndeterminate(false);
-				
-				//switch cursor back to normal
-				Component glassPane = fr.getRootPane().getGlassPane();
-				glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-				glassPane.setVisible(false);
-				
-				//message to console
-				System.out.println("The process has been cancelled.");
-			}
-			
 			if (fr.getOS() != null){
 				
+				//cancel button - version 1.1
+				if (evt.getSource().equals(btnCancel)){
+					
+					 //cancellations!
+					 CancelBtn();
+
+				}
 				
 				String action = null;
 				FitxerDades fitxTmp;
@@ -1976,6 +1948,11 @@ import definicions.MatriuDistancies;
 										Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
 										Jpan_Menu.getPrecision(), true);
 								CurrentSearch.addPropertyChangeListener(this);
+								
+								
+								//default: the search worker is not cancelled.
+								fr.setSearchWorkerCancelled(false);
+								
 								CurrentSearch.execute();
 
 							}
@@ -2009,6 +1986,10 @@ import definicions.MatriuDistancies;
 									Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
 									Jpan_Menu.getPrecision(), true);//phylogeny
 							CurrentSearch.addPropertyChangeListener(this);
+							
+							//default: the search worker is not cancelled.
+							fr.setSearchWorkerCancelled(false);
+							
 							CurrentSearch.execute();
 						}
 
@@ -2046,12 +2027,20 @@ import definicions.MatriuDistancies;
 								Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
 								Jpan_Menu.getPrecision(), true);//phylogeny
 						CurrentSearch.addPropertyChangeListener(this);
+						
+						//default: the search worker is not cancelled.
+						fr.setSearchWorkerCancelled(false);
+						
 						CurrentSearch.execute();
 					} else {
 						CurrentSearch = new SearchWorker(SelectedFrame,action,
 								Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
 								Jpan_Menu.getPrecision(), true);//phylogeny
 						CurrentSearch.addPropertyChangeListener(this);
+						
+						//default: the search worker is not cancelled.
+						fr.setSearchWorkerCancelled(false);
+						
 						CurrentSearch.execute();
 					}
 					
@@ -2082,6 +2071,58 @@ import definicions.MatriuDistancies;
 					fr.NoOS();
 				}
 			}
+		}
+		
+		//cancel button
+		public void CancelBtn(){
+			
+			//Kill search worker
+			if (CurrentSearch != null){
+				CurrentSearch.cancel(true);
+				CurrentSearch = null;
+				de = null;
+			}
+			
+			//kill popular set retrieval worker
+			if (fr.getCurrentLPW() != null){
+				fr.getCurrentLPW().SelectedItem.setSelected(false);
+				fr.getCurrentLPW().cancel(true);
+				fr.setCurrentLPW(null);
+			}
+			
+			//kill export sequences worker
+			if (fr.getCurrentESW() != null) {
+				fr.getCurrentESW().cancel(true);
+				fr.setCurrentESW(null);
+			}
+			
+			//kill display sequences worker
+			if (fr.getCurrentRGW() != null){
+				fr.getCurrentRGW().cancel(true);
+				fr.setCurrentRGW(null);
+			}
+			
+			//After cancellation, need to modify some things in the main thread.
+			//Try to cut out ASAP - but there may be a better way.
+			
+			//Output-associated resets
+			fr.setRenderGenomesWorkerCancelled(true);	//Rendered Genome Worker
+			fr.setSearchWorkerCancelled(true); 			//Search Worker
+			
+			//GUI-related resets
+			
+			//progress bar back to defaults
+			fr.getPanBtn().getProgressBar().setValue(0);
+			fr.getPanBtn().getProgressBar().setIndeterminate(false);
+			
+			//switch cursor back to normal
+			Component glassPane = fr.getRootPane().getGlassPane();
+			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			glassPane.setVisible(false);
+			
+			//message to console
+			System.out.println("The process has been cancelled.");
+			
 		}
 		
 		public void showCalls(String action, QueryData qD) {

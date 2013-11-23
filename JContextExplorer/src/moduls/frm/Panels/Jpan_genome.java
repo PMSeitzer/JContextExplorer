@@ -449,6 +449,9 @@ public class Jpan_genome extends JPanel implements ActionListener,
 								//add to main frame
 								fr.setCurrentRGW(RGW);
 								
+								//the worker has not yet been cancelled
+								fr.setRenderGenomesWorkerCancelled(false);
+								
 								//execute rendering
 								RGW.execute();
 								

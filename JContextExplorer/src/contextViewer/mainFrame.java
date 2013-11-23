@@ -50,7 +50,7 @@ public class mainFrame extends JFrame implements ComponentListener{
 	
 	//constructor: include all biological information
 	public mainFrame(CSDisplayData csd, OrganismSet os, String title, FrmPrincipalDesk fr){
-		
+				
 		//INITIALIZATIONS
 		super(title);
 		this.CSD = csd;
@@ -59,6 +59,7 @@ public class mainFrame extends JFrame implements ComponentListener{
 		this.setFr(fr);
 		this.addComponentListener(this);
 		
+
 		//RETRIEVE SYSTEM INFO
 		Dimension pantalla = Toolkit.getDefaultToolkit().getScreenSize();
 		dim = new Dimension();
@@ -126,14 +127,26 @@ public class mainFrame extends JFrame implements ComponentListener{
 				fr.getCurrentFrame().getInternalFrameData().getQD().getCSD().getEC().getSourceContigNames().put(s, rgp.getSplitContigNames().get(s));
 			}
 		}
+
 		
 //		//debugging
 //		System.out.println("Main frame, before viewing");
 //		for (ContextLeaf CL : fr.getCurrentFrame().getInternalFrameData().getQD().getCSD().getGraphicalContexts()){
 //			System.out.println(CL.getName() + " " +fr.getCurrentFrame().getInternalFrameData().getQD().getCSD().getEC().getContexts().get(CL.getName()));
 //		}
-	
-		this.setVisible(true);
+		
+		//ghetto work-around?
+		if (!fr.isRenderGenomesWorkerCancelled()){
+			this.setVisible(true);
+		} else {
+			
+			//instead of displaying, just dispose of these computations.
+			this.dispose();
+			
+			//re-set for next search.
+			fr.setRenderGenomesWorkerCancelled(false);
+		}
+
 	}
 
 	public CSDisplayData getCSD() {

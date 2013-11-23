@@ -330,6 +330,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private boolean SearchWorkerRunning = false;
 	private ExportSequencesWorker CurrentESW;
 	private RenderGenomesWorker CurrentRGW;
+	private boolean RenderGenomesWorkerCancelled = false;
+	private boolean SearchWorkerCancelled = false;
 	
 	// ===== Classes ===== //
 	
@@ -3690,6 +3692,22 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	public void setCurrentRGW(RenderGenomesWorker rGW) {
 		CurrentRGW = rGW;
+	}
+
+	public boolean isRenderGenomesWorkerCancelled() {
+		return RenderGenomesWorkerCancelled;
+	}
+
+	public void setRenderGenomesWorkerCancelled(boolean renderGenomesWorkerCancelled) {
+		RenderGenomesWorkerCancelled = renderGenomesWorkerCancelled;
+	}
+
+	public boolean isSearchWorkerCancelled() {
+		return SearchWorkerCancelled;
+	}
+
+	public void setSearchWorkerCancelled(boolean searchWorkerCancelled) {
+		SearchWorkerCancelled = searchWorkerCancelled;
 	}
 
 }
