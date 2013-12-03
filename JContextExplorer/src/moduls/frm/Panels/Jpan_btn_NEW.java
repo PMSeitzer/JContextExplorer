@@ -262,49 +262,114 @@ import definicions.MatriuDistancies;
 					SearchOrganismsbyCluster();
 				}
 				
-				if (DisplayOutput){
-					if (this.WorkerQD.getCSD().getEC().getNumberOfEntries() == 1){
-						System.out.println("Search Completed. " + this.WorkerQD.getCSD().getEC().getNumberOfEntries() + " Gene Grouping Recovered.");					
-					} else {
-						System.out.println("Search Completed. " + this.WorkerQD.getCSD().getEC().getNumberOfEntries() + " Gene Groupings Recovered.");					
-					}
-				}
-
-				//adjust analyses options based on number of matches.
-				if (this.WorkerQD.getCSD().getEC().getNumberOfEntries() < 2){
-					this.WorkerQD.getAnalysesList().setOptionComputeDendrogram(false);
-					this.WorkerQD.getAnalysesList().setOptionComputeContextGraph(false);
-					if (this.WorkerQD.getCSD().getEC().getNumberOfEntries() == 0){
-						String errMsg = "There were no matches to the query (or queries).";
-						SearchResultsFrame = new FrmSearchResults();
-						if (DisplayOutput){
-							showError(errMsg);
+				//only display output if the thread was no interrupted.
+				if (!Thread.currentThread().isInterrupted()){
+					if (DisplayOutput){
+						if (this.WorkerQD.getCSD().getEC().getNumberOfEntries() == 1){
+							System.out.println("Search Completed. " + this.WorkerQD.getCSD().getEC().getNumberOfEntries() + " Gene Grouping Recovered.");					
+						} else {
+							System.out.println("Search Completed. " + this.WorkerQD.getCSD().getEC().getNumberOfEntries() + " Gene Groupings Recovered.");					
 						}
-						ExceptionThrown = true;
-						RootCluster = null;
+					}
+					
+					//adjust analyses options based on number of matches.
+					if (this.WorkerQD.getCSD().getEC().getNumberOfEntries() < 2){
+						this.WorkerQD.getAnalysesList().setOptionComputeDendrogram(false);
+						this.WorkerQD.getAnalysesList().setOptionComputeContextGraph(false);
+						if (this.WorkerQD.getCSD().getEC().getNumberOfEntries() == 0){
+							String errMsg = "There were no matches to the query (or queries).";
+							SearchResultsFrame = new FrmSearchResults();
+							if (DisplayOutput){
+								showError(errMsg);
+							}
+							ExceptionThrown = true;
+							RootCluster = null;
 
+						}
 					}
 				}
 				
 				//Analyses options
 				//=================================//
 				
+				//check to ensure that this search worker has not been cancelled.
+				//if (!fr.isSearchWorkerCancelled()){
+				
 				if (!ExceptionThrown){
 					
 					//(1) Construct search pane
-					if (AnalysesList.isOptionDisplaySearches()){
-						CreateSearchPanel();
+					if (!Thread.currentThread().isInterrupted()){
+						if (AnalysesList.isOptionDisplaySearches()){
+							CreateSearchPanel();
+						}
 						
-					}
+					} else {
 
-					//(2) Compute dendrogram
-					if (AnalysesList.isOptionComputeDendrogram()){
-						ComputeDendrogram();
+						//re-set cursor, progress bar
+						fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+						setProgress(0);
+						progressBar.setString("");
+						progressBar.setBorderPainted(false);
+						
+						//set cancellation parameter for EDT
+						fr.setSearchWorkerCancelled(true);
 					}
 					
+					//(2) Compute dendrogram
+					if (!Thread.currentThread().isInterrupted()){
+						if (AnalysesList.isOptionComputeDendrogram()){
+							ComputeDendrogram();
+						}
+						
+					//if the process has been cancelled, restore defaults.
+					} else {
+
+						//re-set cursor, progress bar
+						fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+						setProgress(0);
+						progressBar.setString("");
+						progressBar.setBorderPainted(false);
+						
+						//set cancellation parameter for EDT
+						fr.setSearchWorkerCancelled(true);
+					}
+					
+					//(3) Render products into output
+					if (!Thread.currentThread().isInterrupted()){
+						
+						//process completed!
+						ProcessCompleted = true;
+						fr.setTmpCluster(RootCluster);
+						
+						//(3) Display output
+						if (DisplayOutput){
+							
+							//try to update values
+							try {
+								//update values for display
+								if (AnalysesList.isOptionComputeDendrogram()){
+									multiDendro.getArrel().setBase(minBase);
+								}
+								showCalls(action, this.WorkerQD); //pass on the QD + display options
+							} catch (Exception ex) {
+								
+							}
+						}
+						
+						//if the process has been cancelled, restore defaults.
+						} else {
+
+							//re-set cursor, progress bar
+							fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+							setProgress(0);
+							progressBar.setString("");
+							progressBar.setBorderPainted(false);
+							
+							//set cancellation parameter for EDT
+							fr.setSearchWorkerCancelled(true);
+						}
 				}
 
-				
 			} catch (Exception ex) {
 				if (DisplayOutput){
 					showError("There were no matches to the query (or queries).");
@@ -312,7 +377,8 @@ import definicions.MatriuDistancies;
 				ExceptionThrown = true;
 				ex.printStackTrace();
 			}
-			
+
+				//exit background thread
 				return null;
 			}
 			
@@ -542,198 +608,212 @@ import definicions.MatriuDistancies;
 					progress = (int) (50*((double)SpeciesCounter/(double)fr.getOS().getSpecies().size()));
 					//update progress
 					setProgress(progress);
+					
+					//check for cancellations
+					if (0 == progress%2){
+						if (Thread.currentThread().isInterrupted()){
+							setProgress(0);
+							break;
+						}
+					}
+					
 				}
 				
-				//re-computation
-				if (CurrentCSD.getType().equals("GenesAround")){
+				//only proceed if the thread has not been cancelled.
+				if (!Thread.currentThread().isInterrupted()){
 					
-					//attempt to standardize
-					if (CurrentCSD.isRelativeBeforeAfter()){
-
-						//first, retrieve an alternative list
-						LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> AlternativeContextSetList = 
-								new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
+					//re-computation
+					if (CurrentCSD.getType().equals("GenesAround")){
 						
-						//adjust values for alternative list
-						int GenesBefore = CurrentCSD.getGenesBefore();
-						int GenesAfter = CurrentCSD.getGenesAfter();
-						
-						CurrentCSD.setGenesBefore(GenesAfter);
-						CurrentCSD.setGenesAfter(GenesBefore);
+						//attempt to standardize
+						if (CurrentCSD.isRelativeBeforeAfter()){
 
-						//retrieve alternative set of hits
-						for (Entry<String, AnnotatedGenome> entry : fr.getOS().getSpecies().entrySet()) {
+							//first, retrieve an alternative list
+							LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> AlternativeContextSetList = 
+									new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
 							
-							//Retrieve matches
-							HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = 
-									entry.getValue().MatchesOnTheFly(Queries, null, CurrentCSD);
+							//adjust values for alternative list
+							int GenesBefore = CurrentCSD.getGenesBefore();
+							int GenesAfter = CurrentCSD.getGenesAfter();
 							
-							//create an iterator for the HashSet
-							Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
-							
-							int AlternativeOperonCounter = 0; //reset operon counter
-							while(it.hasNext()){
+							CurrentCSD.setGenesBefore(GenesAfter);
+							CurrentCSD.setGenesAfter(GenesBefore);
+
+							//retrieve alternative set of hits
+							for (Entry<String, AnnotatedGenome> entry : fr.getOS().getSpecies().entrySet()) {
 								
-								//context unit object
-								LinkedList<GenomicElementAndQueryMatch> ContextSegment = it.next();
+								//Retrieve matches
+								HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = 
+										entry.getValue().MatchesOnTheFly(Queries, null, CurrentCSD);
 								
-								//increment counters
-								AlternativeOperonCounter++;	
+								//create an iterator for the HashSet
+								Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
 								
-								//define key
-								String Key = entry.getKey() + "-" + Integer.toString(AlternativeOperonCounter);
+								int AlternativeOperonCounter = 0; //reset operon counter
+								while(it.hasNext()){
+									
+									//context unit object
+									LinkedList<GenomicElementAndQueryMatch> ContextSegment = it.next();
+									
+									//increment counters
+									AlternativeOperonCounter++;	
+									
+									//define key
+									String Key = entry.getKey() + "-" + Integer.toString(AlternativeOperonCounter);
+									
+									//put elements into hashmap
+									AlternativeContextSetList.put(Key, ContextSegment);
+								}
 								
-								//put elements into hashmap
-								AlternativeContextSetList.put(Key, ContextSegment);
 							}
 							
-						}
-						
-						LinkedHashMap<String, Strand> QueryHash = new LinkedHashMap<String, Strand>();
-						
-						//determine 'proper' orientation, based on number
-						int StrandForward = 0; 
-						int StrandReverse = 0;
-						for (String s : ContextSetList.keySet()){
+							LinkedHashMap<String, Strand> QueryHash = new LinkedHashMap<String, Strand>();
 							
-							LinkedList<GenomicElementAndQueryMatch> LL = ContextSetList.get(s);
-							for (GenomicElementAndQueryMatch GandE : LL){
-								if (GandE.isQueryMatch()){
-									if (GandE.getE().getStrand().equals(Strand.POSITIVE)){
-										StrandForward++;
-										QueryHash.put(s, Strand.POSITIVE);
-									} else {
-										StrandReverse++;
-										QueryHash.put(s, Strand.NEGATIVE);
+							//determine 'proper' orientation, based on number
+							int StrandForward = 0; 
+							int StrandReverse = 0;
+							for (String s : ContextSetList.keySet()){
+								
+								LinkedList<GenomicElementAndQueryMatch> LL = ContextSetList.get(s);
+								for (GenomicElementAndQueryMatch GandE : LL){
+									if (GandE.isQueryMatch()){
+										if (GandE.getE().getStrand().equals(Strand.POSITIVE)){
+											StrandForward++;
+											QueryHash.put(s, Strand.POSITIVE);
+										} else {
+											StrandReverse++;
+											QueryHash.put(s, Strand.NEGATIVE);
+										}
 									}
 								}
 							}
+							
+							//initialize a final list
+							LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> FinalContextSetList = 
+									new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
+							
+							
+							//write entries to the final list, if appropriate
+							for (String s : ContextSetList.keySet()){
+								LinkedList<GenomicElementAndQueryMatch> FwdLL = ContextSetList.get(s);
+								LinkedList<GenomicElementAndQueryMatch> RevLL = AlternativeContextSetList.get(s);
+								
+								//don't flip Fwd
+								if (StrandForward >= StrandReverse){
+									if (QueryHash.get(s).equals(Strand.POSITIVE)){
+										FinalContextSetList.put(s, FwdLL);
+									} else {
+										FinalContextSetList.put(s, RevLL);
+									}
+								//don't flip reverse	
+								} else {
+									if (QueryHash.get(s).equals(Strand.POSITIVE)){
+										FinalContextSetList.put(s, RevLL);
+									} else {
+										FinalContextSetList.put(s, FwdLL);
+									}
+								}
+							}
+							
+							//update EC + return CSD to original
+							ContextSetList = FinalContextSetList;
+							CurrentCSD.setGenesBefore(GenesBefore);
+							CurrentCSD.setGenesAfter(GenesAfter);
 						}
+					}			
+					
+					//adjust values, if necessary, if context set type is a cassette
+					if (isCassette){
+						int CassetteCounter = 0;
 						
-						//initialize a final list
-						LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> FinalContextSetList = 
+						//create a new context list
+						LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> CassetteContextSetList = 
 								new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
 						
+						//species names
+						LinkedHashMap<String, String> CassetteSourceNames =
+								new LinkedHashMap<String, String>();
 						
-						//write entries to the final list, if appropriate
-						for (String s : ContextSetList.keySet()){
-							LinkedList<GenomicElementAndQueryMatch> FwdLL = ContextSetList.get(s);
-							LinkedList<GenomicElementAndQueryMatch> RevLL = AlternativeContextSetList.get(s);
+						//contig names
+						LinkedHashMap<String, HashSet<String>> CassetteContigNames = 
+								new LinkedHashMap<String, HashSet<String>>();
+						
+						//parameters for each
+						String SpeciesKey;
+						LinkedList<GenomicElementAndQueryMatch> SpeciesGenes;
+						
+						for (AnnotatedGenome AG : fr.getOS().getSpecies().values()){
 							
-							//don't flip Fwd
-							if (StrandForward >= StrandReverse){
-								if (QueryHash.get(s).equals(Strand.POSITIVE)){
-									FinalContextSetList.put(s, FwdLL);
-								} else {
-									FinalContextSetList.put(s, RevLL);
+							//Species Name
+							SpeciesKey = AG.getSpecies() + "-1";
+							SpeciesGenes = new LinkedList<GenomicElementAndQueryMatch>();
+							
+							//Contigs
+							HashSet<String> Contigs = new HashSet<String>();
+							
+							for (GenomicElement E : AG.getElements()){
+								if (GenesForCassettes.contains(E.getAnnotation())){
+									
+									//create appropriate GenomicElementAndQueryMatch
+									GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+									GandE.setQueryMatch(true);
+									GandE.setE(E);
+									Contigs.add(E.getContig());
+									
+									//add to list
+									SpeciesGenes.add(GandE);
 								}
-							//don't flip reverse	
-							} else {
-								if (QueryHash.get(s).equals(Strand.POSITIVE)){
-									FinalContextSetList.put(s, RevLL);
-								} else {
-									FinalContextSetList.put(s, FwdLL);
-								}
+							}
+							
+							//add, if not empty
+							if (!SpeciesGenes.isEmpty()){
+								
+								//update information
+								CassetteContextSetList.put(SpeciesKey,SpeciesGenes);
+								CassetteSourceNames.put(SpeciesKey, AG.getSpecies());
+								CassetteContigNames.put(SpeciesKey, Contigs);
+								
+								CassetteCounter++;
 							}
 						}
 						
-						//update EC + return CSD to original
-						ContextSetList = FinalContextSetList;
-						CurrentCSD.setGenesBefore(GenesBefore);
-						CurrentCSD.setGenesAfter(GenesAfter);
+						
+						//When complete, add completed structures
+						EC.setContexts(CassetteContextSetList);
+						EC.setNumberOfEntries(CassetteCounter);
+						
+						//add source info
+						EC.setSourceSpeciesNames(CassetteSourceNames);
+						EC.setSourceContigNames(CassetteContigNames);
+						
+					} else {
+						
+						//add hash map to extended CRON
+						EC.setContexts(ContextSetList);
+						EC.setNumberOfEntries(Counter);
+						
+						//add source info
+						EC.setSourceSpeciesNames(SourceNames);
+						EC.setSourceContigNames(ContigNames);
 					}
-				}			
-				
-				//adjust values, if necessary, if context set type is a cassette
-				if (isCassette){
-					int CassetteCounter = 0;
+
+//					//debugging
+//					System.out.println("Jpanbtn");
+//					for (String s : EC.getContexts().keySet()){
+//						HashSet<String> HSContigNames = EC.getSourceContigNames().get(s);
+//						Iterator<String> it = HSContigNames.iterator();
+//						while (it.hasNext()){
+//							System.out.println(s + "-" + it.next());
+//						}
+//					}
 					
-					//create a new context list
-					LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> CassetteContextSetList = 
-							new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
+					//Update the query data with all changes.
+					CSDisplayData CSD = new CSDisplayData();
+					CSD.setECandInitializeTreeLeaves(EC);
+					WorkerQD.setCSD(CSD);
 					
-					//species names
-					LinkedHashMap<String, String> CassetteSourceNames =
-							new LinkedHashMap<String, String>();
-					
-					//contig names
-					LinkedHashMap<String, HashSet<String>> CassetteContigNames = 
-							new LinkedHashMap<String, HashSet<String>>();
-					
-					//parameters for each
-					String SpeciesKey;
-					LinkedList<GenomicElementAndQueryMatch> SpeciesGenes;
-					
-					for (AnnotatedGenome AG : fr.getOS().getSpecies().values()){
-						
-						//Species Name
-						SpeciesKey = AG.getSpecies() + "-1";
-						SpeciesGenes = new LinkedList<GenomicElementAndQueryMatch>();
-						
-						//Contigs
-						HashSet<String> Contigs = new HashSet<String>();
-						
-						for (GenomicElement E : AG.getElements()){
-							if (GenesForCassettes.contains(E.getAnnotation())){
-								
-								//create appropriate GenomicElementAndQueryMatch
-								GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
-								GandE.setQueryMatch(true);
-								GandE.setE(E);
-								Contigs.add(E.getContig());
-								
-								//add to list
-								SpeciesGenes.add(GandE);
-							}
-						}
-						
-						//add, if not empty
-						if (!SpeciesGenes.isEmpty()){
-							
-							//update information
-							CassetteContextSetList.put(SpeciesKey,SpeciesGenes);
-							CassetteSourceNames.put(SpeciesKey, AG.getSpecies());
-							CassetteContigNames.put(SpeciesKey, Contigs);
-							
-							CassetteCounter++;
-						}
-					}
-					
-					
-					//When complete, add completed structures
-					EC.setContexts(CassetteContextSetList);
-					EC.setNumberOfEntries(CassetteCounter);
-					
-					//add source info
-					EC.setSourceSpeciesNames(CassetteSourceNames);
-					EC.setSourceContigNames(CassetteContigNames);
-					
-				} else {
-					
-					//add hash map to extended CRON
-					EC.setContexts(ContextSetList);
-					EC.setNumberOfEntries(Counter);
-					
-					//add source info
-					EC.setSourceSpeciesNames(SourceNames);
-					EC.setSourceContigNames(ContigNames);
 				}
 
-//				//debugging
-//				System.out.println("Jpanbtn");
-//				for (String s : EC.getContexts().keySet()){
-//					HashSet<String> HSContigNames = EC.getSourceContigNames().get(s);
-//					Iterator<String> it = HSContigNames.iterator();
-//					while (it.hasNext()){
-//						System.out.println(s + "-" + it.next());
-//					}
-//				}
-				
-				//Update the query data with all changes.
-				CSDisplayData CSD = new CSDisplayData();
-				CSD.setECandInitializeTreeLeaves(EC);
-				WorkerQD.setCSD(CSD);
-				
 				return null;
 			}
 			
@@ -972,275 +1052,288 @@ import definicions.MatriuDistancies;
 					//update progress
 					setProgress(progress);
 					
+					//check for cancellations
+					if (0 == progress%2){
+						if (Thread.currentThread().isInterrupted()){
+							setProgress(0);
+							break;
+						}
+					}
+					
 				}
 				
-				//re-computation
-				if (CurrentCSD.getType().equals("GenesAround")){
+				//only proceed if the search has not already been cancelled.
+				if (!Thread.currentThread().isInterrupted()){
 					
-					//attempt to standardize
-					if (CurrentCSD.isRelativeBeforeAfter()){
-
-						//first, retrieve an alternative list
-						LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> AlternativeContextSetList = 
-								new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
+					//re-computation
+					if (CurrentCSD.getType().equals("GenesAround")){
 						
-						//adjust values for alternative list
-						int GenesBefore = CurrentCSD.getGenesBefore();
-						int GenesAfter = CurrentCSD.getGenesAfter();
-						
-						CurrentCSD.setGenesBefore(GenesAfter);
-						CurrentCSD.setGenesAfter(GenesBefore);
+						//attempt to standardize
+						if (CurrentCSD.isRelativeBeforeAfter()){
 
-						//retrieve alternative set of hits
-						for (Entry<String, AnnotatedGenome> entry : fr.getOS().getSpecies().entrySet()) {
+							//first, retrieve an alternative list
+							LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> AlternativeContextSetList = 
+									new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
 							
-							//Retrieve matches
-							HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = 
-									entry.getValue().MatchesOnTheFly(null, this.ClusterNumber, CurrentCSD);
+							//adjust values for alternative list
+							int GenesBefore = CurrentCSD.getGenesBefore();
+							int GenesAfter = CurrentCSD.getGenesAfter();
 							
-							//create an iterator for the HashSet
-							Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
-							
-							int AlternativeOperonCounter = 0; //reset operon counter
-							while(it.hasNext()){
+							CurrentCSD.setGenesBefore(GenesAfter);
+							CurrentCSD.setGenesAfter(GenesBefore);
+
+							//retrieve alternative set of hits
+							for (Entry<String, AnnotatedGenome> entry : fr.getOS().getSpecies().entrySet()) {
 								
-								//context unit object
-								LinkedList<GenomicElementAndQueryMatch> ContextSegment = it.next();
-																
-								//increment counters
-								AlternativeOperonCounter++;	
+								//Retrieve matches
+								HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches = 
+										entry.getValue().MatchesOnTheFly(null, this.ClusterNumber, CurrentCSD);
 								
-								//define key
-								String Key = entry.getKey() + "-" + Integer.toString(AlternativeOperonCounter);
+								//create an iterator for the HashSet
+								Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
 								
-								//put elements into hashmap
-								AlternativeContextSetList.put(Key, ContextSegment);
+								int AlternativeOperonCounter = 0; //reset operon counter
+								while(it.hasNext()){
+									
+									//context unit object
+									LinkedList<GenomicElementAndQueryMatch> ContextSegment = it.next();
+																	
+									//increment counters
+									AlternativeOperonCounter++;	
+									
+									//define key
+									String Key = entry.getKey() + "-" + Integer.toString(AlternativeOperonCounter);
+									
+									//put elements into hashmap
+									AlternativeContextSetList.put(Key, ContextSegment);
+								}
+								
 							}
 							
-						}
-						
-						LinkedHashMap<String, Strand> QueryHash = new LinkedHashMap<String, Strand>();
-						
-						//determine 'proper' orientation, based on number
-						int StrandForward = 0; 
-						int StrandReverse = 0;
-						for (String s : ContextSetList.keySet()){
+							LinkedHashMap<String, Strand> QueryHash = new LinkedHashMap<String, Strand>();
 							
-							LinkedList<GenomicElementAndQueryMatch> LL = ContextSetList.get(s);
-							for (GenomicElementAndQueryMatch GandE : LL){
-								if (GandE.isQueryMatch()){
-									if (GandE.getE().getStrand().equals(Strand.POSITIVE)){
-										StrandForward++;
-										QueryHash.put(s, Strand.POSITIVE);
-									} else {
-										StrandReverse++;
-										QueryHash.put(s, Strand.NEGATIVE);
+							//determine 'proper' orientation, based on number
+							int StrandForward = 0; 
+							int StrandReverse = 0;
+							for (String s : ContextSetList.keySet()){
+								
+								LinkedList<GenomicElementAndQueryMatch> LL = ContextSetList.get(s);
+								for (GenomicElementAndQueryMatch GandE : LL){
+									if (GandE.isQueryMatch()){
+										if (GandE.getE().getStrand().equals(Strand.POSITIVE)){
+											StrandForward++;
+											QueryHash.put(s, Strand.POSITIVE);
+										} else {
+											StrandReverse++;
+											QueryHash.put(s, Strand.NEGATIVE);
+										}
 									}
 								}
 							}
+							
+							//initialize a final list
+							LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> FinalContextSetList = 
+									new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
+							
+							
+							//write entries to the final list, if appropriate
+							for (String s : ContextSetList.keySet()){
+								LinkedList<GenomicElementAndQueryMatch> FwdLL = ContextSetList.get(s);
+								LinkedList<GenomicElementAndQueryMatch> RevLL = AlternativeContextSetList.get(s);
+								
+								//don't flip Fwd
+								if (StrandForward >= StrandReverse){
+									if (QueryHash.get(s).equals(Strand.POSITIVE)){
+										FinalContextSetList.put(s, FwdLL);
+									} else {
+										FinalContextSetList.put(s, RevLL);
+									}
+								//don't flip reverse	
+								} else {
+									if (QueryHash.get(s).equals(Strand.POSITIVE)){
+										FinalContextSetList.put(s, RevLL);
+									} else {
+										FinalContextSetList.put(s, FwdLL);
+									}
+								}
+							}
+							
+							//update EC + return CSD to original
+							ContextSetList = FinalContextSetList;
+							CurrentCSD.setGenesBefore(GenesBefore);
+							CurrentCSD.setGenesAfter(GenesAfter);
 						}
+					}	
+				
+					//adjust values, if necessary, if context set type is a cassette
+					if (isCassette){
+						int CassetteCounter = 0;
 						
-						//initialize a final list
-						LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> FinalContextSetList = 
+						//create a new context list
+						LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> CassetteContextSetList = 
 								new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
 						
+						//species names
+						LinkedHashMap<String, String> CassetteSourceNames =
+								new LinkedHashMap<String, String>();
 						
-						//write entries to the final list, if appropriate
-						for (String s : ContextSetList.keySet()){
-							LinkedList<GenomicElementAndQueryMatch> FwdLL = ContextSetList.get(s);
-							LinkedList<GenomicElementAndQueryMatch> RevLL = AlternativeContextSetList.get(s);
-							
-							//don't flip Fwd
-							if (StrandForward >= StrandReverse){
-								if (QueryHash.get(s).equals(Strand.POSITIVE)){
-									FinalContextSetList.put(s, FwdLL);
-								} else {
-									FinalContextSetList.put(s, RevLL);
-								}
-							//don't flip reverse	
-							} else {
-								if (QueryHash.get(s).equals(Strand.POSITIVE)){
-									FinalContextSetList.put(s, RevLL);
-								} else {
-									FinalContextSetList.put(s, FwdLL);
-								}
-							}
-						}
+						//contig names
+						LinkedHashMap<String, HashSet<String>> CassetteContigNames = 
+								new LinkedHashMap<String, HashSet<String>>();
 						
-						//update EC + return CSD to original
-						ContextSetList = FinalContextSetList;
-						CurrentCSD.setGenesBefore(GenesBefore);
-						CurrentCSD.setGenesAfter(GenesAfter);
-					}
-				}	
-			
-				//adjust values, if necessary, if context set type is a cassette
-				if (isCassette){
-					int CassetteCounter = 0;
-					
-					//create a new context list
-					LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> CassetteContextSetList = 
-							new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
-					
-					//species names
-					LinkedHashMap<String, String> CassetteSourceNames =
-							new LinkedHashMap<String, String>();
-					
-					//contig names
-					LinkedHashMap<String, HashSet<String>> CassetteContigNames = 
-							new LinkedHashMap<String, HashSet<String>>();
-					
-					//parameters for each
-					String SpeciesKey;
-					LinkedList<GenomicElementAndQueryMatch> SpeciesGenes;
-					
-					//nearby only: merge all into a single set
-					if (!CurrentCSD.isNearbyOnly()){
-						for (AnnotatedGenome AG : fr.getOS().getSpecies().values()){
-							
-							//Species Name
-							SpeciesKey = AG.getSpecies() + "-1";
-							SpeciesGenes = new LinkedList<GenomicElementAndQueryMatch>();
-							
-							//Contigs
-							HashSet<String> Contigs = new HashSet<String>();
-							
-							for (GenomicElement E : AG.getElements()){
+						//parameters for each
+						String SpeciesKey;
+						LinkedList<GenomicElementAndQueryMatch> SpeciesGenes;
+						
+						//nearby only: merge all into a single set
+						if (!CurrentCSD.isNearbyOnly()){
+							for (AnnotatedGenome AG : fr.getOS().getSpecies().values()){
 								
-								//candidate new values, to add
-								if (GenesForCassettes.contains(E.getClusterID())){
+								//Species Name
+								SpeciesKey = AG.getSpecies() + "-1";
+								SpeciesGenes = new LinkedList<GenomicElementAndQueryMatch>();
+								
+								//Contigs
+								HashSet<String> Contigs = new HashSet<String>();
+								
+								for (GenomicElement E : AG.getElements()){
 									
-									//create appropriate GenomicElementAndQueryMatch
-									GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
-									GandE.setQueryMatch(true);
-									GandE.setE(E);
-									Contigs.add(E.getContig());
+									//candidate new values, to add
+									if (GenesForCassettes.contains(E.getClusterID())){
+										
+										//create appropriate GenomicElementAndQueryMatch
+										GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+										GandE.setQueryMatch(true);
+										GandE.setE(E);
+										Contigs.add(E.getContig());
+										
+										//add to list
+										SpeciesGenes.add(GandE);
+									}
+								}
+								
+								//add, if not empty
+								if (!SpeciesGenes.isEmpty()){
 									
-									//add to list
-									SpeciesGenes.add(GandE);
+									//update information
+									CassetteContextSetList.put(SpeciesKey,SpeciesGenes);
+									CassetteSourceNames.put(SpeciesKey, AG.getSpecies());
+									CassetteContigNames.put(SpeciesKey, Contigs);
+									
+									CassetteCounter++;
 								}
 							}
 							
-							//add, if not empty
-							if (!SpeciesGenes.isEmpty()){
+						} else {
+							
+							//iterate through all old sets, and adjust
+							for (String s : ContextSetList.keySet()){
 								
-								//update information
-								CassetteContextSetList.put(SpeciesKey,SpeciesGenes);
-								CassetteSourceNames.put(SpeciesKey, AG.getSpecies());
-								CassetteContigNames.put(SpeciesKey, Contigs);
-								
+								//implement counter
 								CassetteCounter++;
-							}
-						}
-						
-					} else {
-						
-						//iterate through all old sets, and adjust
-						for (String s : ContextSetList.keySet()){
-							
-							//implement counter
-							CassetteCounter++;
-							
-							//Retrieve Original
-							LinkedList<GenomicElementAndQueryMatch> LL  = ContextSetList.get(s);
-							
-							//new list to merge
-							LinkedList<GenomicElementAndQueryMatch> Additions = new LinkedList<GenomicElementAndQueryMatch>();
-							
-							//Retrieve appropriate organisms
-							String OrgName[]  = s.split("-");
-							String WholeName = "";
-							for (int i = 0; i < OrgName.length-1; i++){
-								WholeName = WholeName + OrgName[i] + "-";
-							}
-							WholeName = (String) WholeName.subSequence(0, WholeName.length()-1);
-							AnnotatedGenome AG = fr.getOS().getSpecies().get(WholeName);
-							
-							//debugging
-							//System.out.println(WholeName);
-							//System.out.println(AG.getSpecies());
-							
-							//iterate through elements, find elements to add.
-							for (GenomicElement E : AG.getElements()){
 								
-								//gene has appropriate ID
-								if (GenesForCassettes.contains(E.getClusterID())){
+								//Retrieve Original
+								LinkedList<GenomicElementAndQueryMatch> LL  = ContextSetList.get(s);
+								
+								//new list to merge
+								LinkedList<GenomicElementAndQueryMatch> Additions = new LinkedList<GenomicElementAndQueryMatch>();
+								
+								//Retrieve appropriate organisms
+								String OrgName[]  = s.split("-");
+								String WholeName = "";
+								for (int i = 0; i < OrgName.length-1; i++){
+									WholeName = WholeName + OrgName[i] + "-";
+								}
+								WholeName = (String) WholeName.subSequence(0, WholeName.length()-1);
+								AnnotatedGenome AG = fr.getOS().getSpecies().get(WholeName);
+								
+								//debugging
+								//System.out.println(WholeName);
+								//System.out.println(AG.getSpecies());
+								
+								//iterate through elements, find elements to add.
+								for (GenomicElement E : AG.getElements()){
 									
-									boolean AddThisGene = false;
-									
-									for (GenomicElementAndQueryMatch GandE : LL){
-										GenomicElement E2 = GandE.getE();
+									//gene has appropriate ID
+									if (GenesForCassettes.contains(E.getClusterID())){
 										
-//										//debugging
-//										if (E.getStart() == 382735 && E.getStop() == 383745){
-//											System.out.println(CurrentCSD.getNearbyLimit());
-//											System.out.println(Math.abs(E2.getStart() - E.getStop()));
-//											System.out.println(Math.abs(E.getStart() - E2.getStop()));
-//										}
+										boolean AddThisGene = false;
 										
-										//Add a gene, or not
-										if (E.getContig().equals(E2.getContig())){
-											if  (Math.abs(E2.getStart() - E.getStop()) <= CurrentCSD.getNearbyLimit() ||
-												Math.abs(E.getStart() - E2.getStop()) <= CurrentCSD.getNearbyLimit()){
-												AddThisGene = true;
-												break;
-											}
+										for (GenomicElementAndQueryMatch GandE : LL){
+											GenomicElement E2 = GandE.getE();
+											
+//											//debugging
+//											if (E.getStart() == 382735 && E.getStop() == 383745){
+//												System.out.println(CurrentCSD.getNearbyLimit());
+//												System.out.println(Math.abs(E2.getStart() - E.getStop()));
+//												System.out.println(Math.abs(E.getStart() - E2.getStop()));
+//											}
+											
+											//Add a gene, or not
+											if (E.getContig().equals(E2.getContig())){
+												if  (Math.abs(E2.getStart() - E.getStop()) <= CurrentCSD.getNearbyLimit() ||
+													Math.abs(E.getStart() - E2.getStop()) <= CurrentCSD.getNearbyLimit()){
+													AddThisGene = true;
+													break;
+												}
 
+											}
+										}
+										
+										//add the new gene
+										if (AddThisGene){
+											GenomicElementAndQueryMatch GandE_n = new GenomicElementAndQueryMatch();
+											GandE_n.setE(E);
+											GandE_n.setQueryMatch(false);
+											Additions.add(GandE_n);
 										}
 									}
 									
-									//add the new gene
-									if (AddThisGene){
-										GenomicElementAndQueryMatch GandE_n = new GenomicElementAndQueryMatch();
-										GandE_n.setE(E);
-										GandE_n.setQueryMatch(false);
-										Additions.add(GandE_n);
-									}
 								}
 								
+								//debugging
+								//System.out.println(s + ": " + Additions.size());
+								
+								//Add the list, and sort it.
+								LL.addAll(Additions);
+								Collections.sort(LL, new AnnotatedGenome.SortGandEByElements());
+								
+								//write this list into the new hash map
+								CassetteContextSetList.put(s,LL);
 							}
 							
-							//debugging
-							//System.out.println(s + ": " + Additions.size());
+							//update variables that didn't change
+							CassetteSourceNames = SourceNames;
+							CassetteContigNames = ContigNames;
 							
-							//Add the list, and sort it.
-							LL.addAll(Additions);
-							Collections.sort(LL, new AnnotatedGenome.SortGandEByElements());
-							
-							//write this list into the new hash map
-							CassetteContextSetList.put(s,LL);
 						}
 						
-						//update variables that didn't change
-						CassetteSourceNames = SourceNames;
-						CassetteContigNames = ContigNames;
+						//When complete, add completed structures
+						EC.setContexts(CassetteContextSetList);
+						EC.setNumberOfEntries(CassetteCounter);
 						
+						//add source info
+						EC.setSourceSpeciesNames(CassetteSourceNames);
+						EC.setSourceContigNames(CassetteContigNames);
+						
+					} else {
+						
+						//add hash map to extended CRON
+						EC.setContexts(ContextSetList);
+						EC.setNumberOfEntries(Counter);
+						
+						//add source info
+						EC.setSourceSpeciesNames(SourceNames);
+						EC.setSourceContigNames(ContigNames);
 					}
 					
-					//When complete, add completed structures
-					EC.setContexts(CassetteContextSetList);
-					EC.setNumberOfEntries(CassetteCounter);
-					
-					//add source info
-					EC.setSourceSpeciesNames(CassetteSourceNames);
-					EC.setSourceContigNames(CassetteContigNames);
-					
-				} else {
-					
-					//add hash map to extended CRON
-					EC.setContexts(ContextSetList);
-					EC.setNumberOfEntries(Counter);
-					
-					//add source info
-					EC.setSourceSpeciesNames(SourceNames);
-					EC.setSourceContigNames(ContigNames);
+					//Update the query data with all changes.
+					CSDisplayData CSD = new CSDisplayData();
+					CSD.setECandInitializeTreeLeaves(EC);
+					WorkerQD.setCSD(CSD);
+
 				}
-				
-				//Update the query data with all changes.
-				CSDisplayData CSD = new CSDisplayData();
-				CSD.setECandInitializeTreeLeaves(EC);
-				WorkerQD.setCSD(CSD);
-				
+
 				return null;
 			}
 			
@@ -1331,6 +1424,12 @@ import definicions.MatriuDistancies;
 				int progress;
 
 				while (multiDendro.getCardinalitat() > 1) {
+					
+					//check for cancellations
+					if (Thread.currentThread().isInterrupted()){
+						break;
+					}
+					
 					try {
 						
 						//CLUSTERING FROM DISTANCES DATA
@@ -1353,16 +1452,31 @@ import definicions.MatriuDistancies;
 									* (nbElements - multiDendro.getCardinalitat())
 									/ (nbElements - 1);
 							setProgress(progress);
+
 						//}
 
 					} catch (final Exception e) {
 						//showError(e.getMessage());
-						showError("problems in calculating dendrogram.");
+						if (!fr.isSearchWorkerCancelled()){
+							showError("problems in calculating dendrogram.");
+						} else {
+							
+							//re-set cursor, progress bar
+							fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+							setProgress(0);
+							progressBar.setString("");
+							progressBar.setBorderPainted(false);
+						}
 					}
 				}
-				
-				//set field
-				this.RootCluster = multiDendro.getArrel();
+				//check for cancellations
+				if (!Thread.currentThread().isInterrupted()){
+
+					//set field
+					this.RootCluster = multiDendro.getArrel();
+					
+				}
+
 				
 				//debugging
 				//System.out.println("Root cluster determined to be " + this.RootCluster);
@@ -1384,44 +1498,49 @@ import definicions.MatriuDistancies;
 			
 			//following search + dendrogram computation
 			public void done(){
-			
+							
+			//System.out.println("done fr.isSearchWorkerCancelled(): " + fr.isSearchWorkerCancelled());
+
 			//re-set cursor, progress bar
 			fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			setProgress(0);
 			progressBar.setString("");
 			progressBar.setBorderPainted(false);
 				
-			//only do these things if the searchworker is not recognized as cancelled.
-			if (!fr.isSearchWorkerCancelled()){
-				
-				//proceed if exception thrown
-				if (!ExceptionThrown){
-					
-					//process completed!
-					ProcessCompleted = true;
-					fr.setTmpCluster(RootCluster);
-					
-					if (DisplayOutput){
-						
-						//try to update values
-						try {
-							//update values for display
-							if (AnalysesList.isOptionComputeDendrogram()){
-								multiDendro.getArrel().setBase(minBase);
-							}
-							showCalls(action, this.WorkerQD); //pass on the QD + display options
-						} catch (Exception ex) {
-							
-						}
-
-					}
-				}
-				
-			} else {
-				
-				//default: search worker is not cancelled.
-				fr.setSearchWorkerCancelled(false);
-			}
+//			//only do these things if the searchworker is not recognized as cancelled.
+//			if (!fr.isSearchWorkerCancelled()){
+//			//if (!Thread.currentThread().isInterrupted()){
+//				
+//				//proceed if exception thrown
+//				if (!ExceptionThrown){
+//					
+//					//process completed!
+//					ProcessCompleted = true;
+//					fr.setTmpCluster(RootCluster);
+//					
+//					if (DisplayOutput){
+//						
+//						//try to update values
+//						try {
+//							//update values for display
+//							if (AnalysesList.isOptionComputeDendrogram()){
+//								multiDendro.getArrel().setBase(minBase);
+//							}
+//							showCalls(action, this.WorkerQD); //pass on the QD + display options
+//						} catch (Exception ex) {
+//							
+//						}
+//
+//					}
+//				}
+//				
+//			} else {
+//				
+//				System.out.println("Search process cancelled (done)");
+//				
+//				//default: search worker is not cancelled.
+//				fr.setSearchWorkerCancelled(false);
+//			}
 
 			//no search worker is running, any more
 			//fr.setSearchWorkerRunning(false);
@@ -2119,6 +2238,14 @@ import definicions.MatriuDistancies;
 			Component glassPane = fr.getRootPane().getGlassPane();
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			glassPane.setVisible(false);
+			
+			//try to release the current CPU thread, so that 
+			//the subordinate thread can be cancelled.
+			try {
+				Thread.sleep(1);
+			} catch (Exception ex){
+				
+			}
 			
 			//message to console
 			System.out.println("The process has been cancelled.");

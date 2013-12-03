@@ -152,6 +152,8 @@ public class RemoveGenomes extends JFrame implements ActionListener{
 		//remove genomes button
 		if (e.getSource().equals(btnRemove)){
 			
+			//TODO: add try/catch block for version
+			
 			//retrieve selected
 			List<String> Selected = NameListGUI.getSelectedValuesList();
 			
