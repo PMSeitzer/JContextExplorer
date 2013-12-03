@@ -111,7 +111,7 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 	
 	// ====== Export-Related ======= //
 	
-	//extra class
+	//sequence export class
 	public class ExportSequencesWorker extends SwingWorker<Void, Void>{
 
 		public ActionEvent evt;
@@ -134,7 +134,7 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 			Component glassPane = fr.getRootPane().getGlassPane();
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			glassPane.setVisible(true);
-			
+						
 			/*
 			 * EXPORT SEQUENCES
 			 */
@@ -151,7 +151,7 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 			
 			//export protein sequence
 			if (evt.getActionCommand().equals(ExportProtSeqs)){
-				ExportGeneSequences(true);
+				SWExportGeneSequences(true);
 			}
 			
 			/*
@@ -178,8 +178,15 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 		//export a file DNA or protein sequences
 		public void SWExportGeneSequences(boolean isProtein){
 			
+			String Title = "";
+			if (isProtein){
+				Title = "Export Protein Sequences of Selected Genes";
+			} else {
+				Title = "Export DNA Sequences of Selected Genes";
+			}
+			
 			//Create + Show file dialog window
-			final FileDialog fd = new FileDialog(fr, "Export DNA Sequences of Selected Genes", FileDialog.SAVE);
+			final FileDialog fd = new FileDialog(fr, Title, FileDialog.SAVE);
 			fd.setDirectory(fr.getFileChooserSource().getAbsolutePath());
 			fd.setFile(".fasta");
 			fd.setVisible(true);
@@ -209,7 +216,6 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 						
 						//an individual gene / genes
 						if (TN.isLeaf() && !TN.getAllowsChildren()){
-							String s = TN.toString();
 							if (!SelectedNodes.contains(TN)){
 								SelectedNodes.add(TN);
 							}
@@ -263,15 +269,21 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 							
 						}
 						
-						//store values
-						Genes4Export.put(TN, str);
-						NumCounter++;
-						//adjust progress bar
-						// update progress bar
-						int progress = (int) Math
-								.round(100 * ((double) NumCounter / SelectedNodes.size()));
-						System.out.println("Exported " + NumCounter + "/" + SelectedNodes.size() + " Sequences.");
-						setProgress(progress);
+						//cancel at this point
+						if (!Thread.currentThread().isInterrupted()){							
+							//store values
+							Genes4Export.put(TN, str);
+							NumCounter++;
+							//adjust progress bar
+							// update progress bar
+							int progress = (int) Math
+									.round(100 * ((double) NumCounter / SelectedNodes.size()));
+							System.out.println("Exported " + NumCounter + "/" + SelectedNodes.size() + " Sequences.");							
+							setProgress(progress);
+						} else{
+							setProgress(0);
+							break;
+						}
 
 					} else {
 						FailedExport = true;
@@ -279,39 +291,45 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 					
 				}
 
-				//write sequence to file
-				try {
-			
-					//open file stream
-					BufferedWriter bw = new BufferedWriter(new FileWriter(OutputFile));
+				//export sequences when the process has not been cancelled.
+				if (!Thread.currentThread().isInterrupted()){	
 					
-					for (TreeNode TN : Genes4Export.keySet()){
+					//write sequence to file
+					try {
+				
+						//open file stream
+						BufferedWriter bw = new BufferedWriter(new FileWriter(OutputFile));
 						
-						//Header
-						bw.write(FastaHeaderReformat(TN));
-						bw.flush();
+						for (TreeNode TN : Genes4Export.keySet()){
+							
+							//Header
+							bw.write(FastaHeaderReformat(TN));
+							bw.flush();
+							
+							//body
+							bw.write(FastaBodyReformat(Genes4Export.get(TN)));
+							bw.flush();
+						}
 						
-						//body
-						bw.write(FastaBodyReformat(Genes4Export.get(TN)));
-						bw.flush();
+						//close file stream
+						bw.close();
+				
+					} catch (Exception e) {
+						e.printStackTrace();
+						JOptionPane.showMessageDialog(null, "The gene sequences could not be exported.",
+								"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
 					}
 					
-					//close file stream
-					bw.close();
-			
-				} catch (Exception e) {
-					e.printStackTrace();
-					JOptionPane.showMessageDialog(null, "The gene sequences could not be exported.",
-							"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
+					//when a genome does not exist, failed export.
+					if (FailedExport){
+						JOptionPane.showMessageDialog(null, "One or more of the genes selected for export do " +
+								"not have an associated sequence file.\nTo associate a genome with a sequence file, " +
+								"select \"Load Genome Sequence File(s)\" from the Load drop-down menu.",
+								"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
+					}
+					
 				}
-				
-				//when a genome does not exist, failed export.
-				if (FailedExport){
-					JOptionPane.showMessageDialog(null, "One or more of the genes selected for export do " +
-							"not have an associated sequence file.\nTo associate a genome with a sequence file, " +
-							"select \"Load Genome Sequence File(s)\" from the Load drop-down menu.",
-							"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
-				}
+
 
 			}
 
@@ -421,16 +439,22 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 								
 								//retrieve sequence
 								String str = AG.DNASequence(contigkey, MinStart, MaxStop, Strand.POSITIVE);
-								
-								//store values
-								Genes4Export.put(TN, str);
-								NumCounter++;
-								
-								//progress
-								int progress = (int) Math
-										.round(100 * ((double) NumCounter / SelectedNodes.size()));
-								System.out.println("Exported " + NumCounter + "/" + SelectedNodes.size() + " Sequences.");
-								setProgress(progress);
+																
+								//cancel at this point
+								if (!Thread.currentThread().isInterrupted()){							
+									//store values
+									Genes4Export.put(TN, str);
+									NumCounter++;
+									//adjust progress bar
+									// update progress bar
+									int progress = (int) Math
+											.round(100 * ((double) NumCounter / SelectedNodes.size()));
+									System.out.println("Exported " + NumCounter + "/" + SelectedNodes.size() + " Sequences.");							
+									setProgress(progress);
+								} else{
+									setProgress(0);
+									break;
+								}
 								
 							}
 
@@ -440,41 +464,48 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 						
 					}
 
-					//write sequence to file
-					try {
-				
-						//open file stream
-						BufferedWriter bw = new BufferedWriter(new FileWriter(OutputFile));
+					//export if the current thread has not been interrupted.
+					if (!Thread.currentThread().isInterrupted()){
+						
+						//write sequence to file
+						try {
+					
+							//open file stream
+							BufferedWriter bw = new BufferedWriter(new FileWriter(OutputFile));
 
-						for (TreeNode TN : Genes4Export.keySet()){
-							
-							//Header
-							bw.write(FastaHeaderReformat(TN));
-							bw.flush();
-							
-							//body
-							bw.write(FastaBodyReformat(Genes4Export.get(TN)));
-							bw.flush();
-							
+							for (TreeNode TN : Genes4Export.keySet()){
+								
+								//Header
+								bw.write(FastaHeaderReformat(TN));
+								bw.flush();
+								
+								//body
+								bw.write(FastaBodyReformat(Genes4Export.get(TN)));
+								bw.flush();
+								
 
+							}
+							
+							//close file stream
+							bw.close();
+					
+						} catch (Exception e) {
+							e.printStackTrace();
+							JOptionPane.showMessageDialog(null, "The sequences could not be exported.",
+									"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
 						}
 						
-						//close file stream
-						bw.close();
-				
-					} catch (Exception e) {
-						e.printStackTrace();
-						JOptionPane.showMessageDialog(null, "The sequences could not be exported.",
-								"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
+						//when a genome does not exist, failed export.
+						if (FailedExport){
+							JOptionPane.showMessageDialog(null, "One or more of the genes selected for export do " +
+									"not have an associated sequence file.\nTo associate a genome with a sequence file, " +
+									"select \"Load Genome Sequence File(s)\" from the Load drop-down menu.",
+									"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
+						}
+
+						
 					}
 					
-					//when a genome does not exist, failed export.
-					if (FailedExport){
-						JOptionPane.showMessageDialog(null, "One or more of the genes selected for export do " +
-								"not have an associated sequence file.\nTo associate a genome with a sequence file, " +
-								"select \"Load Genome Sequence File(s)\" from the Load drop-down menu.",
-								"Sequence Export Error",JOptionPane.ERROR_MESSAGE);
-					}
 					
 				} else {
 					JOptionPane.showMessageDialog(null, "No genomic groupings are selected.\n" +

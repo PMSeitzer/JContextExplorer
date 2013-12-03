@@ -64,6 +64,10 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.Timer;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -202,7 +206,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private boolean IncludeMotifs = false;
 	private boolean DisplayMotifs = false;
 	private String SelectedAnalysisType = "Search Results";
-	private File FileChooserSource;
+	private File FileChooserSource = new File("."); //default
 	private int InternalFrameID = 0;	//for debugging
 	
 
@@ -332,6 +336,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	private RenderGenomesWorker CurrentRGW;
 	private boolean RenderGenomesWorkerCancelled = false;
 	private boolean SearchWorkerCancelled = false;
+	private boolean ImportPopularSetWorkerCancelled = false;
+	private ObjectInputStream PopularSetImportStream = null;
 	
 	// ===== Classes ===== //
 	
@@ -1067,11 +1073,13 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 		//fields
 		public JCheckBoxMenuItem SelectedItem;
+		public ObjectInputStream in;
 		
 		public LoadPopularWorker(JCheckBoxMenuItem j) {
 			this.SelectedItem = j;
 		}
 
+		//background method
 		@Override
 		protected Void doInBackground() throws Exception {
 			
@@ -1091,7 +1099,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			long StartTime = System.nanoTime();
 			
 			//pass system time to method
-			ImportPopularSet(SelectedItem);
+			this.ImportPopularSet(SelectedItem);
 			
 			//switch cursor
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -1101,15 +1109,123 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			return null;
 		}
 		
+		//Import organism set info from web.
+		public void ImportPopularSet(JCheckBoxMenuItem m){
+			
+			//Retrieve info		
+			File f = new File(m.getName());
+			String strURL = PopularGenomeSets.get(m).getURL();
+			
+			//Import!
+			try {
+
+				URL inputURL = new URL(strURL);
+				HttpURLConnection c = (HttpURLConnection) inputURL.openConnection();
+				in = new ObjectInputStream(c.getInputStream());
+				PopularSetImportStream = in;
+				
+				//import data, update appropriately.
+				OrganismSet OSPopular = (OrganismSet) in.readObject();
+				
+				//close file stream
+				in.close();
+				
+				//check for cancelled
+				Thread.sleep(1L);
+				
+				//only if the process has not been cancelled, proceed.
+				if (!Thread.currentThread().isInterrupted()){
+					
+					//Initialize a file for the organism set, even if we don't use it.
+					File fx = new File(OSPopular.getName());
+					GenomeSetFiles.put(OSPopular.getName(), fx);
+					GenomeSetFiles.put(m.getName(), f);
+					
+					//Need a new check box
+					JCheckBoxMenuItem pop = new JCheckBoxMenuItem();
+					pop.setText(m.getText());
+					pop.setName(m.getName());
+					
+					//turn on additional options
+					OSMenuComponentsEnabled(true);
+
+					//update current genome set menu
+					if (AvailableOSCheckBoxMenuItems.contains(MG_NoGS)){
+						
+						//make a new, default genome set.
+						MakeDefaultGenomeSet(OSPopular.getName());
+						
+						//update appropriately
+						OS = OSPopular;
+
+						//remove no GS type.
+						AvailableOSCheckBoxMenuItems.remove(MG_NoGS);
+						
+						//Add information
+						CreateAndStoreGSInfo(OS);
+						
+						//Update GUI
+						NewOSUpdateGUI();
+						
+					//Switch out of old genome set
+					} else {
+						
+						//Create a GS
+						//Add this menu item to the list.			
+						AvailableOSCheckBoxMenuItems.add(pop);
+						MG_CurrentGS.add(pop);
+						
+						//create a dummy file for new genome set, store appropriately
+						OSPopular.setName(pop.getName());
+						ExportNonFocusOS(OSPopular);
+
+						//check for cancelled
+						Thread.sleep(1L);
+						
+						//invoke switch worker
+						CallSwitchWorker(OS.getName(), OSPopular.getName());
+						
+					}
+					
+					//for the halophiles, import sequences as appropriate
+					//UNTESTED
+					if (m.getName().equals("Haloarchaea")){
+						AssociateHalophileSequences();
+					}
+				
+				//re-set
+				} else{
+					ImportPopularSetWorkerCancelled = false;
+				}
+			
+			} catch (Exception e) {
+				
+				//item not selected
+				m.setSelected(false);
+				
+				//error message
+				if (!ImportPopularSetWorkerCancelled){
+					
+					JOptionPane.showMessageDialog(null, "There was a problem reading data from the internet.\nCheck your internet connection and try again later.",
+							"Data Import Error", JOptionPane.ERROR_MESSAGE);
+				} else{
+					ImportPopularSetWorkerCancelled = false;
+				}
+
+				
+			}
+
+
+		}
+		
 		//post-processing
 		public void done(){
 			
-			//switch cursor
+			//switch cursor + progress bar
 			Component glassPane = getRootPane().getGlassPane();
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			glassPane.setVisible(false);
 			getPanBtn().getProgressBar().setIndeterminate(false);
-			
 			setProgress(0);
 		}
 		
@@ -1471,13 +1587,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MG_Salmonella = new JCheckBoxMenuItem(strSalmonella);
 		MG_Staph = new JCheckBoxMenuItem(strStaph);
 
+		//add to menu
 		MG_PopularSets.add(MG_Chloroviruses);
-		MG_PopularSets.add(MG_Ecoli);
+		//MG_PopularSets.add(MG_Ecoli);
 		MG_PopularSets.add(MG_Halos);
 		MG_PopularSets.add(MG_Mimi);
 		MG_PopularSets.add(MG_Myxo);
-		MG_PopularSets.add(MG_Staph);
-		MG_PopularSets.add(MG_Salmonella);
+		//MG_PopularSets.add(MG_Staph);
+		//MG_PopularSets.add(MG_Salmonella);
 		
 //		//Whole genome set analysis / context forest
 //		MG_WholeSet = new JMenuItem(strCF);
@@ -1688,7 +1805,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		MB.add(M_Load);
 		MB.add(M_Export);
 		MB.add(M_Process);
-		MB.add(M_Settings);
+		//MB.add(M_Settings);
 		MB.add(M_Help);
 			
 		this.setJMenuBar(MB);
@@ -1767,7 +1884,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PopularGenomeSetData PGD_chloros = new PopularGenomeSetData();
 		PGD_chloros.setName(strChloroviruses);
 		PGD_chloros.setChkBox(MG_Chloroviruses);
-		PGD_chloros.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/09/Chloroviruses.txt");
+		PGD_chloros.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/12/Chloroviruses.txt");
 		PGD_chloros.setPasswordProtected(false);
 		PopularGenomeSets.put(MG_Chloroviruses, PGD_chloros);
 		
@@ -1784,7 +1901,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PopularGenomeSetData PGD_halos = new PopularGenomeSetData();
 		PGD_halos.setName(strHalos);
 		PGD_halos.setChkBox(MG_Halos);
-		PGD_halos.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/09/Haloarchaea.txt");
+		PGD_halos.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/12/Haloarchaea.txt");
 		PGD_halos.setPasswordProtected(false);
 		PopularGenomeSets.put(MG_Halos, PGD_halos);
 
@@ -1792,7 +1909,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PopularGenomeSetData PGD_mimi = new PopularGenomeSetData();
 		PGD_mimi.setName(strMimi);
 		PGD_mimi.setChkBox(MG_Mimi);
-		PGD_mimi.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/09/Mimiviruses.txt");
+		PGD_mimi.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/12/Mimiviruses.txt");
 		PGD_mimi.setPasswordProtected(false);
 		PopularGenomeSets.put(MG_Mimi, PGD_mimi);
 		
@@ -1800,7 +1917,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PopularGenomeSetData PGD_myxo = new PopularGenomeSetData();
 		PGD_myxo.setName(strMyxo);
 		PGD_myxo.setChkBox(MG_Myxo);
-		PGD_myxo.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/09/Myxococcus.txt");
+		PGD_myxo.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/12/Myxococcus.txt");
 		PGD_myxo.setPasswordProtected(false);
 		PopularGenomeSets.put(MG_Myxo, PGD_myxo);
 		
@@ -2057,10 +2174,24 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					
 					//proceed to attempt to stream in from internet
 					if (ContinueLoading){
+										
 						LoadPopularWorker LPW = new LoadPopularWorker(j);
 						LPW.addPropertyChangeListener(panBtn);
-						this.CurrentLPW = LPW;
+						this.CurrentLPW = LPW;						
 						LPW.execute();
+						
+//						try {
+//							LPW.get(5, TimeUnit.SECONDS);
+//						} catch (InterruptedException e) {
+//							// TODO Auto-generated catch block
+//							//e.printStackTrace();
+//						} catch (ExecutionException e) {
+//							// TODO Auto-generated catch block
+//							//e.printStackTrace();
+//						} catch (TimeoutException e) {
+//							// TODO Auto-generated catch block
+//							e.printStackTrace();
+//						}
 						
 						if (PDG.isPasswordProtected()){
 							//update the GUI to enable components.
@@ -2166,8 +2297,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					}
 
 				} else {
-					System.out.println("Temp loaded!");
-					AssociateHalophileSequences();
+					//System.out.println("Temp loaded!");
+					//AssociateHalophileSequences();
 				}
 				
 			} else {
@@ -2300,7 +2431,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Launch NCBI genome search window
 		if (evt.getSource().equals(MG_Ncbi)){
-			LaunchWebsite("http://www.ncbi.nlm.nih.gov/genome/browse");
+			LaunchWebsite("http://www.ncbi.nlm.nih.gov/nuccore/");
 		}
 		
 		//Launch NCBI taxonomy browser
@@ -2806,91 +2937,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	      }
 
 	}
-	
-	//Import organism set info from web.
-	public void ImportPopularSet(JCheckBoxMenuItem m){
 		
-		//Retrieve info		
-		File f = new File(m.getName());
-		String strURL = PopularGenomeSets.get(m).getURL();
-		GenomeSetFiles.put(m.getName(), f);
-		
-		//Import!
-		try {
-
-			URL inputURL = new URL(strURL);
-			HttpURLConnection c = (HttpURLConnection) inputURL.openConnection();
-			ObjectInputStream in = new ObjectInputStream(c.getInputStream());
-				
-			//import data, update appropriately.
-			OrganismSet OSPopular = (OrganismSet) in.readObject();
-			
-			//Initialize a file for the organism set, even if we don't use it.
-			File fx = new File(OSPopular.getName());
-			GenomeSetFiles.put(OSPopular.getName(), fx);
-			
-			//Need a new check box
-			JCheckBoxMenuItem pop = new JCheckBoxMenuItem();
-			pop.setText(m.getText());
-			pop.setName(m.getName());
-			
-			//turn on additional options
-			OSMenuComponentsEnabled(true);
-
-			//update current genome set menu
-			if (AvailableOSCheckBoxMenuItems.contains(MG_NoGS)){
-				
-				//make a new, default genome set.
-				MakeDefaultGenomeSet(OSPopular.getName());
-				
-				//update appropriately
-				OS = OSPopular;
-
-				//remove no GS type.
-				AvailableOSCheckBoxMenuItems.remove(MG_NoGS);
-				
-				//Add information
-				CreateAndStoreGSInfo(OS);
-				
-				//Update GUI
-				NewOSUpdateGUI();
-				
-			//Switch out of old genome set
-			} else {
-				
-				//Create a GS
-				//Add this menu item to the list.			
-				AvailableOSCheckBoxMenuItems.add(pop);
-				MG_CurrentGS.add(pop);
-				
-				//create a dummy file for new genome set, store appropriately
-				OSPopular.setName(pop.getName());
-				this.ExportNonFocusOS(OSPopular);
-
-				//invoke switch worker
-				this.CallSwitchWorker(OS.getName(), OSPopular.getName());
-				
-			}
-			
-			//for the halophiles, import sequences as appropriate
-			//UNTESTED
-			if (m.getName().equals("Haloarchaea")){
-				AssociateHalophileSequences();
-			}
-
-		} catch (Exception e) {
-			
-			//item not selected
-			m.setSelected(false);
-			
-			//error message
-			JOptionPane.showMessageDialog(null, "There was a problem reading data from the internet.\nCheck your internet connection and try again later.",
-					"Data Import Error", JOptionPane.ERROR_MESSAGE);
-		}
-
-
-	}
-
 	//Method to switch between two OS (files already exist)
 	@SuppressWarnings("unchecked")
 	public void SwitchBetweenOS(String FirstOS, String SecondOS){
@@ -3708,6 +3755,23 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	public void setSearchWorkerCancelled(boolean searchWorkerCancelled) {
 		SearchWorkerCancelled = searchWorkerCancelled;
+	}
+
+	public boolean isImportPopularSetWorkerCancelled() {
+		return ImportPopularSetWorkerCancelled;
+	}
+
+	public void setImportPopularSetWorkerCancelled(
+			boolean importPopularSetWorkerCancelled) {
+		ImportPopularSetWorkerCancelled = importPopularSetWorkerCancelled;
+	}
+
+	public ObjectInputStream getPopularSetImportStream() {
+		return PopularSetImportStream;
+	}
+
+	public void setPopularSetImportStream(ObjectInputStream popularSetImportStream) {
+		PopularSetImportStream = popularSetImportStream;
 	}
 
 }

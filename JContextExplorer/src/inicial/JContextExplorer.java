@@ -64,7 +64,7 @@ public class JContextExplorer {
 
 		//carry along OS, create Frm
 		this.OS = theOrganismSet;
-		this.f = new FrmPrincipalDesk("JContextExplorer (2.0): Main Window", theOrganismSet);
+		this.f = new FrmPrincipalDesk("JContextExplorer (3.0): Main Window", theOrganismSet);
 		
 		//Frm specifications
 		Dimension pantalla = Toolkit.getDefaultToolkit().getScreenSize();

@@ -25,6 +25,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -210,6 +211,7 @@ import definicions.MatriuDistancies;
 			//final
 			public Cluster RootCluster = null;
 			public boolean ProcessCompleted = false;
+			public boolean RenderOutput = false;
 			
 			//constructor
 			public SearchWorker(final QueryData QD, final String action,
@@ -334,42 +336,11 @@ import definicions.MatriuDistancies;
 						fr.setSearchWorkerCancelled(true);
 					}
 					
-					//(3) Render products into output
-					if (!Thread.currentThread().isInterrupted()){
-						
-						//process completed!
-						ProcessCompleted = true;
-						fr.setTmpCluster(RootCluster);
-						
-						//(3) Display output
-						if (DisplayOutput){
-							
-							//try to update values
-							try {
-								//update values for display
-								if (AnalysesList.isOptionComputeDendrogram()){
-									multiDendro.getArrel().setBase(minBase);
-								}
-								showCalls(action, this.WorkerQD); //pass on the QD + display options
-							} catch (Exception ex) {
-								
-							}
-						}
-						
-						//if the process has been cancelled, restore defaults.
-						} else {
-
-							//re-set cursor, progress bar
-							fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-							setProgress(0);
-							progressBar.setString("");
-							progressBar.setBorderPainted(false);
-							
-							//set cancellation parameter for EDT
-							fr.setSearchWorkerCancelled(true);
-						}
 				}
-
+				
+				//very last step - renderingint output is a go!
+				RenderOutput = true;
+				
 			} catch (Exception ex) {
 				if (DisplayOutput){
 					showError("There were no matches to the query (or queries).");
@@ -1507,40 +1478,40 @@ import definicions.MatriuDistancies;
 			progressBar.setString("");
 			progressBar.setBorderPainted(false);
 				
-//			//only do these things if the searchworker is not recognized as cancelled.
-//			if (!fr.isSearchWorkerCancelled()){
-//			//if (!Thread.currentThread().isInterrupted()){
-//				
-//				//proceed if exception thrown
-//				if (!ExceptionThrown){
-//					
-//					//process completed!
-//					ProcessCompleted = true;
-//					fr.setTmpCluster(RootCluster);
-//					
-//					if (DisplayOutput){
-//						
-//						//try to update values
-//						try {
-//							//update values for display
-//							if (AnalysesList.isOptionComputeDendrogram()){
-//								multiDendro.getArrel().setBase(minBase);
-//							}
-//							showCalls(action, this.WorkerQD); //pass on the QD + display options
-//						} catch (Exception ex) {
-//							
-//						}
-//
-//					}
-//				}
-//				
-//			} else {
-//				
-//				System.out.println("Search process cancelled (done)");
-//				
-//				//default: search worker is not cancelled.
-//				fr.setSearchWorkerCancelled(false);
-//			}
+			//only do these things if the searchworker is not recognized as cancelled.
+			if (RenderOutput){
+			//if (!Thread.currentThread().isInterrupted()){
+				
+				//proceed if exception thrown
+				if (!ExceptionThrown){
+					
+					//process completed!
+					ProcessCompleted = true;
+					fr.setTmpCluster(RootCluster);
+					
+					if (DisplayOutput){
+						
+						//try to update values
+						try {
+							//update values for display
+							if (AnalysesList.isOptionComputeDendrogram()){
+								multiDendro.getArrel().setBase(minBase);
+							}
+							showCalls(action, this.WorkerQD); //pass on the QD + display options
+						} catch (Exception ex) {
+							
+						}
+
+					}
+				}
+				
+			} else {
+				
+				//System.out.println("Search process cancelled (done)");
+				
+				//default: search worker is not cancelled.
+				fr.setSearchWorkerCancelled(false);
+			}
 
 			//no search worker is running, any more
 			//fr.setSearchWorkerRunning(false);
@@ -1853,255 +1824,308 @@ import definicions.MatriuDistancies;
 		@Override
 		public void actionPerformed(final ActionEvent evt) {
 			
-			if (fr.getOS() != null){
+			//cancel button - always active
+			if (evt.getSource().equals(btnCancel)){
 				
-				//cancel button - version 1.1
-				if (evt.getSource().equals(btnCancel)){
-					
-					 //cancellations!
-					 CancelBtn();
+				 //cancellations!
+				 CancelBtn();
 
-				}
+			//other features - only active when an active set has been loaded.
+			} else {
 				
-				String action = null;
-				FitxerDades fitxTmp;
-				boolean ambDades = false;
-				InternalFrameData ifd;
-				double minBase;
-				MDComputation mdComputation;
-				String query;
+				//conditionals
+				if (fr.getOS() != null){
 
-				/*
-				 * Available actions:
-				 * (1) Load				 [Create a new Context Tree]
-				 * (2) Reload			 [Update Context Tree - new matrix]
-				 * (3) Redraw			 [Update Context Tree - old matrix]
-				 * (4) cluster search    [take place of Reload]
-				 */
-				
-				//initialize a new 'querydata' object whenever an action is taken - 
-				//represents current search parameter space
-				QueryData QD = new QueryData();
-				QD.setOSName(fr.getOS().getName()); 	//Important later for context viewing.
-				if (!evt.getSource().equals(contextSetMenu)){
-					if (searchType.getSelection().equals(annotationSearch.getModel())){
-						QD.setAnnotationSearch(true);
-					} else {
-						QD.setAnnotationSearch(false);
-					}
-					QD.setContextSetName(contextSetMenu.getSelectedItem().toString());
-					QD.setDissimilarityType(fr.getPanMenu().getCbDissimilarity().getSelectedItem().toString());
-					QD.setAnalysesList(new PostSearchAnalyses(
-							fr.getPanMenuTab().getJpo().getDrawSearchResults().isSelected(), //search results
-							fr.getPanMenuTab().getJpo().getDrawContextTree().isSelected(), //draw context tree
-							fr.getPanMenuTab().getJpo().getDrawContextGraph().isSelected(), //draw context graph
-							fr.getPanMenuTab().getJpo().getDrawPhylogeneticTree().isSelected() //phylogeny
-							));
-				}
-				
-				//turn on search results, if nothing else turned on.
-				if (evt.getSource().equals(searchField) || 
-						evt.getSource().equals(btnSubmit) ||
-						evt.getSource().equals(btnUpdate)){
-					
-					//check: if none selected, show search results only.
-					if (!fr.getPanMenuTab().getJpo().getDrawSearchResults().isSelected() &&
-							!fr.getPanMenuTab().getJpo().getDrawContextTree().isSelected() &&
-							!fr.getPanMenuTab().getJpo().getDrawContextGraph().isSelected() &&
-							!fr.getPanMenuTab().getJpo().getDrawPhylogeneticTree().isSelected()){
-						System.out.println("No analyses were specified. Switching 'Print Search Results' on.");
-						QD.getAnalysesList().setOptionDisplaySearches(true);
-						fr.getPanMenuTab().getJpo().getDrawSearchResults().setSelected(true);
-					}
-					
-				}
+					String action = null;
+					FitxerDades fitxTmp;
+					boolean ambDades = false;
+					InternalFrameData ifd;
+					double minBase;
+					MDComputation mdComputation;
+					String query;
 
-
-				//Search Query
-				if (evt.getSource().equals(searchField) || evt.getSource().equals(btnSubmit)){
+					/*
+					 * Available actions:
+					 * (1) Load				 [Create a new Context Tree]
+					 * (2) Reload			 [Update Context Tree - new matrix]
+					 * (3) Redraw			 [Update Context Tree - old matrix]
+					 * (4) cluster search    [take place of Reload]
+					 */
 					
-					//reset bad search flag
-					boolean BadSearch = false;
-					
-					//all semicolon case
-					String txt = searchField.getText().trim();
-					for (int i = 0; i < txt.length(); i++){
-						if (txt.charAt(i) == ';'){
-							BadSearch = true;
-						} else {
-							BadSearch = false;
-							break;
-						}
-					}
-					
-					//retrieve semicolons
-					String[] L = searchField.getText().trim().split(";");
-					for (String s : L){
-						if (s.trim().equals("")){
-							BadSearch = true;
-							break;
-						}
-					}
-
-					//Proceed with Query, if appropriate.
-					if (!BadSearch) {
-						
-						//System.out.println("Search field invoked with query:" + searchField.getText());
+					//initialize a new 'querydata' object whenever an action is taken - 
+					//represents current search parameter space
+					QueryData QD = new QueryData();
+					QD.setOSName(fr.getOS().getName()); 	//Important later for context viewing.
+					if (!evt.getSource().equals(contextSetMenu)){
 						if (searchType.getSelection().equals(annotationSearch.getModel())){
-							currentQuery = "Search Query: " + searchField.getText().trim();
+							QD.setAnnotationSearch(true);
 						} else {
-							currentQuery ="Search Query: Cluster(s) " + searchField.getText().trim();
+							QD.setAnnotationSearch(false);
 						}
-					
-						action = "Load";
-						buttonClicked = true;
-						ambDades = true;
-					
-					} else {
-						//showError("Please enter a query in the search bar.");
-						JOptionPane.showMessageDialog(null, "One or more queries are empty string searches.\nPlease remove all empty string searches.",
-								"Empty Search",JOptionPane.ERROR_MESSAGE);
+						QD.setContextSetName(contextSetMenu.getSelectedItem().toString());
+						QD.setDissimilarityType(fr.getPanMenu().getCbDissimilarity().getSelectedItem().toString());
+						QD.setAnalysesList(new PostSearchAnalyses(
+								fr.getPanMenuTab().getJpo().getDrawSearchResults().isSelected(), //search results
+								fr.getPanMenuTab().getJpo().getDrawContextTree().isSelected(), //draw context tree
+								fr.getPanMenuTab().getJpo().getDrawContextGraph().isSelected(), //draw context graph
+								fr.getPanMenuTab().getJpo().getDrawPhylogeneticTree().isSelected() //phylogeny
+								));
 					}
 					
-				} else if (evt.getSource().equals(btnUpdate)) {
-					
-					//set wait cursor
-					fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-					
-					// UPDATE
-					buttonClicked = true;
-					ifd = currentInternalFrame.getInternalFrameData();
+					//turn on search results, if nothing else turned on.
+					if (evt.getSource().equals(searchField) || 
+							evt.getSource().equals(btnSubmit) ||
+							evt.getSource().equals(btnUpdate)){
+						
+						//check: if none selected, show search results only.
+						if (!fr.getPanMenuTab().getJpo().getDrawSearchResults().isSelected() &&
+								!fr.getPanMenuTab().getJpo().getDrawContextTree().isSelected() &&
+								!fr.getPanMenuTab().getJpo().getDrawContextGraph().isSelected() &&
+								!fr.getPanMenuTab().getJpo().getDrawPhylogeneticTree().isSelected()){
+							System.out.println("No analyses were specified. Switching 'Print Search Results' on.");
+							QD.getAnalysesList().setOptionDisplaySearches(true);
+							fr.getPanMenuTab().getJpo().getDrawSearchResults().setSelected(true);
+						}
+						
+					}
 
-					if ((Jpan_Menu.getTypeData() == ifd.getTypeData())
-							&& (Jpan_Menu.getMethod() == ifd.getMethod())
-							&& (Jpan_Menu.getPrecision() == ifd.getPrecision())
-							&& (QD.getDissimilarityType().equals(ifd.getQD().getDissimilarityType()))
-							&& (QD.getContextSetName().equals(ifd.getQD().getContextSetName()))
-							
-							/* TODO:
-							 * Currently set so that any tab change will cause for re-computation.  This should be changed, later,
-							 * to account for re-computations of different kinds, for different analyses. (1-14-2013)
-							 */
-							&& (QD.getAnalysesList().isOptionDisplaySearches() == ifd.getQD().getAnalysesList().isOptionDisplaySearches())
-							&& (QD.getAnalysesList().isOptionComputeDendrogram() == ifd.getQD().getAnalysesList().isOptionComputeDendrogram())
-							&& (QD.getAnalysesList().isOptionComputeContextGraph() == ifd.getQD().getAnalysesList().isOptionComputeContextGraph())
-							&& (QD.getAnalysesList().isOptionRenderPhylogeny() == ifd.getQD().getAnalysesList().isOptionRenderPhylogeny())){
-							//&& (QD.getAnalysesList().equals(ifd.getQD().getAnalysesList()))){
-					
-						action = "Redraw"; // no new matrix required
-						//System.out.println("Action = Redraw");
-					} else {
-						action = "Reload"; //a new matrix is required
-						//System.out.println("Action = Reloaded");
-//						System.out.println("Method:" + (Jpan_Menu.getMethod() == ifd.getMethod()));
-//						System.out.println("Precision: " + (Jpan_Menu.getPrecision() == ifd.getPrecision()));
-//						System.out.println("Dissimilarity Type: " + (QD.getDissimilarityType().equals(ifd.getQD().getDissimilarityType())));
-//						System.out.println("Context Set Name: " + (QD.getContextSetName().equals(ifd.getQD().getContextSetName())));
+
+					//Search Query
+					if (evt.getSource().equals(searchField) || evt.getSource().equals(btnSubmit)){
 						
-						//the problem!
-						//System.out.println("Analyses List: " + (QD.getAnalysesList().equals(ifd.getQD().getAnalysesList())));
-//						
-//						System.out.println("QD List:" + QD.getAnalysesList().isOptionDisplaySearches() 
-//								+ " " + QD.getAnalysesList().isOptionComputeDendrogram()
-//								+ " " + QD.getAnalysesList().isOptionComputeContextGraph()
-//								+ " " + QD.getAnalysesList().isOptionRenderPhylogeny());
-//						
-//						System.out.println("ifd:" + ifd.getQD().getAnalysesList().isOptionDisplaySearches() 
-//								+ " " + ifd.getQD().getAnalysesList().isOptionComputeDendrogram()
-//								+ " " + ifd.getQD().getAnalysesList().isOptionComputeContextGraph()
-//								+ " " + ifd.getQD().getAnalysesList().isOptionRenderPhylogeny());
-					}
-					ambDades = true;
-					
-				} else if (evt.getSource().equals(btnManage)){
-					action = "manage contexts";
-					buttonClicked = true;
-					//new manageContextSets(this.fr, fr.getOS().getCSDs(), this);
-					new manageContextSetsv2(this.fr, this);
-				}
-				
-				//CARRY OUT ACTION
-				if (ambDades && (action.equals("Load"))) {
-					String TheName = searchField.getText() + " [" + contextSetMenu.getSelectedItem() + "]";
-					QD.setName(TheName);
-					try {
+						//reset bad search flag
+						boolean BadSearch = false;
 						
-						//parse into candidates
-						String[] Queries = searchField.getText().trim().split(";");
-						minBase = Double.MAX_VALUE;
-						
-						if (searchType.getSelection().equals(annotationSearch.getModel())){
-							
-							//before carrying out search, ask user about their search.
-							String Hypo = "hypothetical protein";
-							String Unk = "Unknown function";
-							
-							if ((Hypo.contains(searchField.getText()) || Unk.contains(searchField.getText()) ||
-									searchField.getText().length() <= 3) && QD.getAnalysesList().isOptionComputeDendrogram()
-									&& fr.getPanDisplayOptions().getDrawContextTree().isSelected()){
-								
-								String SureYouWantToSearch = "You have entered a search query that may return a large number of results." + "\n"
-										+ "Proceeding may cause this program to crash." + "\n"
-										+ "Are you sure you would like to proceed?" + "\n";
-								
-								//ask question, and maybe proceed with search
-								int SearchCheck = JOptionPane.showConfirmDialog(null,SureYouWantToSearch,
-										"Proceed with search", JOptionPane.YES_NO_CANCEL_OPTION);
-								
-								if (SearchCheck == JOptionPane.YES_OPTION){
-									this.ProceedWithSearch = true;
-								} else {
-									this.ProceedWithSearch = false;
-									de = null; //this will effectively fast-forward to the catch statement
-								}
+						//all semicolon case
+						String txt = searchField.getText().trim();
+						for (int i = 0; i < txt.length(); i++){
+							if (txt.charAt(i) == ';'){
+								BadSearch = true;
 							} else {
-								this.ProceedWithSearch = true;
+								BadSearch = false;
+								break;
 							}
+						}
+						
+						//retrieve semicolons
+						String[] L = searchField.getText().trim().split(";");
+						for (String s : L){
+							if (s.trim().equals("")){
+								BadSearch = true;
+								break;
+							}
+						}
+
+						//Proceed with Query, if appropriate.
+						if (!BadSearch) {
 							
-							if (this.ProceedWithSearch == true){
-							
-								QD.setQueries(Queries);
+							//System.out.println("Search field invoked with query:" + searchField.getText());
+							if (searchType.getSelection().equals(annotationSearch.getModel())){
+								currentQuery = "Search Query: " + searchField.getText().trim();
+							} else {
+								currentQuery ="Search Query: Cluster(s) " + searchField.getText().trim();
+							}
+						
+							action = "Load";
+							buttonClicked = true;
+							ambDades = true;
+						
+						} else {
+							//showError("Please enter a query in the search bar.");
+							JOptionPane.showMessageDialog(null, "One or more queries are empty string searches.\nPlease remove all empty string searches.",
+									"Empty Search",JOptionPane.ERROR_MESSAGE);
+						}
+						
+					} else if (evt.getSource().equals(btnUpdate)) {
+						
+						//set wait cursor
+						fr.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+						
+						// UPDATE
+						buttonClicked = true;
+						ifd = currentInternalFrame.getInternalFrameData();
+
+						if ((Jpan_Menu.getTypeData() == ifd.getTypeData())
+								&& (Jpan_Menu.getMethod() == ifd.getMethod())
+								&& (Jpan_Menu.getPrecision() == ifd.getPrecision())
+								&& (QD.getDissimilarityType().equals(ifd.getQD().getDissimilarityType()))
+								&& (QD.getContextSetName().equals(ifd.getQD().getContextSetName()))
 								
-								//single, interruptable Swing Worker
+								/* TODO:
+								 * Currently set so that any tab change will cause for re-computation.  This should be changed, later,
+								 * to account for re-computations of different kinds, for different analyses. (1-14-2013)
+								 */
+								&& (QD.getAnalysesList().isOptionDisplaySearches() == ifd.getQD().getAnalysesList().isOptionDisplaySearches())
+								&& (QD.getAnalysesList().isOptionComputeDendrogram() == ifd.getQD().getAnalysesList().isOptionComputeDendrogram())
+								&& (QD.getAnalysesList().isOptionComputeContextGraph() == ifd.getQD().getAnalysesList().isOptionComputeContextGraph())
+								&& (QD.getAnalysesList().isOptionRenderPhylogeny() == ifd.getQD().getAnalysesList().isOptionRenderPhylogeny())){
+								//&& (QD.getAnalysesList().equals(ifd.getQD().getAnalysesList()))){
+						
+							action = "Redraw"; // no new matrix required
+							//System.out.println("Action = Redraw");
+						} else {
+							action = "Reload"; //a new matrix is required
+							//System.out.println("Action = Reloaded");
+//							System.out.println("Method:" + (Jpan_Menu.getMethod() == ifd.getMethod()));
+//							System.out.println("Precision: " + (Jpan_Menu.getPrecision() == ifd.getPrecision()));
+//							System.out.println("Dissimilarity Type: " + (QD.getDissimilarityType().equals(ifd.getQD().getDissimilarityType())));
+//							System.out.println("Context Set Name: " + (QD.getContextSetName().equals(ifd.getQD().getContextSetName())));
+							
+							//the problem!
+							//System.out.println("Analyses List: " + (QD.getAnalysesList().equals(ifd.getQD().getAnalysesList())));
+//							
+//							System.out.println("QD List:" + QD.getAnalysesList().isOptionDisplaySearches() 
+//									+ " " + QD.getAnalysesList().isOptionComputeDendrogram()
+//									+ " " + QD.getAnalysesList().isOptionComputeContextGraph()
+//									+ " " + QD.getAnalysesList().isOptionRenderPhylogeny());
+//							
+//							System.out.println("ifd:" + ifd.getQD().getAnalysesList().isOptionDisplaySearches() 
+//									+ " " + ifd.getQD().getAnalysesList().isOptionComputeDendrogram()
+//									+ " " + ifd.getQD().getAnalysesList().isOptionComputeContextGraph()
+//									+ " " + ifd.getQD().getAnalysesList().isOptionRenderPhylogeny());
+						}
+						ambDades = true;
+						
+					} else if (evt.getSource().equals(btnManage)){
+						action = "manage contexts";
+						buttonClicked = true;
+						//new manageContextSets(this.fr, fr.getOS().getCSDs(), this);
+						new manageContextSetsv2(this.fr, this);
+					}
+					
+					//CARRY OUT ACTION
+					if (ambDades && (action.equals("Load"))) {
+						String TheName = searchField.getText() + " [" + contextSetMenu.getSelectedItem() + "]";
+						QD.setName(TheName);
+						try {
+							
+							//parse into candidates
+							String[] Queries = searchField.getText().trim().split(";");
+							minBase = Double.MAX_VALUE;
+							
+							if (searchType.getSelection().equals(annotationSearch.getModel())){
+								
+								//before carrying out search, ask user about their search.
+								String Hypo = "hypothetical protein";
+								String Unk = "Unknown function";
+								
+								if ((Hypo.contains(searchField.getText()) || Unk.contains(searchField.getText()) ||
+										searchField.getText().length() <= 3) && QD.getAnalysesList().isOptionComputeDendrogram()
+										&& fr.getPanDisplayOptions().getDrawContextTree().isSelected()){
+									
+									String SureYouWantToSearch = "You have entered a search query that may return a large number of results." + "\n"
+											+ "Proceeding may cause this program to crash." + "\n"
+											+ "Are you sure you would like to proceed?" + "\n";
+									
+									//ask question, and maybe proceed with search
+									int SearchCheck = JOptionPane.showConfirmDialog(null,SureYouWantToSearch,
+											"Proceed with search", JOptionPane.YES_NO_CANCEL_OPTION);
+									
+									if (SearchCheck == JOptionPane.YES_OPTION){
+										this.ProceedWithSearch = true;
+									} else {
+										this.ProceedWithSearch = false;
+										de = null; //this will effectively fast-forward to the catch statement
+									}
+								} else {
+									this.ProceedWithSearch = true;
+								}
+								
+								if (this.ProceedWithSearch == true){
+								
+									QD.setQueries(Queries);
+									
+									//single, interruptable Swing Worker
+									CurrentSearch = new SearchWorker(QD,action,
+											Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
+											Jpan_Menu.getPrecision(), true);
+									CurrentSearch.addPropertyChangeListener(this);
+									
+									
+									//default: the search worker is not cancelled.
+									fr.setSearchWorkerCancelled(false);
+									
+									CurrentSearch.execute();
+
+								}
+
+							} else {
+								LinkedList<Integer> NumQueriesList = new LinkedList<Integer>();
+								for (int i = 0; i < Queries.length; i++){
+									try {
+										if (Queries[i].contains("-")){
+											String Rng[] = Queries[i].split("-");
+											int Start = Integer.parseInt(Rng[0].trim());
+											int Stop = Integer.parseInt(Rng[1].trim());
+											for (int j = Start; j <= Stop; j++){
+												NumQueriesList.add(j);
+											}
+										}
+										NumQueriesList.add(Integer.parseInt(Queries[i].trim()));
+									} catch (Exception ex){}
+								}
+								
+								int[] NumQueries = new int[NumQueriesList.size()];
+								for (int i = 0; i < NumQueriesList.size(); i++){
+									NumQueries[i] = NumQueriesList.get(i);
+								}
+								
+								//store 
+								QD.setClusters(NumQueries);
+								
+								//try: unified swingworker approach
 								CurrentSearch = new SearchWorker(QD,action,
 										Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
-										Jpan_Menu.getPrecision(), true);
+										Jpan_Menu.getPrecision(), true);//phylogeny
 								CurrentSearch.addPropertyChangeListener(this);
-								
 								
 								//default: the search worker is not cancelled.
 								fr.setSearchWorkerCancelled(false);
 								
 								CurrentSearch.execute();
-
 							}
 
+
+						} catch (Exception e1) {
+							
+							e1.printStackTrace();
+							
+							fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+							
+							buttonClicked = false;
+							//showError(e1.getMessage());
+							if (searchType.getSelection().equals(annotationSearch.getModel())){
+								if (this.ProceedWithSearch == true){
+									showError("There were no matches to the query (or queries).");
+								}
+							} else {
+								//String LastCluster = Integer.toString(OS.LargestCluster);
+								String errMsg = "There were no matches to the query (or queries).";
+								showError(errMsg);
+							}
+						}
+					} else if (ambDades && action.equals("Reload")) {
+						
+						//retrieve information from selected frame
+						QueryData SelectedFrame = currentInternalFrame.getInternalFrameData().getQD();
+						
+						//update internal frame data
+						SelectedFrame.setDissimilarityType(QD.getDissimilarityType());
+						SelectedFrame.setContextSetName(QD.getContextSetName());
+						SelectedFrame.setAnalysesList(QD.getAnalysesList());
+						
+						if (SelectedFrame.isAnnotationSearch()){
+							CurrentSearch = new SearchWorker(SelectedFrame,action,
+									Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
+									Jpan_Menu.getPrecision(), true);//phylogeny
+							CurrentSearch.addPropertyChangeListener(this);
+							
+							//default: the search worker is not cancelled.
+							fr.setSearchWorkerCancelled(false);
+							
+							CurrentSearch.execute();
 						} else {
-							LinkedList<Integer> NumQueriesList = new LinkedList<Integer>();
-							for (int i = 0; i < Queries.length; i++){
-								try {
-									if (Queries[i].contains("-")){
-										String Rng[] = Queries[i].split("-");
-										int Start = Integer.parseInt(Rng[0].trim());
-										int Stop = Integer.parseInt(Rng[1].trim());
-										for (int j = Start; j <= Stop; j++){
-											NumQueriesList.add(j);
-										}
-									}
-									NumQueriesList.add(Integer.parseInt(Queries[i].trim()));
-								} catch (Exception ex){}
-							}
-							
-							int[] NumQueries = new int[NumQueriesList.size()];
-							for (int i = 0; i < NumQueriesList.size(); i++){
-								NumQueries[i] = NumQueriesList.get(i);
-							}
-							
-							//store 
-							QD.setClusters(NumQueries);
-							
-							//try: unified swingworker approach
-							CurrentSearch = new SearchWorker(QD,action,
+							CurrentSearch = new SearchWorker(SelectedFrame,action,
 									Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
 									Jpan_Menu.getPrecision(), true);//phylogeny
 							CurrentSearch.addPropertyChangeListener(this);
@@ -2111,85 +2135,22 @@ import definicions.MatriuDistancies;
 							
 							CurrentSearch.execute();
 						}
-
-
-					} catch (Exception e1) {
 						
-						e1.printStackTrace();
-						
+					// in this case, no need to modify what's already in the internal frame.
+					} else if (ambDades && action.equals("Redraw")) {
+						//only GUI updates - no recomputations
+						showCalls(action, currentInternalFrame.getInternalFrameData().getQD());//phylogeny
 						fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-						
-						buttonClicked = false;
-						//showError(e1.getMessage());
-						if (searchType.getSelection().equals(annotationSearch.getModel())){
-							if (this.ProceedWithSearch == true){
-								showError("There were no matches to the query (or queries).");
-							}
-						} else {
-							//String LastCluster = Integer.toString(OS.LargestCluster);
-							String errMsg = "There were no matches to the query (or queries).";
-							showError(errMsg);
-						}
-					}
-				} else if (ambDades && action.equals("Reload")) {
-					
-					//retrieve information from selected frame
-					QueryData SelectedFrame = currentInternalFrame.getInternalFrameData().getQD();
-					
-					//update internal frame data
-					SelectedFrame.setDissimilarityType(QD.getDissimilarityType());
-					SelectedFrame.setContextSetName(QD.getContextSetName());
-					SelectedFrame.setAnalysesList(QD.getAnalysesList());
-					
-					if (SelectedFrame.isAnnotationSearch()){
-						CurrentSearch = new SearchWorker(SelectedFrame,action,
-								Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
-								Jpan_Menu.getPrecision(), true);//phylogeny
-						CurrentSearch.addPropertyChangeListener(this);
-						
-						//default: the search worker is not cancelled.
-						fr.setSearchWorkerCancelled(false);
-						
-						CurrentSearch.execute();
+
 					} else {
-						CurrentSearch = new SearchWorker(SelectedFrame,action,
-								Jpan_Menu.getTypeData(), Jpan_Menu.getMethod(),
-								Jpan_Menu.getPrecision(), true);//phylogeny
-						CurrentSearch.addPropertyChangeListener(this);
-						
-						//default: the search worker is not cancelled.
-						fr.setSearchWorkerCancelled(false);
-						
-						CurrentSearch.execute();
+						buttonClicked = false;
 					}
-					
-				// in this case, no need to modify what's already in the internal frame.
-				} else if (ambDades && action.equals("Redraw")) {
-					//only GUI updates - no recomputations
-					showCalls(action, currentInternalFrame.getInternalFrameData().getQD());//phylogeny
-					fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 
-				} else {
-					buttonClicked = false;
-				}
+				} 
 				
-
-//			} else if (fr.getCurrentLPW() != null){
-//				System.out.println("Meeerh!");
-//				if (evt.getSource().equals(btnCancel)){
-//					if (fr.getCurrentLPW() != null){
-//						fr.getCurrentLPW().cancel(true);
-//						fr.setCurrentLPW(null);
-//						progressBar.setIndeterminate(false);
-//						progressBar.setValue(0);
-//						fr.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-//					}
-//				}
-			} else {
-				if(!evt.getSource().equals(btnCancel)){
-					fr.NoOS();
-				}
 			}
+			
+
 		}
 		
 		//cancel button
@@ -2209,6 +2170,15 @@ import definicions.MatriuDistancies;
 				fr.setCurrentLPW(null);
 			}
 			
+			//close stream
+			if (fr.getPopularSetImportStream() != null){
+				try {
+					fr.getPopularSetImportStream().close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			
 			//kill export sequences worker
 			if (fr.getCurrentESW() != null) {
 				fr.getCurrentESW().cancel(true);
@@ -2225,8 +2195,9 @@ import definicions.MatriuDistancies;
 			//Try to cut out ASAP - but there may be a better way.
 			
 			//Output-associated resets
-			fr.setRenderGenomesWorkerCancelled(true);	//Rendered Genome Worker
-			fr.setSearchWorkerCancelled(true); 			//Search Worker
+			fr.setRenderGenomesWorkerCancelled(true);		//Rendered Genome Worker
+			fr.setSearchWorkerCancelled(true); 				//Search Worker
+			fr.setImportPopularSetWorkerCancelled(true);	//Import Popular set worker
 			
 			//GUI-related resets
 			
@@ -2238,15 +2209,7 @@ import definicions.MatriuDistancies;
 			Component glassPane = fr.getRootPane().getGlassPane();
 			glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			glassPane.setVisible(false);
-			
-			//try to release the current CPU thread, so that 
-			//the subordinate thread can be cancelled.
-			try {
-				Thread.sleep(1);
-			} catch (Exception ex){
-				
-			}
-			
+						
 			//message to console
 			System.out.println("The process has been cancelled.");
 			

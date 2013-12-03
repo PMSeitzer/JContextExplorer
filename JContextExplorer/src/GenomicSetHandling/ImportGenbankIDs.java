@@ -106,8 +106,10 @@ public class ImportGenbankIDs extends JDialog implements ActionListener, FocusLi
 				new LinkedHashMap<String, String>();
 		protected String GenbankIDs;
 		protected String msgErr = "No annotated genomes matching your query\n" +
-				"Are currently publically available in the NCBI Genbank database.";
-
+				"Are currently publically available in the NCBI Genbank database.\n\n" +
+				"However, you may discover hits to your query by manual browsing the nucleotide database.\n" +
+				"To manually browse NCBI's nucleotide database, please navigate to\n" +
+				"Genomes -> Browse NCBI available genomes by organism name\nor type command + B.";
 		
 		//Constructor
 		public QueryNCBIWorker(String Query){

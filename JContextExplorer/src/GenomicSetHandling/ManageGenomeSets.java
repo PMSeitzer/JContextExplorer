@@ -405,6 +405,9 @@ public class ManageGenomeSets extends JDialog implements ActionListener, ListSel
 		//View Statistics, Update
 		if (e.getSource().equals(btnOK)){
 
+			//Warn if try to remove current selected genome set
+			boolean TriedToRemoveCurrentGS = false;
+			
 			//Update fields
 			for (int i = 0; i < DisplayOnlyListModel.getSize(); i++){
 				
@@ -434,7 +437,24 @@ public class ManageGenomeSets extends JDialog implements ActionListener, ListSel
 							UpdatedGSMenu.remove(j);
 						}
 						
+						if (j.isSelected() && j.getName().equals(GSKey)){
+							TriedToRemoveCurrentGS = true;
+						}
+						
 					} catch (Exception ex){}
+				}
+				
+				//current genome set
+				if (TriedToRemoveCurrentGS){
+					
+					//message explaining action
+					String msg = "You have attempted to remove the currently active genome set.\n" +
+							"This action has been prevented.\n" +
+							"If you would like to remove the currently active genome set,\n" +
+							"Switch out of this set to a different set, and remove the genome set once it is no longer the active genome set.";
+					
+					JOptionPane.showMessageDialog(null, msg, 
+							"Cannot Remove Current Genome Set", JOptionPane.INFORMATION_MESSAGE);
 				}
 				
 				//update menu
