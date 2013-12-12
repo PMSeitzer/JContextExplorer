@@ -64,7 +64,7 @@ public void importFromGFFFile(String filename){
 			HashSet<String> ContigCount = new HashSet<String>();
 			
 			while((Line = br.readLine()) != null){
-				
+				//System.out.println(Line);
 					//ignore commented lines
 					if (!Line.startsWith("#") && !Line.isEmpty()){
 												
@@ -196,8 +196,10 @@ public void importFromGFFFile(String filename){
 			br.close();		
 			
 		}catch(Exception ex){
+			//ex.printStackTrace();
 			//System.out.println("fail!");
 			//System.exit(1);
+			//System.out.println("Meow");
 		}
 		
 		//sort elements
@@ -938,7 +940,12 @@ public void AdjustContextSet(String CSName, String ContigName, int Start, int St
 			
 			//update list
 			if (CSMap.get(Key) != null){
-				CSMap.get(Key).add(E);
+				
+				//if the CSMap already contains the element, don't add again
+				if (!CSMap.get(Key).contains(E)){
+					CSMap.get(Key).add(E);
+				}
+
 			} else {
 				LinkedList<GenomicElement> List = new LinkedList<GenomicElement>();
 				List.add(E);

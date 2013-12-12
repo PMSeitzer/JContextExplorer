@@ -115,6 +115,10 @@ public class CustomDissimilarity implements Serializable {
 		this.SSWeight = sSWeight2;
 	}
 	
+	//dummy constructor
+	public CustomDissimilarity(){
+		
+	}
 	// -------- Compute Dissimilarity -------------------------//
 	// -------- General ----------//
 	
