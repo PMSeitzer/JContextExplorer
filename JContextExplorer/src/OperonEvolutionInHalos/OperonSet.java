@@ -238,11 +238,19 @@ public class OperonSet {
 				OT.Operonicity = RatioNonSingle;
 				OT.Variety = RatioNovel;
 				OT.TrajectoryHash = Trajectory;
+				OT.amalgamate();				//puts all ops in same organisms together
 				OT.OperonHash = OpDataTraj;
 				OT.OtherClusters = Clusts;
 				
+				//Determine overall phylogenetic spread of protein family
+				LinkedList<String> ListOfOrganisms = new LinkedList<String>(OT.OperonHash.keySet());
+				OT.ClusterPhylogeneticRange = DetermineMaxDist(ListOfOrganisms);
+				
 				//Segregate trajectory - intensive, not always necessary
-				//OT.OperonGroups = SegregateTrajectory(OT);
+				OT.OperonGroups = SegregateTrajectory(OT);
+				
+				//compute evo rate - open to re-analysis
+				OT.computeEvoRate();
 				
 				//add to map + inc counter
 				Trajectories.put(i,OT);
@@ -268,10 +276,75 @@ public class OperonSet {
 	}
 
 	//Calculate for disagreements at lowest level
-	public void AddLowestLevelPhyloDisagreement(OperonTrajectory OT){
+	public void AddLowestLevelPhyloDisagreement(OperonTrajectory OT, double PhyloMargin, boolean ignoreSingleGenes){
 		/*
-		 * Algorithm: TODO
+		 * This algorithm checks the organismic sources of operons
+		 * of identical topology, and identifies cases where a more
+		 * distant relative exists that is not found in the group.
+		 * 
+		 * In that case, the operon is said not to agree exactly with
+		 * the phylogeny.
+		 * 
+		 * If the "distance relative" is within a provided margin of
+		 * error, this offender can be discarded.
+		 * 
 		 */
+		
+		//default: this operon follows the phylogeny
+		boolean FollowsPhylogeny = true;
+		
+		//only need to perform comparison if no alternative operon topologies featured
+		if (OT.OperonGroups.size() > 1){
+			
+			for (OperonCluster OC1 : OT.OperonGroups){
+				
+				//if an operon cluster contains only one organism,
+				//no intra-cluster divergence distance to measure.
+				if (OC1.Operons.size() != 1){
+					
+					//optionally ignore single gene topology
+					if (!ignoreSingleGenes || (ignoreSingleGenes && OC1.OperonSize>1)){
+						
+						//find the smallest inter-cluster distance
+						double MinDist = 999;
+						
+						//compare this cluster to every other cluster
+						for (OperonCluster OC2: OT.OperonGroups){
+							
+							//don't compare same
+							if (!OC1.equals(OC2)){
+								
+								//optionally, ignore single gene topology
+								if (!ignoreSingleGenes || (ignoreSingleGenes && OC2.OperonSize>1)){
+									
+									//compare
+									double NewDist = DetermineMinDist(OC1.Organisms,OC2.Organisms);
+									
+									//update minimum
+									if (NewDist < MinDist){
+										MinDist = NewDist;
+									}
+									
+								}
+								
+							}
+						}
+
+						//compare internal phylo distances to smallest external distance
+						if (OC1.MaxInternalDist - PhyloMargin > MinDist){
+							FollowsPhylogeny = false;
+							break;
+						}
+						
+					}
+										
+				}
+
+			}
+		}
+		
+		//update operon trajectory field
+		OT.AgreesWithPhylogenyAtLowestLevel = FollowsPhylogeny;
 		
 	}
 	
@@ -723,38 +796,71 @@ public class OperonSet {
 		//initialize sorting number
 		int SortingNumber = 0;
 		
-		//(1) Segregate operons into appropriate groups
-		for (String s : OT.TrajectoryHash.keySet()){
-			for (LinkedList<GenomicElement> L : OT.TrajectoryHash.get(s)){
-				
-				// determine featured protein families
-				LinkedList<Integer> FamClust = new LinkedList<Integer>();
-				
-				//an operon
-				for (GenomicElement E : L){
-					FamClust.add(E.getClusterID());
-				}
-				
-				//build the key for the hash
-				Collections.sort(FamClust);
-				
-				OperonCluster OC;
-				if (Segregation.get(FamClust) != null){
-					OC = Segregation.get(FamClust);
-				} else {
-					OC = new OperonCluster();
-					SortingNumber++;
-				}
-				
-				//adjust contents + store in hash
-				OC.SeedCluster = OT.ClusterID;
-				OC.SortingNumber = SortingNumber;
-				OC.addOrg(s);
-				OC.Operons.add(L);
-				OC.addClustersFeatured(FamClust);
-				
-				Segregation.put(FamClust, OC);
+//		//(1) Segregate operons into appropriate groups
+//		for (String s : OT.TrajectoryHash.keySet()){
+//			for (LinkedList<GenomicElement> L : OT.TrajectoryHash.get(s)){
+//		
+//				// determine featured protein families
+//				LinkedList<Integer> FamClust = new LinkedList<Integer>();
+//				
+//				//an operon
+//				for (GenomicElement E : L){
+//					FamClust.add(E.getClusterID());
+//				}
+//				
+//				//build the key for the hash
+//				Collections.sort(FamClust);
+//				
+//				OperonCluster OC;
+//				if (Segregation.get(FamClust) != null){
+//					OC = Segregation.get(FamClust);
+//				} else {
+//					OC = new OperonCluster();
+//					SortingNumber++;
+//				}
+//				
+//				//adjust contents + store in hash
+//				OC.SeedCluster = OT.ClusterID;
+//				OC.SortingNumber = SortingNumber;
+//				OC.addOrg(s);
+//				OC.Operons.add(L);
+//				OC.addClustersFeatured(FamClust);
+//				
+//				Segregation.put(FamClust, OC);
+//			}
+//		}
+		
+		//(1) UPDATE - use species-amalgamated operons instead of separate operons
+		for (String s : OT.AmalgamatedOperons.keySet()){
+			LinkedList<GenomicElement> L = OT.AmalgamatedOperons.get(s);
+			
+			// determine featured protein families
+			LinkedList<Integer> FamClust = new LinkedList<Integer>();
+			
+			//an operon
+			for (GenomicElement E : L){
+				FamClust.add(E.getClusterID());
 			}
+			
+			//build the key for the hash
+			Collections.sort(FamClust);
+			
+			OperonCluster OC;
+			if (Segregation.get(FamClust) != null){
+				OC = Segregation.get(FamClust);
+			} else {
+				OC = new OperonCluster();
+				SortingNumber++;
+			}
+			
+			//adjust contents + store in hash
+			OC.SeedCluster = OT.ClusterID;
+			OC.SortingNumber = SortingNumber;
+			OC.addOrg(s);
+			OC.Operons.add(L);
+			OC.addClustersFeatured(FamClust);
+			
+			Segregation.put(FamClust, OC);
 		}
 		
 		//(2) Calculate features of each operon cluster.
@@ -774,6 +880,7 @@ public class OperonSet {
 	
 	// ===== Export ======== //
 	
+	//DEPRECATED
 	//Export trajectories as context set
 	public void ExportTrajectoriesAsContextSet(String ContextSetFile, boolean OperonsOnly, LinkedHashMap<Integer, OperonTrajectory> Trajectories){
 		try {
@@ -803,11 +910,8 @@ public class OperonSet {
 					 //for each organism's gene instances in the trajectory
 					 for (String s : OT.TrajectoryHash.keySet()){
 						 
-						 //retrieve all operons
-						 LinkedList<LinkedList<GenomicElement>> Operons = OT.TrajectoryHash.get(s);
-						 
-						 //write data from each gene
-						 for (LinkedList<GenomicElement> L : Operons){
+						 //Export amalgamated set
+						 LinkedList<GenomicElement> L = OT.AmalgamatedOperons.get(s);
 							 for (GenomicElement E : L){
 								 
 								 //build line
@@ -831,7 +935,6 @@ public class OperonSet {
 									 bw.flush();
 								 }
 							 }
-						 }
 						 
 					 }
 					 
@@ -843,15 +946,6 @@ public class OperonSet {
 				}
 				 
 			 }
-			 
-//			 //actually export lines.
-//			 System.out.println("Starting final export.");
-//			 
-//			 //export data
-//			 for (String S : Lines2Export){
-//				 bw.write(S);
-//				 bw.flush();
-//			 }
 			 
 			 //close file writer
 			 bw.close();
@@ -1055,6 +1149,19 @@ public class OperonSet {
 				if (o1.Operonicity==o2.Operonicity){
 					return o1.ClusterID - o2.ClusterID;
 				}
+			}
+			return 0;
+		}
+		
+	}
+	public static class SortbyEvoRate implements Comparator<OperonTrajectory>{
+
+		@Override
+		public int compare(OperonTrajectory o1, OperonTrajectory o2) {
+			if (o1.EvoRate<o2.EvoRate) return -1;
+			if (o1.EvoRate>o2.EvoRate) return 1;
+			if (o1.EvoRate == o2.EvoRate){
+				return o1.ClusterID - o2.ClusterID;
 			}
 			return 0;
 		}

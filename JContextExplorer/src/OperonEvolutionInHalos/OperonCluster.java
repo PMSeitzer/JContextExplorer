@@ -35,10 +35,18 @@ public class OperonCluster {
 	//add list of clusters -> cast to appropriate type
 	public void addClustersFeatured(LinkedList<Integer> FamClust){
 		LinkedList<Object> ObjList = new LinkedList<Object>();
+		boolean ExtraSeedClusterCopies = false;
 		for (Integer x : FamClust){
-			if (x != SeedCluster){
+			
+			//clusters are either non-seed, or additional copies of a seed.
+			if (x != SeedCluster || (x == SeedCluster && ExtraSeedClusterCopies)){
 				Object obj = (Object) x;
 				ObjList.add(obj);
+			}
+			
+			//from this point on, count additional copies of the seed cluster.
+			if (x == SeedCluster){
+				ExtraSeedClusterCopies = true;
 			}
 		}
 		ClustersFeatured=ObjList;

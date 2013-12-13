@@ -1,13 +1,17 @@
 package OperonEvolutionInHalos;
 
 import genomeObjects.AnnotatedGenome;
+import genomeObjects.ContextSet;
 import genomeObjects.GenomicElement;
 import genomeObjects.OrganismSet;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
@@ -98,10 +102,62 @@ public class LoadData {
 	
 	// ------ Export ------//
 	
-	//TODO
 	//export operons as context set - for use with JCE, for visualization
-	public static void ExportOperonsAsContextSet(String OperonFile){
+	public static void ExportOperonsAsContextSet(String OperonCSFile, String CSName){
 		
+		try {
+			
+			//open file stream
+			BufferedWriter bw = new BufferedWriter(new FileWriter(OperonCSFile));
+			
+			//Initialize counter
+			int ContextCounter = 0;
+			
+			//write for each organism in the set of organisms.
+			for (String s : OS.getSpecies().keySet()){
+				
+				//retrieve the context set
+				ContextSet TheContextSet = null;
+				AnnotatedGenome AG = OS.getSpecies().get(s);
+				for (ContextSet CS : AG.getGroupings()){
+					if (CS.getName().equals(CSName)){
+						TheContextSet = CS;
+						break;
+					}
+				}
+				
+				//retrieve mapping
+				HashMap<Integer,LinkedList<GenomicElement>> Mapping =
+						TheContextSet.getContextMapping();
+				
+				//iterate through mapping + write to file
+				for (LinkedList<GenomicElement> L : Mapping.values()){
+					
+					//Increment the context counter
+					ContextCounter++;
+					
+					//Write each line to file.
+					for (GenomicElement E : L){
+						String Line = s + "\t" 
+								 + E.getContig() + "\t"
+								 + E.getStart() + "\t"
+								 + E.getStop() + "\t"
+								 + String.valueOf(ContextCounter) + "\n";
+						bw.write(Line);
+						bw.flush();
+					}
+				}
+				
+			}
+			
+			//close file stream
+			 bw.close();
+			 
+			 //output statement
+			 System.out.println("Operons successfully exported!");
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
 	}
 	
 	// ------ Deprecated ------ //
