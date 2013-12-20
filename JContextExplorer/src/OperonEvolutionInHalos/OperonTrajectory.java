@@ -25,9 +25,19 @@ public class OperonTrajectory {
 	
 	//Methods
 	
-	//compute evo rate - open to investigation
+	//compute evo rate - using amalgamated set
 	public void computeEvoRate(){
-		EvoRate = Math.round(1000.0 * (double) OperonGroups.size() / ClusterPhylogeneticRange)/1000;
+//		System.out.println("PhyloRange: " + ClusterPhylogeneticRange);
+//		double X = (double) OperonGroups.size() / ClusterPhylogeneticRange;
+//		System.out.println("X: " + X);
+//		double Round = 1000*X;
+//		System.out.println("round: " + Round);
+//		double Rounded = (double) Math.round(Round)/1000.0;
+//		System.out.println("Rounded: " + Rounded);
+//		
+		
+		EvoRate = Math.round(1000.0 * (((double) OperonGroups.size()) / ClusterPhylogeneticRange))/1000.0;
+		//System.out.println("EvoRate: " + EvoRate);
 	}
 	
 	//amalgamate operons into species-specific groups

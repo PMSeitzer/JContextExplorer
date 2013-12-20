@@ -1122,12 +1122,41 @@ public class CustomDissimilarity implements Serializable {
 				SSContribution = SSDissimilarity(G1,G2,T);
 			}
 			
-			//Weight accordingly.
-			return (CGWeight/AllProvidedWeights) * CGContribution +
+			//weighted average.
+			double TotalContribution = 
+					
+				   (CGWeight/AllProvidedWeights) * CGContribution +
 				   (CMWeight/AllProvidedWeights) * CMContribution +
 				   (GOWeight/AllProvidedWeights) * GOContribution +
 				   (GGWeight/AllProvidedWeights) * GGContribution +
 				   (SSWeight/AllProvidedWeights) * SSContribution;
+			
+			/*
+			 * Modification: empty set comparisons should either yield maximum dissimilarity
+			 * (empty set versus non-empty set) or maximum similarity (empty set vs. empty set).
+			 */
+			
+			if (G1.size() == 0){
+				
+				//double empty set case (empty G1, empty G2)
+				if (G2.size() == 0){
+					TotalContribution = 0.0; 
+				
+				//empty set versus non-empty set case I (empty G1, non-empty G2)
+				} else {
+					TotalContribution = 1.0;
+				}
+
+			} else {
+				
+				//other empty set versus non-empty case II (non-empty G1, empty G2)
+				if (G2.size() == 0){
+					TotalContribution = 1.0;
+				}
+			}
+			
+			//return modified (if necessary) contribution
+			return TotalContribution;
 			
 		} else {
 			/*
@@ -1221,6 +1250,31 @@ public class CustomDissimilarity implements Serializable {
 				TotalContribution = ImpMapping.getFirst().Dissimilarity;
 			}
 
+			
+			/*
+			 * Modification: empty set comparisons should either yield maximum dissimilarity
+			 * (empty set versus non-empty set) or maximum similarity (empty set vs. empty set).
+			 */
+			
+			if (G1.size() == 0){
+				
+				//double empty set case (empty G1, empty G2)
+				if (G2.size() == 0){
+					TotalContribution = 0.0; 
+				
+				//empty set versus non-empty set case I (empty G1, non-empty G2)
+				} else {
+					TotalContribution = 1.0;
+				}
+
+			} else {
+				
+				//other empty set versus non-empty case II (non-empty G1, empty G2)
+				if (G2.size() == 0){
+					TotalContribution = 1.0;
+				}
+			}
+			
 			return TotalContribution;
 		}
 

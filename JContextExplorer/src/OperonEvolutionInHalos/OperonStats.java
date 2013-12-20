@@ -29,22 +29,30 @@ public class OperonStats extends LoadData{
 		OperonSet BasicSet = new OperonSet(OS,"BasicOperons");
 		BasicSet.BuildPhylogeneticDistanceMapping();
 		BasicSet.BuildOperonTrajectories();
+		//BasicSet.ExportQuerySet(QuerySetFile, Trajectories, MinOperonicity, MaxNovelty)
 		
-		//determine agreement at this level
-		double margin = 0.10;
-		int NumAgree = 0;
-		for (Integer x : BasicSet.Trajectories.keySet()){
-			OperonTrajectory OT = BasicSet.Trajectories.get(x);
-			BasicSet.AddLowestLevelPhyloDisagreement(OT, margin, true);
-			if (OT.AgreesWithPhylogenyAtLowestLevel && !OT.AlwaysASingleGene){
-				NumAgree++;
-			} else {
-				if (!OT.AlwaysASingleGene){
-					System.out.println(OT.ClusterID + " disagrees with the phylogeny (ignore single genes).");
-				}
-			}
-		}
-		System.out.println(NumAgree + " agree in total.");
+		String QuerySetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/QS/QS_Operonicity_0_90.txt";
+		BasicSet.ExportQuerySet(QuerySetFile, BasicSet.Trajectories, 0.90, 1.1);
+		
+		//export, excluding trajectories where the gene is always a singleton
+		//String StatsTxt = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/OperonTrajectories/D50";
+		//BasicSet.ExportByDifferentVariables(StatsTxt,false);
+		
+//		//determine agreement at this level
+//		double margin = 0.10;
+//		int NumAgree = 0;
+//		for (Integer x : BasicSet.Trajectories.keySet()){
+//			OperonTrajectory OT = BasicSet.Trajectories.get(x);
+//			BasicSet.AddLowestLevelPhyloDisagreement(OT, margin, true);
+//			if (OT.AgreesWithPhylogenyAtLowestLevel && !OT.AlwaysASingleGene){
+//				NumAgree++;
+//			} else {
+//				if (!OT.AlwaysASingleGene){
+//					System.out.println(OT.ClusterID + " disagrees with the phylogeny (ignore single genes).");
+//				}
+//			}
+//		}
+//		System.out.println(NumAgree + " agree in total.");
 		
 //		//new list
 //		LinkedList<OperonTrajectory> Trajs = new LinkedList<OperonTrajectory>(BasicSet.Trajectories.values());

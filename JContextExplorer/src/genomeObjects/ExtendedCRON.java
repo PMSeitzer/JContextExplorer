@@ -132,7 +132,7 @@ public class ExtendedCRON implements Serializable{
 			//set list to ECRON structure.
 			this.setDistances(D);
 			
-		} else {
+		} else { //Uses a custom method.
 			
 			//initialize output list
 			LinkedList<Double> D = new LinkedList<Double>();
@@ -158,7 +158,9 @@ public class ExtendedCRON implements Serializable{
 					double dist = CustomDistMethod.TotalDissimilarity(this.Contexts.get(Keys[i]), this.Contexts.get(Keys[j]), SearchType);
 
 					//print statements - also reveals the order of keys
-					//System.out.println("Distance between " + Keys[i] + " and " + Keys[j] + ": " + "(" + i + "," + j + "): " + dist);
+//					if (Keys[i].equals("Natrialba_chahannoensis-1")){
+//						System.out.println("Distance between " + Keys[i] + " and " + Keys[j] + ": " + "(" + i + "," + j + "): " + dist);
+//					}
 					str = str + String.valueOf(dist) + " ";
 					
 					//add value to linked list

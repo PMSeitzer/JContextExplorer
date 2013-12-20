@@ -97,7 +97,7 @@ public class OperonSet {
 		
 		//check all clusters
 		for (int i = 272; i <= 5276; i++){
-		//for (int i = 1500; i <= 1500; i++){
+		//for (int i = 1800; i <= 1800; i++){
 			
 			//Initialize this operon trajectory
 			OperonTrajectory OT = new OperonTrajectory();
@@ -968,12 +968,12 @@ public class OperonSet {
 		
 		//(1) by NSR
 		Collections.sort(L, new SortbyOperonicity());
-		String NSRFile = BaseFile + "_byNSR.txt";
+		String NSRFile = BaseFile + "_byOperonicity.txt";
 		ExportTrajectoryStatistics(NSRFile,L,IncludeSingletons);
 		
 		//(2) by Novelty
 		Collections.sort(L, new SortbyVariety());
-		String NoveltyFile = BaseFile + "_byNovelty.txt";
+		String NoveltyFile = BaseFile + "_byVariety.txt";
 		ExportTrajectoryStatistics(NoveltyFile,L,IncludeSingletons);
 		
 		//(3) by OrgsFeatured
@@ -983,13 +983,18 @@ public class OperonSet {
 		
 		//(4) NSR, Novelty
 		Collections.sort(L, new SortbyOperonicityThenVariety());
-		String NSR_then_NoveltyFile = BaseFile + "_byNSR_then_Novelty.txt";
+		String NSR_then_NoveltyFile = BaseFile + "_byOperonicity_then_Variety.txt";
 		ExportTrajectoryStatistics(NSR_then_NoveltyFile,L,IncludeSingletons);
 		
 		//(5) Novelty, NSR
 		Collections.sort(L, new SortbyVarietyThenOperonicity());
-		String Novelty_then_NSRFile = BaseFile + "_byNovelty_then_NSR.txt";
+		String Novelty_then_NSRFile = BaseFile + "_byNVariety_then_Operonicity.txt";
 		ExportTrajectoryStatistics(Novelty_then_NSRFile,L,IncludeSingletons);
+		
+		//(6) by evolutionary rate
+		Collections.sort(L, new SortbyEvoRate());
+		String EvoRateFile = BaseFile + "_byRate.txt";
+		ExportTrajectoryStatistics(EvoRateFile,L,IncludeSingletons);
 		
 		//output message
 		System.out.println("Files Successfully Exported!");
@@ -1004,7 +1009,7 @@ public class OperonSet {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(FileName));
 			
 			//initialize header + write to file
-			String Header = "cluster_num\tnum_orgs\tNS_ratio\tnovelty\n";
+			String Header = "cluster_num\tnum_orgs\toperonicity\tvariety\tevolutionary_rate\n";
 			bw.write(Header);
 			bw.flush();
 			
@@ -1015,7 +1020,8 @@ public class OperonSet {
 				String ln = String.valueOf(OT.ClusterID) +"\t"
 					+ String.valueOf(OT.OrgsFeatured) + "\t"
 					+ String.valueOf(OT.Operonicity) + "\t"
-					+ String.valueOf(OT.Variety) + "\n";
+					+ String.valueOf(OT.Variety) + "\t"
+					+ String.valueOf(OT.EvoRate) + "\n";
 				
 				//write line to file
 				if (IncludeSingletons || (!IncludeSingletons && !OT.AlwaysASingleGene)){
@@ -1031,12 +1037,18 @@ public class OperonSet {
 	}
 	
 	//export a query set, with options to vary operonicity + novelty (towards highly conserved)
+	
+	//Export a query set!
 	public void ExportQuerySet(String QuerySetFile, LinkedHashMap<Integer,OperonTrajectory> Trajectories, Double MinOperonicity, Double MaxNovelty){
 		try {
 			
 			//open file stream
 			BufferedWriter bw = new BufferedWriter(new FileWriter(QuerySetFile));
 			
+			//initialize counter.
+			int Counter = 0;
+			
+			//export all appropriate trajectories
 			for (Integer x : Trajectories.keySet()){
 				
 				//retrieve trajectory
@@ -1050,12 +1062,19 @@ public class OperonSet {
 					String ln = x + "\n";
 					bw.write(ln);
 					bw.flush();
+					
+					//increment counter
+					Counter++;
 				}
 				
 			}
 			
 			//close file stream
 			bw.close();
+			
+			//output message
+			System.out.println("Exported query set containing " + Counter + " trajectories.");
+			
 		} catch (Exception ex){
 			ex.printStackTrace();
 		}
