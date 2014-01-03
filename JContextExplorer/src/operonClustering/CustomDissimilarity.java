@@ -47,8 +47,10 @@ public class CustomDissimilarity implements Serializable {
 	private String GOCompareType;
 	private boolean HeadPos;
 	private boolean PairOrd;
+	private boolean LinearOrd;
 	private double RelWeightHeadPos;
 	private double RelWeightPairOrd;
+	private double RelWeightLinearOrd;
 	private double GOWeight;
 	private int GOImportance;
 	
@@ -69,7 +71,7 @@ public class CustomDissimilarity implements Serializable {
 	public CustomDissimilarity(String name2,String amalgamationType2,LinkedList<String> factors2, double ImpFactor,
 			String cGCompareType2,boolean cGDuplicatesUnique2,double cGWeight2,int cGImportance2,
 			LinkedList<String> cMMotifNames2,String cMCompareType2,boolean cMDuplicatesUnique2,double cMWeight2,int cMImportance2,
-			boolean HeadPos, boolean PairOrd, double HeadPoswt, double PairOrdwt, double gOWeight2, int gOImportance2,
+			boolean HeadPos, boolean PairOrd, boolean LinearOrd, double HeadPoswt, double PairOrdwt, double LinearOrdwt, double gOWeight2, int gOImportance2,
 			GapPointMapping gapSizeDissMapping2, double gGWeight2,int gGImportance2,
 			boolean individualGenes2, boolean wholeGroup2, double relWeightIndGenes2, double relWeightWholeGroup2, double sSWeight2, int sSImportance2){
 		
@@ -96,8 +98,11 @@ public class CustomDissimilarity implements Serializable {
 		//factor 3: gene order
 		this.HeadPos = HeadPos;
 		this.PairOrd = PairOrd;
+		this.LinearOrd = LinearOrd;
 		this.RelWeightHeadPos = HeadPoswt;
 		this.RelWeightPairOrd = PairOrdwt;
+		this.RelWeightLinearOrd = LinearOrdwt;
+		
 		this.GOImportance = gOImportance2;
 		this.GOWeight = gOWeight2;
 		
@@ -307,6 +312,84 @@ public class CustomDissimilarity implements Serializable {
 		}
 
 		return PairOrdDissimilarity;
+	}
+	
+	//Dissimilarity by overall shape (tolerate insertions/deletions) (GO)
+	public double LinearOrderDiss(LinkedList<Object> O1Values, LinkedList<Object> O2Values){
+		
+		/*
+		 * Algorithm:
+		 * (1) Build O2 in reverse order
+		 * (2) Determine list of elements common to both sets, in the order they occur
+		 * (3) check for disagreements in ordering
+		 */
+		
+		/*
+		 * Debugging
+		 * 
+		 */
+		
+		//initialize output
+		double LinearOrderDissimilarity = 0.0;
+		
+		//build reverse list
+		LinkedList<Object> O2ValuesRev = new LinkedList<Object>();
+		for (int i = O2Values.size()-1; i >=0; i--){
+			O2ValuesRev.add(O2Values.get(i));
+		}
+		
+		//common elements from each set
+		LinkedList<Object> O1CommonValues = new LinkedList<Object>();
+		LinkedList<Object> O2CommonValues = new LinkedList<Object>();
+		LinkedList<Object> O2RevCommonValues = new LinkedList<Object>();
+		
+		//build common elements lists
+		
+		//O1 List
+		for (Object O : O1Values){
+			if (O2Values.contains(O) && !O1CommonValues.contains(O)){
+				O1CommonValues.add(O);
+			}
+		}
+		
+		//O2 List
+		for (Object O : O2Values){
+			if (O1Values.contains(O) && !O2CommonValues.contains(O)){
+				O2CommonValues.add(O);
+			}
+		}
+		
+		//O2Rev List
+		for (Object O : O2ValuesRev){
+			if (O1Values.contains(O) && !O2RevCommonValues.contains(O)){
+				O2RevCommonValues.add(O);
+			}
+		}
+		
+		//if the first list agrees with either of the other lists, record no change in gene order.
+		//otherwise, maximum dissimilarity.
+		if (O1CommonValues.equals(O2CommonValues) ||
+				O1CommonValues.equals(O2RevCommonValues)){
+			LinearOrderDissimilarity = 0.0;
+			
+			//Tricky balance between 0 transitivity and segregating single-gene commonalities
+			//
+			//Solution: need to eliminate 0 transitivity.
+			//To eliminate single-gene commonalities,
+			//create a better context set.
+			
+			//if only one element exists in common, need to break 0 transitivities.
+			if (O1CommonValues.size()==1){
+				LinearOrderDissimilarity = 1.0;
+			}
+			
+		} else{
+			LinearOrderDissimilarity = 1.0;
+		}
+		
+		//return output
+		return LinearOrderDissimilarity;
+		
 	}
 	
 	// ------- Factors -----------//
@@ -622,6 +705,7 @@ public class CustomDissimilarity implements Serializable {
 		double Dissimilarity = 0;
 		double HeadPosDissimilarity = 0;
 		double PairOrdDissimilarity = 0;
+		double LinearOrdDissimilarity = 0;
 		
 		//Strand counts
 		int StrandMatches = 0;
@@ -697,9 +781,20 @@ public class CustomDissimilarity implements Serializable {
 			PairOrdDissimilarity = this.PairOrdDiss(O1Values, O2Values);
 		}
 		
+		if (LinearOrd){
+			
+			//increment total weights contribution
+			TotalRelativeWeights = TotalRelativeWeights + RelWeightLinearOrd;
+			
+			//Compute the dissimilarity from this factor
+			LinearOrdDissimilarity = this.LinearOrderDiss(O1Values, O2Values);
+			
+		}
+		
 		//Amalgamate into dissimilarity
 		Dissimilarity = (RelWeightHeadPos/TotalRelativeWeights) * HeadPosDissimilarity +
-						(RelWeightPairOrd/TotalRelativeWeights) * PairOrdDissimilarity;
+						(RelWeightPairOrd/TotalRelativeWeights) * PairOrdDissimilarity +
+						(RelWeightLinearOrd/TotalRelativeWeights) * LinearOrdDissimilarity;
 		
 		//Maximum dissimilarity is 1, minimum is 0.
 		if (Dissimilarity > 1){

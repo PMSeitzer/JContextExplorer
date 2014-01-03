@@ -158,7 +158,7 @@ public class ExtendedCRON implements Serializable{
 					double dist = CustomDistMethod.TotalDissimilarity(this.Contexts.get(Keys[i]), this.Contexts.get(Keys[j]), SearchType);
 
 					//print statements - also reveals the order of keys
-//					if (Keys[i].equals("Natrialba_chahannoensis-1")){
+//					if (Keys[i].equals("Halococcus_saccharolyticus-1")){
 //						System.out.println("Distance between " + Keys[i] + " and " + Keys[j] + ": " + "(" + i + "," + j + "): " + dist);
 //					}
 					str = str + String.valueOf(dist) + " ";
@@ -168,7 +168,7 @@ public class ExtendedCRON implements Serializable{
 				}
 				
 				//debugging - view matrix
-				//System.out.println(str);
+				System.out.println(str);
 			}
 
 			//set list to ECRON structure.

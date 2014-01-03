@@ -120,13 +120,15 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 	private JTextField LblgoWeight, TxtgoWeight, LblgoScale, TxtgoScale;
 	private String strTxtgoWeight = "0.2";
 	private String strTxtgoScale = "3";
-	private JCheckBox chkHeadPos, chkPairOrd;
+	private JCheckBox chkHeadPos, chkPairOrd, chkLinearOrd;
 	private String strHeadPos = "Percent conserved gene position from head";
 	private String strPairOrd = "Percent conserved collinear gene pairs";
-	private JTextField LblwtHead, LblwtPair, TxtwtHead, TxtwtPair;
+	private String strLinearOrd = "Conserved linear order of genes";
+	private JTextField LblwtHead, LblwtPair, LblwtLinear, TxtwtHead, TxtwtPair, TxtwtLinear;
 	private String strLblwtOrd = " Relative Weight:";
-	private String strTxtwtHead = "0.5";
-	private String strTxtwtPair = "0.5";
+	private String strTxtwtHead = "0.33";
+	private String strTxtwtPair = "0.33";
+	private String strTxtwtLinear = "0.33";
 	
 	// (4) GENE GAPS
 	private JTextField LblggWeight, TxtggWeight, LblggScale, TxtggScale;
@@ -788,6 +790,43 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		TxtwtPair.setColumns(StrColNum);
 		grpGeneOrder.add(TxtwtPair);
 		jp.add(TxtwtPair, c);
+		gridy++;
+		
+		//linear gene order option
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 2;
+		c.insets = new Insets(1,20,1,1);
+		chkLinearOrd = new JCheckBox(strLinearOrd);
+		chkLinearOrd.setSelected(true);
+		grpGeneOrder.add(chkLinearOrd);
+		jp.add(chkLinearOrd, c);
+		gridy++;
+		
+		//relative weights
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,40,1,1);
+		LblwtLinear = new JTextField(strLblwtOrd);
+		LblwtLinear.setBorder(null);
+		LblwtLinear.setEditable(false);
+		grpGeneOrder.add(LblwtLinear);
+		jp.add(LblwtLinear, c);
+				
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,1,1,1);
+		c.fill = GridBagConstraints.NONE;
+		TxtwtLinear = new JTextField(strTxtwtLinear);
+		TxtwtLinear.setEditable(true);
+		TxtwtLinear.setColumns(StrColNum);
+		grpGeneOrder.add(TxtwtLinear);
+		jp.add(TxtwtLinear, c);
 		gridy++;
 
 		//(4) GENE GAPS
@@ -1549,32 +1588,50 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 					//Factor 3: Gene order
 					boolean HeadPos;
 					boolean PairOrd;
+					boolean LinearOrd;
 					double RelWeightHeadPos;
 					double RelWeightPairOrd;
+					double RelWeightLinearOrd;
 					double GOWeight;
 					int GOImportance;
 
 					if (this.chkGeneOrder.isSelected()){
 						Factors.add("GO");
+						
+						//head position factor
 						if (this.chkHeadPos.isSelected()){
 							HeadPos = true;
 						} else {
 							HeadPos = false;
 						}
+						
+						//pair order factor
 						if (this.chkPairOrd.isSelected()){
 							PairOrd = true;
 						} else {
 							PairOrd = false;
 						}
+						
+						//linear order factor
+						if (this.chkLinearOrd.isSelected()){
+							LinearOrd = true;
+						} else {
+							LinearOrd = false;
+						}
+						
 						RelWeightHeadPos = Double.parseDouble(this.TxtwtHead.getText());
 						RelWeightPairOrd = Double.parseDouble(this.TxtwtPair.getText());
+						RelWeightLinearOrd = Double.parseDouble(this.TxtwtLinear.getText());
+						
 						GOWeight = Double.parseDouble(this.TxtgoWeight.getText());
 						GOImportance = Integer.parseInt(this.TxtgoScale.getText());
 					} else{
 						HeadPos = false;
 						PairOrd = false;
+						LinearOrd = false;
 						RelWeightHeadPos = 0;
 						RelWeightPairOrd = 0;
+						RelWeightLinearOrd = 0;
 						GOWeight = 0;
 						GOImportance = -1;
 					}
@@ -1645,8 +1702,10 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 							CMImportance,		
 							HeadPos,			//Factor 3: Gene Order
 							PairOrd,
+							LinearOrd,
 							RelWeightHeadPos,
 							RelWeightPairOrd,
+							RelWeightLinearOrd,
 							GOWeight,
 							GOImportance,
 							GapSizeDissMapping,	//Factor 4: Gene Gaps

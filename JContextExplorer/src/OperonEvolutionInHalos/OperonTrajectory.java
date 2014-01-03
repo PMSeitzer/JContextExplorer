@@ -20,9 +20,8 @@ public class OperonTrajectory {
 	public LinkedHashMap<String, LinkedList<GenomicElement>> AmalgamatedOperons;
 	public LinkedHashMap<String, LinkedList<OperonData>> OperonHash;
 	public LinkedList<Integer> OtherClusters;
-	
 	public LinkedList<OperonCluster> OperonGroups;
-	
+
 	//Methods
 	
 	//compute evo rate - using amalgamated set
@@ -59,6 +58,40 @@ public class OperonTrajectory {
 			//store in hash map
 			AmalgamatedOperons.put(s, L);
 		}
+	}
+	
+	//gene-order appropriate gene split
+	public LinkedList<LinkedList<GenomicElement>> GeneOrderGeneSplit(){
+		
+		//Initialize output
+		LinkedList<LinkedList<GenomicElement>> Operons = 
+				new LinkedList<LinkedList<GenomicElement>>();
+		
+		//Initialize a hashmap, for use with storing
+		LinkedHashMap<LinkedList<Integer>, LinkedList<GenomicElement>> ClusterIDHash
+			= new LinkedHashMap<LinkedList<Integer>, LinkedList<GenomicElement>>();
+		
+		//Check all operon groups
+		for (String s : TrajectoryHash.keySet()){
+			
+			//retrieve all operons from this organism
+			LinkedList<LinkedList<GenomicElement>> OpList = TrajectoryHash.get(s);
+			
+			//iterate through operons
+			for (LinkedList<GenomicElement> L : OpList){
+				
+				//determine clusters featured
+				
+				
+			}
+			
+		}
+		
+		//TODO
+		
+		//return value
+		return Operons;
+		
 	}
 	
 }

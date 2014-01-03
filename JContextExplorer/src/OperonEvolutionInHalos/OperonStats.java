@@ -22,17 +22,19 @@ public class OperonStats extends LoadData{
 		ImportGenomes();			//load genomic data
 		BasicOperons(50);			//create basic operons
 		
-		//String ContextSetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/JCE/CS_D50.txt";
-		//ExportOperonsAsContextSet(ContextSetFile,"BasicOperons"); //Export set
+		String ContextSetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/JCE/Current/CS_BasicOperons_NoSingleGenes.txt";
+		ExportOperonsAsContextSet(ContextSetFile,"BasicOperons",false); //Export set
 		
-		//convert to set for trajectory analysis
-		OperonSet BasicSet = new OperonSet(OS,"BasicOperons");
-		BasicSet.BuildPhylogeneticDistanceMapping();
-		BasicSet.BuildOperonTrajectories();
+//		//convert to set for trajectory analysis
+//		OperonSet BasicSet = new OperonSet(OS,"BasicOperons");
+//		BasicSet.BuildPhylogeneticDistanceMapping();
+//		BasicSet.BuildOperonTrajectories();
+//		BasicSet.GenerateGeneOrderAppropriateGeneSets(BasicSet.Trajectories);
+		
 		//BasicSet.ExportQuerySet(QuerySetFile, Trajectories, MinOperonicity, MaxNovelty)
 		
-		String QuerySetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/QS/QS_Operonicity_0_90.txt";
-		BasicSet.ExportQuerySet(QuerySetFile, BasicSet.Trajectories, 0.90, 1.1);
+//		String QuerySetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/QS/QS_Operonicity_0_90.txt";
+//		BasicSet.ExportQuerySet(QuerySetFile, BasicSet.Trajectories, 0.90, 1.1);
 		
 		//export, excluding trajectories where the gene is always a singleton
 		//String StatsTxt = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/OperonTrajectories/D50";

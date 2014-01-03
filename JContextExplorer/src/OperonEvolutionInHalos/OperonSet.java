@@ -37,6 +37,7 @@ public class OperonSet {
 	
 	//Trajectories
 	public LinkedHashMap<Integer, OperonTrajectory> Trajectories;
+	public LinkedHashMap<LinkedList<Integer>, DoubleOperonTrajectory> DoubleTrajectories;
 	public int RoundingConstant = 10000;
 	
 	//constructor for direct loading of OS context to new object
@@ -745,6 +746,7 @@ public class OperonSet {
 		return MaxDist;
 	}
 	
+	//determine the minimum distance between elements in a list of organisms
 	//determine the minimum distance between elements in two separate lists of organisms
 	public double DetermineMinDist(LinkedList<String> L1, LinkedList<String> L2){
 		
@@ -878,86 +880,212 @@ public class OperonSet {
 		
 	}
 	
-	// ===== Export ======== //
-	
-	//DEPRECATED
-	//Export trajectories as context set
-	public void ExportTrajectoriesAsContextSet(String ContextSetFile, boolean OperonsOnly, LinkedHashMap<Integer, OperonTrajectory> Trajectories){
-		try {
-			
-			//file writing
-			BufferedWriter bw = new BufferedWriter(new FileWriter(ContextSetFile));
-			
-			//Initialize a hash set of string
-			LinkedList<String> Lines2Export = new LinkedList<String>();
-			
-			 //Initialize a line + counter
-			 String Line = "";
-			 String LineKey = "";
-			 int ProcessCounter = 0;
-			 
-			 for (Integer x : Trajectories.keySet()){
-				 
-				 //retrieve trajectory
-				 OperonTrajectory OT = Trajectories.get(x);
-				 
-				 //option to only export operons
-				 if (!OperonsOnly || (OperonsOnly && !OT.AlwaysASingleGene)){
-					 
-					 //increment counter
-					 ProcessCounter++;
-					 
-					 //for each organism's gene instances in the trajectory
-					 for (String s : OT.TrajectoryHash.keySet()){
-						 
-						 //Export amalgamated set
-						 LinkedList<GenomicElement> L = OT.AmalgamatedOperons.get(s);
-							 for (GenomicElement E : L){
-								 
-								 //build line
-								 //key - the data itself
-								 LineKey = s + "\t" 
-										 + E.getContig() + "\t"
-										 + E.getStart() + "\t"
-										 + E.getStop() + "\t";
-								 
-								 //the line itself in context set file
-								 Line = LineKey + x + "\n";
-								 
-								 //if this data point has not yet been exported, export.
-								 if (!Lines2Export.contains(LineKey)){
-									 
-									 //store key
-									 Lines2Export.add(LineKey);
-									 
-									 //write line to file
-									 bw.write(Line);
-									 bw.flush();
-								 }
-							 }
-						 
-					 }
-					 
-				 }
+	//segregate a single operon trajectory into multiple clusters - no amalg
+	public LinkedList<OperonCluster> SegregateTrajectoryNoAmalg(OperonTrajectory OT){
 				
-				 //output message.
-				if (ProcessCounter%100 == 0){
-					System.out.println("Exported " + ProcessCounter +"/"+ Trajectories.size() +" operon trajectories.");
+		//initialize hash
+		LinkedHashMap<LinkedList<Integer>,OperonCluster> Segregation
+			= new LinkedHashMap<LinkedList<Integer>, OperonCluster>();
+		
+		//initialize sorting number
+		int SortingNumber = 0;
+		
+		//(1) Segregate operons into appropriate groups
+		for (String s : OT.TrajectoryHash.keySet()){
+			for (LinkedList<GenomicElement> L : OT.TrajectoryHash.get(s)){
+		
+				// determine featured protein families
+				LinkedList<Integer> FamClust = new LinkedList<Integer>();
+				
+				//an operon
+				for (GenomicElement E : L){
+					FamClust.add(E.getClusterID());
 				}
-				 
-			 }
-			 
-			 //close file writer
-			 bw.close();
-			 
-			 //last message
-			 System.out.println("Export complete!");
-			 
-		} catch (Exception ex){
-			ex.printStackTrace();
+				
+				//build the key for the hash
+				Collections.sort(FamClust);
+				
+				OperonCluster OC;
+				if (Segregation.get(FamClust) != null){
+					OC = Segregation.get(FamClust);
+				} else {
+					OC = new OperonCluster();
+					SortingNumber++;
+				}
+				
+				//adjust contents + store in hash
+				OC.SeedCluster = OT.ClusterID;
+				OC.SortingNumber = SortingNumber;
+				OC.addOrg(s);
+				OC.Operons.add(L);
+				OC.addClustersFeatured(FamClust);
+				
+				Segregation.put(FamClust, OC);
+			}
 		}
+		
+		//(2) Calculate features of each operon cluster.
+		LinkedList<OperonCluster> OpGroups = new LinkedList<OperonCluster>();
+		
+		//iterate through each, compute values, store in new list
+		for (OperonCluster OC : Segregation.values()){
+			OC.OperonSize = OC.ClustersFeatured.size();
+			OC.MaxInternalDist = DetermineMaxDist(OC.Organisms);
+			OpGroups.add(OC);
+		}
+	
+		//print statement
+		System.out.println("Breakpoint!");
+		
+		//return statement
+		return OpGroups;
+		
 	}
 	
+	//amalgamate a set of clusters into a new set of clusters
+	public LinkedList<OperonCluster> GeneOrderSetAmalgamate(LinkedList<OperonCluster> UnfilteredSet){
+		
+		//Initialize output
+		LinkedList<OperonCluster> FilteredSet = new LinkedList<OperonCluster>();
+		
+		//Remove single sets
+		for (OperonCluster OC : UnfilteredSet){
+			if (OC.OperonSize > 0){
+				FilteredSet.add(OC);
+			}
+		}
+		
+		//Iterate amalgamation protocol
+		
+		//Initialize - try to amalgamate
+		boolean FinishedAmalgamation = false;
+		
+		while (!FinishedAmalgamation){
+			
+			//re-set place-holder set, and re-initialize filtered set
+			LinkedList<OperonCluster> PlaceHolder = FilteredSet;
+			FilteredSet = new LinkedList<OperonCluster>();
+			
+			//check for 2-element overlaps
+			
+			//check every operon cluster...
+			for (int i = 0; i < PlaceHolder.size(); i++){
+				
+				//retrieve one
+				OperonCluster OC1 = PlaceHolder.get(i);
+				
+				//Check number of amalgamations
+				int AmalgCounter = 0;
+				
+				//... against every other operon cluster
+				for (int j = i+1; j < PlaceHolder.size(); j++){
+
+					//retrieve the other
+					OperonCluster OC2 = PlaceHolder.get(j);
+					
+					//check for at least two common elements, if so, schedule for amalgamation
+					
+				}
+			}
+			
+		}
+		
+		//return output
+		return FilteredSet;
+	}
+	
+	//build 2-gene trajectories - for use with gene order set, etc
+	public void BuildDoubleTrajectories(){
+		
+	}
+	
+	//split a single trajectory into a set of double trajectories
+	public LinkedList<DoubleOperonTrajectory> Single2DoubleTrajectory(OperonTrajectory OT){
+		
+		//Initialize output
+		LinkedList<DoubleOperonTrajectory> SplitTrajectory = new LinkedList<DoubleOperonTrajectory>();
+		
+		//create a hash map -> data for trajectories
+		LinkedHashMap<LinkedList<Integer>, LinkedHashMap<String,LinkedList<LinkedList<GenomicElement>>>> Mapping
+			= new LinkedHashMap<LinkedList<Integer>, LinkedHashMap<String,LinkedList<LinkedList<GenomicElement>>>>();
+		
+		//Initialize empty hash maps
+		
+		
+		//Iterate through all species featured
+		for (String s : OT.TrajectoryHash.keySet()){
+			
+			//all operons from speices s
+			LinkedList<LinkedList<GenomicElement>> OpSet = OT.TrajectoryHash.get(s);
+			
+			//every individual operon
+			for (LinkedList<GenomicElement> L : OpSet){
+				
+				//keep track of clusters featured
+				LinkedList<Integer> ClustersFeatured = new LinkedList<Integer>();
+				
+				
+				
+				
+			}
+			
+		}
+		
+		
+		//return output
+		return SplitTrajectory;
+		
+	}
+	
+	// ===== Export ======== //
+
+	//Create a list of operon trajectories appropriate for gene-order analysis
+	public LinkedList<LinkedList<GenomicElement>> GenerateGeneOrderAppropriateGeneSets(LinkedHashMap<Integer, OperonTrajectory> Trajectories){
+		
+		/*
+		 * Not all operon trajectories have the potential to exhibit an interesting change
+		 * in gene order.  Trajectories should be filtered+split so that all have at least two common
+		 * elements - only if there are two elements can there be a relative change in gene order.
+		 * 
+		 * This may mean that trajectories are divided up into multiple groups.  That's okay -
+		 * groups are stored based on lists of genes, so no danger at naming confusion
+		 * 
+		 * How to properly compare a set of component operons should be built into the JCE software:
+		 * For example, assessing changes in "before" and "after" needs to be compared considering strand
+		 * commonality: in other words, a reverse in order of the genes in an operon reflects a
+		 *  change in gene order iff the strand is the same in both operons.
+		 * 
+		 * Algorithm:
+		 * (1) For each operon trajectory, divide into non-overlapping clusters based on at least 2 common genes
+		 * (2) Each non-overlapping cluster is a single context set group.
+		 * (3) Store all groups in a master list, checking for overlaps.
+		 * (4) 
+		 */
+		
+		//Inititalize output
+		LinkedList<LinkedList<GenomicElement>> NonOverlappingGeneGroups =
+				new LinkedList<LinkedList<GenomicElement>>();
+		
+		//Iterate through each trajectory
+		for (Integer x : Trajectories.keySet()){
+			
+			//Retrieve trajectory
+			OperonTrajectory OT = Trajectories.get(x);
+			
+			//split all operons into groups
+			LinkedList<OperonCluster> IsolatedGroups = SegregateTrajectoryNoAmalg(OT);
+			
+			//build amalgamated groups from these
+			LinkedList<OperonCluster> AmalgamatedGroups = GeneOrderSetAmalgamate(IsolatedGroups);
+			
+		}
+		
+		//return completed hash map
+		return NonOverlappingGeneGroups;
+		
+	}
+	
+	//Export a whole set of operon trajectory statistics
 	//Export operon stats sorted by several different variables
 	public void ExportByDifferentVariables(String BaseFile, boolean IncludeSingletons){
 		
@@ -1002,6 +1130,8 @@ public class OperonSet {
 	}
 	
 	//export stats about each basic operon
+	
+	//Export a single set of operon trajectory statistics
 	public void ExportTrajectoryStatistics(String FileName, LinkedList<OperonTrajectory> SortedTrajectories, boolean IncludeSingletons){
 		try {
 			
@@ -1083,6 +1213,9 @@ public class OperonSet {
 	// ===== Sorting Classes ====== //
 	
 	//sort by NSR
+	
+	// ===== Sorting Classes ======== //
+	
 	public class SortbyOperonicity implements Comparator<OperonTrajectory>{
 
 		@Override
@@ -1193,5 +1326,85 @@ public class OperonSet {
 			return o1.SortingNumber-o2.SortingNumber;
 		}
 		
+	}
+	
+	// ===== Deprecated ======== //
+	
+	//DEPRECATED
+	//Export trajectories as context set
+	public void ExportTrajectoriesAsContextSet(String ContextSetFile, boolean OperonsOnly, LinkedHashMap<Integer, OperonTrajectory> Trajectories){
+		try {
+			
+			//file writing
+			BufferedWriter bw = new BufferedWriter(new FileWriter(ContextSetFile));
+			
+			//Initialize a hash set of string
+			LinkedList<String> Lines2Export = new LinkedList<String>();
+			
+			 //Initialize a line + counter
+			 String Line = "";
+			 String LineKey = "";
+			 int ProcessCounter = 0;
+			 
+			 for (Integer x : Trajectories.keySet()){
+				 
+				 //retrieve trajectory
+				 OperonTrajectory OT = Trajectories.get(x);
+				 
+				 //option to only export operons
+				 if (!OperonsOnly || (OperonsOnly && !OT.AlwaysASingleGene)){
+					 
+					 //increment counter
+					 ProcessCounter++;
+					 
+					 //for each organism's gene instances in the trajectory
+					 for (String s : OT.TrajectoryHash.keySet()){
+						 
+						 //Export amalgamated set
+						 LinkedList<GenomicElement> L = OT.AmalgamatedOperons.get(s);
+							 for (GenomicElement E : L){
+								 
+								 //build line
+								 //key - the data itself
+								 LineKey = s + "\t" 
+										 + E.getContig() + "\t"
+										 + E.getStart() + "\t"
+										 + E.getStop() + "\t";
+								 
+								 //the line itself in context set file
+								 Line = LineKey + x + "\n";
+								 
+								 //if this data point has not yet been exported, export.
+								 if (!Lines2Export.contains(LineKey)){
+									 
+									 //store key
+									 Lines2Export.add(LineKey);
+									 
+									 //write line to file
+									 bw.write(Line);
+									 bw.flush();
+								 }
+							 }
+						 
+					 }
+					 
+				 }
+				
+				 //output message.
+				if (ProcessCounter%100 == 0){
+					System.out.println("Exported " + ProcessCounter +"/"+ Trajectories.size() +" operon trajectories.");
+				}
+				 
+			 }
+			 
+			 //close file writer
+			 bw.close();
+			 
+			 //last message
+			 System.out.println("Export complete!");
+			 
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
 	}
 }

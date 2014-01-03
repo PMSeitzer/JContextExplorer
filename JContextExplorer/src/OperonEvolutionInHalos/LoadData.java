@@ -103,7 +103,7 @@ public class LoadData {
 	// ------ Export ------//
 	
 	//export operons as context set - for use with JCE, for visualization
-	public static void ExportOperonsAsContextSet(String OperonCSFile, String CSName){
+	public static void ExportOperonsAsContextSet(String OperonCSFile, String CSName, boolean IncludeSingleGeneOperonInstances){
 		
 		try {
 			
@@ -133,19 +133,25 @@ public class LoadData {
 				//iterate through mapping + write to file
 				for (LinkedList<GenomicElement> L : Mapping.values()){
 					
-					//Increment the context counter
-					ContextCounter++;
-					
-					//Write each line to file.
-					for (GenomicElement E : L){
-						String Line = s + "\t" 
-								 + E.getContig() + "\t"
-								 + E.getStart() + "\t"
-								 + E.getStop() + "\t"
-								 + String.valueOf(ContextCounter) + "\n";
-						bw.write(Line);
-						bw.flush();
+					if (IncludeSingleGeneOperonInstances || (!IncludeSingleGeneOperonInstances && L.size() > 1)){
+						
+						//Increment the context counter
+						ContextCounter++;
+						
+						//Write each line to file.
+						for (GenomicElement E : L){
+							String Line = s + "\t" 
+									 + E.getContig() + "\t"
+									 + E.getStart() + "\t"
+									 + E.getStop() + "\t"
+									 + String.valueOf(ContextCounter) + "\n";
+							bw.write(Line);
+							bw.flush();
+						}
+						
 					}
+					
+
 				}
 				
 			}
