@@ -204,7 +204,7 @@ public class CustomDissimilarity implements Serializable {
 	}
 
 	//Head position based dissimilarity (GO)
-	public double HeadPosDiss(LinkedList<Object> O1Values, LinkedList<Object> O2Values){
+	public double HeadPosDiss(LinkedList<Object> O1Values, LinkedList<Object> O2Values, boolean isStrandFlipped){
 		double HeadPosDissimilarity = 0.0;
 		
 		/*
@@ -248,7 +248,16 @@ public class CustomDissimilarity implements Serializable {
 				RevCount++;
 			}
 		}
-		MaxCount = Math.max(FwdCount, RevCount);
+		
+		//old way - benefit of doubt
+		//MaxCount = Math.max(FwdCount, RevCount);
+		
+		//new way - based on supplied strand
+		if (isStrandFlipped){
+			MaxCount = RevCount;
+		} else {
+			MaxCount = FwdCount;
+		}
 		
 		//(6) Compute dissimilarity
 		if (NumIntersecting != 0){
@@ -261,7 +270,7 @@ public class CustomDissimilarity implements Serializable {
 	}
 	
 	//Pair ordering based dissimilarity (GO)
-	public double PairOrdDiss(LinkedList<Object> O1Values, LinkedList<Object> O2Values){
+	public double PairOrdDiss(LinkedList<Object> O1Values, LinkedList<Object> O2Values, boolean isStrandFlipped){
 		double PairOrdDissimilarity = 0;
 		
 		/*
@@ -302,9 +311,22 @@ public class CustomDissimilarity implements Serializable {
 		O2AdjacenciesFwd.retainAll(O1Adjacencies);
 		O2AdjacenciesRev.retainAll(O1Adjacencies);
 		
+		//only consider the
+		
 		//compute dissimilarity
 		int SmallerSize = Math.min(O1Values.size(), O2Values.size());
-		int MostAdjacencies = Math.max(O2AdjacenciesFwd.size(), O2AdjacenciesRev.size());
+		
+		//old way - don't consider pre-determined strandedness
+		//int MostAdjacencies = Math.max(O2AdjacenciesFwd.size(), O2AdjacenciesRev.size());
+		
+		//new way: only if the strand is explicitly reported as flipped, consider the reverse
+		int MostAdjacencies = -1;
+		if (isStrandFlipped){
+			MostAdjacencies = O2AdjacenciesRev.size();
+		} else {
+			MostAdjacencies = O2AdjacenciesFwd.size();
+		}
+		
 		if (SmallerSize > 1){
 			PairOrdDissimilarity = 1 - ((double)MostAdjacencies/(double)(SmallerSize-1));
 		} else {
@@ -315,7 +337,7 @@ public class CustomDissimilarity implements Serializable {
 	}
 	
 	//Dissimilarity by overall shape (tolerate insertions/deletions) (GO)
-	public double LinearOrderDiss(LinkedList<Object> O1Values, LinkedList<Object> O2Values){
+	public double LinearOrderDiss(LinkedList<Object> O1Values, LinkedList<Object> O2Values, boolean isStrandFlipped){
 		
 		/*
 		 * Algorithm:
@@ -359,6 +381,9 @@ public class CustomDissimilarity implements Serializable {
 			}
 		}
 		
+		//the reverse list really only makes sense if there is a total strand flip.
+		boolean TotalStrandFlip = false;
+		
 		//O2Rev List
 		for (Object O : O2ValuesRev){
 			if (O1Values.contains(O) && !O2RevCommonValues.contains(O)){
@@ -369,7 +394,7 @@ public class CustomDissimilarity implements Serializable {
 		//if the first list agrees with either of the other lists, record no change in gene order.
 		//otherwise, maximum dissimilarity.
 		if (O1CommonValues.equals(O2CommonValues) ||
-				O1CommonValues.equals(O2RevCommonValues)){
+				(O1CommonValues.equals(O2RevCommonValues) && isStrandFlipped)){
 			LinearOrderDissimilarity = 0.0;
 			
 			//Tricky balance between 0 transitivity and segregating single-gene commonalities
@@ -710,6 +735,9 @@ public class CustomDissimilarity implements Serializable {
 		//Strand counts
 		int StrandMatches = 0;
 		
+		//attempt to detect a complete strand switching
+		
+		
 		LinkedList<Object> O1Values = new LinkedList<Object>();
 		LinkedList<Object> O2Values = new LinkedList<Object>();
 		
@@ -763,6 +791,9 @@ public class CustomDissimilarity implements Serializable {
 			NumIntersecting = NumIntersecting + Math.min(Collections.frequency(O1Values, O), Collections.frequency(O2Values, O));
 		}
 		
+		//determine if the total strand has flipped
+		boolean isStrandFlipped = TotalGroupStrandFlip(O1,O2,Type);
+		
 		//Determine relative weights
 		double TotalRelativeWeights = 0;
 		if (HeadPos){
@@ -770,7 +801,7 @@ public class CustomDissimilarity implements Serializable {
 			TotalRelativeWeights = TotalRelativeWeights + RelWeightHeadPos;
 			
 			//Compute head position contribution
-			HeadPosDissimilarity = this.HeadPosDiss(O1Values, O2Values);
+			HeadPosDissimilarity = this.HeadPosDiss(O1Values, O2Values, isStrandFlipped);
 			
 		}
 		if (PairOrd){
@@ -778,16 +809,17 @@ public class CustomDissimilarity implements Serializable {
 			TotalRelativeWeights = TotalRelativeWeights + RelWeightPairOrd;
 			
 			//Compute number of common pairs contribution
-			PairOrdDissimilarity = this.PairOrdDiss(O1Values, O2Values);
+			PairOrdDissimilarity = this.PairOrdDiss(O1Values, O2Values, isStrandFlipped);
 		}
 		
 		if (LinearOrd){
 			
 			//increment total weights contribution
 			TotalRelativeWeights = TotalRelativeWeights + RelWeightLinearOrd;
+		
 			
 			//Compute the dissimilarity from this factor
-			LinearOrdDissimilarity = this.LinearOrderDiss(O1Values, O2Values);
+			LinearOrdDissimilarity = this.LinearOrderDiss(O1Values, O2Values, isStrandFlipped);
 			
 		}
 		
@@ -1174,6 +1206,152 @@ public class CustomDissimilarity implements Serializable {
 		}
 		
 		return Dissimilarity;
+		
+	}
+	
+	//determine if the whole group has flipped or not
+	public boolean TotalGroupStrandFlip(LinkedList<GenomicElementAndQueryMatch> O1, LinkedList<GenomicElementAndQueryMatch> O2, String Type){
+				
+		//Create special sets for counts
+		LinkedList<GenomicElementAndQueryMatch> O1Counts = new LinkedList<GenomicElementAndQueryMatch>();
+		LinkedList<GenomicElementAndQueryMatch> O2Counts = new LinkedList<GenomicElementAndQueryMatch>();
+		
+		//Add elements found in both sets.
+		boolean RetainElement;
+		//from O1
+		for (GenomicElementAndQueryMatch GandE1 : O1){
+			RetainElement = false;
+			for (GenomicElementAndQueryMatch GandE2 : O2){
+				if (Type.equals("annotation")){
+					if (GandE1.getE().getAnnotation().toUpperCase().equals(GandE2.getE().getAnnotation().toUpperCase())){
+						RetainElement = true;
+						break;
+					}	
+				} else {
+					if (GandE1.getE().getClusterID() == GandE2.getE().getClusterID()){
+						RetainElement = true;
+						break;
+					}
+				}
+			}
+			
+			//add element elements
+			if (RetainElement){
+				O1Counts.add(GandE1);
+			}
+		}
+		
+		//from O2
+		for (GenomicElementAndQueryMatch GandE2 : O2){
+			RetainElement = false;
+			for (GenomicElementAndQueryMatch GandE1 : O1){
+				if (GandE2.getE().getAnnotation().toUpperCase().equals(GandE1.getE().getAnnotation().toUpperCase())){
+					RetainElement = true;
+					break;
+				} else {
+					if (GandE2.getE().getClusterID() == GandE1.getE().getClusterID()){
+						RetainElement = true;
+						break;
+					}
+				}
+			}
+			
+			//remove elements
+			if (RetainElement){
+				O2Counts.add(GandE2);
+			}
+		}
+		
+		boolean MatchingElement;
+		int CommonSameStrand = 0;
+		int CommonDiffStrand = 0;
+		
+		//Create special sets for strand-matching counts
+		LinkedList<GenomicElementAndQueryMatch> O1CountsM = new LinkedList<GenomicElementAndQueryMatch>();
+		LinkedList<GenomicElementAndQueryMatch> O2CountsM = new LinkedList<GenomicElementAndQueryMatch>();
+		LinkedList<GenomicElementAndQueryMatch> O1CountsN = new LinkedList<GenomicElementAndQueryMatch>();
+		LinkedList<GenomicElementAndQueryMatch> O2CountsN = new LinkedList<GenomicElementAndQueryMatch>();
+		
+		
+		//sort O1Counts appropriately
+		for (GenomicElementAndQueryMatch GandE1 : O1Counts){
+			
+			//find a common element in O2Counts that matches, if possible
+			MatchingElement = false;
+			
+			for (GenomicElementAndQueryMatch GandE2 : O2Counts){
+				if (Type.equals("annotation")){
+					if (GandE1.getE().getAnnotation().toUpperCase().equals(GandE2.getE().getAnnotation().toUpperCase()) &&
+							GandE1.getE().getStrand().equals(GandE2.getE().getStrand()) &&
+							!O1CountsM.contains(GandE1)){
+						MatchingElement = true;
+						break;
+					}	
+				} else {
+					if (GandE1.getE().getClusterID() == GandE2.getE().getClusterID() &&
+							GandE1.getE().getStrand().equals(GandE2.getE().getStrand()) &&
+							!O1CountsM.contains(GandE1)){
+						MatchingElement = true;
+						break;
+					}
+				}
+			}
+			
+			// Update counts, and remove from list
+			if (MatchingElement){
+				O1CountsM.add(GandE1);
+			} else {
+				O1CountsN.add(GandE1);
+			}
+			
+		}
+		
+		
+		//sort O1Counts appropriately
+		for (GenomicElementAndQueryMatch GandE2 : O2Counts){
+			
+			//find a common element in O2Counts that matches, if possible
+			MatchingElement = false;
+			
+			for (GenomicElementAndQueryMatch GandE1 : O1){
+				if (Type.equals("annotation")){
+					if (GandE2.getE().getAnnotation().toUpperCase().equals(GandE1.getE().getAnnotation().toUpperCase()) &&
+							GandE2.getE().getStrand().equals(GandE1.getE().getStrand()) &&
+							!O2CountsM.contains(GandE2)){
+						MatchingElement = true;
+						break;
+					}	
+				} else {
+					if (GandE2.getE().getClusterID() == GandE1.getE().getClusterID() &&
+							GandE2.getE().getStrand().equals(GandE1.getE().getStrand()) &&
+							!O2CountsM.contains(GandE2)){
+						MatchingElement = true;
+						break;
+					}
+				}
+			}
+			
+			// Update counts, and remove from list
+			if (MatchingElement){
+				O2CountsM.add(GandE2);
+			} else {
+				O2CountsN.add(GandE2);
+			}
+			
+		}
+		
+	//Finalize counts
+	CommonSameStrand = O1CountsM.size();
+	CommonDiffStrand = O1CountsN.size() + O2CountsN.size();
+
+	//whole group is switched
+	if (CommonDiffStrand > CommonSameStrand ){
+		return true; //strand has flipped
+	} else {
+		return false; // strand has not flipped
+	}
+
+
 		
 	}
 	

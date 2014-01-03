@@ -168,7 +168,7 @@ public class ExtendedCRON implements Serializable{
 				}
 				
 				//debugging - view matrix
-				System.out.println(str);
+				//System.out.println(str);
 			}
 
 			//set list to ECRON structure.
