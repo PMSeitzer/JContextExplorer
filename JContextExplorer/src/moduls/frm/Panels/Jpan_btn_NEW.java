@@ -458,6 +458,12 @@ import definicions.MatriuDistancies;
 						Matches = Amalgamate(CurrentCSD.isSingleOrganismAmalgamation(), Matches);
 					}
 					
+					//take note of AND statements
+					if (!this.WorkerQD.ANDStatementsParsed){
+						this.WorkerQD.BuildANDStatements("annotation");
+					}
+					Matches = ANDStatementFilter(this.WorkerQD.ParsedStatements,"annotation",Matches);
+					
 					//create an iterator for the HashSet
 					Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
 										
@@ -858,7 +864,7 @@ import definicions.MatriuDistancies;
 				//Initialize a hash map to use for the case of cassette contexts.
 				HashSet<Integer> GenesForCassettes = new HashSet<Integer>();
 				
-				//Initialize a hash map for the use of RetainFraction-type analysis.
+				//Initialize a hash map for the use of Retain-Fraction-type analysis.
 							 //Cluster Counts
 				LinkedHashMap<Integer, Integer> ClusterCounts 
 					= new LinkedHashMap<Integer, Integer>();
@@ -894,6 +900,12 @@ import definicions.MatriuDistancies;
 					if (CurrentCSD.isSingleOrganismAmalgamation()){
 						Matches = Amalgamate(CurrentCSD.isSingleOrganismAmalgamation(), Matches);
 					}
+					
+					//take note of AND statements
+					if (!this.WorkerQD.ANDStatementsParsed){
+						this.WorkerQD.BuildANDStatements("cluster");
+					}
+					Matches = ANDStatementFilter(this.WorkerQD.ParsedStatements,"cluster",Matches);
 					
 					//create an iterator for the HashSet
 					Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
@@ -1314,7 +1326,9 @@ import definicions.MatriuDistancies;
 				return null;
 			}
 			
-			//both
+			//applies to both
+			
+			//amalgamte
  			protected HashSet<LinkedList<GenomicElementAndQueryMatch>> Amalgamate(boolean Amalgamate, HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches){
 				
 				//option: condense into single list + update matches
@@ -1346,6 +1360,73 @@ import definicions.MatriuDistancies;
 				}
 			}
 			
+ 			//account for AND statements
+ 			protected HashSet<LinkedList<GenomicElementAndQueryMatch>> ANDStatementFilter(LinkedList<LinkedList> ParsedANDStatements, String Type, HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches){
+ 				
+ 				if (ParsedANDStatements.size() > 0){
+
+ 					//create a filtered list, abiding by all supplied OR statements
+ 	 				HashSet<LinkedList<GenomicElementAndQueryMatch>> FilteredList = new 
+ 	 						HashSet<LinkedList<GenomicElementAndQueryMatch>>();
+ 	 				
+ 	 				//create an iterator
+					Iterator<LinkedList<GenomicElementAndQueryMatch>> itp = Matches.iterator();
+ 	 				
+					while (itp.hasNext()){
+						
+						//next in list
+						LinkedList<GenomicElementAndQueryMatch> LL = itp.next();
+						
+						//initializations
+						LinkedList<Integer> ClusterNums = new LinkedList<Integer>();
+						LinkedList<String> AnnQueries = new LinkedList<String>();
+						LinkedList<Object> Queries = new LinkedList<Object>();
+						
+						//values from the list, as appropriate by type.
+						for (GenomicElementAndQueryMatch GandE : LL){
+							if (Type.equals("cluster")){
+								ClusterNums.add(GandE.getE().getClusterID());
+								Queries.add((Object) GandE.getE().getClusterID());
+							} else {
+								AnnQueries.add(GandE.getE().getAnnotation().trim().toUpperCase());
+								Queries.add((Object) GandE.getE().getAnnotation().trim().toUpperCase());
+							}
+						}
+						
+						//default: retain this set
+						boolean RetainMatch = true;
+						
+						//check all of the and statement requirements
+						for (LinkedList L : ParsedANDStatements){
+							HashSet<Object> IntersectionHash = new HashSet<Object>(L);
+							IntersectionHash.removeAll(Queries);
+							
+							//if not all were removed, do not retain this set
+							if (IntersectionHash.size() != 0){
+								RetainMatch = false;
+								break;
+							}
+						}
+						
+						//only if this should be retained, continue
+						if (RetainMatch){
+							FilteredList.add(LL);
+						}
+
+					}
+
+					//return Matches;
+					return FilteredList;
+ 	 				
+ 				} else {
+ 					return Matches;
+ 				}
+ 				
+
+ 				
+ 			}
+ 			
+ 			
 			//Optional Operations
 			
 			//(1) Create a tree panel of search results
@@ -2000,7 +2081,45 @@ import definicions.MatriuDistancies;
 						try {
 							
 							//parse into candidates
+							
+							//and statements
 							String[] Queries = searchField.getText().trim().split(";");
+							
+							//store updated list into linked list
+							LinkedList<String> AllParsedStatements = new LinkedList<String>();
+							
+							//or statements, within and statements
+							for (String sq : Queries){
+								
+								//one or more and statements within an or statement
+								if (sq.contains("$$")){
+									
+									//note whole statement
+									QD.ANDStatements.add(sq.trim());
+									
+									//record appropriately
+									String[] sqORQueries = sq.trim().split("\\$\\$");
+									
+									for (int i = 0; i < sqORQueries.length; i++){
+										AllParsedStatements.add(sqORQueries[i].trim());
+									}
+									
+								} else {
+									AllParsedStatements.add(sq.trim());
+								}
+								
+							}
+							
+							//rebuild the list appropriately
+							String[] UpdatedQueries = new String[AllParsedStatements.size()];
+							for (int i = 0; i < AllParsedStatements.size(); i++){
+								UpdatedQueries[i] = AllParsedStatements.get(i);
+								//System.out.println(UpdatedQueries[i]);
+							}
+							
+							//restore values ... and continue as before
+							Queries = UpdatedQueries;
+							
 							minBase = Double.MAX_VALUE;
 							
 							if (searchType.getSelection().equals(annotationSearch.getModel())){
@@ -2103,6 +2222,7 @@ import definicions.MatriuDistancies;
 								String errMsg = "There were no matches to the query (or queries).";
 								showError(errMsg);
 							}
+							e1.printStackTrace();
 						}
 					} else if (ambDades && action.equals("Reload")) {
 						

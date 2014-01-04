@@ -1,6 +1,7 @@
 package moduls.frm;
 
 import java.io.Serializable;
+import java.util.LinkedList;
 
 import importExport.DadesExternes;
 import moduls.frm.children.FrmSearchResults;
@@ -28,11 +29,54 @@ public class QueryData implements Serializable{
 	private DadesExternes de;
 	private Cluster OutputCluster = null;
 	
+	//OR-statement fields
+	public LinkedList<String> ANDStatements = new LinkedList<String>();
+	public LinkedList<LinkedList> ParsedStatements;
+	public LinkedList<LinkedList<Integer>> ParsedANDStatementsCluster;
+	public LinkedList<LinkedList<String>> ParsedANDStatementsAnnotation;
+	public boolean ANDStatementsParsed = false;
+	
 	//Constructor
 	public QueryData(){
 		
 	}
 
+	// === Method ====//
+	public void BuildANDStatements(String Type){
+		
+		//Initialize
+		ParsedStatements = new LinkedList<LinkedList>();
+		
+		//transform each unparsed AND statement into a list of associated items
+		for (String s : ANDStatements){
+				
+			//split the string by components
+			String[] Comps = s.split("\\$\\$");
+				
+			LinkedList<Integer> ANDClusters = new LinkedList<Integer>();
+			LinkedList<String> ANDAnnotations = new LinkedList<String>();
+				
+			//parse statements into linked lists.
+			for (String s1 : Comps){
+				if (Type.equals("cluster")){
+					ANDClusters.add(Integer.parseInt(s1.trim()));
+				} else {
+					ANDAnnotations.add(s1.trim().toUpperCase());
+				}
+			}
+			
+			//store the list in parsed form.
+			if (Type.equals("cluster")){
+				ParsedStatements.add(ANDClusters);
+			} else {
+				ParsedStatements.add(ANDAnnotations);
+			}
+		}
+		
+		//note that these statements have been parsed
+		ANDStatementsParsed = true;
+	}
+	
 	//=== SETTERS AND GETTERS ==========//
 	
 	public String getOSName() {
