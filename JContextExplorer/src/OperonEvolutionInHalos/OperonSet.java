@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -1085,8 +1086,7 @@ public class OperonSet {
 		
 	}
 	
-	//Export a whole set of operon trajectory statistics
-	//Export operon stats sorted by several different variables
+	//Export a whole set of operon stats sorted by several different variables
 	public void ExportByDifferentVariables(String BaseFile, boolean IncludeSingletons){
 		
 		//Retrieve list of trajectories
@@ -1128,8 +1128,6 @@ public class OperonSet {
 		System.out.println("Files Successfully Exported!");
 		
 	}
-	
-	//export stats about each basic operon
 	
 	//Export a single set of operon trajectory statistics
 	public void ExportTrajectoryStatistics(String FileName, LinkedList<OperonTrajectory> SortedTrajectories, boolean IncludeSingletons){
@@ -1208,6 +1206,77 @@ public class OperonSet {
 		} catch (Exception ex){
 			ex.printStackTrace();
 		}
+	}
+		
+	//Export a set of pairwise searches appropriate for export
+	public void ExportGeneOrderAnalysisQuerySet(String QuerySetFile, LinkedHashMap<Integer,OperonTrajectory> Trajectories, Double MinOperonicity){
+		
+		//Initialize a list of query-pairs
+		LinkedList<LinkedList<Integer>> QueryPairs = new LinkedList<LinkedList<Integer>>();
+		
+		//iterate through all values
+		for (Integer x : Trajectories.keySet()){
+			
+			//retrieve trajectory
+			OperonTrajectory OT = Trajectories.get(x);
+			
+			//proceed if appropriate
+			if (OT.Operonicity >= MinOperonicity){
+				
+				//create each pair
+				for (Integer y : OT.OtherClusters){
+					
+					//re-format pair as sorted linked list
+					LinkedList<Integer> GenePair = new LinkedList<Integer>();
+					GenePair.add(x);
+					GenePair.add(y);
+					Collections.sort(GenePair);
+					
+					//add list to set of all pairs
+					if (!QueryPairs.contains(GenePair)){
+						QueryPairs.add(GenePair);
+					}
+				}
+				
+			}
+			
+			//output message.
+			if (x%100 == 0){
+				System.out.println("Built Query Pairs for " + x +"/5276 operon trajectories.");
+			}
+			
+		}
+		
+		//System.out.println("Sorting!");
+		
+		//Sort the list
+		Collections.sort(QueryPairs, new SortListOfPairs());
+		
+		//export to file
+		try {
+			
+			//open file stream
+			BufferedWriter bw = new BufferedWriter(new FileWriter(QuerySetFile));
+			
+			//export each query pair
+			for (LinkedList<Integer> L : QueryPairs){
+				
+				//build string
+				String str = String.valueOf(L.get(0)) + " $$ " + String.valueOf(L.get(1)) + "\n";
+				
+				//write to file stream
+				bw.write(str);
+				bw.flush();
+				
+			}
+			
+			//close file stream
+			bw.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 	
 	// ===== Sorting Classes ====== //
@@ -1328,6 +1397,23 @@ public class OperonSet {
 		
 	}
 	
+	public class SortListOfPairs implements Comparator<LinkedList<Integer>>{
+
+		@Override
+		public int compare(LinkedList<Integer> o1, LinkedList<Integer> o2) {
+			try {
+				if (o1.get(0) == o2.get(0)){
+					return o1.get(1) - o2.get(1);
+				} else {
+					return o1.get(0) - o2.get(0);
+				}
+			} catch (Exception ex){
+				return 0;
+			}
+
+		}
+		
+	}
 	// ===== Deprecated ======== //
 	
 	//DEPRECATED

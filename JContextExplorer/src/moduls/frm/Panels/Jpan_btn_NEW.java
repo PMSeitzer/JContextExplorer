@@ -320,6 +320,9 @@ import definicions.MatriuDistancies;
 					//(2) Compute dendrogram
 					if (!Thread.currentThread().isInterrupted()){
 						if (AnalysesList.isOptionComputeDendrogram()){
+							
+							//testing
+							//System.out.println("Entries: " + this.WorkerQD.getCSD().getEC().getNumberOfEntries());
 							ComputeDendrogram();
 						}
 						
@@ -338,7 +341,7 @@ import definicions.MatriuDistancies;
 					
 				}
 				
-				//very last step - renderingint output is a go!
+				//very last step - rendering int output is a go!
 				RenderOutput = true;
 				
 			} catch (Exception ex) {
@@ -1444,6 +1447,11 @@ import definicions.MatriuDistancies;
 			//============================================//
 			protected Void ComputeDendrogram(){
 
+				//debugging
+//				if (this.WorkerQD.getCSD().getEC().getNumberOfEntries() == 2){
+//					System.out.println("Breakpoint!");
+//				}
+				
 				//Create DE
 				try {
 					

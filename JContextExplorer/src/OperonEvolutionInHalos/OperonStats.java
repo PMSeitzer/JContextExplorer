@@ -21,15 +21,18 @@ public class OperonStats extends LoadData{
 		//build data set
 		ImportGenomes();			//load genomic data
 		BasicOperons(50);			//create basic operons
+				
+		//String ContextSetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/JCE/Current/CS_BasicOperons_NoSingleGenes.txt";
+		//ExportOperonsAsContextSet(ContextSetFile,"BasicOperons",false); //Export set
 		
-		String ContextSetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/JCE/Current/CS_BasicOperons_NoSingleGenes.txt";
-		ExportOperonsAsContextSet(ContextSetFile,"BasicOperons",false); //Export set
+		//convert to set for trajectory analysis
+		OperonSet BasicSet = new OperonSet(OS,"BasicOperons");
+		BasicSet.BuildPhylogeneticDistanceMapping();
+		BasicSet.BuildOperonTrajectories();
 		
-//		//convert to set for trajectory analysis
-//		OperonSet BasicSet = new OperonSet(OS,"BasicOperons");
-//		BasicSet.BuildPhylogeneticDistanceMapping();
-//		BasicSet.BuildOperonTrajectories();
-//		BasicSet.GenerateGeneOrderAppropriateGeneSets(BasicSet.Trajectories);
+		//Export a query set for gene order analysis
+		String QuerySetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/JCE/Current/QS_GeneOrderPairs_0_90.txt";
+		BasicSet.ExportGeneOrderAnalysisQuerySet(QuerySetFile, BasicSet.Trajectories, 0.90);
 		
 		//BasicSet.ExportQuerySet(QuerySetFile, Trajectories, MinOperonicity, MaxNovelty)
 		
@@ -164,6 +167,11 @@ public class OperonStats extends LoadData{
 //		
 //		System.out.println("Max Dist: " + MaxDist + " for " + Lmax.get(0) + " , " + Lmax.get(1));
 
+		//Monday, Jan 7, 2013
+//		//Import a list of all clusters of interest in this investigation
+//		String ClustersUsedFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/JCE/Current/QS_NonSingle.txt";
+//		ImportClustersToInclude(ClustersUsedFile);
+		
 	}
 
 }

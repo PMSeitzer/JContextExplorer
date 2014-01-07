@@ -142,8 +142,10 @@ public class ReadTXT implements PropertyChangeListener, Serializable { //just a 
 		tmpC = lstdades.get(0);
 		nc = tmpC.length;
 		nl = lstdades.size();
+		
 		// Matrix or list format
-		if ((nc > 3) || ((nc == 3) && (nl == 4)))
+		//if ((nc > 3) || ((nc == 3) && (nl == 4))) //legacy
+		if ((nc > 3) || ((nc == 3) && (nl == 4)) || ((nc == 3) && (nl == 2))) //add 2-node case
 			
 			//from a read matrix
 			lst = this.llegeixMatriu();
@@ -207,7 +209,8 @@ public class ReadTXT implements PropertyChangeListener, Serializable { //just a 
 		nc = tmpC.length;
 		nl = lstdades.size();
 		// Matrix or list format
-		if ((nc > 3) || ((nc == 3) && (nl == 4)))
+		//if ((nc > 3) || ((nc == 3) && (nl == 4))) //legacy
+		if ((nc > 3) || ((nc == 3) && (nl == 4)) || ((nc == 3) && (nl == 2))) //add 2-node case
 			lst = this.llegeixMatriu();
 		else if ((nc == 3) && (nl == 3)) {
 			LinkedList<StructIn<String>> lstA, lstM;

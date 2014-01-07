@@ -39,6 +39,9 @@ public class LoadData {
 	public static int MaxClusterNum = 0;
 	public static int FastaLineLength = 70;
 	
+	//gene order processing
+	public static LinkedList<Integer> Clusters2Include;
+	
 	//Organism set in this case is just a hash map
 	public static OrganismSet OS;
 
@@ -161,6 +164,31 @@ public class LoadData {
 			 
 			 //output statement
 			 System.out.println("Operons successfully exported!");
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
+	}
+	
+	//Export a gene order pair appropriate query set
+	public static void ExportGeneOrderPairQuerySet(String QuerySetFile){
+		
+		/*
+		 * 
+		 */
+		
+	}
+	
+	//import a list of the clusters under investigation
+	public static void ImportClustersToInclude(String ClusterFile){
+		Clusters2Include = new LinkedList<Integer>();
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(ClusterFile));
+			String Line = null;
+			while ((Line = br.readLine()) != null){
+				int Cluster = Integer.parseInt(Line.trim());
+				Clusters2Include.add(Cluster);
+			}
+			br.close();
 		} catch (Exception ex){
 			ex.printStackTrace();
 		}

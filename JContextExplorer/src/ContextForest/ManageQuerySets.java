@@ -551,6 +551,44 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 			//Split each query by delimiter (semicolon)
 			String SplitList[] = s.split(";");
 			
+			//Added functionality for new AND delimiter ($$)
+
+			//store updated list into linked list
+			LinkedList<String> AllParsedStatements = new LinkedList<String>();
+			LinkedList<String> ANDStatements = new LinkedList<String>();
+			
+			//AND statements, within and statements
+			for (String sq : SplitList){
+				
+				//one or more and statements within an or statement
+				if (sq.contains("$$")){
+					
+					//note whole statement
+					ANDStatements.add(sq.trim());
+					
+					//record appropriately
+					String[] sqANDQueries = sq.trim().split("\\$\\$");
+					
+					for (int i = 0; i < sqANDQueries.length; i++){
+						AllParsedStatements.add(sqANDQueries[i].trim());
+					}
+					
+				} else {
+					AllParsedStatements.add(sq.trim());
+				}
+				
+			}
+			
+			//rebuild the list appropriately
+			String[] UpdatedQueries = new String[AllParsedStatements.size()];
+			for (int i = 0; i < AllParsedStatements.size(); i++){
+				UpdatedQueries[i] = AllParsedStatements.get(i);
+				//System.out.println(UpdatedQueries[i]);
+			}
+			
+			//restore values ... and continue as before
+			SplitList = UpdatedQueries;
+			
 			//build search points
 			if (AnnotationSearch){
 				Queries = SplitList;
@@ -598,6 +636,9 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 				QD.setAnalysesList(P);
 				QD.setCSD(CSD);
 				QD.setOSName(OSName);
+				
+				//update - add AND statements
+				QD.ANDStatements = ANDStatements;
 				
 				//Add query to output, unless already added.
 				if (!QueryNames.contains(QD.getName())){

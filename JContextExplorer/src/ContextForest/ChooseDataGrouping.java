@@ -167,8 +167,6 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 			//Scan each individual query 
 			for (QueryData QD : TQ.getContextTrees()){
 				
-				//BUG IS IN REGION BELOW
-				
 				//generate cluster from every test query, if not already there
 				if (QD.getOutputCluster() != null){
 					Query = QD.getOutputCluster();
@@ -176,9 +174,7 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 					Query = GenerateClusterFromQuery(QD,false);
 					QD.setOutputCluster(Query);
 				}
-				
-				//BUG IS IN REGION ABOVE
-				
+
 				//null cluster - context tree is empty.
 				if (Query != null){
 					
@@ -358,6 +354,13 @@ public class ChooseDataGrouping extends JDialog implements ActionListener, Prope
 //			c = SW.RootCluster;
 //			
 //			return c;
+			
+//			// trees with 1 element don't mean anything
+//			if (SW.RootCluster.getFills() <= 1){
+//				System.out.println(QD.getName() + " has only one node.");
+//				SW.RootCluster = null;
+//			}
+			
 			return SW.RootCluster;
 			
 		}
