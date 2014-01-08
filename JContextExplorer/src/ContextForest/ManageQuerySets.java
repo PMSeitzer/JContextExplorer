@@ -543,6 +543,14 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 			//default - try to add the query
 			AddQuery = true;
 			
+			boolean ifAndOnlyif = false;
+			
+			//the very first step: check for and remove special "if and only if" character
+			if (s.startsWith("&&only")){
+				ifAndOnlyif = true;
+				s = s.substring(6);
+			}
+			
 			//update name
 			//Name = "Query " + String.valueOf(Counter);
 			Name = s;
@@ -627,8 +635,8 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 				
 				//Add Parameters
 				QD.setAnnotationSearch(AnnotationSearch);
-				QD.setQueries(Queries);
-				QD.setClusters(Clusters);
+				QD.setQueriesAndList(Queries);
+				QD.setClustersAndList(Clusters);
 				QD.setName(Name);
 				QD.setContextSetName(ContextSetName);
 				QD.setDissimilarityType(DissimilarityType);
@@ -636,6 +644,7 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 				QD.setAnalysesList(P);
 				QD.setCSD(CSD);
 				QD.setOSName(OSName);
+				QD.ifAndOnlyif = ifAndOnlyif;
 				
 				//update - add AND statements
 				QD.ANDStatements = ANDStatements;

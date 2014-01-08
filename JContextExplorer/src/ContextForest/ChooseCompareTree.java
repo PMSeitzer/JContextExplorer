@@ -265,8 +265,8 @@ public class ChooseCompareTree extends JDialog implements ActionListener, Proper
 					
 					//Add Parameters
 					Q.setAnnotationSearch(AnnotationSearch);
-					Q.setQueries(Queries);
-					Q.setClusters(Clusters);
+					Q.setQueriesAndList(Queries);
+					Q.setClustersAndList(Clusters);
 					Q.setName(TreeName);
 					Q.setContextSetName(ContextSetName);
 					Q.setDissimilarityType(DissimilarityType);

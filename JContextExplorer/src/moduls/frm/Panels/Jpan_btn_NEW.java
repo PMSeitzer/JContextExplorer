@@ -467,6 +467,11 @@ import definicions.MatriuDistancies;
 					}
 					Matches = ANDStatementFilter(this.WorkerQD.ParsedStatements,"annotation",Matches);
 					
+					//consider the iff and only iff clause
+					if (WorkerQD.ifAndOnlyif){
+						Matches = IfAndOnlyIfFilter(Matches);
+					}
+					
 					//create an iterator for the HashSet
 					Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
 										
@@ -909,6 +914,11 @@ import definicions.MatriuDistancies;
 						this.WorkerQD.BuildANDStatements("cluster");
 					}
 					Matches = ANDStatementFilter(this.WorkerQD.ParsedStatements,"cluster",Matches);
+					
+					//consider the iff and only iff clause
+					if (WorkerQD.ifAndOnlyif){
+						Matches = IfAndOnlyIfFilter(Matches);
+					}
 					
 					//create an iterator for the HashSet
 					Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
@@ -1429,7 +1439,55 @@ import definicions.MatriuDistancies;
  				
  			}
  			
- 			
+ 			//filter by if and only if
+ 			protected HashSet<LinkedList<GenomicElementAndQueryMatch>> IfAndOnlyIfFilter(HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches){
+ 				if (WorkerQD.ifAndOnlyif){
+ 					
+ 					//create a filtered list, abiding by all supplied OR statements
+ 	 				HashSet<LinkedList<GenomicElementAndQueryMatch>> FilteredList = new 
+ 	 						HashSet<LinkedList<GenomicElementAndQueryMatch>>();
+ 	 				
+ 	 				//create an iterator
+					Iterator<LinkedList<GenomicElementAndQueryMatch>> itp = Matches.iterator();
+					
+					while (itp.hasNext()){
+						
+						//next in list
+						LinkedList<GenomicElementAndQueryMatch> LL = itp.next();
+								
+						//default: retain this set
+						boolean RetainMatch = true;
+						
+						//check the lists for elements that are not included in the provided set.
+						if (!WorkerQD.isAnnotationSearch()){
+							for (GenomicElementAndQueryMatch GandE : LL){
+								if (!WorkerQD.ClustersAsList.contains(GandE.getE().getClusterID())){
+									RetainMatch = false;
+									break;
+								}
+							}
+						} else {
+							for (GenomicElementAndQueryMatch GandE : LL){
+								if (!WorkerQD.QueriesAsList.contains(GandE.getE().getAnnotation().trim().toUpperCase())){
+									RetainMatch = false;
+									break;
+								}
+							}
+						}
+
+						//retain set, if appropriate.
+						if (RetainMatch){
+							FilteredList.add(LL);
+						}
+
+					}
+					
+					return FilteredList;
+ 					
+ 				} else {
+ 					return Matches;
+ 				}
+ 			}
 			//Optional Operations
 			
 			//(1) Create a tree panel of search results
@@ -2084,14 +2142,28 @@ import definicions.MatriuDistancies;
 					
 					//CARRY OUT ACTION
 					if (ambDades && (action.equals("Load"))) {
-						String TheName = searchField.getText() + " [" + contextSetMenu.getSelectedItem() + "]";
+						
+						//retrieve text from window.
+						String startText = searchField.getText();
+						
+						//name of the search.
+						String TheName = startText + " [" + contextSetMenu.getSelectedItem() + "]";
 						QD.setName(TheName);
+						
+						boolean ifAndOnlyif = false;
+						
+						//the very first step: check for and remove special "if and only if" character
+						if (startText.startsWith("&&only")){
+							ifAndOnlyif = true;
+							startText = startText.substring(6).trim();
+						}
+						
 						try {
 							
 							//parse into candidates
 							
 							//and statements
-							String[] Queries = searchField.getText().trim().split(";");
+							String[] Queries = startText.trim().split(";");
 							
 							//store updated list into linked list
 							LinkedList<String> AllParsedStatements = new LinkedList<String>();
@@ -2136,8 +2208,8 @@ import definicions.MatriuDistancies;
 								String Hypo = "hypothetical protein";
 								String Unk = "Unknown function";
 								
-								if ((Hypo.contains(searchField.getText()) || Unk.contains(searchField.getText()) ||
-										searchField.getText().length() <= 3) && QD.getAnalysesList().isOptionComputeDendrogram()
+								if ((Hypo.contains(startText) || Unk.contains(startText) ||
+										startText.length() <= 3) && QD.getAnalysesList().isOptionComputeDendrogram()
 										&& fr.getPanDisplayOptions().getDrawContextTree().isSelected()){
 									
 									String SureYouWantToSearch = "You have entered a search query that may return a large number of results." + "\n"
@@ -2160,7 +2232,8 @@ import definicions.MatriuDistancies;
 								
 								if (this.ProceedWithSearch == true){
 								
-									QD.setQueries(Queries);
+									QD.setQueriesAndList(Queries);
+									QD.ifAndOnlyif = ifAndOnlyif;
 									
 									//single, interruptable Swing Worker
 									CurrentSearch = new SearchWorker(QD,action,
@@ -2197,8 +2270,9 @@ import definicions.MatriuDistancies;
 									NumQueries[i] = NumQueriesList.get(i);
 								}
 								
-								//store 
-								QD.setClusters(NumQueries);
+								//store
+								QD.setClustersAndList(NumQueries);
+								QD.ifAndOnlyif = ifAndOnlyif;
 								
 								//try: unified swingworker approach
 								CurrentSearch = new SearchWorker(QD,action,

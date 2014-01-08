@@ -29,12 +29,16 @@ public class QueryData implements Serializable{
 	private DadesExternes de;
 	private Cluster OutputCluster = null;
 	
-	//OR-statement fields
+	//AND-statement fields
 	public LinkedList<String> ANDStatements = new LinkedList<String>();
 	public LinkedList<LinkedList> ParsedStatements;
 	public LinkedList<LinkedList<Integer>> ParsedANDStatementsCluster;
 	public LinkedList<LinkedList<String>> ParsedANDStatementsAnnotation;
 	public boolean ANDStatementsParsed = false;
+	public boolean ifAndOnlyif = false;
+	
+	public LinkedList<Integer> ClustersAsList;
+	public LinkedList<String> QueriesAsList;
 	
 	//Constructor
 	public QueryData(){
@@ -99,16 +103,34 @@ public class QueryData implements Serializable{
 		return Queries;
 	}
 
-	public void setQueries(String[] queries) {
+	public void setQueriesAndList(String[] queries) {
 		Queries = queries;
+		
+		//build list
+		if (queries != null){
+			QueriesAsList = new LinkedList<String>();
+			for (String s : Queries){
+				QueriesAsList.add(s);
+			}
+		}
+
 	}
 
 	public int[] getClusters() {
 		return Clusters;
 	}
 
-	public void setClusters(int[] clusters) {
+	public void setClustersAndList(int[] clusters) {
 		Clusters = clusters;
+		
+		//build list
+		if (clusters != null){
+			ClustersAsList = new LinkedList<Integer>();
+			for (Integer x : Clusters){
+				ClustersAsList.add(x);
+			}
+		}
+
 	}
 
 	public String getContextSetName() {

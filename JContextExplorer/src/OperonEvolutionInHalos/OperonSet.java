@@ -1279,6 +1279,14 @@ public class OperonSet {
 
 	}
 	
+	//Export a set of n-wise searches appropriate for export
+	public void ExportIdenticalContentQuerySet(String QuerySetFile, LinkedHashMap<Integer,OperonTrajectory> Trajectories, Double MinOperonicity){
+		
+		//segregate trajectory
+		//LinkedList<OperonCluster> L = SegregateTrajectoryNoAmalg(OT);
+		
+	}
+	
 	// ===== Sorting Classes ====== //
 	
 	//sort by NSR
