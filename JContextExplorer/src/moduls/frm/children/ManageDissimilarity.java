@@ -115,6 +115,10 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 	private ButtonGroup DiceOrJaccardMotif;
 	private JCheckBox chkTreatDuplicatesAsUniqueMotif;
 	private String strTreatDuplicatesAsUniqueMotif = "Treat duplicate motifs as unique";
+	private JCheckBox chkExcludeOperonHead;
+	private String strExcludeOperonHead = "Exclude operon head (for operons only)";
+	private JCheckBox chkExcludeOperonTail;
+	private String strExcludeOperonTail = "Exclude operon tail (for operons only)";
 	
 	//(3) GENE ORDER
 	private JTextField LblgoWeight, TxtgoWeight, LblgoScale, TxtgoScale;
@@ -650,6 +654,32 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 		jp.add(chkTreatDuplicatesAsUniqueMotif, c);
 		gridy++;
 
+		//operon head exclusion check box
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 2;
+		c.fill = GridBagConstraints.NONE;
+		c.insets = new Insets(1,20,1,1);
+		chkExcludeOperonHead = new JCheckBox(strExcludeOperonHead);
+		chkExcludeOperonHead.setSelected(false);
+		grpCommonMotifs.add(chkExcludeOperonHead);
+		jp.add(chkExcludeOperonHead, c);
+		gridy++;
+		
+		//operon tail exclusion check box
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 2;
+		c.fill = GridBagConstraints.NONE;
+		c.insets = new Insets(1,20,1,1);
+		chkExcludeOperonTail = new JCheckBox(strExcludeOperonTail);
+		chkExcludeOperonTail.setSelected(false);
+		grpCommonMotifs.add(chkExcludeOperonTail);
+		jp.add(chkExcludeOperonTail, c);
+		gridy++;		
+		
 		//(3) GENE ORDER
 		c.ipady = 7;
 		
@@ -1565,6 +1595,8 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 					boolean CMDuplicatesUnique;
 					double CMWeight;
 					int CMImportance;
+					boolean CMExcludeOperonHead;
+					boolean CMExcludeOperonTail;
 					
 					if (this.chkCommonMotifs.isSelected()){
 						Factors.add("CM");
@@ -1577,12 +1609,16 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 						CMDuplicatesUnique = this.chkTreatDuplicatesAsUniqueMotif.isSelected();
 						CMWeight = Double.parseDouble(this.TxtcmWeight.getText());
 						CMImportance = Integer.parseInt(this.TxtcmScale.getText());
+						CMExcludeOperonHead = this.chkExcludeOperonHead.isSelected();
+						CMExcludeOperonTail = this.chkExcludeOperonTail.isSelected();
 					} else {
 						CMMotifNames = null;
 						CMCompareType = null;
 						CMDuplicatesUnique = false;
 						CMWeight = 0;
 						CMImportance = -1;
+						CMExcludeOperonHead = false;
+						CMExcludeOperonTail = false;
 					}
 					
 					//Factor 3: Gene order
@@ -1698,6 +1734,8 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 							CMMotifNames,		//Factor 2: Common Motifs
 							CMCompareType,
 							CMDuplicatesUnique,
+							CMExcludeOperonHead,
+							CMExcludeOperonTail,
 							CMWeight,
 							CMImportance,		
 							HeadPos,			//Factor 3: Gene Order

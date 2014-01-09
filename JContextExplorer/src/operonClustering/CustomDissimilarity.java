@@ -42,6 +42,8 @@ public class CustomDissimilarity implements Serializable {
 	private boolean CMDuplicatesUnique;
 	private double CMWeight;
 	private int CMImportance;
+	public boolean CMExcludeOperonHead;
+	public boolean CMExcludeOperonTail;
 	
 	//Factor 3: Gene order
 	private String GOCompareType;
@@ -70,7 +72,7 @@ public class CustomDissimilarity implements Serializable {
 	//Constructor
 	public CustomDissimilarity(String name2,String amalgamationType2,LinkedList<String> factors2, double ImpFactor,
 			String cGCompareType2,boolean cGDuplicatesUnique2,double cGWeight2,int cGImportance2,
-			LinkedList<String> cMMotifNames2,String cMCompareType2,boolean cMDuplicatesUnique2,double cMWeight2,int cMImportance2,
+			LinkedList<String> cMMotifNames2,String cMCompareType2,boolean cMDuplicatesUnique2, boolean cMExcludeOperonHead, boolean cMExcludeOperonTail, double cMWeight2,int cMImportance2,
 			boolean HeadPos, boolean PairOrd, boolean LinearOrd, double HeadPoswt, double PairOrdwt, double LinearOrdwt, double gOWeight2, int gOImportance2,
 			GapPointMapping gapSizeDissMapping2, double gGWeight2,int gGImportance2,
 			boolean individualGenes2, boolean wholeGroup2, double relWeightIndGenes2, double relWeightWholeGroup2, double sSWeight2, int sSImportance2){
@@ -92,6 +94,15 @@ public class CustomDissimilarity implements Serializable {
 		this.CMMotifNames = cMMotifNames2;
 		this.CMCompareType = cMCompareType2;
 		this.CMDuplicatesUnique = cMDuplicatesUnique2;
+		this.CMExcludeOperonHead = cMExcludeOperonHead;
+		this.CMExcludeOperonTail = cMExcludeOperonTail;
+		
+		//excluding both the head and tail is meaningless, so ignore this possibility.
+		if (CMExcludeOperonHead && CMExcludeOperonTail){
+			CMExcludeOperonHead = false;
+			CMExcludeOperonTail = false;
+		}
+		
 		this.CMImportance = cMImportance2;
 		this.CMWeight = cMWeight2;
 		
@@ -1380,7 +1391,65 @@ public class CustomDissimilarity implements Serializable {
 			}
 			if (Factors.contains("CM")){
 				AllProvidedWeights = AllProvidedWeights + CMWeight;
-				CMContribution = CMDissimilarity(G1,G2,T);
+				
+				//exclude the head prior to determination
+				if (CMExcludeOperonHead){
+					
+					//create special dummy lists just to assess the dissimilarity
+					LinkedList<GenomicElementAndQueryMatch> G1mod = new LinkedList<GenomicElementAndQueryMatch>(G1);
+					LinkedList<GenomicElementAndQueryMatch> G2mod = new LinkedList<GenomicElementAndQueryMatch>(G2);
+					
+					//exclude the head of the operon, if appropriate
+					
+					//first list					
+					if (G1mod.size() > 1){
+						if (G1mod.get(0).getE().getStrand().equals(Strand.POSITIVE)){
+							G1mod.remove(0);
+						} else {
+							G1mod.remove(G1mod.size()-1);
+						}
+					}
+					
+					//second list
+					if (G2mod.size() > 1){
+						if (G2mod.get(0).getE().getStrand().equals(Strand.POSITIVE)){
+							G2mod.remove(0);
+						} else {
+							G2mod.remove(G2mod.size()-1);
+						}
+					}
+					
+					CMContribution = CMDissimilarity(G1mod,G2mod,T);
+					
+				} else if (CMExcludeOperonTail){
+					
+					//create special dummy lists just to assess the dissimilarity
+					LinkedList<GenomicElementAndQueryMatch> G1mod = new LinkedList<GenomicElementAndQueryMatch>();
+					LinkedList<GenomicElementAndQueryMatch> G2mod = new LinkedList<GenomicElementAndQueryMatch>();
+					
+					//first list					
+					if (G1.size() > 1){
+						if (G1.get(0).getE().getStrand().equals(Strand.POSITIVE)){
+							G1mod.add(G1.get(0));
+						} else {
+							G1mod.add(G1.get(G1.size()-1));
+						}
+					}
+					
+					//second list
+					//first list					
+					if (G2.size() > 1){
+						if (G2.get(0).getE().getStrand().equals(Strand.POSITIVE)){
+							G2mod.add(G2.get(0));
+						} else {
+							G2mod.add(G2.get(G2.size()-1));
+						}
+					}
+					
+				} else {
+					CMContribution = CMDissimilarity(G1,G2,T);
+				}
+				
 			}
 			if (Factors.contains("GO")){
 				AllProvidedWeights = AllProvidedWeights + GOWeight;
@@ -1464,7 +1533,65 @@ public class CustomDissimilarity implements Serializable {
 				ImpMapping.add(IM);
 			}
 			if (Factors.contains("CM")){
-				CMContribution = CMDissimilarity(G1,G2,T);
+				
+				//exclude the head prior to determination
+				if (CMExcludeOperonHead){
+					
+					//create special dummy lists just to assess the dissimilarity
+					LinkedList<GenomicElementAndQueryMatch> G1mod = new LinkedList<GenomicElementAndQueryMatch>(G1);
+					LinkedList<GenomicElementAndQueryMatch> G2mod = new LinkedList<GenomicElementAndQueryMatch>(G2);
+					
+					//exclude the head of the operon, if appropriate
+					
+					//first list					
+					if (G1mod.size() > 1){
+						if (G1mod.get(0).getE().getStrand().equals(Strand.POSITIVE)){
+							G1mod.remove(0);
+						} else {
+							G1mod.remove(G1mod.size()-1);
+						}
+					}
+					
+					//second list
+					if (G2mod.size() > 1){
+						if (G2mod.get(0).getE().getStrand().equals(Strand.POSITIVE)){
+							G2mod.remove(0);
+						} else {
+							G2mod.remove(G2mod.size()-1);
+						}
+					}
+					
+					CMContribution = CMDissimilarity(G1mod,G2mod,T);
+				
+				} else if (CMExcludeOperonTail){
+					
+					//create special dummy lists just to assess the dissimilarity
+					LinkedList<GenomicElementAndQueryMatch> G1mod = new LinkedList<GenomicElementAndQueryMatch>();
+					LinkedList<GenomicElementAndQueryMatch> G2mod = new LinkedList<GenomicElementAndQueryMatch>();
+					
+					//first list					
+					if (G1.size() > 1){
+						if (G1.get(0).getE().getStrand().equals(Strand.POSITIVE)){
+							G1mod.add(G1.get(0));
+						} else {
+							G1mod.add(G1.get(G1.size()-1));
+						}
+					}
+					
+					//second list
+					//first list					
+					if (G2.size() > 1){
+						if (G2.get(0).getE().getStrand().equals(Strand.POSITIVE)){
+							G2mod.add(G2.get(0));
+						} else {
+							G2mod.add(G2.get(G2.size()-1));
+						}
+					}
+					
+				} else {
+					CMContribution = CMDissimilarity(G1,G2,T);
+				}
+
 				ImportanceMapping IM = new ImportanceMapping();
 				IM.FactorType = "CM";
 				IM.Dissimilarity = CMContribution;

@@ -1457,7 +1457,7 @@ import definicions.MatriuDistancies;
 								
 						//default: retain this set
 						boolean RetainMatch = true;
-						
+												
 						//check the lists for elements that are not included in the provided set.
 						if (!WorkerQD.isAnnotationSearch()){
 							for (GenomicElementAndQueryMatch GandE : LL){
@@ -1474,6 +1474,18 @@ import definicions.MatriuDistancies;
 								}
 							}
 						}
+						
+						//also require size matching - for multiple copy issues
+						if (!WorkerQD.isAnnotationSearch()){
+							if (LL.size() != WorkerQD.ClustersAsList.size()){
+								RetainMatch = false;
+							}
+						} else {
+							if (LL.size() != WorkerQD.QueriesAsList.size()){
+								RetainMatch = false;
+							}
+						}
+
 
 						//retain set, if appropriate.
 						if (RetainMatch){

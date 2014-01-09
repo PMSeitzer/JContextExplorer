@@ -203,9 +203,9 @@ public class GeneColorLegendPanel extends JPanel implements MouseListener{
 		} else if (this.ItemsToShow.contentEquals("Complete")) {
 			for (int i = 0; i <this.GeneList.length; i++){
 				
-				//null catching
+				//null catching - no annotation provided
 				if (this.GeneList[i].getAnnotation() == null){
-					this.GeneList[i].setAnnotation("");
+					this.GeneList[i].setAnnotation("none");
 				}
 				
 				TextLayout label = new TextLayout(this.GeneList[i].getAnnotation(),fontStandard,renderContext);

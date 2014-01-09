@@ -936,7 +936,7 @@ public class OperonSet {
 		}
 	
 		//print statement
-		System.out.println("Breakpoint!");
+		//System.out.println("Breakpoint!");
 		
 		//return statement
 		return OpGroups;
@@ -1280,11 +1280,104 @@ public class OperonSet {
 	}
 	
 	//Export a set of n-wise searches appropriate for export
-	public void ExportIdenticalContentQuerySet(String QuerySetFile, LinkedHashMap<Integer,OperonTrajectory> Trajectories, Double MinOperonicity){
+	public void ExportIdenticalContentQuerySet(String QuerySetFile, LinkedHashMap<Integer,OperonTrajectory> Trajectories, boolean IncludeSingles){
 		
-		//segregate trajectory
-		//LinkedList<OperonCluster> L = SegregateTrajectoryNoAmalg(OT);
+		//Initialize a list of query-pairs
+		LinkedList<LinkedList<Integer>> QueryGroups = new LinkedList<LinkedList<Integer>>();
 		
+		//iterate through all values
+		for (Integer x : Trajectories.keySet()){
+			
+			//retrieve trajectory
+			OperonTrajectory OT = Trajectories.get(x);
+			
+			//determine all non-overlapping groups
+			LinkedList<OperonCluster> Clusters = SegregateTrajectoryNoAmalg(OT);
+			
+			//iterate through + create groups
+			for (OperonCluster OC : Clusters){
+				
+				//create group
+				LinkedList<Integer> ClusterGrp = new LinkedList<Integer>();
+				
+				//add this cluster to the list
+				ClusterGrp.add(x);
+				
+				//build list
+				for (Object o : OC.ClustersFeatured){
+					Integer objint = (Integer) o;
+					ClusterGrp.add(objint);
+				}
+				
+				//arrange in ascending order
+				Collections.sort(ClusterGrp);
+				
+				//add list to set of all pairs
+				if ((!QueryGroups.contains(ClusterGrp) 
+						&& ClusterGrp.size() > 0
+						&& OC.Operons.size() > 1) &&
+						(IncludeSingles || !IncludeSingles && ClusterGrp.size() > 1) //either include singles, or not
+						){
+					QueryGroups.add(ClusterGrp);
+				}
+
+			}
+			
+			//output message.
+			if (x%100 == 0){
+				System.out.println("Built Query Groups for " + x +"/5276 operon trajectories.");
+			}
+			
+		}
+
+		//Sort the list
+		Collections.sort(QueryGroups, new SortListOfGroups());
+		
+		//export to file
+		try {
+			
+			//open file stream
+			BufferedWriter bw = new BufferedWriter(new FileWriter(QuerySetFile));
+			
+			//export each query pair
+			for (LinkedList<Integer> L : QueryGroups){
+				
+				//initialize an index counter
+				int IndexCounter = 0;
+				
+				//initialize string
+				String str = "&&only ";
+				
+				while (IndexCounter < L.size()) {
+					
+					//add next index
+					str = str + String.valueOf(L.get(IndexCounter));
+					
+					//anticipate additional genes, if necessary
+					if (IndexCounter+1 < L.size()){
+						str = str + " $$ ";
+					} 
+					
+					//increment counter
+					IndexCounter++;
+				}
+				
+				//add new line
+				str = str + "\n";
+				
+				//write to file stream
+				bw.write(str);
+				bw.flush();
+				
+			}
+			
+			//close file stream
+			bw.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 	
 	// ===== Sorting Classes ====== //
@@ -1409,6 +1502,7 @@ public class OperonSet {
 
 		@Override
 		public int compare(LinkedList<Integer> o1, LinkedList<Integer> o2) {
+			
 			try {
 				if (o1.get(0) == o2.get(0)){
 					return o1.get(1) - o2.get(1);
@@ -1422,6 +1516,33 @@ public class OperonSet {
 		}
 		
 	}
+	
+	public class SortListOfGroups implements Comparator<LinkedList<Integer>>{
+
+		@Override
+		public int compare(LinkedList<Integer> o1, LinkedList<Integer> o2) {
+			
+			//march down list, while elements still around
+			int ReturnVal = 0;
+			int ElementCounter = 0;
+
+			//sort the list for as long as possible.
+			while(o1.size() > ElementCounter && o2.size() > ElementCounter){
+				if (o1.get(ElementCounter) != o2.get(ElementCounter)){
+					ReturnVal = o1.get(ElementCounter) - o2.get(ElementCounter);
+					break;
+				} else{
+					ElementCounter++;
+				}
+			}
+
+			//return the determined value!
+			return ReturnVal;
+
+		}
+		
+	}
+	
 	// ===== Deprecated ======== //
 	
 	//DEPRECATED

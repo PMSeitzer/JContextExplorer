@@ -540,6 +540,9 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 		//Each line is a query, add appropriately to set!
 		for (String s : StartingSet){
 
+			//Initialize the name
+			Name = s;
+			
 			//default - try to add the query
 			AddQuery = true;
 			
@@ -553,7 +556,6 @@ public class ManageQuerySets extends JDialog implements ActionListener{
 			
 			//update name
 			//Name = "Query " + String.valueOf(Counter);
-			Name = s;
 			Counter++;
 			
 			//Split each query by delimiter (semicolon)
