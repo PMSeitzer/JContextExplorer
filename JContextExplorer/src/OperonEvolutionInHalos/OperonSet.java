@@ -1166,7 +1166,7 @@ public class OperonSet {
 	
 	//export a query set, with options to vary operonicity + novelty (towards highly conserved)
 	
-	//Export a query set!
+	//Export a query set of trajectories
 	public void ExportQuerySet(String QuerySetFile, LinkedHashMap<Integer,OperonTrajectory> Trajectories, Double MinOperonicity, Double MaxNovelty){
 		try {
 			
@@ -1378,6 +1378,85 @@ public class OperonSet {
 			e.printStackTrace();
 		}
 
+	}
+	
+	//Export the set of adjacent gene pairs that are represented in all operon topologies
+	public void ExportAdjacentGenePairs(String QuerySetFile, LinkedHashMap<Integer, OperonTrajectory> Trajectories){
+		
+		//Initialize a list of query-pairs
+		LinkedList<LinkedList<Integer>> QueryGroups = new LinkedList<LinkedList<Integer>>();
+		
+		//iterate through all values
+		for (Integer x : Trajectories.keySet()){
+			
+			//retrieve trajectory
+			OperonTrajectory OT = Trajectories.get(x);
+			
+			//determine all non-overlapping groups
+			LinkedList<OperonCluster> Clusters = SegregateTrajectoryNoAmalg(OT);
+			
+			//iterate through + create groups
+			for (OperonCluster OC : Clusters){
+
+				//check every operon instance
+				for (LinkedList<GenomicElement> L : OC.Operons){
+					
+					//iterate through operon
+					for (int i = 0; i < L.size()-1; i++){
+						
+						//note every pair
+						LinkedList<Integer> ClusterGrp = new LinkedList<Integer>();
+						ClusterGrp.add(L.get(i).getClusterID());
+						ClusterGrp.add(L.get(i+1).getClusterID());
+						
+						//sort + add to set
+						Collections.sort(ClusterGrp);
+						if (!QueryGroups.contains(ClusterGrp)){
+							QueryGroups.add(ClusterGrp);
+						}
+						
+					}
+
+				}
+				
+			}
+			
+			//output message.
+			if (x%100 == 0){
+				System.out.println("Built Query Groups for " + x +"/5276 operon trajectories.");
+			}
+			
+		}
+
+		//Sort the list
+		Collections.sort(QueryGroups, new SortListOfPairs());
+		
+		//export to file
+		try {
+			
+			//open file stream
+			BufferedWriter bw = new BufferedWriter(new FileWriter(QuerySetFile));
+			
+			//export each query pair
+			for (LinkedList<Integer> L : QueryGroups){
+				
+				//create string
+				String str = String.valueOf(L.get(0)) + " ; " + String.valueOf(L.get(1)) + "\n";
+				
+				//write to file stream
+				bw.write(str);
+				bw.flush();
+				
+			}
+			
+			//close file stream
+			bw.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
 	}
 	
 	// ===== Sorting Classes ====== //

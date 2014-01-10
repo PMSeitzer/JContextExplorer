@@ -69,6 +69,9 @@ public class CustomDissimilarity implements Serializable {
 	private double SSWeight;
 	private int SSImportance;
 	
+	//extra
+	public boolean DisplayMsgAboutInternalMotif = false;
+	
 	//Constructor
 	public CustomDissimilarity(String name2,String amalgamationType2,LinkedList<String> factors2, double ImpFactor,
 			String cGCompareType2,boolean cGDuplicatesUnique2,double cGWeight2,int cGImportance2,
@@ -860,6 +863,9 @@ public class CustomDissimilarity implements Serializable {
 //			}
 //		}
 		
+		//only for customized
+		DisplayMsgAboutInternalMotif = false;
+		
 		//re-sizing - O1 Values must always be larger
 		if (O1.size() < O2.size()){
 			LinkedList<GenomicElementAndQueryMatch> Temp = O1;
@@ -867,7 +873,7 @@ public class CustomDissimilarity implements Serializable {
 			O2 = Temp;
 		}
 		
-		//Initial Dissimilarity
+		//Initialize Dissimilarity
 		double Dissimilarity = 0.0;
 		
 		//Initialize adjacencies
@@ -950,6 +956,12 @@ public class CustomDissimilarity implements Serializable {
 					//determine gap dissimilarity
 					if (gapDiff > this.GPM.MaxGapLimit){
 						gapDissimilarity = this.GPM.MaxDissimilarity;
+						
+						//only for customized
+						//if (!DisplayMsgAboutInternalMotif)
+						//	DisplayMsgAboutInternalMotif = CheckForInternalPromoter(Adjacency,FwdAdj);
+						
+						
 					} else if (gapDiff > this.GPM.MinGaplimit){
 						gapDissimilarity = this.GPM.Mapping.get(gapDiff);
 					}
@@ -1002,6 +1014,11 @@ public class CustomDissimilarity implements Serializable {
 					//determine gap dissimilarity
 					if (gapDiff > this.GPM.MaxGapLimit){
 						gapDissimilarity = this.GPM.MaxDissimilarity;
+						
+						//only for customized
+						//if (!DisplayMsgAboutInternalMotif)
+						//	DisplayMsgAboutInternalMotif = CheckForInternalPromoter(Adjacency,RevAdj);
+						
 					} else if (gapDiff > this.GPM.MinGaplimit){
 						gapDissimilarity = this.GPM.Mapping.get(gapDiff);
 					}
@@ -1390,6 +1407,8 @@ public class CustomDissimilarity implements Serializable {
 				CGContribution = CGDissimilarity(G1,G2,T);
 			}
 			if (Factors.contains("CM")){
+				
+				//running weights total
 				AllProvidedWeights = AllProvidedWeights + CMWeight;
 				
 				//exclude the head prior to determination
@@ -1445,6 +1464,8 @@ public class CustomDissimilarity implements Serializable {
 							G2mod.add(G2.get(G2.size()-1));
 						}
 					}
+					
+					CMContribution = CMDissimilarity(G1mod,G2mod,T);
 					
 				} else {
 					CMContribution = CMDissimilarity(G1,G2,T);
@@ -1588,6 +1609,8 @@ public class CustomDissimilarity implements Serializable {
 						}
 					}
 					
+					CMContribution = CMDissimilarity(G1mod,G2mod,T);
+					
 				} else {
 					CMContribution = CMDissimilarity(G1,G2,T);
 				}
@@ -1694,6 +1717,129 @@ public class CustomDissimilarity implements Serializable {
 
 	public void setImportanceFraction(Double importanceFraction) {
 		ImportanceFraction = importanceFraction;
+	}
+	
+	// ------- Extra methods -----------//
+	
+	//a customized method for use only for 80 halophiles/operon search stuff.
+	public boolean CheckForInternalPromoter(LinkedList<GenomicElementAndQueryMatch> Adj1, LinkedList<GenomicElementAndQueryMatch> Adj2){
+		
+		//initialize return value
+		boolean NewInternalMotifInGap = false;
+				
+		//Adj 1 derives from a (+)-stranded operon
+		if (Adj1.get(0).getE().getStrand().equals(Strand.POSITIVE)){
+		
+			//Adj 2 derives from a (+)-stranded operon
+			if (Adj2.get(0).getE().getStrand().equals(Strand.POSITIVE)){
+				
+				//Adj1 is the case with the widened gap.
+				if (Adj1.get(1).getE().getStart()-Adj1.get(0).getE().getStop() > 
+					Adj2.get(1).getE().getStart()-Adj2.get(0).getE().getStop()){
+				
+					//The widened gene has more promoter motifs than the non-widened.
+					if (Adj1.get(1).getE().getAssociatedMotifs().size() >
+							Adj2.get(1).getE().getAssociatedMotifs().size()){
+						NewInternalMotifInGap = true;
+					}
+					
+				//Adj2 is the case with widened gap.
+				} else{
+					
+					//The widened gene has more promoter motifs than the non-widened.
+					if (Adj1.get(1).getE().getAssociatedMotifs().size() <
+							Adj2.get(1).getE().getAssociatedMotifs().size()){
+						NewInternalMotifInGap = true;
+					}
+					
+				}
+
+			
+			//Adj 2 derives from a (-)-stranded operon
+			} else {
+
+				//Adj1 is the case with the widened gap.
+				if (Adj1.get(1).getE().getStart()-Adj1.get(0).getE().getStop() > 
+					Adj2.get(1).getE().getStart()-Adj2.get(0).getE().getStop()){
+				
+					//The widened gene has more promoter motifs than the non-widened.
+					if (Adj1.get(1).getE().getAssociatedMotifs().size() >
+							Adj2.get(0).getE().getAssociatedMotifs().size()){
+						NewInternalMotifInGap = true;
+					}
+					
+				//Adj2 is the case with widened gap.
+				} else{
+					
+					//The widened gene has more promoter motifs than the non-widened.
+					if (Adj1.get(1).getE().getAssociatedMotifs().size() <
+							Adj2.get(0).getE().getAssociatedMotifs().size()){
+						NewInternalMotifInGap = true;
+					}
+					
+				}
+				
+				
+			}
+			
+		//Adj 1 derives from a (-)-stranded operon
+		} else {
+			
+			//Adj 2 derives from a (+)-stranded operon
+			if (Adj2.get(0).getE().getStrand().equals(Strand.POSITIVE)){
+			
+				//Adj1 is the case with the widened gap.
+				if (Adj1.get(1).getE().getStart()-Adj1.get(0).getE().getStop() > 
+					Adj2.get(1).getE().getStart()-Adj2.get(0).getE().getStop()){
+				
+					//The widened gene has more promoter motifs than the non-widened.
+					if (Adj1.get(0).getE().getAssociatedMotifs().size() >
+							Adj2.get(1).getE().getAssociatedMotifs().size()){
+						NewInternalMotifInGap = true;
+					}
+					
+				//Adj2 is the case with widened gap.
+				} else{
+					
+					//The widened gene has more promoter motifs than the non-widened.
+					if (Adj1.get(0).getE().getAssociatedMotifs().size() <
+							Adj2.get(1).getE().getAssociatedMotifs().size()){
+						NewInternalMotifInGap = true;
+					}
+					
+				}
+				
+			//Adj 2 derives from a (-)-stranded operon
+			} else {
+				
+				//Adj1 is the case with the widened gap.
+				if (Adj1.get(1).getE().getStart()-Adj1.get(0).getE().getStop() > 
+					Adj2.get(1).getE().getStart()-Adj2.get(0).getE().getStop()){
+				
+					//The widened gene has more promoter motifs than the non-widened.
+					if (Adj1.get(0).getE().getAssociatedMotifs().size() >
+							Adj2.get(0).getE().getAssociatedMotifs().size()){
+						NewInternalMotifInGap = true;
+					}
+					
+				//Adj2 is the case with widened gap.
+				} else{
+					
+					//The widened gene has more promoter motifs than the non-widened.
+					if (Adj1.get(0).getE().getAssociatedMotifs().size() <
+							Adj2.get(0).getE().getAssociatedMotifs().size()){
+						NewInternalMotifInGap = true;
+					}
+					
+				}
+				
+			}
+			
+		}
+		
+		//return the value
+		return NewInternalMotifInGap;
+		
 	}
 	
 	//new class

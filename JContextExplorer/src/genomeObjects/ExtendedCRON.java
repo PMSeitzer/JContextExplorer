@@ -45,8 +45,6 @@ public class ExtendedCRON implements Serializable{
 	//public DadesExternes de; 
 	/*
 	 * This data type comes from the MultiDendrograms software package
-	 * TODO: negotiate DadesExterna, ReadTXT, JPan_btn, and FrmPrincipalDesk to figure out
-	 * how to appropriately modify those files and this one for direct ECRON loading
 	 */
 	
 	//constructor
@@ -157,6 +155,11 @@ public class ExtendedCRON implements Serializable{
 					
 					double dist = CustomDistMethod.TotalDissimilarity(this.Contexts.get(Keys[i]), this.Contexts.get(Keys[j]), SearchType);
 
+//					//only for customized
+//					if (CustomDistMethod.DisplayMsgAboutInternalMotif){
+//						System.out.println(Name);
+//					}
+					
 					//print statements - also reveals the order of keys
 //					if (Keys[i].equals("Halococcus_saccharolyticus-1")){
 //						System.out.println("Distance between " + Keys[i] + " and " + Keys[j] + ": " + "(" + i + "," + j + "): " + dist);

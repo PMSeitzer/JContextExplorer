@@ -31,8 +31,8 @@ public class OperonStats extends LoadData{
 		BasicSet.BuildOperonTrajectories();
 		
 		//Export a query set for gene order analysis
-		String QuerySetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/JCE/Current/QS_IdenticalContentGroups.txt";
-		BasicSet.ExportIdenticalContentQuerySet(QuerySetFile, BasicSet.Trajectories, false);
+		String QuerySetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/JCE/Current/QS_AdjacentGenePairs.txt";
+		BasicSet.ExportAdjacentGenePairs(QuerySetFile, BasicSet.Trajectories);
 		
 		//BasicSet.ExportQuerySet(QuerySetFile, Trajectories, MinOperonicity, MaxNovelty)
 		
