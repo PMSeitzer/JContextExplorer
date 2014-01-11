@@ -1622,7 +1622,7 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 				}
 			}
 		}
-		
+			
 		//pairings of genomic element query matches
 		HashSet<LinkedList<GenomicElement>> Pairs = 
 				new HashSet<LinkedList<GenomicElement>>();
@@ -1638,13 +1638,37 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 			//find closest
 			for (GenomicElement E2 : SecondQueries){
 				if (E1.getContig().contentEquals(E2.getContig()) &&
-						Math.abs(E1.getStart() - E2.getStart()) < ClosestDistance) {
-					ClosestDistance = E1.getStart() - E2.getStart();
-					Partner = E2;
+						Math.abs(E1.getCenter() - E2.getCenter()) < ClosestDistance) {
+					
+					//Partners that are too far away are excluded anyway, if this option is specified
+					if ((CSD.isGapLimit() && Math.abs(E1.getCenter() - E2.getCenter()) <= CSD.getGapLimitSize()) ||
+							!CSD.isGapLimit()){
+						
+						//operon expansion option - same strand checks 
+						if (CSD.isOperonExpansion && CSD.SameStrandRequired){
+							
+							//strand must match to count as a partner
+							if (E1.getStrand().equals(E2.getStrand())){
+								
+								//update the closest distance
+								Math.abs(ClosestDistance = E1.getCenter() - E2.getCenter());
+								Partner = E2;
+							}
+
+							
+						//no operon expansion - strandedness doesn't matter in this case
+						} else {
+							
+							//update the closest distance
+							Math.abs(ClosestDistance = E1.getCenter() - E2.getCenter());
+							Partner = E2;
+						}
+						
+					}
 				}
 			}
 			
-			//there must be a partner for this to even matter.
+			//there must be a partner to describe a partnership.
 			if (Partner != null){
 				
 				//add to hash set
@@ -1666,9 +1690,36 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 			//find closest
 			for (GenomicElement E1 : FirstQueries){
 				if (E2.getContig().contentEquals(E1.getContig()) &&
-						Math.abs(E2.getStart() - E1.getStart()) < ClosestDistance) {
-					ClosestDistance = E2.getStart() - E1.getStart();
-					Partner = E1;
+						Math.abs(E2.getCenter() - E1.getCenter()) < ClosestDistance) {
+					
+					
+					//Partners that are too far away are excluded anyway, if this option is specified
+					if ((CSD.isGapLimit() && Math.abs(E1.getCenter() - E2.getCenter()) <= CSD.getGapLimitSize()) ||
+							!CSD.isGapLimit()){
+						
+						//operon expansion option - same strand checks 
+						if (CSD.isOperonExpansion && CSD.SameStrandRequired){
+							
+							//strand must match to count as a partner
+							if (E1.getStrand().equals(E2.getStrand())){
+
+								//update the closest distance
+								ClosestDistance = Math.abs(E2.getCenter() - E1.getCenter());
+								Partner = E1;
+							}
+
+							
+						//no operon expansion - strandedness doesn't matter in this case
+						} else {
+							
+							//update the closest distance
+							ClosestDistance = Math.abs(E2.getCenter() - E1.getCenter());
+							Partner = E1;
+							
+						}
+						
+					}
+
 				}
 			}
 			
@@ -1709,17 +1760,22 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 				StoppingE = temp;
 			}
 			
-			//compute stats about starting element
-			double StartingECenter = this.Elements.get(StartingE).getStart() 
-					+ (0.5*(this.Elements.get(StartingE).getStop() - this.Elements.get(StartingE).getStart()));
+			//for operon expansion
+			boolean AddListToMatches = true;
 			
 			//add all intermediate elements
 			GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
 			GandE.setE(this.Elements.get(StartingE)); GandE.setQueryMatch(true); LL.add(GandE);
 			int ElementNumber = StartingE + 1;
-			while (ElementNumber < StoppingE){
+			int CurrentListCounter = 0;
+			while (ElementNumber <= StoppingE){
 				GandE = new GenomicElementAndQueryMatch();
-				GandE.setE(Elements.get(ElementNumber)); GandE.setQueryMatch(false);
+				GandE.setE(Elements.get(ElementNumber)); 
+				if (ElementNumber == StoppingE){
+					GandE.setQueryMatch(true);
+				} else {
+					GandE.setQueryMatch(false);
+				}
 				
 				//check against user-defined set of valid types
 				boolean ElementIsValid = false;
@@ -1729,31 +1785,65 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 						break;
 					}
 				}
-				
+								
 				//only add elements of the appropriate type - otherwise, skip
 				if (ElementIsValid){
 	
+					//add these to list, and increment counter (for distance comparison)
 					LL.add(GandE);
+					CurrentListCounter++;
+					
+					//check against max gene count options
+					if (CSD.InternalGeneNumberLimit){
+						if (CurrentListCounter - 1 > CSD.MaxNumInternalGenes){
+							AddListToMatches = false;
+							break;
+						}
+					}
+					
+					//check against operon expansion options
+					if (CSD.isOperonExpansion){
+						
+						//check for same strand violation
+						if (CSD.SameStrandRequired 
+								&& !GandE.getE().getStrand().equals(LL.get(0).getE().getStrand())){
+							AddListToMatches = false;
+							break;
+						}
+						
+						//check for distance violation
+						if (LL.get(CurrentListCounter).getE().getStart() - LL.get(CurrentListCounter-1).getE().getStop() > CSD.IntergenicGapLimit){
+							AddListToMatches = false;
+							break;
+						}
+					}
 				}
-
+				
 				ElementNumber++;
 			}
-			GandE = new GenomicElementAndQueryMatch();
-			GandE.setE(this.Elements.get(StoppingE)); GandE.setQueryMatch(true); LL.add(GandE);
+
+			//debugging
+			//System.out.println(LL);
 			
-			//compute stats about stopping element
-			double StoppingECenter = this.Elements.get(StoppingE).getStart() 
-					+ (0.5*(this.Elements.get(StoppingE).getStop() - this.Elements.get(StoppingE).getStart()));
-			
-			//add list to hash map.  Check for inappropriate cases.
-			if (CSD.isGapLimit()){
-				//System.out.println("Starting: " + StartingECenter + " Stopping: " + StoppingECenter);
-				if (Math.abs(StoppingECenter - StartingECenter) <= CSD.getGapLimitSize()){
-					Hits.add(LL);
-				}
-			} else {
+			//add list to hash map
+			if (AddListToMatches)
 				Hits.add(LL);
-			}
+
+//			//legacy
+//			
+//			//compute stats about stopping element
+//			double StoppingECenter = this.Elements.get(StoppingE).getStart() 
+//					+ (0.5*(this.Elements.get(StoppingE).getStop() - this.Elements.get(StoppingE).getStart()));
+//
+//			//add list to hash map.  Check for inappropriate cases.
+//			if (CSD.isGapLimit()){
+//				//System.out.println("Starting: " + StartingECenter + " Stopping: " + StoppingECenter);
+//				if (Math.abs(StoppingECenter - StartingECenter) <= CSD.getGapLimitSize()){
+//					Hits.add(LL);
+//				}
+//			} else {
+//				Hits.add(LL);
+//			}
 		}
 
 	

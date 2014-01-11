@@ -898,6 +898,10 @@ import definicions.MatriuDistancies;
 									"Inappropriate Number of Queries",JOptionPane.ERROR_MESSAGE);
 						} else {
 
+							//debugging
+						//	System.out.println("Breakpoint!");
+							
+							//proceed
 							Matches = entry.getValue().MatchesOnTheFly(null, this.ClusterNumber, CurrentCSD);
 
 						}

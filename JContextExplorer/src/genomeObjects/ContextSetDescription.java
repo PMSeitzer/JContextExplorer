@@ -30,9 +30,19 @@ public class ContextSetDescription implements Serializable{
 	private int GenesAfter;
 	private boolean RelativeBeforeAfter;
 	
-	//genes between
+	//genes between limiters
+	//(1) gap limits
 	private boolean GapLimit;
 	private int GapLimitSize;
+	
+	// internal genes
+	public boolean InternalGeneNumberLimit;
+	public int MaxNumInternalGenes;
+	
+	//(3) operon expansions
+	public boolean isOperonExpansion;
+	public boolean SameStrandRequired = true;
+	public int IntergenicGapLimit;
 	
 	//cassette
 	private String CassetteOf; 		//Name of another ContextSetDescription

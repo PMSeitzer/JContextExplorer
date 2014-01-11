@@ -112,6 +112,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 	private JRadioButton CSIntergenicDist;
 	private String strCSIntergenicDist = "Group genes based on intergenic distance";
 	private JTextField intergenicTolerance;
+	private String strIntegenicTolerance = "20";
 	private JButton computeIntergenic; 
 	private String strcomputeIntergenic = "Compute";
 	private JCheckBox cbStrandOption;
@@ -150,6 +151,20 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 	private JTextField TxtDistanceLimit;
 	private JTextField LblDistanceLimit;
 	private String strLblDistanceLimit = "nt Span";
+	private JCheckBox cbLimitNumGenes;
+	private String strchkLimitNumGenes = "Max number of internal genes:";
+	private JTextField TxtNumGeneLimit;
+	private String strTxtNumGeneLimit = "0";
+	private JTextField LblNumGeneLimit;
+	private String strLblNumGeneLimit = "genes";
+	private JCheckBox cbOperonExpansionOnly;
+	private String strchkOperonExpansionOnly = "Operon Expansion Only:";
+	private JTextField TxtOperonDistanceLimit;
+	private JTextField LblOperonDistanceLimit;
+	private String strLblOperonDistanceLimit = "nt distance";
+	private JCheckBox cbOperonExpansionSameStrand;
+	private String strchkOperonExpansionSameStrand = "Same Strand";
+	
 	
 	//CSType (5) - CSMultipleQuery
 	private LinkedList<Component> CSMultipleQuery_group;
@@ -693,7 +708,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		c.gridheight = 1;
 		c.insets = new Insets(1,20,1,1);
 		c.fill = GridBagConstraints.HORIZONTAL;
-		intergenicTolerance = new JTextField("20");
+		intergenicTolerance = new JTextField(strIntegenicTolerance);
 		intergenicTolerance.setEditable(true);
 		intergenicTolerance.addActionListener(this);
 		jp.add(intergenicTolerance, c);
@@ -884,6 +899,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		CSGenesBetween.addActionListener(this);
 		gridy++;
 		
+		//nucleotide span limit
 		c.gridx = 0;
 		c.gridy = gridy;
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -914,11 +930,97 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		LblDistanceLimit = new JTextField(strLblDistanceLimit);
 		LblDistanceLimit.setEditable(false);
 		jp.add(LblDistanceLimit, c);
-		CSGenesBetween_group.add(LblDistanceLimit);
+		CSGenesBetween_group.add(LblDistanceLimit);		
+		gridy++;
+
+		//num genes between limit
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,20,1,1);
+		cbLimitNumGenes = new JCheckBox(strchkLimitNumGenes);
+		cbLimitNumGenes.setSelected(false);
+		cbLimitNumGenes.addActionListener(this);
+		jp.add(cbLimitNumGenes, c);
+		CSGenesBetween_group.add(cbLimitNumGenes);
 		
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,1,1,1);
+		TxtNumGeneLimit = new JTextField(strTxtNumGeneLimit);
+		TxtNumGeneLimit.setEditable(true);
+		TxtNumGeneLimit.setHorizontalAlignment(JTextField.LEFT);
+		jp.add(TxtNumGeneLimit, c);
+		CSGenesBetween_group.add(TxtNumGeneLimit);
+		
+		c.gridx = 2;
+		c.gridy = gridy;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,1,1,1);
+		LblNumGeneLimit = new JTextField(strLblNumGeneLimit);
+		LblNumGeneLimit.setEditable(false);
+		jp.add(LblNumGeneLimit, c);
+		CSGenesBetween_group.add(LblNumGeneLimit);		
 		gridy++;
 		
-		//private JTextField DistanceLimit;
+		//Initial state - components are disabled.
+		TxtNumGeneLimit.setEnabled(false);
+		LblNumGeneLimit.setEnabled(false);
+		
+		//operon expansion limit
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,20,1,1);
+		cbOperonExpansionOnly = new JCheckBox(strchkOperonExpansionOnly);
+		cbOperonExpansionOnly.setSelected(false);
+		cbOperonExpansionOnly.addActionListener(this);
+		jp.add(cbOperonExpansionOnly, c);
+		CSGenesBetween_group.add(cbOperonExpansionOnly);
+		
+		c.gridx = 1;
+		c.gridy = gridy;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,1,1,1);
+		TxtOperonDistanceLimit = new JTextField(strIntegenicTolerance);
+		TxtOperonDistanceLimit.setEditable(true);
+		TxtOperonDistanceLimit.setHorizontalAlignment(JTextField.LEFT);
+		jp.add(TxtOperonDistanceLimit, c);
+		CSGenesBetween_group.add(TxtOperonDistanceLimit);
+
+		c.gridx = 2;
+		c.gridy = gridy;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,1,1,1);
+		LblOperonDistanceLimit = new JTextField(strLblOperonDistanceLimit);
+		LblOperonDistanceLimit.setEditable(false);
+		jp.add(LblOperonDistanceLimit, c);
+		CSGenesBetween_group.add(LblOperonDistanceLimit);		
+
+		c.gridx = 3;
+		c.gridy = gridy;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 1;
+		c.insets = new Insets(1,1,1,1);
+		cbOperonExpansionSameStrand = new JCheckBox(strchkOperonExpansionSameStrand);
+		cbOperonExpansionSameStrand.setSelected(true);
+		jp.add(cbOperonExpansionSameStrand, c);
+		CSGenesBetween_group.add(cbOperonExpansionSameStrand);		
+		
+		//Initial state - components are disabled.
+		TxtOperonDistanceLimit.setEnabled(false);
+		LblOperonDistanceLimit.setEnabled(false);
+		cbOperonExpansionSameStrand.setEnabled(false);
+		
+		//next row
+		gridy++;
 		
 		//add this mapping to hash map.
 		RadioButtonComponents.put(CSGenesBetween.getModel(), CSGenesBetween_group);
@@ -1374,6 +1476,30 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 			}
 		}
 		
+		//Between, limiting gene number
+		 if (evt.getSource().equals(cbLimitNumGenes)){
+			 if (cbLimitNumGenes.isSelected()){
+				 TxtNumGeneLimit.setEnabled(true);
+				 LblNumGeneLimit.setEnabled(true);
+			 } else {
+				 TxtNumGeneLimit.setEnabled(false);
+				 LblNumGeneLimit.setEnabled(false);
+			 }
+		 }
+		
+		//Operon expansion
+		if (evt.getSource().equals(cbOperonExpansionOnly)){
+			if (cbOperonExpansionOnly.isSelected()){
+				TxtOperonDistanceLimit.setEnabled(true);
+				LblOperonDistanceLimit.setEnabled(true);
+				cbOperonExpansionSameStrand.setEnabled(true);
+			} else {
+				TxtOperonDistanceLimit.setEnabled(false);
+				LblOperonDistanceLimit.setEnabled(false);
+				cbOperonExpansionSameStrand.setEnabled(false);
+			}
+		}
+		
 		//cassette, limiting distance
 		if (evt.getSource().equals(this.cbOnlyNearby)){
 			if (cbOnlyNearby.isSelected()){
@@ -1437,6 +1563,8 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 						
 					} else if (CSType.isSelected(CSGenesBetween.getModel())) {  //CSType (4) - CSGenesBetween
 						ToAdd.setType("GenesBetween");	ToAdd.setPreprocessed(false);
+						
+						//limit distance options
 						if (cbLimitDistance.isSelected()){
 							ToAdd.setGapLimit(true);
 							int Value = 10000;	//default: 10000
@@ -1446,6 +1574,31 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 							ToAdd.setGapLimitSize(Value);
 						} else {
 							ToAdd.setGapLimit(false);
+						}
+						
+						//limit by internal gene counter
+						if (cbLimitNumGenes.isSelected()){
+							ToAdd.InternalGeneNumberLimit = true;
+							int Value = 0; //default is 0 (no genes are allowed between)
+							try {
+								Value = Integer.parseInt(TxtNumGeneLimit.getText());
+							} catch (Exception ex) {}
+							ToAdd.MaxNumInternalGenes = Value;
+						} else{
+							ToAdd.InternalGeneNumberLimit = false;
+						}
+						
+						//operon expansion options
+						if (cbOperonExpansionOnly.isSelected()){
+							ToAdd.isOperonExpansion = true;
+							int Value = 20;	//default: 20 (operon intergenic distance threshold)
+							try {
+								Value = Integer.parseInt(TxtOperonDistanceLimit.getText());
+							} catch (Exception ex){}
+							ToAdd.IntergenicGapLimit = Value;
+							ToAdd.SameStrandRequired = cbOperonExpansionSameStrand.isSelected();
+						} else {
+							ToAdd.isOperonExpansion = false;
 						}
 						
 					} else if (CSType.isSelected(CSMultipleQuery.getModel())){  //CSType (5) - CSMultipleQuery
@@ -1684,9 +1837,26 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 				}
 				
 				//case: between range limiter
-				if (LL.equals(CSGenesBetween_group) && !cbLimitDistance.isSelected()){
-					TxtDistanceLimit.setEnabled(false);
-					LblDistanceLimit.setEnabled(false);
+				if (LL.equals(CSGenesBetween_group)){ 
+					
+					//distance limiter
+					if (!cbLimitDistance.isSelected()){
+							TxtDistanceLimit.setEnabled(false);
+							LblDistanceLimit.setEnabled(false);
+					}
+					
+					//gene number limiter
+					if (!cbLimitNumGenes.isSelected()){
+						TxtNumGeneLimit.setEnabled(false);
+						LblNumGeneLimit.setEnabled(false);
+					}
+					
+					//operon expansion
+					if (!cbOperonExpansionOnly.isSelected()){
+						TxtOperonDistanceLimit.setEnabled(false);
+						LblOperonDistanceLimit.setEnabled(false);
+						cbOperonExpansionSameStrand.setEnabled(false);
+					}
 				}
 				
 				//case: cassette limiter
