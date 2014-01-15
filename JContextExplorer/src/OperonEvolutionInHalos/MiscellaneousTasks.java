@@ -49,15 +49,35 @@ public class MiscellaneousTasks {
 		
 	}
 	
+	//list of associations
+	public static void ListOfAssociations(){
+		
+		for (int i = 0; i <= 100; i++){
+			Double d = (double) i/ 200.0;
+			//Double d = (double) (Math.round((double) i * 100 / 200.0)/100);
+			System.out.println(i + " " + d + ";");
+		}
+		
+		for (int i = 101; i <= 200; i++){
+			System.out.println(i + " 1.0;");
+		}
+		
+	}
+	
 	//main method
 	public static void main(String[] args) {
 		
+//		/*
+//		 * Thursday, January 8, 2013
+//		 */
+//		String ConsoleFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/IntergenicGaps/Console_Output.txt";
+//		String OutputFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/IntergenicGaps/Output_w_Counts.txt";
+//		InternalPromoterGapConsoleOutput(ConsoleFile,OutputFile);
+		
 		/*
-		 * Thursday, January 8, 2013
+		 * Monday, January 13, 2013
 		 */
-		String ConsoleFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/IntergenicGaps/Console_Output.txt";
-		String OutputFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/IntergenicGaps/Output_w_Counts.txt";
-		InternalPromoterGapConsoleOutput(ConsoleFile,OutputFile);
+		ListOfAssociations();
 	}
 
 }

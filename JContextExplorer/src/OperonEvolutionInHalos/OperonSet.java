@@ -1577,7 +1577,7 @@ public class OperonSet {
 		
 	}
 	
-	public class SortListOfPairs implements Comparator<LinkedList<Integer>>{
+	public static class SortListOfPairs implements Comparator<LinkedList<Integer>>{
 
 		@Override
 		public int compare(LinkedList<Integer> o1, LinkedList<Integer> o2) {

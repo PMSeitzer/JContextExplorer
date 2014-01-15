@@ -21,18 +21,19 @@ public class OperonStats extends LoadData{
 		//build data set
 		ImportGenomes();			//load genomic data
 		BasicOperons(50);			//create basic operons
-				
+		ShowLocalOperonDuplications(50);	//display duplication cases
+		
 		//String ContextSetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/JCE/Current/CS_BasicOperons_NoSingleGenes.txt";
 		//ExportOperonsAsContextSet(ContextSetFile,"BasicOperons",false); //Export set
 		
 		//convert to set for trajectory analysis
-		OperonSet BasicSet = new OperonSet(OS,"BasicOperons");
-		BasicSet.BuildPhylogeneticDistanceMapping();
-		BasicSet.BuildOperonTrajectories();
-		
-		//Export a query set for gene order analysis
-		String QuerySetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/JCE/Current/QS_AdjacentGenePairs.txt";
-		BasicSet.ExportAdjacentGenePairs(QuerySetFile, BasicSet.Trajectories);
+//		OperonSet BasicSet = new OperonSet(OS,"BasicOperons");
+//		BasicSet.BuildPhylogeneticDistanceMapping();
+//		BasicSet.BuildOperonTrajectories();
+//		
+//		//Export a query set for gene order analysis
+//		String QuerySetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/JCE/Current/QS_AdjacentGenePairs.txt";
+//		BasicSet.ExportAdjacentGenePairs(QuerySetFile, BasicSet.Trajectories);
 		
 		//BasicSet.ExportQuerySet(QuerySetFile, Trajectories, MinOperonicity, MaxNovelty)
 		

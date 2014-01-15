@@ -1853,12 +1853,14 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 				String Line = null;
 				String AllText = "";
 				while ((Line = br.readLine()) != null){
-					AllText = AllText + Line;
+					AllText = AllText + Line + "\n";
 				}
 				
 				//set text to field
 				this.EnterPointsTxt.setText(AllText);
 				
+				//close file stream
+				br.close();
 			} catch (Exception e) {
 				JOptionPane.showMessageDialog(null, "File not formatted correctly.",
 						"File Format Error.", JOptionPane.ERROR_MESSAGE);

@@ -16,6 +16,7 @@ public class ContextSetDescription implements Serializable{
 	private boolean SingleOrganismAmalgamation;
 	private boolean RetainFractionEnabled;
 	private double RetainFraction;
+	public boolean RequireSameSizeHomologs = false;
 	
 	//distance
 	private int IntGenSpacing;

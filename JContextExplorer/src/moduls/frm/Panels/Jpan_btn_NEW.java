@@ -2,6 +2,7 @@ package moduls.frm.Panels;
 
 	import genomeObjects.AnnotatedGenome;
 import genomeObjects.CSDisplayData;
+import genomeObjects.ContextSetDataFromJpanBtn;
 import genomeObjects.ContextSetDescription;
 import genomeObjects.ExtendedCRON;
 import genomeObjects.GenomicElement;
@@ -27,6 +28,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -472,6 +474,11 @@ import definicions.MatriuDistancies;
 						Matches = IfAndOnlyIfFilter(Matches);
 					}
 					
+					//filter matches in operon expansion case
+					if (CurrentCSD.isOperonExpansion && Matches.size() > 0){
+						Matches = RemoveOverlappingSubsets(Matches);
+					}
+										
 					//create an iterator for the HashSet
 					Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
 										
@@ -606,6 +613,15 @@ import definicions.MatriuDistancies;
 				
 				//only proceed if the thread has not been cancelled.
 				if (!Thread.currentThread().isInterrupted()){
+					
+					//filter matches based on same homologs requirement
+					if (CurrentCSD.RequireSameSizeHomologs){
+						ContextSetDataFromJpanBtn CSDFJB= FilterbySameSizeHomologs(ContextSetList,"cluster");
+						ContextSetList = CSDFJB.ContextSetList;
+						SourceNames = CSDFJB.SourceNames;
+						ContigNames = CSDFJB.ContigNames;
+						Counter = CSDFJB.Counter;
+					}
 					
 					//re-computation
 					if (CurrentCSD.getType().equals("GenesAround")){
@@ -924,6 +940,11 @@ import definicions.MatriuDistancies;
 						Matches = IfAndOnlyIfFilter(Matches);
 					}
 					
+					//filter matches in operon expansion case
+					if (CurrentCSD.isOperonExpansion && Matches.size() > 0){
+						Matches = RemoveOverlappingSubsets(Matches);
+					}
+										
 					//create an iterator for the HashSet
 					Iterator<LinkedList<GenomicElementAndQueryMatch>> it = Matches.iterator();
 					
@@ -1064,6 +1085,15 @@ import definicions.MatriuDistancies;
 				
 				//only proceed if the search has not already been cancelled.
 				if (!Thread.currentThread().isInterrupted()){
+										
+					//filter matches based on same homologs requirement
+					if (CurrentCSD.RequireSameSizeHomologs){
+						ContextSetDataFromJpanBtn CSDFJB= FilterbySameSizeHomologs(ContextSetList,"cluster");
+						ContextSetList = CSDFJB.ContextSetList;
+						SourceNames = CSDFJB.SourceNames;
+						ContigNames = CSDFJB.ContigNames;
+						Counter = CSDFJB.Counter;
+					}
 					
 					//re-computation
 					if (CurrentCSD.getType().equals("GenesAround")){
@@ -1343,9 +1373,9 @@ import definicions.MatriuDistancies;
 				return null;
 			}
 			
-			//applies to both
+			//filters / modifiers
 			
-			//amalgamte
+			//amalgamate
  			protected HashSet<LinkedList<GenomicElementAndQueryMatch>> Amalgamate(boolean Amalgamate, HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches){
 				
 				//option: condense into single list + update matches
@@ -1357,10 +1387,40 @@ import definicions.MatriuDistancies;
 					//create an iterator
 					Iterator<LinkedList<GenomicElementAndQueryMatch>> itp = Matches.iterator();
 					
-					//march through entries, condense
+					//create hash map to store these values
+					LinkedHashMap<GenomicElement, Boolean> ElementHash 
+						= new LinkedHashMap<GenomicElement, Boolean>();
+					
+					//march through entries, write to hash
 					while (itp.hasNext()){
-						CondensedList.addAll(itp.next());
+						
+						//if an element is every a query match, it scores as a query match here.
+						LinkedList<GenomicElementAndQueryMatch> LL = itp.next();
+						
+						for (GenomicElementAndQueryMatch GandE : LL){
+							GenomicElement E = GandE.getE();
+							if (ElementHash.get(E) != null){
+								if (ElementHash.get(E) == false){
+									ElementHash.put(E, GandE.isQueryMatch());
+								}
+							} else{
+								ElementHash.put(E,GandE.isQueryMatch());
+							}
+						}
+						
+						//CondensedList.addAll(LL);
 					}
+					
+					//building holding cell from hash map
+					for (GenomicElement E : ElementHash.keySet()){
+						GenomicElementAndQueryMatch GandE = new GenomicElementAndQueryMatch();
+						GandE.setE(E);
+						GandE.setQueryMatch(ElementHash.get(E));
+						CondensedList.add(GandE);
+					}
+					
+					//sort list
+					Collections.sort(CondensedList, new GandEListSorter());
 					
 					//Initialize new output + write condensed
 					HashSet<LinkedList<GenomicElementAndQueryMatch>> UpdatedMatches =
@@ -1504,7 +1564,241 @@ import definicions.MatriuDistancies;
  					return Matches;
  				}
  			}
-			//Optional Operations
+			
+ 			//filter for operon expansion option (remove subsets)
+ 			protected HashSet<LinkedList<GenomicElementAndQueryMatch>> RemoveOverlappingSubsets(HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches){
+ 				 				
+	 			//create an iterator
+				Iterator<LinkedList<GenomicElementAndQueryMatch>> itp = Matches.iterator();
+ 				
+				//re-cast sets as list
+				LinkedList<LinkedList<GenomicElementAndQueryMatch>> ListList
+					= new LinkedList<LinkedList<GenomicElementAndQueryMatch>>();
+				
+				while (itp.hasNext()){
+					ListList.add(itp.next());
+				}
+				
+				//sort the list by increasing size
+				Collections.sort(ListList, new ListListSorter());
+				
+				//first create the filtered set as a list of lists
+				LinkedList<LinkedList<GenomicElementAndQueryMatch>> FilteredListofLists
+					= new LinkedList<LinkedList<GenomicElementAndQueryMatch>>();
+				
+				//build the filtered set, adding whenever possible
+				for (LinkedList<GenomicElementAndQueryMatch> L : ListList){
+					
+					boolean AddToFilteredSet = true;
+					
+					//create list of elements
+					LinkedList<GenomicElement> LE = new LinkedList<GenomicElement>();
+					for (GenomicElementAndQueryMatch GandE : L){
+						LE.add(GandE.getE());
+					}
+					
+					for (LinkedList<GenomicElementAndQueryMatch> LF : FilteredListofLists){
+						
+						//create list of elements
+						LinkedList<GenomicElement> LFE = new LinkedList<GenomicElement>();
+						for (GenomicElementAndQueryMatch GandE : LF){
+							LFE.add(GandE.getE());
+						}
+						
+						//create mod lists
+						LinkedList<GenomicElement> LE_Mod = new LinkedList<GenomicElement>(LE);
+						LinkedList<GenomicElement> LFE_Mod = new LinkedList<GenomicElement>(LFE);
+						
+						LE_Mod.retainAll(LFE_Mod);
+						
+						//no need to add
+						if (LE_Mod.equals(LE)){
+							AddToFilteredSet = false;
+							break;
+						}
+						
+					}
+					
+					//pass through filter - add
+					if (AddToFilteredSet){
+						FilteredListofLists.add(L);
+					}
+					
+					
+				}
+				
+ 				//filtered set 2 return
+ 				HashSet<LinkedList<GenomicElementAndQueryMatch>> FilteredSet 
+ 					= new HashSet<LinkedList<GenomicElementAndQueryMatch>>(FilteredListofLists);
+				
+ 				//return filtered
+ 				return FilteredSet;
+ 			}
+ 			
+ 			//filter by strict limits on homolog size
+ 			protected ContextSetDataFromJpanBtn FilterbySameSizeHomologs(LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> Matches, String Type){
+ 				
+ 				//Initialize output
+ 				ContextSetDataFromJpanBtn CSDFJB = new ContextSetDataFromJpanBtn();
+ 				
+ 				//hash
+ 				LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>> FilteredMatches
+ 					= new LinkedHashMap<String, LinkedList<GenomicElementAndQueryMatch>>();
+ 				
+ 				//sources
+ 				LinkedHashMap<String, String> SourceNames
+ 					= new LinkedHashMap<String, String>();
+ 				
+ 				//contigs
+ 				 LinkedHashMap<String, HashSet<String>> ContigNames
+ 				 	= new  LinkedHashMap<String, HashSet<String>>();
+ 				
+ 				
+ 				//hash map storing homolog appearance counts
+ 				LinkedHashMap<Object, LinkedHashMap<Integer,Integer>> HomologHash
+ 					= new LinkedHashMap<Object, LinkedHashMap<Integer,Integer>>();
+ 				
+				for (String s : Matches.keySet()){
+					
+					//retrieve data
+					LinkedList<GenomicElementAndQueryMatch> LL = Matches.get(s);
+					
+					//iterate through
+					for (GenomicElementAndQueryMatch GandE : LL){
+						
+						//retrieve data
+						GenomicElement E = GandE.getE();
+						int Size = E.getStop()-E.getStart()+1;
+						Object Key;
+						if (Type.equals("cluster")){
+							Key = (Object) E.getClusterID();
+						} else{
+							Key = (Object) E.getAnnotation().toUpperCase();
+						}
+						
+						//check for existance in hash
+						if (HomologHash.get(Key) != null){
+							
+							//retrieve existing hash map
+							LinkedHashMap<Integer,Integer> SizeHash = HomologHash.get(Key);
+							
+							//check this map
+							if (SizeHash.get(Size) != null){
+								int CurVal = SizeHash.get(Size);
+								CurVal++;
+								SizeHash.put(Size, CurVal);
+							} else{
+								SizeHash.put(Size, 1);
+							}
+							
+							//update homolog hash.
+							HomologHash.put(Key, SizeHash);
+							
+							
+						} else{
+							
+							//first appearance
+							LinkedHashMap<Integer, Integer> SizeHash 
+								= new LinkedHashMap<Integer, Integer>();
+							SizeHash.put(Size, 1);
+							
+							//update homolog hash
+							HomologHash.put(Key, SizeHash);
+						}
+					}
+					
+				}
+				
+				//build final counts hash
+				LinkedHashMap<Object, Integer> ValueCounts = new LinkedHashMap<Object, Integer>();
+				
+				for (Object o : HomologHash.keySet()){
+					
+					//retrieve data
+					LinkedHashMap<Integer,Integer> H = HomologHash.get(o);
+					
+					//determine max for each object
+					int Max = -1;
+					int MaxSize = -1;
+					for (Integer x : H.keySet()){
+						if (H.get(x) > Max){
+							Max = H.get(x);
+							MaxSize = x;
+							
+						//in the case of a tie, take the longer element
+						} else if (H.get(x) == Max) {
+							if (x > MaxSize){
+								Max = H.get(x);
+								MaxSize = x;
+							}
+						}
+					}
+					
+					//write to mapping
+					ValueCounts.put(o,MaxSize);
+				}
+				
+				//filter the set
+				for (String s : Matches.keySet()){
+					
+					//retrieve data
+					boolean RetainThisSet = true;
+					LinkedList<GenomicElementAndQueryMatch> LL = Matches.get(s);
+					HashSet<String> HSContigNames = new HashSet<String>();
+					for (GenomicElementAndQueryMatch GandE : LL){
+						
+						//retrieve data
+						GenomicElement E = GandE.getE();
+						int Size = E.getStop()-E.getStart()+1;
+						
+						//create key
+						Object Key;
+						if (Type.equals("cluster")){
+							Key = (Object) E.getClusterID();
+						} else{
+							Key = (Object) E.getAnnotation().toUpperCase();
+						}
+						
+						//check value
+						int AllottedSizeValue = ValueCounts.get(Key);
+						
+						if (AllottedSizeValue != Size){
+							RetainThisSet = false;
+							break;
+						} else{
+							HSContigNames.add(E.getContig());
+						}
+					}
+
+					//update filtered set w/ all essential info
+					if (RetainThisSet){
+						FilteredMatches.put(s,LL);
+						ContigNames.put(s,HSContigNames);
+						
+						String OrgName[]  = s.split("-");
+						String WholeName = "";
+						for (int i = 0; i < OrgName.length-1; i++){
+							WholeName = WholeName + OrgName[i] + "-";
+						}
+						WholeName = (String) WholeName.subSequence(0, WholeName.length()-1);
+						
+						SourceNames.put(s,WholeName);
+					}
+					
+				}
+				
+				//add data to output structure
+				CSDFJB.ContextSetList = FilteredMatches;
+				CSDFJB.ContigNames = ContigNames;
+				CSDFJB.SourceNames = SourceNames;
+				CSDFJB.Counter = FilteredMatches.keySet().size();
+				
+				//return
+				return CSDFJB;
+ 				
+ 			}
+ 			
+ 			//Optional Operations
 			
 			//(1) Create a tree panel of search results
 			//============================================//
@@ -2944,5 +3238,35 @@ import definicions.MatriuDistancies;
 			this.de = de;
 		}
 
+		public static class ListListSorter implements Comparator<LinkedList<GenomicElementAndQueryMatch>>{
 
+			@Override
+			public int compare(LinkedList<GenomicElementAndQueryMatch> L1, LinkedList<GenomicElementAndQueryMatch> L2) {
+				return -1* (L1.size() - L2.size());
+			}
+			
+		}
+		
+		public static class GandEListSorter implements Comparator<GenomicElementAndQueryMatch> {
+
+			@Override
+			public int compare(GenomicElementAndQueryMatch o1,
+					GenomicElementAndQueryMatch o2) {
+				
+				//extract genomic elements
+				GenomicElement E1 = o1.getE();
+				GenomicElement E2 = o2.getE();
+				
+				//sort as usual
+			     int nameCompare = E1.getContig().compareToIgnoreCase(E2.getContig());
+			     if (nameCompare != 0) {
+			        return nameCompare;
+			     } else {
+				     return Integer.valueOf(E1.getCenter()).compareTo(Integer.valueOf(E2.getCenter()));
+			     }
+			}
+			
+		}
+
+		
 	}

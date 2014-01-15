@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 import org.biojava3.core.sequence.Strand;
@@ -863,6 +864,9 @@ public class CustomDissimilarity implements Serializable {
 //			}
 //		}
 		
+		//determine if the total strand has flipped
+		boolean isStrandFlipped = TotalGroupStrandFlip(O1,O2,Type);
+		
 		//only for customized
 		DisplayMsgAboutInternalMotif = false;
 		
@@ -914,6 +918,14 @@ public class CustomDissimilarity implements Serializable {
 		double ReverseDissimilarity = 0;
 		int FwdMatch = 0;
 		int RevMatch = 0;
+		
+		//When multiple homologous pairs present, pick the smallest one.
+		LinkedHashMap<LinkedList<Object>, Integer> FwdAdjHash
+			= new LinkedHashMap<LinkedList<Object>, Integer>();
+		
+		LinkedHashMap<LinkedList<Object>, Integer> RevAdjHash
+			= new LinkedHashMap<LinkedList<Object>, Integer>();
+		
 		
 		//Walk along adjacencies.
 		for (LinkedList<GenomicElementAndQueryMatch> Adjacency : O1Adjacencies){
@@ -971,6 +983,32 @@ public class CustomDissimilarity implements Serializable {
 					
 					//reset adjacency
 					EquivalentAdjacency = false;
+					
+					//add to hash map
+					LinkedList<Object> ObjKey;
+					if (Type.equals("cluster")){
+						LinkedList<Integer> Key = new LinkedList<Integer>();
+						Key.add(Adjacency.get(1).getE().getClusterID());
+						Key.add(Adjacency.get(0).getE().getClusterID());
+						Collections.sort(Key);
+						ObjKey = new LinkedList<Object>(Key);
+					} else {
+						LinkedList<String> Key = new LinkedList<String>();
+						Key.add(Adjacency.get(1).getE().getAnnotation().toUpperCase());
+						Key.add(Adjacency.get(0).getE().getAnnotation().toUpperCase());
+						Collections.sort(Key);
+						ObjKey = new LinkedList<Object>(Key);
+					}
+					
+					if (FwdAdjHash.get(ObjKey) != null){
+						int StoredGapDiff = FwdAdjHash.get(ObjKey);
+						if (gapDiff < StoredGapDiff){
+							StoredGapDiff = gapDiff;
+						}
+						FwdAdjHash.put(ObjKey, StoredGapDiff);
+					} else{
+						FwdAdjHash.put(ObjKey, gapDiff);
+					}
 				}
 			}
 			
@@ -1028,13 +1066,69 @@ public class CustomDissimilarity implements Serializable {
 					
 					//reset adjacency
 					EquivalentAdjacencyRev = false;
+					
+					//add to hash map
+					LinkedList<Object> ObjKey;
+					if (Type.equals("cluster")){
+						LinkedList<Integer> Key = new LinkedList<Integer>();
+						Key.add(Adjacency.get(1).getE().getClusterID());
+						Key.add(Adjacency.get(0).getE().getClusterID());
+						Collections.sort(Key);
+						ObjKey = new LinkedList<Object>(Key);
+					} else {
+						LinkedList<String> Key = new LinkedList<String>();
+						Key.add(Adjacency.get(1).getE().getAnnotation().toUpperCase());
+						Key.add(Adjacency.get(0).getE().getAnnotation().toUpperCase());
+						Collections.sort(Key);
+						ObjKey = new LinkedList<Object>(Key);
+					}
+					
+					if (RevAdjHash.get(ObjKey) != null){
+						int StoredGapDiff = RevAdjHash.get(ObjKey);
+						if (gapDiff < StoredGapDiff){
+							StoredGapDiff = gapDiff;
+						}
+						RevAdjHash.put(ObjKey, StoredGapDiff);
+					} else{
+						RevAdjHash.put(ObjKey,gapDiff);
+					}
+
 				}
 			}
 			
 		}
 		
+		//NEW METHOD Jan 13, 2014
+		//build dissimilarities from hash maps
+		
+		//forward
+		ForwardDissimilarity = 0.0;
+		for (Integer x : FwdAdjHash.values()){
+			if (x > this.GPM.MaxGapLimit){
+				ForwardDissimilarity = ForwardDissimilarity + this.GPM.MaxDissimilarity;
+			} else {
+				ForwardDissimilarity = ForwardDissimilarity + this.GPM.Mapping.get(x);
+			}
+		}
+		
+		//reverse
+		ReverseDissimilarity = 0.0;
+		for (Integer x : RevAdjHash.values()){
+			if (x > this.GPM.MaxGapLimit){
+				ReverseDissimilarity = ReverseDissimilarity + this.GPM.MaxDissimilarity;
+			} else {
+				ReverseDissimilarity = ReverseDissimilarity + this.GPM.Mapping.get(x);
+			}
+		}
+		
 		//The proper orientation is the one with more common adjacent pairs with O1.
-		if (FwdMatch >= RevMatch){
+//		if (FwdMatch >= RevMatch){
+//			Dissimilarity = ForwardDissimilarity;
+//		} else {
+//			Dissimilarity = ReverseDissimilarity;
+//		}
+			
+		if (!isStrandFlipped){
 			Dissimilarity = ForwardDissimilarity;
 		} else {
 			Dissimilarity = ReverseDissimilarity;

@@ -1638,7 +1638,8 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 			//find closest
 			for (GenomicElement E2 : SecondQueries){
 				if (E1.getContig().contentEquals(E2.getContig()) &&
-						Math.abs(E1.getCenter() - E2.getCenter()) < ClosestDistance) {
+						Math.abs(E1.getCenter() - E2.getCenter()) < ClosestDistance 
+						&& !E1.equals(E2)) {
 					
 					//Partners that are too far away are excluded anyway, if this option is specified
 					if ((CSD.isGapLimit() && Math.abs(E1.getCenter() - E2.getCenter()) <= CSD.getGapLimitSize()) ||
@@ -1690,7 +1691,8 @@ public HashSet<LinkedList<GenomicElementAndQueryMatch>> MatchesOnTheFly(String[]
 			//find closest
 			for (GenomicElement E1 : FirstQueries){
 				if (E2.getContig().contentEquals(E1.getContig()) &&
-						Math.abs(E2.getCenter() - E1.getCenter()) < ClosestDistance) {
+						Math.abs(E2.getCenter() - E1.getCenter()) < ClosestDistance
+						&& !E1.equals(E2) ) {
 					
 					
 					//Partners that are too far away are excluded anyway, if this option is specified

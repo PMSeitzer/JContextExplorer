@@ -194,6 +194,67 @@ public class LoadData {
 		}
 	}
 	
+	//show all examples of local duplications
+	public static void ShowLocalOperonDuplications(int OpD){
+		
+		LinkedList<LinkedList<Integer>> LocalDups = new LinkedList<LinkedList<Integer>>();
+		
+		//iterate through all.
+		for (AnnotatedGenome AG : OS.getSpecies().values()){
+			for (int i = 1; i < AG.getElements().size()-2; i++){
+				GenomicElement E1 = AG.getElements().get(i-1);
+				GenomicElement E2 = AG.getElements().get(i);
+				GenomicElement E3 = AG.getElements().get(i+1);
+				GenomicElement E4 = AG.getElements().get(i+2);
+				
+				//check for same strand, contig, + distance - in op together
+				if (E2.getStrand().equals(E3.getStrand()) 
+						&& E2.getContig().equals(E3.getContig())
+						&& E3.getStart()-E2.getStop() <= OpD){
+					
+					//case 1: E2 duplication
+					if (E1.getStrand().equals(E2.getStrand()) 
+							&& E1.getContig().equals(E2.getContig())
+							&& E2.getStart()-E1.getStop() <= OpD 
+							&& E1.getClusterID() == E2.getClusterID()){
+						
+						LinkedList<Integer> ClustList = new LinkedList<Integer>();
+						ClustList.add(E1.getClusterID());
+						ClustList.add(E3.getClusterID());
+						Collections.sort(ClustList);
+						if (!LocalDups.contains(ClustList)){
+							LocalDups.add(ClustList);
+						}
+					}
+					
+					//case 2: E3 duplication
+					if (E3.getStrand().equals(E4.getStrand()) 
+							&& E3.getContig().equals(E4.getContig())
+							&& E4.getStart()-E3.getStop() <= OpD 
+							&& E3.getClusterID() == E4.getClusterID()){
+						LinkedList<Integer> ClustList = new LinkedList<Integer>();
+						ClustList.add(E2.getClusterID());
+						ClustList.add(E4.getClusterID());
+						Collections.sort(ClustList);
+						if (!LocalDups.contains(ClustList)){
+							LocalDups.add(ClustList);
+						}
+					}
+					
+				}
+			}
+		}
+		
+		//sort the list
+		Collections.sort(LocalDups, new OperonSet.SortListOfPairs());
+		
+		//print statements
+		for (LinkedList<Integer> L : LocalDups){
+			String str = L.get(0) + " ; " + L.get(1);
+			System.out.println(str);
+		}
+		
+	}
 	// ------ Deprecated ------ //
 	
 	//Old import way - not taking advantage of JCE
