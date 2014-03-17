@@ -1,6 +1,7 @@
 package moduls.frm;
 
 import java.io.Serializable;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 import importExport.DadesExternes;
@@ -31,7 +32,6 @@ public class QueryData implements Serializable{
 	
 	//AND-statement fields
 	public LinkedList<String> ANDStatements = new LinkedList<String>();
-	public LinkedList<LinkedList> ParsedStatements;
 	public LinkedList<LinkedList<Integer>> ParsedANDStatementsCluster;
 	public LinkedList<LinkedList<String>> ParsedANDStatementsAnnotation;
 	public boolean ANDStatementsParsed = false;
@@ -40,6 +40,10 @@ public class QueryData implements Serializable{
 	public LinkedList<Integer> ClustersAsList;
 	public LinkedList<String> QueriesAsList;
 	
+	//update AND statments parsing
+	public LinkedHashMap<Integer,Integer> ANDClustersHash = new LinkedHashMap<Integer,Integer>();
+	public LinkedHashMap<String,Integer> ANDAnnotationsHash = new LinkedHashMap<String,Integer>();
+	
 	//Constructor
 	public QueryData(){
 		
@@ -47,34 +51,43 @@ public class QueryData implements Serializable{
 
 	// === Method ====//
 	public void BuildANDStatements(String Type){
-		
-		//Initialize
-		ParsedStatements = new LinkedList<LinkedList>();
-		
+
 		//transform each unparsed AND statement into a list of associated items
 		for (String s : ANDStatements){
 				
 			//split the string by components
 			String[] Comps = s.split("\\$\\$");
 				
-			LinkedList<Integer> ANDClusters = new LinkedList<Integer>();
-			LinkedList<String> ANDAnnotations = new LinkedList<String>();
-				
 			//parse statements into linked lists.
 			for (String s1 : Comps){
 				if (Type.equals("cluster")){
-					ANDClusters.add(Integer.parseInt(s1.trim()));
+					
+					//check hash + initialize count
+					int Key = Integer.parseInt(s1.trim());
+					int Count = 1;
+					
+					//determine appropriate count + increment counter
+					if (ANDClustersHash.get(Key) != null){
+						Count = ANDClustersHash.get(Key);
+						Count++;
+					}
+					ANDClustersHash.put(Key,Count);
+					
 				} else {
-					ANDAnnotations.add(s1.trim().toUpperCase());
+
+					//check hash + initialize count
+					String Key = s1.trim().toUpperCase();
+					int Count = 1;
+					
+					//determine appropriate count + increment counter
+					if (ANDAnnotationsHash.get(Key) != null){
+						Count = ANDAnnotationsHash.get(Key);
+						Count++;
+					}
+					ANDAnnotationsHash.put(Key,Count);
 				}
 			}
 			
-			//store the list in parsed form.
-			if (Type.equals("cluster")){
-				ParsedStatements.add(ANDClusters);
-			} else {
-				ParsedStatements.add(ANDAnnotations);
-			}
 		}
 		
 		//note that these statements have been parsed

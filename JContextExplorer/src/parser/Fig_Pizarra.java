@@ -83,23 +83,36 @@ public class Fig_Pizarra {
 
 	public Fig_Pizarra(final Cluster c, final Config cf) throws Exception {
 		abre = c;
-		val_Max_show = cf.getValorMaxim();
-		radi = cf.getRadi();
-		Fig_Pizarra.tip = cf.getTipusMatriu();
-		prec = cf.getPrecision();
-		if (tip.equals(tipusDades.DISTANCIA)) {
-			posNodes = 0.0;
-		} else {
-			posNodes = val_Max_show;
-		}
 		
-		Branca(abre, cf.getConfigMenu().isFranjaVisible()); //branch
-		
-		if (c.getFills() > 200){
-			construeixMatriuUltrametrica(c, true); 	//don't fill in the matrix
-		} else {
-			construeixMatriuUltrametrica(c, false); // do fill in the matrix (time-consuming)
-		}
+		//JCE-appropriate
+//		if (cf != null){
+			val_Max_show = cf.getValorMaxim();
+			radi = cf.getRadi();
+			Fig_Pizarra.tip = cf.getTipusMatriu();
+			prec = cf.getPrecision();
+			if (tip.equals(tipusDades.DISTANCIA)) {
+				posNodes = 0.0;
+			} else {
+				posNodes = val_Max_show;
+			}
+			
+			Branca(abre, cf.getConfigMenu().isFranjaVisible()); //branch
+			
+			if (c.getFills() > 200){
+				construeixMatriuUltrametrica(c, true); 	//don't fill in the matrix
+			} else {
+				construeixMatriuUltrametrica(c, false); // do fill in the matrix (time-consuming)
+			}
+			
+//		//should only be null when calling from other classes.
+//		} else {
+//			val_Max_show = 1;
+//			radi = 1;
+//			prec = 18;
+//			
+//			Branca(abre, true); //branch
+//		}
+
 
 	}
 
@@ -130,7 +143,6 @@ public class Fig_Pizarra {
 
 	}
 
-	
 	//method to convert between data types
 	private Cluster ConvertTree2Cluster(Tree T) {
 

@@ -34,6 +34,7 @@ public class OperonSet {
 	
 	//Mapping of distances to phylogeny
 	public LinkedHashMap<LinkedList<String>,Double> PhyDistHash;
+	public Double MaxDist = 0.0;
 	public static final String PhyDistHashFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/halo.phy_phyml_sh.txt";
 	
 	//Trajectories
@@ -73,6 +74,11 @@ public class OperonSet {
 		
 	}
 	
+	//dummy constructor
+	public OperonSet(){
+		
+	}
+	
 	// ====================== //
 	// ===== Methods ======== //
 	// ====================== //
@@ -98,8 +104,8 @@ public class OperonSet {
 		int TrajectoryCounter = 0;
 		
 		//check all clusters
-		for (int i = 272; i <= 5276; i++){
-		//for (int i = 1800; i <= 1800; i++){
+		for (int i = 272; i <= 5276; i++){		//the major set
+		//for (int i = 2976; i <= 2976; i++){	//for testing
 			
 			//Initialize this operon trajectory
 			OperonTrajectory OT = new OperonTrajectory();
@@ -214,6 +220,8 @@ public class OperonSet {
 				
 			}
 			
+			//System.out.println("Breakpoint!");
+			
 			//Write the entire trajectory to the hash map, if appropriate.
 			if (OrgCounter >= 10){
 				
@@ -249,10 +257,22 @@ public class OperonSet {
 				OT.ClusterPhylogeneticRange = DetermineMaxDist(ListOfOrganisms);
 				
 				//Segregate trajectory - intensive, not always necessary
-				OT.OperonGroups = SegregateTrajectory(OT);
+				
+				//Important: determine if these should be amalgamated or not!
+				//OT.OperonGroups = SegregateTrajectory(OT);
+				OT.OperonGroups = this.SegregateTrajectoryNoAmalg(OT);
 				
 				//compute evo rate - open to re-analysis
 				OT.computeEvoRate();
+				
+				//classify detected single gene modification events
+				OT.predictSingleGeneOperonModifications();
+				
+//				//debugging - display
+//				System.out.println(OT.ClusterID + ":" + 
+//						" Prepend: " + OT.isPrepend + 
+//						" Insertion: " + OT.isInsertion +
+//						" Append: " + OT.isAppend);
 				
 				//add to map + inc counter
 				Trajectories.put(i,OT);
@@ -480,6 +500,8 @@ public class OperonSet {
 		return Cassette_OT;
 	}
 	
+	// ---- PhyloDist Mapping ----- //
+	
 	//Import phylogenetic mapping info
 	public void BuildPhylogeneticDistanceMapping(){
 		
@@ -541,6 +563,11 @@ public class OperonSet {
 					//build value
 					double Dist = Double.parseDouble(L[3]);
 					
+					//update maximum distance
+					if (Dist > MaxDist){
+						MaxDist = Dist;
+					}
+					
 					//write to hash
 					PhyDistHash.put(OrgRelation, Dist);
 					
@@ -590,6 +617,139 @@ public class OperonSet {
 		//return ComparisonHash;
 		
 	}
+	
+	//Build a generic histogram
+	public PhyloHistData BuildGenericDistanceMapping(String FileName){
+		
+		//Initialize output
+		PhyloHistData PHD = new PhyloHistData();
+
+		//Initialize hash map
+		LinkedHashMap<LinkedList<String>,Double> PhyDistHash = new LinkedHashMap<LinkedList<String>,Double>();
+		Double MaxDist = -1.0;
+		
+		//First, load in file
+		try {
+			//open file stream
+			BufferedReader br = new BufferedReader(new FileReader(FileName));
+			String Line = null;
+
+			//read through lines
+			while ((Line = br.readLine()) != null) {
+				
+				//split by tabs
+				String[] L = Line.split("\t");
+				
+				//updated - don't try to filter out entries (3/17/2014)
+				String Org1 = L[0].trim();
+				String Org2 = L[1].trim();
+
+				//build key
+				LinkedList<String> OrgRelation = new LinkedList<String>();
+				OrgRelation.add(Org1);
+				OrgRelation.add(Org2);
+				Collections.sort(OrgRelation);
+				
+				//build value
+				double Dist = Double.parseDouble(L[2]);
+				
+				//update maximum distance
+				if (Dist > MaxDist){
+					MaxDist = Dist;
+				}
+				
+				//write to hash
+				PhyDistHash.put(OrgRelation, Dist);
+				
+			}
+			
+			//print summary
+			System.out.println(PhyDistHash.size() + " phylogenetic distances mapped.");
+			
+			//close file stream
+			br.close();
+			
+			//record data in structure
+			PHD.MaxDist = MaxDist;
+			PHD.PhyDistHash = PhyDistHash;
+			
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
+		
+		//return data
+		return PHD;
+	}
+	
+	//Create a histogram of distances
+	public void PhyloHist(String HistDataFile, int bins, Double MaxDist, LinkedHashMap<LinkedList<String>,Double> PhyDistHash){
+	
+		//based on number of bins, determine ranges appropriate for bins.
+		Double separationUnit = MaxDist/(double) bins;
+		
+		//counts
+		LinkedHashMap<LinkedList<Double>,Integer> Counts
+			= new LinkedHashMap<LinkedList<Double>, Integer>();
+		
+		//Initialize counts
+		for (int i = 0; i < bins; i++){
+			
+			//create range
+			LinkedList<Double> Range = new LinkedList<Double>();
+			Range.add((double) i * separationUnit);
+			Range.add((double)(i+1)*separationUnit);
+			
+			//add to counts
+			Counts.put(Range, 0);
+		}
+		
+		//Iterate through hash map, and store in appropriate bin.
+		for (Double d : PhyDistHash.values()){
+			
+			//find appropriate range
+			for (LinkedList<Double> L : Counts.keySet()){
+				
+				//when the appropriate range is found, update counts + break out of inner loop.
+				if (d >= L.get(0) && d <= L.get(1)){
+					int count = Counts.get(L);
+					count++;
+					Counts.put(L, count);
+					break;
+				}
+			}
+		}
+		
+		//write to file
+		try {
+			
+			//create file writer
+			BufferedWriter bw = new BufferedWriter(new FileWriter(HistDataFile));
+			
+			//display data
+			int counter = 0;
+			for (LinkedList<Double> L : Counts.keySet()){
+				counter++;
+				int Val = Counts.get(L);
+				Double Avg = 0.5*(L.get(0)+L.get(1));
+				bw.write(String.valueOf(Avg) + "\t" + String.valueOf(Val) + "\n");
+				bw.flush();
+				
+				//System.out.println("bin " + counter + ": "+ L.get(0) + "-" + L.get(1) +":" + Val);
+			}
+			
+//			System.out.println("Bins: " + Counts.size());
+//			System.out.println("Max: " + MaxDist);
+			
+			//close file stream
+			bw.close();
+			
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
+		
+	}
+	
+	// ------- Data Creation -------- //
 	
 	//Create a set of CODs
 	public LinkedHashMap<Integer, OperonTrajectory> CreateCODSet(CODParameters COD){
@@ -1167,7 +1327,7 @@ public class OperonSet {
 	//export a query set, with options to vary operonicity + novelty (towards highly conserved)
 	
 	//Export a query set of trajectories
-	public void ExportQuerySet(String QuerySetFile, LinkedHashMap<Integer,OperonTrajectory> Trajectories, Double MinOperonicity, Double MaxNovelty){
+	public void ExportQuerySet(String QuerySetFile, LinkedHashMap<Integer,OperonTrajectory> Trajectories, Double MinOperonicity, Double MaxNovelty, int MinOrgsFeatured){
 		try {
 			
 			//open file stream
@@ -1184,7 +1344,8 @@ public class OperonSet {
 				
 				//check parameters
 				if (OT.Variety <= MaxNovelty &&
-						OT.Operonicity >= MinOperonicity){
+						OT.Operonicity >= MinOperonicity &&
+						OT.OrgsFeatured >= MinOrgsFeatured){
 					
 					//build string, write and export
 					String ln = x + "\n";
@@ -1457,6 +1618,59 @@ public class OperonSet {
 		}
 		
 		
+	}
+	
+	//Export "clear" cases
+	public void ExportClearSingleGeneModifications(String file){
+		
+		//determine counts
+		int OnlyAppend = 0;
+		int OnlyPrepend = 0;
+		int OnlyInsertion = 0;
+				
+		try {
+			//open file stream
+			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+			
+			//Iterate through all trajectories
+			for (OperonTrajectory OT : Trajectories.values()){
+				
+				//initialize string
+				String str = String.valueOf(OT.ClusterID) + "\t";
+				
+				//prepend only
+				if (OT.isPrepend && !OT.isInsertion && !OT.isAppend){
+					OnlyPrepend++;
+					str = str + "Prepend\n";
+					bw.write(str);
+					bw.flush();
+				//insertion only
+				} else if (!OT.isPrepend && OT.isInsertion && !OT.isAppend){
+					OnlyInsertion++;
+					str = str + "Insertion\n";
+					bw.write(str);
+					bw.flush();
+				//append only
+				} else if (!OT.isPrepend && !OT.isInsertion && OT.isAppend){
+					OnlyAppend++;
+					str = str + "Append\n";
+					bw.write(str);
+					bw.flush();
+				}
+			}
+			
+			//display results
+			System.out.println("Total: " + (OnlyPrepend+OnlyInsertion+OnlyAppend) 
+					+ " Prepend: " + OnlyPrepend 
+					+ " Insertion: " + OnlyInsertion
+					+ " Append: " + OnlyAppend
+					);
+			
+			//close file stream
+			bw.close();
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
 	}
 	
 	// ===== Sorting Classes ====== //

@@ -1,6 +1,8 @@
 package haloGUI;
 
-public class GBKFieldMapping {
+import java.io.Serializable;
+
+public class GBKFieldMapping implements Serializable {
 
 	//this object instructs the parser about what to look for.
 	

@@ -467,7 +467,7 @@ import definicions.MatriuDistancies;
 					if (!this.WorkerQD.ANDStatementsParsed){
 						this.WorkerQD.BuildANDStatements("annotation");
 					}
-					Matches = ANDStatementFilter(this.WorkerQD.ParsedStatements,"annotation",Matches);
+					Matches = ANDStatementFilter("annotation",Matches);
 					
 					//consider the iff and only iff clause
 					if (WorkerQD.ifAndOnlyif){
@@ -933,7 +933,7 @@ import definicions.MatriuDistancies;
 					if (!this.WorkerQD.ANDStatementsParsed){
 						this.WorkerQD.BuildANDStatements("cluster");
 					}
-					Matches = ANDStatementFilter(this.WorkerQD.ParsedStatements,"cluster",Matches);
+					Matches = ANDStatementFilter("cluster",Matches);
 					
 					//consider the iff and only iff clause
 					if (WorkerQD.ifAndOnlyif){
@@ -1438,10 +1438,11 @@ import definicions.MatriuDistancies;
 			}
 			
  			//account for AND statements
- 			protected HashSet<LinkedList<GenomicElementAndQueryMatch>> ANDStatementFilter(LinkedList<LinkedList> ParsedANDStatements, String Type, HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches){
+ 			protected HashSet<LinkedList<GenomicElementAndQueryMatch>> ANDStatementFilter(String Type, HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches){
  				
- 				if (ParsedANDStatements.size() > 0){
-
+ 				if ((Type.equals("cluster") && this.WorkerQD.ANDClustersHash.size() != 0) ||
+ 						(Type.equals("annotation") && this.WorkerQD.ANDAnnotationsHash.size() != 0)){
+ 						
  					//create a filtered list, abiding by all supplied OR statements
  	 				HashSet<LinkedList<GenomicElementAndQueryMatch>> FilteredList = new 
  	 						HashSet<LinkedList<GenomicElementAndQueryMatch>>();
@@ -1455,18 +1456,45 @@ import definicions.MatriuDistancies;
 						LinkedList<GenomicElementAndQueryMatch> LL = itp.next();
 						
 						//initializations
-						LinkedList<Integer> ClusterNums = new LinkedList<Integer>();
-						LinkedList<String> AnnQueries = new LinkedList<String>();
-						LinkedList<Object> Queries = new LinkedList<Object>();
+//						LinkedList<Integer> ClusterNums = new LinkedList<Integer>();
+//						LinkedList<String> AnnQueries = new LinkedList<String>();
+//						LinkedList<Object> Queries = new LinkedList<Object>();
+						
+						//add counts
+						LinkedHashMap<Integer,Integer> ClustersHash = new LinkedHashMap<Integer,Integer>();
+						LinkedHashMap<String,Integer> AnnotationsHash = new LinkedHashMap<String,Integer>();
 						
 						//values from the list, as appropriate by type.
 						for (GenomicElementAndQueryMatch GandE : LL){
 							if (Type.equals("cluster")){
-								ClusterNums.add(GandE.getE().getClusterID());
-								Queries.add((Object) GandE.getE().getClusterID());
+								
+								//check hash + initialize count
+								int Key = GandE.getE().getClusterID();
+								int Count = 1;
+								
+								//determine appropriate count + increment counter
+								if (ClustersHash.get(Key) != null){
+									Count = ClustersHash.get(Key);
+									Count++;
+								}
+								ClustersHash.put(Key,Count);
+								
+//								ClusterNums.add(GandE.getE().getClusterID());
+//								Queries.add((Object) GandE.getE().getClusterID());
 							} else {
-								AnnQueries.add(GandE.getE().getAnnotation().trim().toUpperCase());
-								Queries.add((Object) GandE.getE().getAnnotation().trim().toUpperCase());
+								
+								String Key = GandE.getE().getAnnotation().trim().toUpperCase();
+								int Count = 1;
+								
+								//determine appropriate count + increment counter
+								if (AnnotationsHash.get(Key) != null){
+									Count = AnnotationsHash.get(Key);
+									Count++;
+								}
+								AnnotationsHash.put(Key,Count);
+								
+//								AnnQueries.add(GandE.getE().getAnnotation().trim().toUpperCase());
+//								Queries.add((Object) GandE.getE().getAnnotation().trim().toUpperCase());
 							}
 						}
 						
@@ -1474,15 +1502,51 @@ import definicions.MatriuDistancies;
 						boolean RetainMatch = true;
 						
 						//check all of the and statement requirements
-						for (LinkedList L : ParsedANDStatements){
-							HashSet<Object> IntersectionHash = new HashSet<Object>(L);
-							IntersectionHash.removeAll(Queries);
-							
-							//if not all were removed, do not retain this set
-							if (IntersectionHash.size() != 0){
-								RetainMatch = false;
-								break;
+//						for (LinkedList L : ParsedANDStatements){
+//							HashSet<Object> IntersectionHash = new HashSet<Object>(L);
+//							IntersectionHash.removeAll(Queries);
+//							
+//							//if not all were removed, do not retain this set
+//							if (IntersectionHash.size() != 0){
+//								RetainMatch = false;
+//								break;
+//							}
+//						}
+						
+						if (Type.equals("cluster")){
+							for (Integer x : this.WorkerQD.ANDClustersHash.keySet()){
+								if (ClustersHash.get(x) != null){
+									int MatchCount = ClustersHash.get(x);
+									
+									//did not reach minimal number of AND statements
+									if (MatchCount < WorkerQD.ANDClustersHash.get(x)){
+										RetainMatch = false;
+										break;
+									}
+								//null: violation of an AND statement
+								} else{
+									RetainMatch = false;
+									break;
+								}
 							}
+						} else {
+						
+							for (String x : this.WorkerQD.ANDAnnotationsHash.keySet()){
+								if (AnnotationsHash.get(x) != null){
+									int MatchCount = AnnotationsHash.get(x);
+									
+									//did not reach minimal number of AND statements
+									if (MatchCount < WorkerQD.ANDAnnotationsHash.get(x)){
+										RetainMatch = false;
+										break;
+									}
+								//null: violation of an AND statement
+								} else{
+									RetainMatch = false;
+									break;
+								}
+							}
+							
 						}
 						
 						//only if this should be retained, continue
@@ -1549,7 +1613,6 @@ import definicions.MatriuDistancies;
 								RetainMatch = false;
 							}
 						}
-
 
 						//retain set, if appropriate.
 						if (RetainMatch){
@@ -2906,7 +2969,6 @@ import definicions.MatriuDistancies;
 								HorizontalScrollBuffer,CalculateVerticalScrollValue(PhyloTreeLeaves));
 						fPhylo.setPreferredSize(d);
 						
-						
 						//cfgp.getConfigMenu().setValMin(0.0);
 						//adjust values, if necessary.
 //						if (!qD.getAnalysesList().isOptionComputeDendrogram()) {
@@ -2930,7 +2992,10 @@ import definicions.MatriuDistancies;
 						cfgp.setHtNoms(figPhylo.getHtNoms());
 						
 						//TEST - try changing this - it works
-						//PhyloCfgPanel.setValMax(figPhylo.getLongestBranch());
+						if (!isUpdate){
+							PhyloCfgPanel.setValMax(figPhylo.getLongestBranch());
+						}
+
 						
 						PhyloCfgPanel.setValMin(0);
 						cfgp.setConfigMenu(PhyloCfgPanel);

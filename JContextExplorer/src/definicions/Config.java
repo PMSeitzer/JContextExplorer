@@ -53,6 +53,9 @@ public class Config implements Serializable {
 	private double radi = 5.0;
 	private double val_max_origen = 0;
 
+	public Config(){
+		cfgMenu = new CfgPanelMenu();
+	}
 	public Config(final CfgPanelMenu cfgMenu) {
 		this.cfgMenu = cfgMenu;
 	}

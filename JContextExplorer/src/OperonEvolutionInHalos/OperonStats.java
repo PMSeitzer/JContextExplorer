@@ -16,21 +16,65 @@ public class OperonStats extends LoadData{
 	//main method
 	public static void main(String[] args) {
 		
+		// ======= For Histograms - March 17, 2014 ==== //
+		
+		//dummy operon set
+		OperonSet OS = new OperonSet();
+		
+		//data files
+		String HaloDistFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/cyano_gamma_halo_dist/halo.dist";
+		String GammaDistFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/cyano_gamma_halo_dist/gamma.dist";
+		String CyanoDistFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/cyano_gamma_halo_dist/cyano.dist";
+		
+		//data in appropriate format
+		PhyloHistData Halos = OS.BuildGenericDistanceMapping(HaloDistFile);
+		PhyloHistData Gamma = OS.BuildGenericDistanceMapping(GammaDistFile);
+		PhyloHistData Cyano = OS.BuildGenericDistanceMapping(CyanoDistFile);
+		
+		//export files
+		String HaloHist = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/HistogramData_Mar17/HaloHistData.txt";
+		String GammaHist = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/HistogramData_Mar17/GammaHistData.txt";
+		String CyanoHist = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/HistogramData_Mar17/CyanoHistData.txt";
+		
+		//constants
+		int bins = 100;
+		
+		//determine the largest of the maximum distances.
+		Double LargestMaxDist = Math.max(Halos.MaxDist, Gamma.MaxDist);
+		LargestMaxDist = Math.max(LargestMaxDist, Cyano.MaxDist);
+		
+		//export data as file
+		OS.PhyloHist(HaloHist, bins, LargestMaxDist, Halos.PhyDistHash);
+		OS.PhyloHist(GammaHist, bins, LargestMaxDist, Gamma.PhyDistHash);
+		OS.PhyloHist(CyanoHist, bins, LargestMaxDist, Cyano.PhyDistHash);
+		
 		// ======= Build Data Set =========== //
 		
 		//build data set
-		ImportGenomes();			//load genomic data
-		BasicOperons(50);			//create basic operons
-		ShowLocalOperonDuplications(50);	//display duplication cases
+		//ImportGenomes();			//load genomic data
+		//BasicOperons(50);			//create basic operons
+		//ShowLocalOperonDuplications(50);	//display duplication cases
 		
 		//String ContextSetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/JCE/Current/CS_BasicOperons_NoSingleGenes.txt";
 		//ExportOperonsAsContextSet(ContextSetFile,"BasicOperons",false); //Export set
 		
 		//convert to set for trajectory analysis
-//		OperonSet BasicSet = new OperonSet(OS,"BasicOperons");
-//		BasicSet.BuildPhylogeneticDistanceMapping();
+		//OperonSet BasicSet = new OperonSet(OS,"BasicOperons");
+		//BasicSet.BuildPhylogeneticDistanceMapping();
+		
+//		String HistDataFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/HistogramData_200.txt";
+//		int bins = 200;
+//		BasicSet.PhyloHist(HistDataFile, bins, BasicSet.MaxDist, BasicSet.PhyDistHash);
 //		BasicSet.BuildOperonTrajectories();
-//		
+		
+//		//export single gene modifications counts
+//		String ExportFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Miscellaneous/ClearAIP.txt";
+//		BasicSet.ExportClearSingleGeneModifications(ExportFile);
+		
+		//Export a query set for context forest analysis (Feb 6, 2014)
+		//String QuerySetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/JCE/Current/QS_60Orgs_Op50.txt";
+		//BasicSet.ExportQuerySet(QuerySetFile, BasicSet.Trajectories, 0.50, 1.1, 60);
+		
 //		//Export a query set for gene order analysis
 //		String QuerySetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/JCE/Current/QS_AdjacentGenePairs.txt";
 //		BasicSet.ExportAdjacentGenePairs(QuerySetFile, BasicSet.Trajectories);

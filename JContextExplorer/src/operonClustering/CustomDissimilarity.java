@@ -359,6 +359,12 @@ public class CustomDissimilarity implements Serializable {
 		 * (1) Build O2 in reverse order
 		 * (2) Determine list of elements common to both sets, in the order they occur
 		 * (3) check for disagreements in ordering
+		 * 
+		 * Current state - duplicates pose problems
+		 * if there is an unequal number of duplicates, very hard to compare
+		 * rather, just count up until the maximum number of common duplicates
+		 * this is likely only a big problem when there are a very different number
+		 * of duplicates.  Something to think about / worry about for the future.
 		 */
 		
 		/*
@@ -368,6 +374,8 @@ public class CustomDissimilarity implements Serializable {
 		
 		//initialize output
 		double LinearOrderDissimilarity = 0.0;
+		boolean MultipleElementsExist = false;
+		boolean DuplicatesExist = false;
 		
 		//build reverse list
 		LinkedList<Object> O2ValuesRev = new LinkedList<Object>();
@@ -375,36 +383,107 @@ public class CustomDissimilarity implements Serializable {
 			O2ValuesRev.add(O2Values.get(i));
 		}
 		
+		//build hash of counts - determine the number of elements appropriate
+		LinkedHashMap<Object, Integer> CommonValuesCounts = new LinkedHashMap<Object, Integer>();
+		
+		for (Object O : O1Values){
+			if (O2Values.contains(O)){
+				int Count = 1;
+				if (CommonValuesCounts.get(O) != null){
+					Count = CommonValuesCounts.get(O);
+					Count++;
+					DuplicatesExist = true;
+				}
+				CommonValuesCounts.put(O,Count);
+			}
+		}
+		
+		//a re-ordering can only possibly occur if multiple elements exist.
+		if (CommonValuesCounts.size() > 1){
+			MultipleElementsExist = true;
+		}
+		
 		//common elements from each set
 		LinkedList<Object> O1CommonValues = new LinkedList<Object>();
 		LinkedList<Object> O2CommonValues = new LinkedList<Object>();
 		LinkedList<Object> O2RevCommonValues = new LinkedList<Object>();
+				
+		
+		//keep track of the number of common values in each list
+		LinkedHashMap<Object, Integer> O1CommonCounts = new LinkedHashMap<Object, Integer>();
+		LinkedHashMap<Object, Integer> O2CommonCounts = new LinkedHashMap<Object, Integer>();
+		LinkedHashMap<Object, Integer> O2RevCommonCounts = new LinkedHashMap<Object, Integer>();
 		
 		//build common elements lists
 		
 		//O1 List
 		for (Object O : O1Values){
-			if (O2Values.contains(O) && !O1CommonValues.contains(O)){
-				O1CommonValues.add(O);
-			}
+			if (O2Values.contains(O)){
+				
+				//check current count with master list, and update hash.
+				int Count = 1;
+				if (O1CommonCounts.get(O) != null){
+					Count = O1CommonCounts.get(O);
+					Count++;
+				}
+				O1CommonCounts.put(O,Count);
+				
+				//optionally add this to the list.
+				if (Count <= CommonValuesCounts.get(O)){				
+					O1CommonValues.add(O);
+				}
+
+			}			
 		}
 		
 		//O2 List
 		for (Object O : O2Values){
-			if (O1Values.contains(O) && !O2CommonValues.contains(O)){
-				O2CommonValues.add(O);
+			if (O1Values.contains(O)){
+				
+				//check current count with master list, and update hash.
+				int Count = 1;
+				if (O2CommonCounts.get(O) != null){
+					Count = O2CommonCounts.get(O);
+					Count++;
+				}
+				O2CommonCounts.put(O,Count);
+				
+				//optionally add this to the list.
+				if (Count <= CommonValuesCounts.get(O)){				
+					O2CommonValues.add(O);
+				}
+
 			}
 		}
-		
-		//the reverse list really only makes sense if there is a total strand flip.
-		boolean TotalStrandFlip = false;
-		
+
 		//O2Rev List
 		for (Object O : O2ValuesRev){
-			if (O1Values.contains(O) && !O2RevCommonValues.contains(O)){
-				O2RevCommonValues.add(O);
+			if (O1Values.contains(O)){
+				
+				//check current count with master list, and update hash.
+				int Count = 1;
+				if (O2RevCommonCounts.get(O) != null){
+					Count = O2RevCommonCounts.get(O);
+					Count++;
+				}
+				O2RevCommonCounts.put(O,Count);
+				
+				//optionally add this to the list.
+				if (Count <= CommonValuesCounts.get(O)){				
+					O2RevCommonValues.add(O);
+				}
+				
 			}
 		}
+		
+//		//debugging.
+//		if (O1Values.size() == 3 && O2Values.size() == 3 
+//				&& O1Values.contains(15) && O1Values.contains(309) 
+//				&& O2Values.contains(15) && O2Values.contains(309)
+//				){
+//			System.out.println("Breakpoint!");
+//		}
+
 		
 		//if the first list agrees with either of the other lists, record no change in gene order.
 		//otherwise, maximum dissimilarity.
@@ -418,8 +497,13 @@ public class CustomDissimilarity implements Serializable {
 			//To eliminate single-gene commonalities,
 			//create a better context set.
 			
-			//if only one element exists in common, need to break 0 transitivities.
-			if (O1CommonValues.size()==1){
+//			//if only one element exists in common, need to break 0 transitivities.
+//			if (O1CommonValues.size()==1){
+//				LinearOrderDissimilarity = 1.0;
+//			}
+			
+			//if there is only one kind of common element, no way to talk about re-ordering
+			if (!MultipleElementsExist){
 				LinearOrderDissimilarity = 1.0;
 			}
 			

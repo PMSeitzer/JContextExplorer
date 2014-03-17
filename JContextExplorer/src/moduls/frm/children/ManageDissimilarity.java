@@ -45,7 +45,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 	private File ReferenceDirectory = null;
 	
 	//GUI fields
-	//Name/intro
+	//Name/intro 
 	private JLabel Add;
 	private JTextField DMNameLabel, DMName;
 	private String strDMNameLabel = "Enter Name: ";
@@ -72,7 +72,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 	private String strCommonGenes = "Presence / absence of common genes";
 	private String strCommonMotifs = "Presence / absence of common motifs";
 	private String strGeneOrder = "Changes in gene order";
-	private String strGeneGaps = "Changes in intragenic gap size";
+	private String strGeneGaps = "Changes in intergenic gap size";
 	private String strStrandedness = "Changes in strandedness";
 	private LinkedList<Component> grpCommonGenes = new LinkedList<Component>();
 	private LinkedList<Component> grpCommonMotifs = new LinkedList<Component>();
@@ -1672,7 +1672,7 @@ public class ManageDissimilarity extends JDialog implements ActionListener{
 						GOImportance = -1;
 					}
 					
-					//Factor 4: Intragenic Gap Sizes
+					//Factor 4: Intergenic Gap Sizes
 					GapPointMapping GapSizeDissMapping;
 					double GGWeight;
 					int GGImportance;

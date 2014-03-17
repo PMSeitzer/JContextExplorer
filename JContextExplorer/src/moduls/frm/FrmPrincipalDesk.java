@@ -1188,7 +1188,6 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					}
 					
 					//for the halophiles, import sequences as appropriate
-					//UNTESTED
 					if (m.getName().equals("Haloarchaea")){
 						AssociateHalophileSequences();
 					}
