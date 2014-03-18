@@ -460,7 +460,8 @@ import definicions.MatriuDistancies;
 					
 					//option: condense into single list + update matches
 					if (CurrentCSD.isSingleOrganismAmalgamation()){
-						Matches = Amalgamate(CurrentCSD.isSingleOrganismAmalgamation(), Matches);
+						Matches = Amalgamate(CurrentCSD.isSingleOrganismAmalgamation(), 
+								CurrentCSD.isSingleOrganismAmalgamationKeepEmpty(), Matches);
 					}
 					
 					//take note of AND statements
@@ -926,7 +927,9 @@ import definicions.MatriuDistancies;
 					
 					//option: condense into single list + update matches
 					if (CurrentCSD.isSingleOrganismAmalgamation()){
-						Matches = Amalgamate(CurrentCSD.isSingleOrganismAmalgamation(), Matches);
+						Matches = Amalgamate(CurrentCSD.isSingleOrganismAmalgamation(), 
+								CurrentCSD.isSingleOrganismAmalgamationKeepEmpty(),
+								Matches);
 					}
 					
 					//take note of AND statements
@@ -1376,7 +1379,7 @@ import definicions.MatriuDistancies;
 			//filters / modifiers
 			
 			//amalgamate
- 			protected HashSet<LinkedList<GenomicElementAndQueryMatch>> Amalgamate(boolean Amalgamate, HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches){
+ 			protected HashSet<LinkedList<GenomicElementAndQueryMatch>> Amalgamate(boolean Amalgamate, boolean KeepEmpty, HashSet<LinkedList<GenomicElementAndQueryMatch>> Matches){
 				
 				//option: condense into single list + update matches
 				if (Amalgamate){
@@ -1425,7 +1428,12 @@ import definicions.MatriuDistancies;
 					//Initialize new output + write condensed
 					HashSet<LinkedList<GenomicElementAndQueryMatch>> UpdatedMatches =
 							new HashSet<LinkedList<GenomicElementAndQueryMatch>>();
-					UpdatedMatches.add(CondensedList);
+					
+					//add to set, treating empty sets appropriately
+					if (CondensedList.size() != 0 || (CondensedList.size() == 0 && KeepEmpty)){
+						UpdatedMatches.add(CondensedList);
+					}
+
 					
 					//reset
 					return UpdatedMatches;

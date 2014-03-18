@@ -199,8 +199,9 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 	// MODIFIERS
 	
 	//Single organism amalgamation option
-	private JCheckBox cbAmalg, cbRetainElements;
+	private JCheckBox cbAmalg, cbRetainElements, cbAmalgKeepEmpty;
 	private String strcbAmalg = "Single Organism Amalgamation";
+	private String strcbAmalgKeepEmpty = "Retain Empty Genomic Groupings";
 	private String strcbRetainElements = "Retain Elements Common to a Fraction of Genomic Groupings: ";
 	private String strInitialTxtFraction = "0.75";
 	private JTextField TxtFractionRetain;
@@ -1214,8 +1215,19 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		cbAmalg.setSelected(false);
 		jp.add(cbAmalg, c);
 		gridy++;
+
+		//retain elements for empty set sub-option
+		c.gridx = 0;
+		c.gridy = gridy;
+		c.gridheight = 1;
+		c.gridwidth = 5;
+		c.insets = new Insets(1,20,1,1);
+		cbAmalgKeepEmpty = new JCheckBox(strcbAmalgKeepEmpty);
+		cbAmalgKeepEmpty.setSelected(true);
+		jp.add(cbAmalgKeepEmpty, c);
+		gridy++;
 		
-		//check box
+		//Retain Elements option - check box
 		c.gridx = 0;
 		c.gridy = gridy;
 		c.gridheight = 1;
@@ -1225,7 +1237,7 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 		cbRetainElements.setSelected(false);
 		cbRetainElements.addActionListener(this);
 		jp.add(cbRetainElements, c);
-		
+
 		//fraction
 		c.gridx = 2;
 		c.gridy = gridy;
@@ -1639,7 +1651,16 @@ public class manageContextSetsv2 extends JDialog implements ActionListener, Prop
 					} 
 
 					//Add filters
+					
+					//Amalgamation filter
 					ToAdd.setSingleOrganismAmalgamation(cbAmalg.isSelected());
+					
+					//Amalgamation filter - keep empty set option
+					if (cbAmalg.isSelected()){
+						ToAdd.setSingleOrganismAmalgamationKeepEmpty(cbAmalgKeepEmpty.isSelected());	
+					}
+					
+					//Retain Elements
 					if (this.cbRetainElements.isSelected()){
 						try {
 							String s = this.TxtFractionRetain.getText();

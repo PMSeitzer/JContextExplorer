@@ -381,6 +381,8 @@ public class TreeParser
         boolean ReadSupport = false;
         double SupportValue = 0.0;
 
+        //System.out.println("Breakpoint!");
+        
 	try {
             while (EOT == false &&
                     (thisToken = tokenizer.nextToken()) != StreamTokenizer.TT_EOF)
@@ -390,10 +392,10 @@ public class TreeParser
 //            	case quote:
             	case doubleQuote:
             	case StreamTokenizer.TT_WORD:
-            	    if (!nameNext)
-            	    	JOptionPane.showMessageDialog(null, "The selected file is not appropriately formatted.",
-            	    			"Tree Parsing Error", JOptionPane.ERROR_MESSAGE);
-            	        //System.err.println("Error: didn't expect this name here: " + tokenizer.sval);
+            	    if (!nameNext){
+            	        System.err.println("Error: didn't expect this name here: " + tokenizer.sval);
+            	    	//JOptionPane.showMessageDialog(null, "The selected file is not appropriately formatted.","Tree Parsing Error", JOptionPane.ERROR_MESSAGE);
+            	    }
             	    lastNamed = popAndName(tokenizer.sval, nodeStack);
             		progress += tokenizer.sval.length();
             		nameNext = false;

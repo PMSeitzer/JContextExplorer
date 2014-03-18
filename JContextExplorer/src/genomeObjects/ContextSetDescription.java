@@ -14,6 +14,7 @@ public class ContextSetDescription implements Serializable{
 	
 	//ALL
 	private boolean SingleOrganismAmalgamation;
+	private boolean SingleOrganismAmalgamationKeepEmpty;
 	private boolean RetainFractionEnabled;
 	private double RetainFraction;
 	public boolean RequireSameSizeHomologs = false;
@@ -205,5 +206,14 @@ public class ContextSetDescription implements Serializable{
 
 	public void setNearbyLimit(int nearbyLimit) {
 		NearbyLimit = nearbyLimit;
+	}
+
+	public boolean isSingleOrganismAmalgamationKeepEmpty() {
+		return SingleOrganismAmalgamationKeepEmpty;
+	}
+
+	public void setSingleOrganismAmalgamationKeepEmpty(
+			boolean singleOrganismAmalgamationKeepEmpty) {
+		SingleOrganismAmalgamationKeepEmpty = singleOrganismAmalgamationKeepEmpty;
 	}
 }
