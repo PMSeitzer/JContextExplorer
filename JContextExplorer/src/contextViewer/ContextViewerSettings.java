@@ -30,7 +30,7 @@ public class ContextViewerSettings {
 		
 		//auto-segmentation
 		RangeLimit = 50000;
-		SplitLimit = 15000;
+		SplitLimit = 25000;
 		
 		//range around
 		DefaultRangeAround = 2000;

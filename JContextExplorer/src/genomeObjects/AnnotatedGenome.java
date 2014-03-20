@@ -193,13 +193,14 @@ public void importFromGFFFile(String filename){
 				TextDescription = TextDescription + s + " (" + String.valueOf(Counts.get(s)) + ")\n";
 			}
 			
+			//close file stream
 			br.close();		
 			
 		}catch(Exception ex){
 			//ex.printStackTrace();
 			//System.out.println("fail!");
 			//System.exit(1);
-			//System.out.println("Meow");
+			System.err.println("File format error! Please re-format and try again.");
 		}
 		
 		//sort elements
@@ -511,7 +512,8 @@ public void importFromGBKReader(BufferedReader br){
 				    		 try {
 				    			 String GIDNoQuotes = Line.substring(GFM.GeneID.length()).replaceAll("\"", "");
 				    			 E.setGeneID(GIDNoQuotes);
-				    		 } catch (Exception ex) {}
+				    		 } catch (Exception ex) {
+				    		 }
 				    	 }
 				    	 
 				     }
@@ -572,7 +574,7 @@ public void importFromGBKReader(BufferedReader br){
 		try {
 			br.close();
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			//ex.printStackTrace();
 		}		
       
 		//sort elements
@@ -588,7 +590,7 @@ public LinkedList<GenomicElement> removeRedundantElements(LinkedList<GenomicElem
 	//Initialize output
 	LinkedList<GenomicElement> OutputElements = new LinkedList<GenomicElement>();
 	
-	if (InitialElements.size() > 0){
+	if (InitialElements.size() > 1){
 		
 		//initial comparison element
 		GenomicElement ECompare = InitialElements.get(0);

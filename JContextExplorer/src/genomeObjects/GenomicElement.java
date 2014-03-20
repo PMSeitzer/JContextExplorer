@@ -23,7 +23,7 @@ public class GenomicElement implements Serializable{
     private int ClusterID;				//
     private String GeneID;					//
     private HashSet<SequenceMotif> AssociatedMotifs = new HashSet<SequenceMotif>();
-    private String Translation;
+    private String Translation; 		//This translation is optionally recorded from genbank files.
 
     //Constructor
     // ----------------------- Constructor-----------------------------//

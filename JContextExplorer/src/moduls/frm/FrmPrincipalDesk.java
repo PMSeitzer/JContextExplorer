@@ -546,7 +546,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			
 			//GFF file import
 			if (f.getName().endsWith(".gff")){
-			
+					
 				//increment counter.
 				OrgCounter++;
 				

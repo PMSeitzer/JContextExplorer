@@ -251,7 +251,7 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 					//retrieve all bioinfo.
 					GenomicElement E = LeafData.get(TN);
 					AnnotatedGenome AG = fr.getOS().getSpecies().get(LeafSource.get(TN));
-							
+												
 					if (AG.getGenomeSequenceFile() != null){
 						
 						//retrieve sequence
@@ -285,6 +285,28 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 							break;
 						}
 
+					//if not explicit files associated, try to retrieve data from associate feature.
+					} else if (AG.getGFM().GetTranslation){
+
+						//retrieve directly from the genomic element.
+						String str = E.getTranslation();
+						
+						//cancel at this point
+						if (!Thread.currentThread().isInterrupted()){							
+							//store values
+							Genes4Export.put(TN, str);
+							NumCounter++;
+							//adjust progress bar
+							// update progress bar
+							int progress = (int) Math
+									.round(100 * ((double) NumCounter / SelectedNodes.size()));
+							System.out.println("Exported " + NumCounter + "/" + SelectedNodes.size() + " Sequences.");							
+							setProgress(progress);
+						} else{
+							setProgress(0);
+							break;
+						}
+						
 					} else {
 						FailedExport = true;
 					}

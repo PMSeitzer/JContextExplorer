@@ -152,9 +152,17 @@ public class GBKChecker extends JFrame implements ActionListener{
 		TxtGeneIDTag = new JTextField(GFM.GeneID);
 		TxtGeneIDTag.setEditable(true);
 		
-		//homology clusters
+		//homology clusters - check box
+		cbParseHomologyClusters = new JCheckBox(strcbParseHomologyClusters);
+		cbParseHomologyClusters.setSelected(GFM.GetCluster);
+		
+		//homology clusters - value
 		TxtHomologyClusterTag = new JTextField(GFM.GetClusterTag);
 		TxtHomologyClusterTag.setEditable(true);
+		
+		//retain protein translations
+		cbTranslations = new JCheckBox(strcbTranslations);
+		cbTranslations.setSelected(GFM.GetTranslation);
 		
 	}
 	
@@ -202,7 +210,7 @@ public class GBKChecker extends JFrame implements ActionListener{
          * Field Mapping
          */
 		
-		//Annotation Tag
+		//Annotation Tag - label
 		c.gridx = gridx;
 		c.gridy = gridy;
 		c.gridwidth = 1;
@@ -214,6 +222,7 @@ public class GBKChecker extends JFrame implements ActionListener{
 		jp.add(LblAnnotationTag, c);
 		gridx++;
 		
+		//Annotation Tag - text
 		c.gridx = gridx;
 		c.gridy = gridy;
 		c.gridwidth = 1;
@@ -224,7 +233,7 @@ public class GBKChecker extends JFrame implements ActionListener{
 		gridx = 0;
 		gridy++;
 		
-		//Locus Tag
+		//Locus Tag - label
 		c.gridx = gridx;
 		c.gridy = gridy;
 		c.gridwidth = 1;
@@ -236,6 +245,7 @@ public class GBKChecker extends JFrame implements ActionListener{
 		jp.add(LblGeneIDTag, c);
 		gridx++;
 		
+		//Locus Tag - text
 		c.gridx = gridx;
 		c.gridy = gridy;
 		c.gridwidth = 1;
@@ -249,14 +259,13 @@ public class GBKChecker extends JFrame implements ActionListener{
 		//homology cluster ID
 		GrpHomologyClusters = new LinkedList<Component>();
 		
+		//homology cluster - check box
 		c.gridx = gridx;
 		c.gridy = gridy;
 		c.gridwidth = 2;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1,1,1,1);
-		cbParseHomologyClusters = new JCheckBox(strcbParseHomologyClusters);
-		cbParseHomologyClusters.setSelected(false);
 		cbParseHomologyClusters.addActionListener(this);
 		jp.add(cbParseHomologyClusters, c);
 		gridx = 0;
@@ -275,6 +284,7 @@ public class GBKChecker extends JFrame implements ActionListener{
 		GrpHomologyClusters.add(LblHomologyClusterTag);
 		gridx++;
 		
+		//homology cluster text 
 		c.gridx = gridx;
 		c.gridy = gridy;
 		c.gridwidth = 1;
@@ -286,15 +296,14 @@ public class GBKChecker extends JFrame implements ActionListener{
 		gridx = 0;
 		gridy++;
 
-		//translations
+		//Retain protein translation option
 		c.gridx = gridx;
 		c.gridy = gridy;
 		c.gridwidth = 2;
 		c.gridheight = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(1,1,1,1);
-		cbTranslations = new JCheckBox(strcbTranslations);
-		cbTranslations.setSelected(false);
+
 		jp.add(cbTranslations, c);
 		gridx = 0;
 		gridy++;

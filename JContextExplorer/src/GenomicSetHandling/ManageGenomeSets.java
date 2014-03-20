@@ -488,8 +488,8 @@ public class ManageGenomeSets extends JDialog implements ActionListener, ListSel
 
 			
 			} catch (Exception ex) {
-				System.out.println("MENU GENOMES ERROR!!!!");
-				ex.printStackTrace();
+				System.err.println("Error manipulating genomes menu.");
+				//ex.printStackTrace();
 			}
 			
 		}
