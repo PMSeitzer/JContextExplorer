@@ -1187,9 +1187,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 						
 					}
 					
-					//for the halophiles, import sequences as appropriate
+					//import sequences stored on wordpress site
+					//halophiles
 					if (m.getName().equals("Haloarchaea")){
 						AssociateHalophileSequences();
+					
+					//chloroviruses or myxococcus
+					} else if (m.getName().equals("Chloroviruses") || m.getName().equals("Myxococcus")){
+						AssociateChlorovirusOrMyxococcusSequences();
 					}
 				
 				//re-set
@@ -1588,7 +1593,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 		//add to menu
 		MG_PopularSets.add(MG_Chloroviruses);
-		//MG_PopularSets.add(MG_Ecoli);
+		MG_PopularSets.add(MG_Ecoli);
 		MG_PopularSets.add(MG_Halos);
 		MG_PopularSets.add(MG_Mimi);
 		MG_PopularSets.add(MG_Myxo);
@@ -1866,6 +1871,10 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		//NCBI files
 		setNCBIFields(new NCBIFieldMapping());
 		
+		// ========== Context Viewer Settings ====== //
+		
+		setCVS(new ContextViewerSettings());
+		
 		// ===== Popular Genome Sets ======== //
 		
 		//add names
@@ -1883,24 +1892,28 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PopularGenomeSetData PGD_chloros = new PopularGenomeSetData();
 		PGD_chloros.setName(strChloroviruses);
 		PGD_chloros.setChkBox(MG_Chloroviruses);
-		PGD_chloros.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/12/Chloroviruses.txt");
+		//PGD_chloros.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/12/Chloroviruses.txt");
+		PGD_chloros.setURL("http://www.bme.ucdavis.edu/facciotti/files/2014/04/Chloroviruses.txt");
 		PGD_chloros.setPasswordProtected(false);
 		PopularGenomeSets.put(MG_Chloroviruses, PGD_chloros);
-		
-		//E coli (sima)
+				
+		//E coli (Jason Adams - take 2 - PacBio sequencing)
 		PopularGenomeSetData PGD_ecoli = new PopularGenomeSetData();
 		PGD_ecoli.setName(strEcoli);
 		PGD_ecoli.setChkBox(MG_Ecoli);
-		PGD_ecoli.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/09/Escherichia_coli.txt");
-		PGD_ecoli.setPasswordProtected(true);
-		PGD_ecoli.setPassword("nenegoose");
+		//PGD_ecoli.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/09/Escherichia_coli.txt");
+		PGD_ecoli.setURL("http://www.bme.ucdavis.edu/facciotti/files/2014/04/Escherichia_coli.txt");
+		PGD_ecoli.setPasswordProtected(false);
+		//PGD_ecoli.setPassword("nenegoose");
 		PopularGenomeSets.put(MG_Ecoli, PGD_ecoli);
 		
 		//Halophiles
 		PopularGenomeSetData PGD_halos = new PopularGenomeSetData();
 		PGD_halos.setName(strHalos);
 		PGD_halos.setChkBox(MG_Halos);
-		PGD_halos.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/12/Haloarchaea.txt");
+		//PGD_halos.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/12/Haloarchaea.txt");
+		//PGD_halos.setURL("http://www.bme.ucdavis.edu/facciotti/files/2014/04/Haloarchaea.txt");
+		PGD_halos.setURL("http://www.bme.ucdavis.edu/facciotti/files/2014/05/Haloarchaea.txt");
 		PGD_halos.setPasswordProtected(false);
 		PopularGenomeSets.put(MG_Halos, PGD_halos);
 
@@ -1908,7 +1921,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PopularGenomeSetData PGD_mimi = new PopularGenomeSetData();
 		PGD_mimi.setName(strMimi);
 		PGD_mimi.setChkBox(MG_Mimi);
-		PGD_mimi.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/12/Mimiviruses.txt");
+		//PGD_mimi.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/12/Mimiviruses.txt");
+		PGD_mimi.setURL("http://www.bme.ucdavis.edu/facciotti/files/2014/04/Mimiviruses.txt");
 		PGD_mimi.setPasswordProtected(false);
 		PopularGenomeSets.put(MG_Mimi, PGD_mimi);
 		
@@ -1916,9 +1930,26 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PopularGenomeSetData PGD_myxo = new PopularGenomeSetData();
 		PGD_myxo.setName(strMyxo);
 		PGD_myxo.setChkBox(MG_Myxo);
-		PGD_myxo.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/12/Myxococcus.txt");
+		//PGD_myxo.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/12/Myxococcus.txt");
+		PGD_myxo.setURL("http://www.bme.ucdavis.edu/facciotti/files/2014/04/Myxococcus.txt");
 		PGD_myxo.setPasswordProtected(false);
 		PopularGenomeSets.put(MG_Myxo, PGD_myxo);
+				
+		//add action listener
+		for (JMenuItem j : PopularGenomeSets.keySet()){
+			j.addActionListener(this);
+		}
+		
+		// ===== Deprecated Popular Genome Sets ======== //
+		
+		//Staphylococcus
+		PopularGenomeSetData PGD_staph = new PopularGenomeSetData();
+		PGD_staph.setName(strStaph);
+		PGD_staph.setChkBox(MG_Staph);
+		PGD_staph.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/09/Staphylococcus_aureus.txt");
+		PGD_staph.setPasswordProtected(true);
+		PGD_staph.setPassword("nenegoose");
+		PopularGenomeSets.put(MG_Staph, PGD_staph);
 		
 		//Salmonella
 		PopularGenomeSetData PGD_salmonella = new PopularGenomeSetData();
@@ -1929,22 +1960,14 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PGD_salmonella.setPassword("fugufish");
 		PopularGenomeSets.put(MG_Salmonella, PGD_salmonella);
 		
-		//Staphylococcus
-		PopularGenomeSetData PGD_staph = new PopularGenomeSetData();
-		PGD_staph.setName(strStaph);
-		PGD_staph.setChkBox(MG_Staph);
-		PGD_staph.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/09/Staphylococcus_aureus.txt");
-		PGD_staph.setPasswordProtected(true);
-		PGD_staph.setPassword("nenegoose");
-		PopularGenomeSets.put(MG_Staph, PGD_staph);
-
-		//add action listener
-		for (JMenuItem j : PopularGenomeSets.keySet()){
-			j.addActionListener(this);
-		}
-		
-		 // ========== Settings ====== //
-		setCVS(new ContextViewerSettings());
+//		//E coli (sima)
+//		PopularGenomeSetData PGD_ecoli = new PopularGenomeSetData();
+//		PGD_ecoli.setName(strEcoli);
+//		PGD_ecoli.setChkBox(MG_Ecoli);
+//		PGD_ecoli.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/09/Escherichia_coli.txt");
+//		PGD_ecoli.setPasswordProtected(true);
+//		PGD_ecoli.setPassword("nenegoose");
+//		PopularGenomeSets.put(MG_Ecoli, PGD_ecoli);
 		
 	}
 	
@@ -2614,7 +2637,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		
 		//Launch User'sManual
 		if (evt.getSource().equals(MH_Manual)){
-			LaunchWebsite("http://www.bme.ucdavis.edu/facciotti/files/2013/07/UsersManual_v2.pdf");
+			LaunchWebsite("http://www.bme.ucdavis.edu/facciotti/files/2014/04/UsersManual_v4.pdf");
+			//LaunchWebsite("http://www.bme.ucdavis.edu/facciotti/files/2013/07/UsersManual_v2.pdf");
 		}
 		
 		//Youtube page of video tutorials
@@ -3141,7 +3165,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 	
 	// ==== Sequence Import related ==== //
 	
-	//Import halophiles - a TEMPORARY GHETTO FIX JUST FOR NOW 11-21-2013
+	//Import halophile sequences from wordpress site
 	public void AssociateHalophileSequences(){
 		
 		//define base dir
@@ -3155,6 +3179,28 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 			AG.setSeqsFromFile(false);
 		}
 		
+		System.out.println("Sequences have been successfully associated with these genomes.");
+		
+	}
+	
+	//Import chlorovirus sequences from wordpress site.
+	public void AssociateChlorovirusOrMyxococcusSequences(){
+		
+		//define base dir
+		String BaseDir = "http://www.bme.ucdavis.edu/facciotti/files/2014/04/";
+		
+		//associate each organism with a file on a server.
+		for (String OrgName : OS.getSpecies().keySet()){
+			String WebPath = BaseDir + OrgName + ".txt";
+			AnnotatedGenome AG = OS.getSpecies().get(OrgName);
+			AG.setGenomeSequenceFile(WebPath);
+			AG.setSeqsFromFile(false);
+			
+			//debugging - display web path
+			//System.out.println(OrgName +"\t" + WebPath);
+		}
+		
+		System.out.println("Sequences have been successfully associated with these genomes.");
 	}
 	
 	// ==== Display related ====== //

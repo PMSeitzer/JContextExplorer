@@ -77,6 +77,7 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 	private JButton btnCollapseAll;
 	private String strExpandAll = "Expand All";
 	private String strCollapseAll = "Collapse All";
+	public CustomSeqExportData CSED = null;
 	
 	//Constants
 	private int FastaSeqLineLength = 70;
@@ -115,7 +116,9 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 	public class ExportSequencesWorker extends SwingWorker<Void, Void>{
 
 		public ActionEvent evt;
+		
 		//Strings
+		final String ExportSeqsCustom = "Custom Sequence Export";
 		final String ExportDNASeqs = "Export Genes (DNA Sequences)";
 		final String ExportProtSeqs = "Export Protein Sequences";
 		final String ExportSegments = "Export Genomic Grouping Segments (DNA)";
@@ -146,12 +149,19 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 			
 			//export DNA segment of selected genes
 			if (evt.getActionCommand().equals(ExportDNASeqs)) {
+				CSED = null; // no customizations
 				SWExportGeneSequences(false);
 			}
 			
 			//export protein sequence
 			if (evt.getActionCommand().equals(ExportProtSeqs)){
+				CSED = null; // no customizations
 				SWExportGeneSequences(true);
+			}
+			
+			//create customization prior to export
+			if (evt.getActionCommand().equals(ExportSeqsCustom)){
+				SWCustomExport();
 			}
 			
 			/*
@@ -175,14 +185,35 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 			return null;
 		}
 		
+		//perform a more complicated export
+		public void SWCustomExport(){
+			
+			//Retrieve information from a pop-up window
+			new ManageCustomSeq(FrmSearchResults.this);
+			
+			//proceed to export, if not cancelled
+			if (CSED != null){
+				
+				//proceed to ordinary gene export
+				SWExportGeneSequences(false);
+				
+			}
+
+		}
+		
 		//export a file DNA or protein sequences
 		public void SWExportGeneSequences(boolean isProtein){
 			
 			String Title = "";
 			if (isProtein){
-				Title = "Export Protein Sequences of Selected Genes";
+				Title = "Export protein sequences of selected genes";
 			} else {
-				Title = "Export DNA Sequences of Selected Genes";
+				Title = "Export DNA sequences of selected genes";
+				
+				//if other parameters exist to modify the export, change title
+				if (CSED != null){
+					Title = "Custom export of DNA associated with selected genes";
+				}
 			}
 			
 			//Create + Show file dialog window
@@ -254,20 +285,101 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 												
 					if (AG.getGenomeSequenceFile() != null){
 						
-						//retrieve sequence
-						//String str = AG.retrieveSequence(E.getContig(), E.getStart(), E.getStop(), E.getStrand());
-						String str = AG.DNASequence(E.getContig(), E.getStart(), E.getStop(), E.getStrand());
+						//Initialize sequence
+						String str = "";
 						
-						//if these are proteins, modify to protein sequences.
-						if (isProtein){
-													
-							//convert string to protein sequence
-							DNASequence d = new DNASequence(str);
-							str = d.getReverseComplement().getSequenceAsString();
-							RNASequence rna = d.getRNASequence();
-							str = rna.getProteinSequence().toString();
+						//no customizations - simple gene or protein 
+						if (CSED == null){
+							str = AG.DNASequence(E.getContig(), E.getStart(), E.getStop(), E.getStrand());
+						
+							//if these are proteins, modify to protein sequences.
+							if (isProtein){
+														
+								//convert string to protein sequence
+								DNASequence d = new DNASequence(str);
+								str = d.getReverseComplement().getSequenceAsString();
+								RNASequence rna = d.getRNASequence();
+								str = rna.getProteinSequence().toString();
+								
+							}
+						
+						//customizations - modify the coordinates appropriately	
+						} else {
+							
+							//coordinates for export
+							int startCoord;
+							int stopCoord;
+							
+							//positive strand case
+							if (E.getStrand().equals(Strand.POSITIVE)){
+								
+								//starting position
+								
+								//start relative to start coordinate
+								if (CSED.start_Start == true){
+									startCoord = E.getStart() - CSED.start_Before;
+								
+								//start relative to stop coordinate
+								} else {
+									startCoord = E.getStop() - CSED.start_Before;
+								}
+								
+								//ending position
+								
+								//stop relative to start coordinate
+								if (CSED.stop_Stop == false){
+									stopCoord = E.getStart() - CSED.stop_Before;
+								
+								//stop relative to stop coordinate
+								} else {
+									stopCoord = E.getStop() - CSED.stop_Before;
+								}
+								
+							
+							//reverse strand case: 
+							} else {
+								
+								//starting position
+								
+								//start relative to start coordinate
+								if (CSED.start_Start == true){
+									
+									stopCoord = E.getStop() + CSED.start_Before; 
+											
+								//start relative to stop coordinate
+								} else {
+									
+									stopCoord = E.getStart() + CSED.start_Before;
+								}
+								
+								//ending position
+								
+								//stop relative to start coordinate
+								if (CSED.stop_Stop == false){
+									
+									startCoord = E.getStop() + CSED.stop_Before;
+									
+								//stop relative to stop coordinate
+								} else {
+									
+									startCoord = E.getStart() + CSED.stop_Before;
+									
+								}
+							}
+							
+							//Retrieve sequence, if appropriate
+							if (startCoord < stopCoord){
+								str = AG.DNASequence(E.getContig(), startCoord, stopCoord, E.getStrand());
+							} else {
+								String id = E.getGeneID();
+								if (id.equals("")){
+									id = E.getContig() + "_[" + E.getStart() + ":" + E.getStop() + "]";
+								}
+								System.out.println("Range for gene " + id + " is invalid, no sequence exported.");
+							}
 							
 						}
+						
 						
 						//cancel at this point
 						if (!Thread.currentThread().isInterrupted()){							
@@ -557,6 +669,7 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 	private void InitializeSequenceExportMenu(){
 		
 		//Strings
+		final String ExportSeqsCustom = "Custom Sequence Export";
 		final String ExportDNASeqs = "Export Genes (DNA Sequences)";
 		final String ExportProtSeqs = "Export Protein Sequences";
 		final String ExportSegments = "Export Genomic Grouping Segments (DNA)";
@@ -581,47 +694,6 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 				//reset swing worker in main frame
 				fr.setCurrentESW(null);
 				
-//				//switch cursor
-//				Component glassPane = fr.getRootPane().getGlassPane();
-//				glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-//				glassPane.setVisible(true);
-//				
-//				/*
-//				 * EXPORT SEQUENCES
-//				 */
-//				
-//				//export DNA sequence of whole segment
-//				if (evt.getActionCommand().equals(ExportSegments)){
-//					ExportSegments();
-//				}
-//				
-//				//export DNA segment of selected genes
-//				if (evt.getActionCommand().equals(ExportDNASeqs)) {
-//					ExportGeneSequences(false);
-//				}
-//				
-//				//export protein sequence
-//				if (evt.getActionCommand().equals(ExportProtSeqs)){
-//					ExportGeneSequences(true);
-//				}
-//				
-//				/*
-//				 * EXPORT DATA TABLE
-//				 */
-//				
-//				//export data table - short version
-//				if (evt.getActionCommand().equals(ExportDataAsShortTable)){
-//					ExportTable(false);
-//				}
-//				
-//				//export data table - long version
-//				if (evt.getActionCommand().equals(ExportDataAsLongTable)){
-//					ExportTable(true);
-//				}
-//				
-//				//switch cursor back to normal
-//				glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-//				glassPane.setVisible(false);
 			}
 
 		};
@@ -635,6 +707,7 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 		final JMenuItem me2 = new JMenuItem(ExportSegments);
 		final JMenuItem me3 = new JMenuItem(ExportDataAsShortTable);
 		final JMenuItem me4 = new JMenuItem(ExportDataAsLongTable);
+		final JMenuItem me5 = new JMenuItem(ExportSeqsCustom);
 		
 		//add action listeners
 		me0.addActionListener(exportAction);
@@ -642,11 +715,13 @@ public class FrmSearchResults extends JPanel implements ActionListener, TreeSele
 		me2.addActionListener(exportAction);
 		me3.addActionListener(exportAction);
 		me4.addActionListener(exportAction);
+		me5.addActionListener(exportAction);
 		
 		//build menu
 		ExportMenu.add(me0);
 		ExportMenu.add(me1);
 		ExportMenu.add(me2);
+		ExportMenu.add(me5);
 		ExportMenu.addSeparator();
 		ExportMenu.add(me3);
 		ExportMenu.add(me4);
