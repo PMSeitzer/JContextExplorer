@@ -907,7 +907,6 @@ public class OperonSet {
 		return MaxDist;
 	}
 	
-	//determine the minimum distance between elements in a list of organisms
 	//determine the minimum distance between elements in two separate lists of organisms
 	public double DetermineMinDist(LinkedList<String> L1, LinkedList<String> L2){
 		
@@ -1628,12 +1627,20 @@ public class OperonSet {
 		int OnlyPrepend = 0;
 		int OnlyInsertion = 0;
 				
+		//count multiple trajectories
+		int MultipleTrajectoryCount = 0;
+		int ClearExampleCount = 0;
+		int NoExamplesCount = 0;
+		
 		try {
 			//open file stream
 			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 			
 			//Iterate through all trajectories
 			for (OperonTrajectory OT : Trajectories.values()){
+				
+				//initialize counter
+				int TypeCounter = 0;
 				
 				//initialize string
 				String str = String.valueOf(OT.ClusterID) + "\t";
@@ -1657,6 +1664,28 @@ public class OperonSet {
 					bw.write(str);
 					bw.flush();
 				}
+				
+				if (OT.isPrepend){
+					TypeCounter++;
+				}
+				if (OT.isAppend){
+					TypeCounter++;
+				}
+				if (OT.isInsertion){
+					TypeCounter++;
+				}
+				
+				// 2 or more: it's a multi
+				if (TypeCounter >= 2){
+					MultipleTrajectoryCount++;
+				
+				//just 1: it's a clear case
+				} else if (TypeCounter == 1){
+					ClearExampleCount++;
+				//zero: no clear examples
+				} else {
+					NoExamplesCount++;
+				}
 			}
 			
 			//display results
@@ -1665,6 +1694,12 @@ public class OperonSet {
 					+ " Insertion: " + OnlyInsertion
 					+ " Append: " + OnlyAppend
 					);
+			
+			//new display
+			System.out.println("New Checks - All Trajectories:" + Trajectories.values().size());
+			System.out.println("New Checks - Multiple Trajectories:" + MultipleTrajectoryCount);
+			System.out.println("New Checks - Clear Examples: " + ClearExampleCount);
+			System.out.println("new Checks - No Examples: " + NoExamplesCount);
 			
 			//close file stream
 			bw.close();

@@ -19,57 +19,57 @@ public class OperonStats extends LoadData{
 		// ======= For Histograms - March 17, 2014 ==== //
 		
 		//dummy operon set
-		OperonSet OS = new OperonSet();
+		//OperonSet OS = new OperonSet();
 		
-		//data files
-		String HaloDistFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/cyano_gamma_halo_dist/halo.dist";
-		String GammaDistFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/cyano_gamma_halo_dist/gamma.dist";
-		String CyanoDistFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/cyano_gamma_halo_dist/cyano.dist";
-		
-		//data in appropriate format
-		PhyloHistData Halos = OS.BuildGenericDistanceMapping(HaloDistFile);
-		PhyloHistData Gamma = OS.BuildGenericDistanceMapping(GammaDistFile);
-		PhyloHistData Cyano = OS.BuildGenericDistanceMapping(CyanoDistFile);
-		
-		//export files
-		String HaloHist = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/HistogramData_Mar17/HaloHistData.txt";
-		String GammaHist = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/HistogramData_Mar17/GammaHistData.txt";
-		String CyanoHist = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/HistogramData_Mar17/CyanoHistData.txt";
-		
-		//constants
-		int bins = 100;
-		
-		//determine the largest of the maximum distances.
-		Double LargestMaxDist = Math.max(Halos.MaxDist, Gamma.MaxDist);
-		LargestMaxDist = Math.max(LargestMaxDist, Cyano.MaxDist);
-		
-		//export data as file
-		OS.PhyloHist(HaloHist, bins, LargestMaxDist, Halos.PhyDistHash);
-		OS.PhyloHist(GammaHist, bins, LargestMaxDist, Gamma.PhyDistHash);
-		OS.PhyloHist(CyanoHist, bins, LargestMaxDist, Cyano.PhyDistHash);
+//		//data files
+//		String HaloDistFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/cyano_gamma_halo_dist/halo.dist";
+//		String GammaDistFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/cyano_gamma_halo_dist/gamma.dist";
+//		String CyanoDistFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/cyano_gamma_halo_dist/cyano.dist";
+//		
+//		//data in appropriate format
+//		PhyloHistData Halos = OS.BuildGenericDistanceMapping(HaloDistFile);
+//		PhyloHistData Gamma = OS.BuildGenericDistanceMapping(GammaDistFile);
+//		PhyloHistData Cyano = OS.BuildGenericDistanceMapping(CyanoDistFile);
+//		
+//		//export files
+//		String HaloHist = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/HistogramData_Mar17/HaloHistData.txt";
+//		String GammaHist = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/HistogramData_Mar17/GammaHistData.txt";
+//		String CyanoHist = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/HistogramData_Mar17/CyanoHistData.txt";
+//		
+//		//constants
+//		int bins = 100;
+//		
+//		//determine the largest of the maximum distances.
+//		Double LargestMaxDist = Math.max(Halos.MaxDist, Gamma.MaxDist);
+//		LargestMaxDist = Math.max(LargestMaxDist, Cyano.MaxDist);
+//		
+//		//export data as file
+//		OS.PhyloHist(HaloHist, bins, LargestMaxDist, Halos.PhyDistHash);
+//		OS.PhyloHist(GammaHist, bins, LargestMaxDist, Gamma.PhyDistHash);
+//		OS.PhyloHist(CyanoHist, bins, LargestMaxDist, Cyano.PhyDistHash);
 		
 		// ======= Build Data Set =========== //
 		
 		//build data set
-		//ImportGenomes();			//load genomic data
-		//BasicOperons(50);			//create basic operons
+		ImportGenomes();			//load genomic data
+		BasicOperons(50);			//create basic operons
 		//ShowLocalOperonDuplications(50);	//display duplication cases
 		
 		//String ContextSetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/JCE/Current/CS_BasicOperons_NoSingleGenes.txt";
 		//ExportOperonsAsContextSet(ContextSetFile,"BasicOperons",false); //Export set
 		
 		//convert to set for trajectory analysis
-		//OperonSet BasicSet = new OperonSet(OS,"BasicOperons");
-		//BasicSet.BuildPhylogeneticDistanceMapping();
+		OperonSet BasicSet = new OperonSet(OS,"BasicOperons");
+		BasicSet.BuildPhylogeneticDistanceMapping();
 		
 //		String HistDataFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Phylogeny/HistogramData_200.txt";
 //		int bins = 200;
 //		BasicSet.PhyloHist(HistDataFile, bins, BasicSet.MaxDist, BasicSet.PhyDistHash);
-//		BasicSet.BuildOperonTrajectories();
+		BasicSet.BuildOperonTrajectories();
 		
-//		//export single gene modifications counts
-//		String ExportFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Miscellaneous/ClearAIP.txt";
-//		BasicSet.ExportClearSingleGeneModifications(ExportFile);
+		//export single gene modifications counts
+		String ExportFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Miscellaneous/ClearAIP_v2.txt";
+		BasicSet.ExportClearSingleGeneModifications(ExportFile);
 		
 		//Export a query set for context forest analysis (Feb 6, 2014)
 		//String QuerySetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/JCE/Current/QS_60Orgs_Op50.txt";
@@ -116,11 +116,14 @@ public class OperonStats extends LoadData{
 		
 //		//determine level of agreement at various levels
 //		LinkedHashMap<Double,Integer> AgreementCounts = new LinkedHashMap<Double,Integer>();
+//		LinkedHashMap<Double,Integer> SingleAgreementCounts = new LinkedHashMap<Double,Integer>();
 //		
 //		for (int i = 0; i <= 19; i++){
 //			
 //			//re-set agreement counter
 //			int NumAgree = 0;
+//			int NumSingleAgree = 0;
+//			int NumNonSingle = 0;
 //			
 //			//turn integer to double
 //			double margin = 0.05* (double) i;
@@ -129,21 +132,32 @@ public class OperonStats extends LoadData{
 //			//determine agreement at this level
 //			for (Integer x : BasicSet.Trajectories.keySet()){
 //				OperonTrajectory OT = BasicSet.Trajectories.get(x);
-//				BasicSet.AddLowestLevelPhyloDisagreement(OT, margin);
+//				BasicSet.AddLowestLevelPhyloDisagreement(OT, margin, true); //added 3rd argument 5/2/2014
 //				if (OT.AgreesWithPhylogenyAtLowestLevel && !OT.AlwaysASingleGene){
 //					NumAgree++;
+//				}
+//				BasicSet.AddLowestLevelPhyloDisagreement(OT, margin, false);
+//				if (OT.AgreesWithPhylogenyAtLowestLevel && ! OT.AlwaysASingleGene){
+//					NumSingleAgree++;
+//				}
+//				if (!OT.AlwaysASingleGene){
+//					NumNonSingle++;
 //				}
 //			}
 //			
 //			//store in hash
 //			AgreementCounts.put(margin,NumAgree);
+//			SingleAgreementCounts.put(margin, NumSingleAgree);
 //			
+//			//debugging
+//			//System.out.println(NumNonSingle + " non-single");
 //		}
-//		
+
+		
 //		//print
-//		System.out.println("margin\tagreement");
+//		System.out.println("margin\tagree\tsingle_agree");
 //		for (double d : AgreementCounts.keySet()){
-//			System.out.println(d + "\t" + AgreementCounts.get(d));
+//			System.out.println(d + "\t" + AgreementCounts.get(d) + "\t" + SingleAgreementCounts.get(d));
 //		}
 		
 		//BasicSet.AddLowestLevelPhyloDisagreement(BasicSet.Trajectories.get(1500), 0.01);
