@@ -67,9 +67,17 @@ public class OperonStats extends LoadData{
 //		BasicSet.PhyloHist(HistDataFile, bins, BasicSet.MaxDist, BasicSet.PhyDistHash);
 		BasicSet.BuildOperonTrajectories();
 		
+		for (int i : BasicSet.Trajectories.keySet()){
+			OperonTrajectory OT = BasicSet.Trajectories.get(i);
+			if (!OT.AlwaysASingleGene){
+				System.out.println(i + " Operonicity: " + OT.Operonicity + " Variety: " + OT.Variety);
+			}
+		}
+	
+		
 		//export single gene modifications counts
-		String ExportFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Miscellaneous/ClearAIP_v2.txt";
-		BasicSet.ExportClearSingleGeneModifications(ExportFile);
+//		String ExportFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/Miscellaneous/ClearAIP_v2.txt";
+//		BasicSet.ExportClearSingleGeneModifications(ExportFile);
 		
 		//Export a query set for context forest analysis (Feb 6, 2014)
 		//String QuerySetFile = "/Users/phillipseitzer/Dropbox/OperonEvolutionInHalophiles/JCE/Current/QS_60Orgs_Op50.txt";

@@ -104,8 +104,8 @@ public class OperonSet {
 		int TrajectoryCounter = 0;
 		
 		//check all clusters
-		for (int i = 272; i <= 5276; i++){		//the major set
-		//for (int i = 2976; i <= 2976; i++){	//for testing
+		//for (int i = 272; i <= 5276; i++){		//the major set
+		for (int i = 5200; i <= 5300; i++){	//for testing
 			
 			//Initialize this operon trajectory
 			OperonTrajectory OT = new OperonTrajectory();
@@ -250,7 +250,7 @@ public class OperonSet {
 				OT.TrajectoryHash = Trajectory;
 				OT.amalgamate();				//puts all ops in same organisms together
 				OT.OperonHash = OpDataTraj;
-				OT.OtherClusters = Clusts;
+				OT.OtherClusters = Clusts;		//all other non-seed types of genes featured in the trajectory
 				
 				//Determine overall phylogenetic spread of protein family
 				LinkedList<String> ListOfOrganisms = new LinkedList<String>(OT.OperonHash.keySet());
