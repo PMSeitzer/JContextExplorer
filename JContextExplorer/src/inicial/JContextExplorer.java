@@ -24,6 +24,7 @@ import inicial.FesLog.TipLog;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.event.KeyEvent;
 import java.util.logging.Level;
 
@@ -32,6 +33,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
+import java.lang.reflect.Method;
 import moduls.frm.FrmPrincipalDesk;
 
 /**
@@ -76,9 +78,24 @@ public class JContextExplorer {
 		f.setLocationRelativeTo(null);
 		f.setResizable(true);
 		
+		//enable full screen for mac os x
+		enableOSXFullscreen(f);
+		
 		//set visible
 		f.setVisible(true);
 
+	}
+	
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public static void enableOSXFullscreen(Window window) {
+	    try {
+	        Class util = Class.forName("com.apple.eawt.FullScreenUtilities");
+	        Class params[] = new Class[]{Window.class, Boolean.TYPE};
+	        Method method = util.getMethod("setWindowCanFullScreen", params);
+	        method.invoke(util, window, true);
+	    } catch (Exception e) {
+	    	System.out.println("Unable to enter full-screen mode on Mac OS X.");
+	    }
 	}
 
 	

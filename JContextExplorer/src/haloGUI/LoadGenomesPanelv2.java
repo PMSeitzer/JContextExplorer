@@ -1059,7 +1059,7 @@ public class LoadGenomesPanelv2 extends JLayeredPane implements ActionListener,
 
 								// Annotation information
 								AG.importFromGFFFile(ImportedLine[0]);
-
+								
 								// reference to genome file
 								AG.setGenomeFile(new File(ImportedLine[1]));
 

@@ -697,8 +697,43 @@ public void MakeSingleGeneContextSet(String CSName){
 
 }
 
+public void generateOperonReports(){
+	String dir = "/Users/phillipseitzer/UCDavis/OperonEvolutionInHalophiles/NRC1-distance-vs-transcriptomics/OperonStats";
+	
+	//generate context sets
+	String nameStem = "Dist-";
+	for (int i = 0; i <= 300; i++){
+		String name = nameStem +String.valueOf(i);
+		ContextSet CS = ComputeContextSet(name, i, true);
+		
+		String fileName = dir + "/" + name;
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(fileName));
+			
+			for (LinkedList<GenomicElement> operon : CS.getContextMapping().values()){
+				StringBuilder sb = new StringBuilder();
+				for (GenomicElement ge : operon){
+					String geneId = ge.getGeneID();
+					if (geneId.endsWith("m")){
+						geneId = geneId.substring(0, geneId.length()-1);
+					}
+					sb.append(geneId);
+					sb.append(" ");
+				}
+				sb.append("\n");
+				bw.write(sb.toString());
+			}
+			
+			bw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		System.out.println("Computed context set " + i + "/300.");
+	}
+}
 //estimate contexts based on distance
-public void ComputeContextSet(String CSName, int tolerance, boolean RequireSameStrain){
+public ContextSet ComputeContextSet(String CSName, int tolerance, boolean RequireSameStrain){
 	
 	//initialize a new context set
 	ContextSet CS = new ContextSet(CSName, "IntergenicDist");
@@ -837,6 +872,8 @@ public void ComputeContextSet(String CSName, int tolerance, boolean RequireSameS
 		Groupings = new LinkedList<ContextSet>();
 	} 
 	this.Groupings.add(CS);
+	
+	return CS;
 }
 
 //add pre-computed contexts from file

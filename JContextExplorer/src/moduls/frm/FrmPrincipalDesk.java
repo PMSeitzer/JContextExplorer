@@ -568,6 +568,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 				
 				// Annotation information
 				AG.importFromGFFFile(f.getAbsolutePath());
+				
+				//AG.generateOperonReports();
 
 				//update cluster IDs, if appropriate
 				if (AG.getLargestCluster() > -1){
