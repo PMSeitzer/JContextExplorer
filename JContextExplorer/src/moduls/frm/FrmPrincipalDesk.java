@@ -284,9 +284,9 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 
 	private String strChloroviruses = "Chloroviruses";
 	private String strEcoli = "Escherichia coli";
-	private String strHalos = "Haloarchaea";
+	private String strHalos = "Haloarchaea_PR";
 	private String strMimi = "Mimiviruses";
-	private String strMyxo = "Myxococcus";
+	private String strMyxo = "Myxococcus and 14 relatives";
 	private String strSalmonella = "Salmonella Enterica";
 	private String strStaph = "Staphylococcus Aureus";
 	
@@ -1191,11 +1191,11 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					
 					//import sequences stored on wordpress site
 					//halophiles
-					if (m.getName().equals("Haloarchaea")){
+					if (m.getName().equals("Haloarchaea_PR")){
 						AssociateHalophileSequences();
 					
 					//chloroviruses or myxococcus
-					} else if (m.getName().equals("Chloroviruses") || m.getName().equals("Myxococcus")){
+					} else if (m.getName().equals("Chloroviruses") || m.getName().equals("Myxococcus and 14 relatives")){
 						AssociateChlorovirusOrMyxococcusSequences();
 					}
 				
@@ -1214,6 +1214,7 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 					
 					JOptionPane.showMessageDialog(null, "There was a problem reading data from the internet.\nCheck your internet connection and try again later.",
 							"Data Import Error", JOptionPane.ERROR_MESSAGE);
+					e.printStackTrace();
 				} else{
 					ImportPopularSetWorkerCancelled = false;
 				}
@@ -1895,7 +1896,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PGD_chloros.setName(strChloroviruses);
 		PGD_chloros.setChkBox(MG_Chloroviruses);
 		//PGD_chloros.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/12/Chloroviruses.txt");
-		PGD_chloros.setURL("http://www.bme.ucdavis.edu/facciotti/files/2014/04/Chloroviruses.txt");
+		//PGD_chloros.setURL("http://www.bme.ucdavis.edu/facciotti/files/2014/04/Chloroviruses.txt");
+		PGD_chloros.setURL("https://ucdavis.box.com/shared/static/oucp0w0c152tp352ok11.txt");
 		PGD_chloros.setPasswordProtected(false);
 		PopularGenomeSets.put(MG_Chloroviruses, PGD_chloros);
 				
@@ -1904,7 +1906,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PGD_ecoli.setName(strEcoli);
 		PGD_ecoli.setChkBox(MG_Ecoli);
 		//PGD_ecoli.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/09/Escherichia_coli.txt");
-		PGD_ecoli.setURL("http://www.bme.ucdavis.edu/facciotti/files/2014/04/Escherichia_coli.txt");
+		//PGD_ecoli.setURL("http://www.bme.ucdavis.edu/facciotti/files/2014/04/Escherichia_coli.txt");
+		PGD_ecoli.setURL("https://ucdavis.box.com/shared/static/hc8q5a9jrd1fj4lljyeq.txt");
 		PGD_ecoli.setPasswordProtected(false);
 		//PGD_ecoli.setPassword("nenegoose");
 		PopularGenomeSets.put(MG_Ecoli, PGD_ecoli);
@@ -1915,7 +1918,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PGD_halos.setChkBox(MG_Halos);
 		//PGD_halos.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/12/Haloarchaea.txt");
 		//PGD_halos.setURL("http://www.bme.ucdavis.edu/facciotti/files/2014/04/Haloarchaea.txt");
-		PGD_halos.setURL("http://www.bme.ucdavis.edu/facciotti/files/2014/05/Haloarchaea.txt");
+		//PGD_halos.setURL("http://www.bme.ucdavis.edu/facciotti/files/2014/05/Haloarchaea.txt");
+		PGD_halos.setURL("https://ucdavis.box.com/shared/static/j02zp98fiyopt3eldxfbakn38cslpofp.gs");
 		PGD_halos.setPasswordProtected(false);
 		PopularGenomeSets.put(MG_Halos, PGD_halos);
 
@@ -1924,7 +1928,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PGD_mimi.setName(strMimi);
 		PGD_mimi.setChkBox(MG_Mimi);
 		//PGD_mimi.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/12/Mimiviruses.txt");
-		PGD_mimi.setURL("http://www.bme.ucdavis.edu/facciotti/files/2014/04/Mimiviruses.txt");
+		//PGD_mimi.setURL("http://www.bme.ucdavis.edu/facciotti/files/2014/04/Mimiviruses.txt");
+		PGD_mimi.setURL("https://ucdavis.box.com/shared/static/7kdzzum9qunm3hy0x42o.txt");
 		PGD_mimi.setPasswordProtected(false);
 		PopularGenomeSets.put(MG_Mimi, PGD_mimi);
 		
@@ -1933,7 +1938,8 @@ public class FrmPrincipalDesk extends JFrame implements InternalFrameListener, A
 		PGD_myxo.setName(strMyxo);
 		PGD_myxo.setChkBox(MG_Myxo);
 		//PGD_myxo.setURL("http://www.bme.ucdavis.edu/facciotti/files/2013/12/Myxococcus.txt");
-		PGD_myxo.setURL("http://www.bme.ucdavis.edu/facciotti/files/2014/04/Myxococcus.txt");
+		//PGD_myxo.setURL("http://www.bme.ucdavis.edu/facciotti/files/2014/04/Myxococcus.txt");
+		PGD_myxo.setURL("https://ucdavis.box.com/shared/static/il4siftcqxa2b9upy676d7npy3zgwbqq.gs");
 		PGD_myxo.setPasswordProtected(false);
 		PopularGenomeSets.put(MG_Myxo, PGD_myxo);
 				

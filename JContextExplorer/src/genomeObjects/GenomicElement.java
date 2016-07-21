@@ -10,6 +10,11 @@ import org.biojava3.core.sequence.Strand;
 
 public class GenomicElement implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2782792639687568243L;
+	
 	//Fields 
     private String Genome;
 	private String Contig;              //-Biological-placement----------

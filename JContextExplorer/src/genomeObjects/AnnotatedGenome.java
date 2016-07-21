@@ -18,6 +18,11 @@ import org.biojava3.core.sequence.io.FastaReaderHelper;
 
 public class AnnotatedGenome implements Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7721895130219179915L;
+	
 	//Fields 
     private String Genus;               						//-Biological-organization-------------
     private String Species;             						//									
