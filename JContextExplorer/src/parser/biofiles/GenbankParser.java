@@ -267,6 +267,9 @@ public class GenbankParser {
 
 		      
 		      }
+		      
+		      br.close();
+		      
 		} catch (Exception ex) {
 		      //can't find the file specified by args[0]
 		      ex.printStackTrace();
