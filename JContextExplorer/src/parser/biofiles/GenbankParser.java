@@ -42,241 +42,6 @@ public class GenbankParser {
 		
 	}
 	
-	//import + store file 
-	public static void ImportAndParseGenbank(String FileName){
-		
-		GenbankParser g = new GenbankParser();
-		
-		Entries = new LinkedList<FeatureEntry>();
-		
-		try {
-
-		      //create a buffered reader to read the sequence file specified by args[0]
-		      BufferedReader br = new BufferedReader(new FileReader(FileName));
-
-		      String Line = null;
-		      boolean IgnoreFeatureData = true;
-		      boolean ContinuingFeature = false;
-		      FeatureEntry FE = null;
-		      boolean AnnotationAchieved = false;
-		      boolean ProductStarted = false;
-		      boolean TranslationStarted = false;
-		      boolean TranslationAchieved = false;
-		      String Annotation = "";
-		      String Translation = "";
-		      String ContigName = "Chromosome";
-		      
-		      int Counter = 0;
-	    	  String LocusTag = "";
-	    	  
-		      while ((Line = br.readLine()) != null){
-		    	  
-		    	  Counter++;
-		    	  
-		    	  //split line
-		    	  String[] L = Line.trim().split("\\s+");
-    			  
-		    	  //origin
-		    	  if (L[0].equals("ORIGIN")){
-		    		  TranslationAchieved = true;
-		    		  //AnnotationAchieved = true;
-		    	  }
-
-		    	  //being caring about features
-		    	  if (IgnoreFeatureData==false){
-		    		  
-		    		  if (Line.contains("..")){
-		    			  ContinuingFeature = false;
-		    		  }
-		    		  
-		    		  //start a new feature
-		    		  if (!L[0].startsWith("/") && !ContinuingFeature){
-		    			  
-		    			  //write previous feature
-		    			  if (FE != null){
-		    				  FE.LocusTag = LocusTag;
-		    				  Entries.add(FE);
-		    			  }
-		    			  
-		    			  //create new feature
-		    			  FE = g.new FeatureEntry();
-		    			  
-		    			  //reset switches
-		    			  AnnotationAchieved = false;
-		    			  ProductStarted = false;
-		    			  TranslationStarted = false;
-		    			  TranslationAchieved = false;
-		    			  
-		    			  //type info
-		    			  FE.Type = L[0].trim();
-		    			  FE.Contig = ContigName;
-		    			  
-		    			  //System.out.println(L[2]);
-		    			  //start, stop
-		    			  if (L[1].contains("complement")){
-			    			  String[] X = ((String) L[1].trim().subSequence(11,L[1].length()-1)).split("\\..");
-			    			  
-			    			  if (X[0].contains(">") || X[0].contains("<")){
-			    				  X[0] = X[0].substring(1);
-			    			  }
-			    			  
-			    			  if (X[1].contains(">") || X[1].contains("<")){
-			    				  X[1] = X[1].substring(1);
-			    			  }
-			    			  
-			    			  FE.Start = X[0];
-			    			  FE.Stop = X[1];
-			    			  FE.Strand = "-1";
-		    			  } else {
-			    			  String[] X = L[1].trim().split("\\..");
-			    			  
-			    			  if (X[0].contains(">") || X[0].contains("<")){
-			    				  X[0] = X[0].substring(1);
-			    			  }
-			    			  
-			    			  if (X[1].contains(">") || X[1].contains("<")){
-			    				  X[1] = X[1].substring(1);
-			    			  }
-			    			  
-			    			  FE.Start = X[0];
-			    			  FE.Stop = X[1];
-			    			  FE.Strand = "1";
-		    			  }
-
-		    			  ContinuingFeature = false;
-		    			  
-		    		  } else {
-
-		    			  //write to field
-		    			  ContinuingFeature = true;
-		    			  
-		    		  }
-		    		  
-		    		  //continue collecting feature data
-		    		  if (ContinuingFeature){
-		    			  
-		    			  if (Line.contains("/locus_tag")){
-		    				  LocusTag = Line.trim().substring(12);
-		    				  LocusTag = LocusTag.substring(0, LocusTag.length()-1);
-		    				 // System.out.println(LocusTag);
-		    			  }
-		    			  
-//		    			  if (Line.contains("/gene")){
-//		    				  LocusTag = Line.trim().substring(7);
-//		    				  LocusTag = LocusTag.substring(0, LocusTag.length()-1);
-//		    				  LocusTag = "PBCV1_"+ LocusTag;
-//		    			  }
-		    			  
-		    			  if (!AnnotationAchieved){
-			    			  if (Line.contains("/product")){
-		    				 // if (Line.contains("/locus_tag")){
-			    				  ProductStarted = true;
-			    				  Annotation = Line.trim().substring(1);
-			    				  FE.Annotation = Annotation;
-			    				  //Annotation = Line.trim().substring(12);
-			    				 // Annotation = Annotation.substring(0, Annotation.length()-1);
-			    			  } else {
-			    				  if (ProductStarted){
-			    					 
-			    					  if (Line.trim().startsWith("/") || Line.contains("BASE")){
-				    					  if (FE != null){
-				    						  FE.Annotation = Annotation;
-				    					  }
-				    					  AnnotationAchieved = true;
-			    					  } else {
-			    						  Annotation = Annotation + " " + Line.trim();
-			    						  FE.Annotation = Annotation;
-			    					  }
-			    					  
-//			    					  //If the line is not a new tag, keep adding
-//				    				  if (Line.trim().startsWith("/") == false){
-//				    					  Annotation = Annotation + " " + Line.trim();					    					  
-//				    				  } else {
-//				    					  if (FE != null){
-//				    						  FE.Annotation = Annotation;
-//				    					  }
-//				    					  AnnotationAchieved = true;
-//				    				  }
-			    				  }
-
-			    			  } 
-		    			  }
-		    			  
-		    			  if (!TranslationAchieved){
-		    				  if (Line.contains("/translation=")){
-		    					  TranslationStarted = true;
-		    					  
-		    					  //protein
-		    					  if (Translation.contains("\"")){
-		    						  Translation = (String) Line.trim().substring(14).subSequence(0, Line.trim().substring(14).length()-2);
-		    					  } else {
-		    						  Translation = Line.trim().substring(14);
-		    					  }
-		    					  
-    							  if (FE != null){
-    								  //System.out.println("Complete: " + Translation);
-    								  FE.Translation = Translation;
-    							  }
-		    					  
-		    					 // System.out.println("First: " + Translation);
-		    				  } else {
-		    					  if (TranslationStarted){
-		    						  
-		    						  //continue
-		    						  if (Line.trim().startsWith("/") == false){
-		    							  
-		    							  //append sequence
-				    					  if (Line.contains("\"")){
-				    						  if (Line.trim().length() > 1){
-				    							  Translation = Translation + (String) Line.trim().subSequence(0, Line.trim().length()-1);
-				    						  }
-				    					  } else {
-				    						  Translation = Translation + Line.trim();
-				    					  }
-				    					  
-				    					 // System.out.println("Complete: " + Translation);
-		    							  if (FE != null){
-		    								  //System.out.println("Complete: " + Translation);
-		    								  FE.Translation = Translation;
-		    							  }
-		    						  } else {
-
-	    								  TranslationAchieved = true;
-		    						  }
-		    					  }
-		    				  }
-		    			  }
-
-		    		  }
-
-		    	  }
-		    	  
-		    	  //don't start caring about things until this point
-		    	  if (Line.contains("FEATURES")){
-		    		  IgnoreFeatureData = false;
-				      AnnotationAchieved = false;
-				      ProductStarted = false;
-				      TranslationStarted = false;
-				      TranslationAchieved = false;
-		    	  }
-		    	  
-		    	  //contig name
-		    	  if (L[0].equals("LOCUS")){
-		    		  ContigName = L[1];
-		    	  }
-
-		      
-		      }
-		      
-		      br.close();
-		      
-		} catch (Exception ex) {
-		      //can't find the file specified by args[0]
-		      ex.printStackTrace();
-	    }
-
-	}
-	
 	public static void printSummaryStats(){
 		for (FeatureEntry FE : Entries){
 			
@@ -302,7 +67,7 @@ public class GenbankParser {
 		System.out.println("********************************");
 	}
 	//export
-	public static void ExportGenbankAsGFF(String FileName){
+	public static void exportGenbankAsGFF(String FileName){
 		
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(FileName));
@@ -348,9 +113,7 @@ public class GenbankParser {
 	}
 	
 	//export
-	public static void ParseGenbankv2(String FileName){
-		
-		
+	public static void parseGenbankFile(String FileName){
 		
 		GenbankParser g = new GenbankParser();
 		Entries = new LinkedList<FeatureEntry>();
@@ -598,7 +361,7 @@ public class GenbankParser {
 	}
 	
 	//Export translations
-	private static void ExportTranslations(String FileName) {
+	private static void exportTranslations(String FileName) {
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(FileName));
 			
@@ -691,17 +454,17 @@ public class GenbankParser {
 		//import
 		//new method April 24, 2013
 		//edited Friday, Nov. 13, 2015
-		ParseGenbankv2(GenbankFile);
+		parseGenbankFile(GenbankFile);
 		
 		//output gff
 		if (OutputGFF){
-			ExportGenbankAsGFF(OutputFile);
+			exportGenbankAsGFF(OutputFile);
 			System.out.println("Feature Annotations successfully exported.");
 		}
 
 		//output translations
 		if (OutputTranslations){
-			ExportTranslations(TranslationOutputFile);
+			exportTranslations(TranslationOutputFile);
 			System.out.println("Protein Translations successfully exported.");
 		}
 		
