@@ -28,30 +28,35 @@ public class GenbankParser {
 	public static boolean OutputTranslations = false;
 	public static boolean OutputGFF = false;
 	
-	public class FeatureEntry{
+	public static class FeatureEntry{
 		
 		//Fields
-		public String Contig;
-		public String Type;
-		public String Start;
-		public String Stop;
-		public String Strand;
-		public String Annotation = ".";	//basically, product
-		public String Translation;
-		public String LocusTag = "test";
-		
+		public String contig;
+		public String type;
+		public String start;
+		public String stop;
+		public String strand;
+		public String annotation = ".";	//basically, product
+		public String translation; //only CDS have translations
 	}
 	
 	public static void printSummaryStats(){
+		
+		int numCDSnoTranslations = 0;
+		
 		for (FeatureEntry FE : Entries){
 			
 			int count = 0;
-			if (null != typeCounts.get(FE.Type)){
-				count = typeCounts.get(FE.Type) + 1;
+			if (null != typeCounts.get(FE.type)){
+				count = typeCounts.get(FE.type) + 1;
 			} else {
 				count = 1;
 			}
-			typeCounts.put(FE.Type, count);
+			typeCounts.put(FE.type, count);
+			
+			if ("CDS".equals(FE.type) && FE.translation != null){
+				numCDSnoTranslations++;
+			}
 		}
 		
 		System.out.println("********************************");
@@ -60,8 +65,17 @@ public class GenbankParser {
 		int totalSum = 0;
 		for (Entry<String, Integer> entry : typeCounts.entrySet()){
 			totalSum += entry.getValue();
-			System.out.println(entry.getKey() + ": " + entry.getValue());
+			if ("CDS".equals(entry.getKey())) {
+				if (numCDSnoTranslations != 0) {
+					System.out.println("CDS: " + entry.getValue() + " total, " + numCDSnoTranslations + " with protein sequences ");
+				} else {
+					System.out.println(entry.getKey() + ": " + entry.getValue());
+				}
+			} else {
+				System.out.println(entry.getKey() + ": " + entry.getValue());
+			}
 		}
+
 		System.out.println("total: " + totalSum);
 		System.out.println("********************************");
 		System.out.println("********************************");
@@ -79,16 +93,16 @@ public class GenbankParser {
 //				  + "\t" + FE.Type + "\t" + FE.Start + "\t" + FE.Stop + "\t+\t"
 //				  + FE.Strand + "\t.\t" + FE.Annotation + "\t0\t"+ FE.LocusTag +"\n";
 				
-				String Feature = FE.Contig + "\t" + "GenBank" 
-						  + "\t" + FE.Type + "\t" + FE.Start + "\t" + FE.Stop + "\t+\t"
-						  + FE.Strand + "\t.\t" + FE.Annotation + "\t0\n";
+				String Feature = FE.contig + "\t" + "GenBank" 
+						  + "\t" + FE.type + "\t" + FE.start + "\t" + FE.stop + "\t+\t"
+						  + FE.strand + "\t.\t" + FE.annotation + "\t0\n";
 				//System.out.println(FE.Annotation);
 				
 				//only write certain types to file, if this option is specified.
 				if (Types != null){
 					boolean KeepType = false;
 					for (int i = 0; i < Types.length; i++){
-						if (FE.Type.equals(Types[i])){
+						if (FE.type.equals(Types[i])){
 							KeepType = true;
 							break;
 						}
@@ -112,10 +126,9 @@ public class GenbankParser {
 
 	}
 	
-	//export
+	//stream in data from genbank file
 	public static void parseGenbankFile(String FileName){
 		
-		GenbankParser g = new GenbankParser();
 		Entries = new LinkedList<FeatureEntry>();
 		
 		try {
@@ -128,7 +141,7 @@ public class GenbankParser {
 		      //persistent data
 		      String ContigName = "";
 		      String TypeName = "";
-		      FeatureEntry FE = g.new FeatureEntry();
+		      FeatureEntry FE = new FeatureEntry();
 		      String LocusTag = "";
 		      boolean WritingProduct = false;
 		      boolean WritingTranslation = false;
@@ -162,12 +175,7 @@ public class GenbankParser {
 		    				  NewFeature = true;
 		    				  TypeName = s;
 	    				  break;
-	    			  }
-//		    			  if (Line.startsWith(s) && !WritingProduct && !WritingTranslation){
-//		    				  NewFeature = true;
-//		    				  TypeName = s;
-//		    				  break;
-//		    			  }
+		    			  }
 		    		  }
 		    		  
 		    		  //line is a new feature
@@ -175,14 +183,14 @@ public class GenbankParser {
 		    			 
 		    			  //write previous feature
 		    			  if (FE != null){
-		    				  if (FE.Start != null){
+		    				  if (FE.start != null){
 			    				  Entries.add(FE);
 		    				  }
 
 		    			  }
 		    			  
 		    			  //create new feature
-		    			  FE = g.new FeatureEntry();
+		    			  FE = new FeatureEntry();
 		    			  NewFeature = false;
 		    			  
 		    			  //reset switches
@@ -190,8 +198,8 @@ public class GenbankParser {
 		    		      WritingTranslation = false;
 		    			  
 		    			  //type info
-		    			  FE.Type = TypeName;
-		    			  FE.Contig = ContigName;
+		    			  FE.type = TypeName;
+		    			  FE.contig = ContigName;
 		    			  
 		    			  //fwd or reverse strand
 		    			  if (L[1].contains("complement")){
@@ -210,9 +218,9 @@ public class GenbankParser {
 				    				  X[X.length-1] = X[X.length-1].substring(1);
 				    			  }
 				    			  
-				    			  FE.Start = X[0];
-				    			  FE.Stop = X[X.length-1];
-				    			  FE.Strand = "-1";
+				    			  FE.start = X[0];
+				    			  FE.stop = X[X.length-1];
+				    			  FE.strand = "-1";
 		    				
 				    		  //no join	  
 		    				  } else {
@@ -227,9 +235,9 @@ public class GenbankParser {
 				    				  X[1] = X[1].substring(1);
 				    			  }
 				    			  
-				    			  FE.Start = X[0];
-				    			  FE.Stop = X[1];
-				    			  FE.Strand = "-1";
+				    			  FE.start = X[0];
+				    			  FE.stop = X[1];
+				    			  FE.strand = "-1";
 		    					  
 		    				  }
 
@@ -248,9 +256,9 @@ public class GenbankParser {
 				    				  X[X.length-1] = X[X.length-1].substring(1);
 				    			  }
 				    			  
-				    			  FE.Start = X[0];
-				    			  FE.Stop = X[X.length-1];
-				    			  FE.Strand = "1";
+				    			  FE.start = X[0];
+				    			  FE.stop = X[X.length-1];
+				    			  FE.strand = "1";
 		    					  
 		    				  //no join	  
 		    				  } else {
@@ -265,9 +273,9 @@ public class GenbankParser {
 				    				  X[1] = X[X.length-1].substring(1);
 				    			  }
 				    			  
-				    			  FE.Start = X[0];
-				    			  FE.Stop = X[1];
-				    			  FE.Strand = "1";
+				    			  FE.start = X[0];
+				    			  FE.stop = X[1];
+				    			  FE.strand = "1";
 				    			  
 		    				  }
 		    				  
@@ -285,7 +293,7 @@ public class GenbankParser {
 		    		     if(WritingProduct){
 		    		    	 
 		    		    	//add the current line.
-		    		    	FE.Annotation = FE.Annotation + " " + Line;
+		    		    	FE.annotation = FE.annotation + " " + Line;
 		    		    	
 		    		    	//if a quotation mark is the last character, this is the end of writing product.
 		    		     	if (Line.substring(Line.length()-1).equals("\"")){
@@ -296,10 +304,10 @@ public class GenbankParser {
 		    		    	 
 		    		    	 //last line in translation
 		    		    	 if (Line.substring(Line.length()-1).equals("\"")){
-		    		    		 FE.Translation = FE.Translation + Line.substring(0,Line.length()-1);
+		    		    		 FE.translation = FE.translation + Line.substring(0,Line.length()-1);
 		    		    		 WritingTranslation = false;
 		    		    	 } else {
-		    		    		 FE.Translation = FE.Translation + Line;
+		    		    		 FE.translation = FE.translation + Line;
 		    		    	 }
 		    		    	 
 		    		     //not writing anything - possibly open things up	 
@@ -309,7 +317,7 @@ public class GenbankParser {
 		    		    	 if (L[0].startsWith("/product=")){
 		    		    		  
 		    		    		  WritingProduct = true;
-			    				  FE.Annotation = Line.substring(1);
+			    				  FE.annotation = Line.substring(1);
 			    				  
 				    		    	//if a quotation mark is the last character, this is the end of writing product.
 				    		     	if (Line.substring(Line.length()-1).equals("\"")){
@@ -325,13 +333,13 @@ public class GenbankParser {
 		    		    		 //short translation - ends in quote
 		    		    		 if (Line.substring(Line.length()-1).equals("\"")){
 		    		    		 
-		    		    			 FE.Translation = (String) Line.substring(14, Line.length()-1);
+		    		    			 FE.translation = (String) Line.substring(14, Line.length()-1);
 		    		    			 WritingTranslation = false;
 		    		    			 
 		    		    	     //normal translation - extends multiple lines
 		    		    		 } else {
 		    		    			 
-		    		    			 FE.Translation = Line.substring(14);
+		    		    			 FE.translation = Line.substring(14);
 		    		    			 WritingTranslation = true;
 		    		    		 }
 		    		    		 
@@ -354,7 +362,13 @@ public class GenbankParser {
 		    	  
 		      }
 		      
+		      //write last feature, if it was not already added.
+		      if (!Entries.contains(FE)) {
+		    	  Entries.add(FE);
+		      }
+		      
 		      br.close();
+		      
 		} catch (Exception ex){
 			ex.printStackTrace();
 		}
@@ -363,21 +377,18 @@ public class GenbankParser {
 	//Export translations
 	private static void exportTranslations(String FileName) {
 		try {
+			
 			BufferedWriter bw = new BufferedWriter(new FileWriter(FileName));
 			
-			int Counter = 0;
 			//export
 			for (FeatureEntry FE : Entries){
 
-				if (FE.Type.equals("CDS")){
-					
-					//increment counter
-					Counter++;
+				if (FE.type.equals("CDS")){
 					
 					String Contig = "";
 					
 					if (ContigName.equals("")){
-						Contig = FE.Contig;
+						Contig = FE.contig;
 					} else {
 						Contig = ContigName;
 					}
@@ -386,17 +397,17 @@ public class GenbankParser {
 					String Header;
 					if (SpeciesName != null){
 						//Format: SpeciesName--Contig--Start--Stop
-						Header = ">" + SpeciesName + "--" + Contig + "--" + String.valueOf(FE.Start) + "--" + String.valueOf(FE.Stop) + "\n";
+						Header = ">" + SpeciesName + "--" + Contig + "--" + String.valueOf(FE.start) + "--" + String.valueOf(FE.stop) + "\n";
 						
 					} else { //exclude species name
 
-						Header = ">" + Contig + "--" + String.valueOf(FE.Start) + "--" + String.valueOf(FE.Stop) + "\n";
+						Header = ">" + Contig + "--" + String.valueOf(FE.start) + "--" + String.valueOf(FE.stop) + "\n";
 						
 					}
 					
-					if (null != FE.Translation){
+					if (null != FE.translation){
 						bw.write(Header);
-						bw.write(FE.Translation);
+						bw.write(FE.translation);
 						bw.write("\n\n");
 						bw.flush();
 					}
@@ -488,7 +499,7 @@ public class GenbankParser {
 		System.out.println("	-c <provided-contig-name>");
 		System.out.println("		(if this option is not provided, will attempt to derive contig name from genbank file).");
 		System.out.println("	-v");
-		System.out.println("		(verbose mode: will print out every line of the .gbk as the file is being parsed.");
+		System.out.println("		(verbose mode: will print out every line of the genbank file as the file is being parsed.");
 		System.out.println("	-d");
 		System.out.println("		(summary data mode: at the end of the run, will print the summary data.");
 	}
