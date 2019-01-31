@@ -426,10 +426,11 @@ public class GenbankParser {
 	public static void main(String[] args) {
 		
 		//default types
-		Types = new String[3];
+		Types = new String[4];
 		Types[0] = "CDS";
 		Types[1] = "tRNA";
 		Types[2] = "rRNA";
+		Types[3] = "ncRNA";
 		
 		if (args.length ==0){
 			printUsage();
@@ -492,7 +493,7 @@ public class GenbankParser {
 		System.out.println("");
 		System.out.println("Optional arguments:");
 		System.out.println("	-t <types-to-include-in-gff-file>");
-		System.out.println("		(default: CDS, tRNA, rRNA");	
+		System.out.println("		(default: CDS, tRNA, rRNA, ncRNA");	
 		System.out.println("	-p <protein-translations-file>");
 		System.out.println("	-s <provided-species-name>");
 		System.out.println("		(if this option is not provided, will attempt to derive species name from genbank file).");
